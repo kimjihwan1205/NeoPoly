@@ -1,0 +1,8 @@
+{
+  "name": "Remix: 3D 마켓플레이스",
+  "description": "A comprehensive 3D asset marketplace and AI-powered production studio for creators.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
