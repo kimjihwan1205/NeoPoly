@@ -16,9 +16,9 @@ import ContentManagementPage from './components/ContentManagementPage';
 import PurchasedAssetsPage from './components/PurchasedAssetsPage';
 import FavoritesPage from './components/FavoritesPage';
 import AccountSettingsPage from './components/AccountSettingsPage';
-import ReferencePage from './components/ReferencePage';
+import ReferencePage, { REFERENCE_BOARDS, boardMatchesAsset } from './components/ReferencePage';
 import ProjectPage from './components/ProjectPage';
-import NotesPage from './components/NotesPage';
+import NotesPage, { NOTES } from './components/NotesPage';
 import NoteEditorPage from './components/NoteEditorPage';
 import UserProfilePage from './components/UserProfilePage';
 import AIStudioPage from './components/AIStudioPage';
@@ -26,11 +26,12 @@ import FullWorkflowPage from './components/FullWorkflowPage';
 import FullWorkflowIntroPage from './components/FullWorkflowIntroPage';
 import SupportPage from './components/SupportPage';
 import TurnaroundPage from './components/TurnaroundPage';
+import ModelingGenerationPage from './components/ModelingGenerationPage';
 import { UserProfile } from './types';
 
 // --- Constants & Updated Asset Data ---
 
-const HERO_IMAGE = "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/hero.png";
+const HERO_IMAGE = "/images/hero.png";
 
 const CATEGORIES = [
   { id: 'all', label: '전체', icon: LayoutGrid },
@@ -56,7 +57,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%201.png",
+    image: "/images/work_%201.png",
     badge: 'M'
   },
   {
@@ -66,7 +67,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=v1',
     likes: '754',
     views: '52',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%202.png",
+    image: "/images/work_%202.png",
     badge: 'M'
   },
   {
@@ -76,7 +77,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
     likes: '1.1K',
     views: '87',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%203.png",
+    image: "/images/work_%203.png",
     badge: 'A'
   },
   {
@@ -86,7 +87,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
     likes: '982',
     views: '76',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%204.png",
+    image: "/images/work_%204.png",
     badge: 'M'
   },
   {
@@ -96,7 +97,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=v2',
     likes: '1.1K',
     views: '89',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%205.png",
+    image: "/images/work_%205.png",
     badge: 'M'
   },
   {
@@ -106,7 +107,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=6',
     likes: '2.3K',
     views: '189',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%206.png",
+    image: "/images/work_%206.png",
     badge: 'M'
   },
   {
@@ -116,7 +117,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=7',
     likes: '633',
     views: '33',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%207.png",
+    image: "/images/work_%207.png",
     badge: 'A'
   },
   {
@@ -126,7 +127,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=8',
     likes: '872',
     views: '56',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%208.png",
+    image: "/images/work_%208.png",
     badge: 'M'
   },
   {
@@ -136,7 +137,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=9',
     likes: '1.4K',
     views: '120',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%209.png",
+    image: "/images/work_%209.png",
     badge: 'M'
   },
   {
@@ -146,7 +147,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=10',
     likes: '3.1K',
     views: '245',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2010.png",
+    image: "/images/work_%2010.png",
     badge: 'M'
   },
   {
@@ -156,7 +157,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=11',
     likes: '890',
     views: '67',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2011.png",
+    image: "/images/work_%2011.png",
     badge: 'A'
   },
   {
@@ -166,7 +167,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=12',
     likes: '1.5K',
     views: '112',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2012.png",
+    image: "/images/work_%2012.png",
     badge: 'M'
   },
   {
@@ -176,7 +177,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=13',
     likes: '2.4K',
     views: '198',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2013.png",
+    image: "/images/work_%2013.png",
     badge: 'M'
   },
   {
@@ -186,7 +187,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=14',
     likes: '1.9K',
     views: '154',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2014.png",
+    image: "/images/work_%2014.png",
     badge: 'M'
   },
   {
@@ -196,7 +197,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=15',
     likes: '720',
     views: '45',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2015.png",
+    image: "/images/work_%2015.png",
     badge: 'A'
   },
   {
@@ -206,7 +207,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=16',
     likes: '1.1K',
     views: '88',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2016.png",
+    image: "/images/work_%2016.png",
     badge: 'M'
   },
   {
@@ -216,7 +217,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=17',
     likes: '645',
     views: '34',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2017.png",
+    image: "/images/work_%2017.png",
     badge: 'M'
   },
   {
@@ -226,7 +227,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=18',
     likes: '2.8K',
     views: '210',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2018.png",
+    image: "/images/work_%2018.png",
     badge: 'M'
   },
   {
@@ -236,7 +237,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=19',
     likes: '1.3K',
     views: '92',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2019.png",
+    image: "/images/work_%2019.png",
     badge: 'M'
   },
   {
@@ -246,7 +247,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=20',
     likes: '940',
     views: '71',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2020.png",
+    image: "/images/work_%2020.png",
     badge: 'A'
   },
   {
@@ -256,7 +257,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=21',
     likes: '1.6K',
     views: '124',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2021.png",
+    image: "/images/work_%2021.png",
     badge: 'M'
   },
   {
@@ -266,7 +267,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=22',
     likes: '2.1K',
     views: '167',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2022.png",
+    image: "/images/work_%2022.png",
     badge: 'M'
   },
   {
@@ -276,7 +277,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=23',
     likes: '530',
     views: '28',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2023.png",
+    image: "/images/work_%2023.png",
     badge: 'A'
   },
   {
@@ -286,7 +287,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=v1',
     likes: '1.2K',
     views: '95',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2024.png",
+    image: "/images/work_%2024.png",
     badge: 'M'
   },
   {
@@ -296,7 +297,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=7',
     likes: '820',
     views: '49',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2025.png",
+    image: "/images/work_%2025.png",
     badge: 'M'
   },
   {
@@ -306,7 +307,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=26',
     likes: '1.1K',
     views: '82',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2026.png",
+    image: "/images/work_%2026.png",
     badge: 'A'
   },
   {
@@ -316,7 +317,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=27',
     likes: '1.4K',
     views: '108',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2027.png",
+    image: "/images/work_%2027.png",
     badge: 'M'
   },
   {
@@ -326,7 +327,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=28',
     likes: '1.7K',
     views: '134',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2028.png",
+    image: "/images/work_%2028.png",
     badge: 'M'
   },
   {
@@ -336,7 +337,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=29',
     likes: '840',
     views: '62',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2029.png",
+    image: "/images/work_%2029.png",
     badge: 'A'
   },
   {
@@ -346,7 +347,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=30',
     likes: '2.5K',
     views: '212',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2030.png",
+    image: "/images/work_%2030.png",
     badge: 'M'
   },
   {
@@ -356,7 +357,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=31',
     likes: '1.2K',
     views: '98',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2031.png",
+    image: "/images/work_%2031.png",
     badge: 'M'
   },
   {
@@ -366,7 +367,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=32',
     likes: '3.3K',
     views: '287',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2032.png",
+    image: "/images/work_%2032.png",
     badge: 'M'
   },
   {
@@ -376,7 +377,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=33',
     likes: '690',
     views: '41',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2033.png",
+    image: "/images/work_%2033.png",
     badge: 'A'
   },
   {
@@ -386,7 +387,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=34',
     likes: '1.5K',
     views: '118',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2034.png",
+    image: "/images/work_%2034.png",
     badge: 'M'
   },
   {
@@ -396,7 +397,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=35',
     likes: '1.1K',
     views: '85',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2035.png",
+    image: "/images/work_%2035.png",
     badge: 'M'
   },
   {
@@ -406,7 +407,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=36',
     likes: '920',
     views: '68',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2036.png",
+    image: "/images/work_%2036.png",
     badge: 'A'
   },
   {
@@ -416,7 +417,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=37',
     likes: '1.8K',
     views: '142',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2037.png",
+    image: "/images/work_%2037.png",
     badge: 'M'
   },
   {
@@ -426,7 +427,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=38',
     likes: '1.3K',
     views: '94',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2038.png",
+    image: "/images/work_%2038.png",
     badge: 'M'
   },
   {
@@ -436,7 +437,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=39',
     likes: '2.4K',
     views: '196',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2039.png",
+    image: "/images/work_%2039.png",
     badge: 'M'
   },
   {
@@ -446,7 +447,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=40',
     likes: '4.2K',
     views: '350',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2040.png",
+    image: "/images/work_%2040.png",
     badge: 'M'
   },
   {
@@ -456,7 +457,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=41',
     likes: '1.1K',
     views: '78',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2041.png",
+    image: "/images/work_%2041.png",
     badge: 'M'
   },
   {
@@ -466,7 +467,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=42',
     likes: '670',
     views: '39',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2042.png",
+    image: "/images/work_%2042.png",
     badge: 'A'
   },
   {
@@ -476,7 +477,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=43',
     likes: '890',
     views: '64',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2043.png",
+    image: "/images/work_%2043.png",
     badge: 'M'
   },
   {
@@ -486,7 +487,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=44',
     likes: '510',
     views: '24',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2044.png",
+    image: "/images/work_%2044.png",
     badge: 'A'
   },
   {
@@ -496,7 +497,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=45',
     likes: '1.4K',
     views: '115',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2045.png",
+    image: "/images/work_%2045.png",
     badge: 'M'
   },
   {
@@ -506,7 +507,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=46',
     likes: '1.1K',
     views: '82',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_46.png",
+    image: "/images/work_46.png",
     badge: 'A'
   },
   {
@@ -516,7 +517,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=47',
     likes: '2.3K',
     views: '167',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_47.png",
+    image: "/images/work_47.png",
     badge: 'M'
   },
   {
@@ -526,7 +527,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=48',
     likes: '3.4K',
     views: '280',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_48.png",
+    image: "/images/work_48.png",
     badge: 'M'
   },
   {
@@ -536,7 +537,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=49',
     likes: '960',
     views: '74',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_49.png",
+    image: "/images/work_49.png",
     badge: 'A'
   },
   {
@@ -546,7 +547,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=50',
     likes: '1.5K',
     views: '124',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_50.png",
+    image: "/images/work_50.png",
     badge: 'M'
   },
   {
@@ -556,7 +557,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_51.png",
+    image: "/images/work_51.png",
     badge: 'M'
   },
   {
@@ -566,7 +567,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_52.png",
+    image: "/images/work_52.png",
     badge: 'M'
   },
   {
@@ -576,7 +577,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_53.png",
+    image: "/images/work_53.png",
     badge: 'M'
   },
   {
@@ -586,7 +587,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_54.png",
+    image: "/images/work_54.png",
     badge: 'M'
   },
   {
@@ -596,7 +597,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_55.png",
+    image: "/images/work_55.png",
     badge: 'M'
   },
   {
@@ -606,7 +607,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_56.png",
+    image: "/images/work_56.png",
     badge: 'M'
   },
   {
@@ -616,7 +617,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_57.png",
+    image: "/images/work_57.png",
     badge: 'M'
   },
   {
@@ -626,7 +627,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_58.png",
+    image: "/images/work_58.png",
     badge: 'M'
   },
   {
@@ -636,7 +637,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_59.png",
+    image: "/images/work_59.png",
     badge: 'M'
   },
   {
@@ -646,7 +647,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_60.png",
+    image: "/images/work_60.png",
     badge: 'M'
   }
 ];
@@ -670,7 +671,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
       title: '엘프궁수 (익스텐션 라이선스)',
       price: '85,000₩',
       rawPrice: 85000,
-      image: 'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_48.png',
+      image: '/images/work_48.png',
       category: '3D 캐릭터'
     },
     {
@@ -678,7 +679,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
       title: '오크 (상업용 라이선스)',
       price: '120,000₩',
       rawPrice: 120000,
-      image: 'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_49.png',
+      image: '/images/work_49.png',
       category: '3D 캐릭터'
     }
   ]);
@@ -823,7 +824,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
       <div className="flex items-center gap-4 md:gap-8 lg:gap-12 xl:gap-16 shrink-0">
         <div className="flex items-center">
           <img referrerPolicy="no-referrer" 
-            src="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/logo.png?v=2" 
+            src="/images/logo.png?v=2" 
             alt="NeoPoly" 
             onClick={() => { if(onNavigate) onNavigate('home'); if(setActiveNav) setActiveNav(null); }} 
             className="h-[32px] md:h-[35px] w-auto max-h-[37px] object-contain transition-all cursor-pointer" 
@@ -846,7 +847,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
               Art
             </li>
             <li 
-              className={`${activeNav === 'studio' || currentPage === 'studio' || currentPage === 'full_workflow' || currentPage === 'full_workflow_chat' ? 'text-brand-primary border-b-[2px] border-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
+              className={`${activeNav === 'studio' || currentPage === 'studio' || currentPage === 'full_workflow' || currentPage === 'full_workflow_chat' || currentPage === 'turnaround' || currentPage === 'modeling_generation' ? 'text-brand-primary border-b-[2px] border-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav('studio'); if(onNavigate) onNavigate('studio'); }}
             >
               AI Studio
@@ -954,8 +955,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                           reader.onload = (event) => {
                             setUploadedImage(event.target?.result as string);
                             setSimilarityResults([
-                              { id: 1, title: '엘프궁수', creator: 'Vitality', img: 'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2039.png', simLevel: '98.4%' },
-                              { id: 2, title: '오크', creator: 'Alexey', img: 'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2040.png', simLevel: '92.1%' }
+                              { id: 1, title: '엘프궁수', creator: 'Vitality', img: '/images/work_%2039.png', simLevel: '98.4%' },
+                              { id: 2, title: '오크', creator: 'Alexey', img: '/images/work_%2040.png', simLevel: '92.1%' }
                             ]);
                           };
                           reader.readAsDataURL(file);
@@ -979,8 +980,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                             reader.onload = (event) => {
                               setUploadedImage(event.target?.result as string);
                               setSimilarityResults([
-                                { id: 1, title: '엘프궁수', creator: 'Vitality', img: 'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2041.png', simLevel: '98.4%' },
-                                { id: 2, title: '오크', creator: 'Alexey', img: 'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2042.png', simLevel: '92.1%' }
+                                { id: 1, title: '엘프궁수', creator: 'Vitality', img: '/images/work_%2041.png', simLevel: '98.4%' },
+                                { id: 2, title: '오크', creator: 'Alexey', img: '/images/work_%2042.png', simLevel: '92.1%' }
                               ]);
                             };
                             reader.readAsDataURL(file);
@@ -1475,13 +1476,374 @@ function CategoryNav() {
   );
 }
 
-function AssetCard({ asset, isFavorite, onToggleFavorite }: { asset: any, key?: any, isFavorite?: boolean, onToggleFavorite?: (e: React.MouseEvent) => void }) {
+type QuickDropTarget = "projects" | "notes" | "references";
+
+type QuickCollectAsset = {
+  id: number;
+  title: string;
+  image: string;
+  author?: string;
+  badge?: string;
+  addedAt: number;
+  memo?: string;
+  groupName?: string;
+};
+
+type QuickCollections = Record<QuickDropTarget, QuickCollectAsset[]>;
+
+type QuickCollectOption = {
+  name: string;
+  image: string;
+  count: string;
+  helper?: string;
+};
+
+const QUICK_COLLECTIONS_KEY = "neopoly_quick_collections_v1";
+const QUICK_ASSET_MIME = "application/x-neopoly-asset";
+
+const emptyQuickCollections = (): QuickCollections => ({
+  projects: [],
+  notes: [],
+  references: [],
+});
+
+const toQuickCollectAsset = (asset: any): QuickCollectAsset => ({
+  id: Number(asset?.id ?? Date.now()),
+  title: String(asset?.title ?? "Untitled Asset"),
+  image: String(asset?.image ?? ""),
+  author: asset?.author,
+  badge: asset?.badge,
+  addedAt: Date.now(),
+});
+
+const readDraggedAsset = (event: React.DragEvent): QuickCollectAsset | null => {
+  const payload =
+    event.dataTransfer.getData(QUICK_ASSET_MIME) ||
+    event.dataTransfer.getData("application/json");
+  if (!payload) return null;
+  try {
+    return toQuickCollectAsset(JSON.parse(payload));
+  } catch {
+    return null;
+  }
+};
+
+function QuickDropCard({
+  title,
+  description,
+  icon: Icon,
+  items,
+  onNavigate,
+  onDropAsset,
+}: {
+  title: string;
+  description: string;
+  icon: any;
+  items: QuickCollectAsset[];
+  onNavigate: () => void;
+  onDropAsset: (asset: QuickCollectAsset) => void;
+}) {
+  return (
+    <div
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => {
+        event.preventDefault();
+        const asset = readDraggedAsset(event);
+        if (asset) onDropAsset(asset);
+      }}
+      className="min-h-[220px] rounded-xl border border-[#2A2E36] bg-[#0A0B0D]/80 p-4 transition-colors hover:border-brand-primary/45"
+    >
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#15171C] text-brand-primary">
+            <Icon className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="text-[15px] font-bold text-white">{title}</h3>
+            <p className="text-[11px] text-text-tertiary">{description}</p>
+          </div>
+        </div>
+        <button
+          onClick={onNavigate}
+          className="text-[11px] font-bold text-text-tertiary transition hover:text-brand-primary"
+        >
+          열기 <ChevronRight className="inline h-3 w-3" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {items.slice(0, 4).map((item) => (
+          <div key={`${item.id}-${item.addedAt}`} className="overflow-hidden rounded-lg border border-[#1F2329] bg-[#141518]">
+            <img src={item.image} alt={item.title} className="aspect-[16/10] w-full object-cover" referrerPolicy="no-referrer" />
+            <div className="p-2">
+              <p className="truncate text-[11px] font-bold text-white">{item.title}</p>
+              {item.groupName && <p className="mt-0.5 truncate text-[10px] text-brand-primary">{item.groupName}</p>}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {items.length === 0 && (
+        <div className="flex h-[120px] items-center justify-center rounded-lg border border-dashed border-[#2A2E36] text-[12px] font-bold text-text-tertiary">
+          이미지를 여기에 드롭
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QuickCollectDialog({
+  request,
+  onClose,
+  onSave,
+}: {
+  request: { target: "notes" | "references"; asset: QuickCollectAsset } | null;
+  onClose: () => void;
+  onSave: (mode: "existing" | "new", groupName: string, memo?: string) => void;
+}) {
+  const [mode, setMode] = useState<"existing" | "new">("existing");
+  const [memo, setMemo] = useState("");
+  const [newName, setNewName] = useState("");
+
+  useEffect(() => {
+    if (!request) return;
+    setMode("existing");
+    setMemo("");
+    setNewName(request.target === "notes" ? `${request.asset.title} 메모` : `${request.asset.title} 보드`);
+  }, [request]);
+
+  if (!request) return null;
+
+  const isNote = request.target === "notes";
+  const availableNotes = (() => {
+    try {
+      const saved = localStorage.getItem("neopoly_notes_v2");
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) && parsed.length ? parsed : NOTES;
+    } catch {
+      return NOTES;
+    }
+  })();
+  const existingOptions: QuickCollectOption[] = isNote
+    ? availableNotes.map((note) => ({
+        name: note.title,
+        image: note.images[0] ?? request.asset.image,
+        count: `${note.images.length}장`,
+        helper: note.date,
+      }))
+    : REFERENCE_BOARDS.map((board) => ({
+        name: board.label,
+        image: board.image,
+        count: `${ASSETS.filter((asset) => boardMatchesAsset(board, asset)).length}개`,
+        helper: "Reference board",
+      }));
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-5 backdrop-blur-[1px]">
+      <div className="w-full max-w-[600px] rounded-xl border border-[#2A2E36] bg-[#0E1011] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.65)]">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[12px] font-bold text-brand-primary">{isNote ? "노트에 추가" : "레퍼런스 보드에 추가"}</p>
+            <h3 className="mt-1 text-[20px] font-bold text-white">{request.asset.title}</h3>
+          </div>
+          <button onClick={onClose} className="rounded-md p-1.5 text-text-tertiary transition hover:bg-[#1A1C20] hover:text-white">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="mb-4 flex gap-2 rounded-lg bg-[#08090B] p-1">
+          {[
+            ["existing", "기존에 추가"],
+            ["new", isNote ? "새 노트" : "새 보드"],
+          ].map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setMode(id as "existing" | "new")}
+              className={`flex-1 rounded-md px-3 py-2 text-[13px] font-bold transition ${
+                mode === id ? "bg-brand-primary text-bg-dark" : "text-text-tertiary hover:text-white"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {mode === "existing" ? (
+          <div className="grid max-h-[360px] gap-2 overflow-y-auto pr-1 custom-scrollbar">
+            {existingOptions.map((option) => (
+              <button
+                key={option.name}
+                onClick={() => onSave("existing", option.name, memo)}
+                className="flex items-center gap-3 rounded-lg border border-[#1F2329] bg-[#141518] p-2.5 text-left transition hover:border-brand-primary/60 hover:bg-[#191B20]"
+              >
+                <img
+                  src={option.image}
+                  alt=""
+                  className="h-12 w-12 shrink-0 rounded-md border border-white/10 object-cover"
+                  referrerPolicy="no-referrer"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[14px] font-bold text-white">{option.name}</span>
+                  <span className="mt-0.5 block text-[11px] font-semibold text-text-tertiary">{option.count}</span>
+                </span>
+                <Plus className="h-4 w-4 shrink-0 text-brand-primary" />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <input
+              value={newName}
+              onChange={(event) => setNewName(event.target.value)}
+              className="w-full rounded-lg border border-[#2A2E36] bg-[#08090B] px-4 py-3 text-[14px] font-bold text-white outline-none focus:border-brand-primary"
+              placeholder={isNote ? "새 노트 이름" : "새 보드 이름"}
+            />
+            <textarea
+              value={memo}
+              onChange={(event) => setMemo(event.target.value)}
+              className="h-28 w-full resize-none rounded-lg border border-[#2A2E36] bg-[#08090B] px-4 py-3 text-[13px] text-white outline-none focus:border-brand-primary"
+              placeholder={isNote ? "옆에 남길 메모를 입력하세요." : "보드 설명이나 참고 메모를 입력하세요."}
+            />
+            <button
+              onClick={() => onSave("new", newName.trim() || (isNote ? "새 노트" : "새 레퍼런스 보드"), memo)}
+              className="w-full rounded-lg bg-brand-primary py-3 text-[14px] font-black text-bg-dark transition hover:bg-brand-hover"
+            >
+              저장하기
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function QuickCollectPanel({
+  isOpen,
+  collections,
+  onOpen,
+  onClose,
+  onOpenDrop,
+  onDropTarget,
+  onNavigate,
+}: {
+  isOpen: boolean;
+  collections: QuickCollections;
+  onOpen: () => void;
+  onClose: () => void;
+  onOpenDrop: (asset: QuickCollectAsset | null) => void;
+  onDropTarget: (target: QuickDropTarget, asset: QuickCollectAsset) => void;
+  onNavigate: (page: PageType) => void;
+}) {
+  return (
+    <>
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: 50, x: "-50%" }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed bottom-8 left-1/2 z-40 transform"
+          >
+            <button
+              onClick={onOpen}
+              onDragOver={(event) => {
+                event.preventDefault();
+                onOpen();
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                onOpenDrop(readDraggedAsset(event));
+              }}
+              className="flex items-center gap-2 rounded-[8px] border border-border-primary/80 bg-bg-secondary/95 px-8 py-3 text-[15px] font-bold tracking-wide text-text-primary shadow-[0_15px_40px_rgba(0,0,0,0.9)] backdrop-blur-md transition-all hover:border-brand-primary hover:text-brand-primary"
+            >
+              <PanelRightOpen className="h-4 w-4" />
+              패널 열기
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 150, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: 150, x: "-50%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 180 }}
+            className="fixed bottom-6 left-1/2 z-50 w-[1536px] max-w-[95%] rounded-[12px] border border-border-primary/50 bg-[#0E1011]/95 p-5 pt-12 shadow-[0_30px_60px_rgba(0,0,0,0.95)] backdrop-blur-xl"
+          >
+            <button
+              onClick={onClose}
+              className="absolute right-3 top-3 z-50 rounded-md p-1.5 text-text-tertiary transition hover:bg-[#1c1d22]/80 hover:text-brand-primary"
+              title="패널 닫기"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+              <div className="xl:col-span-5">
+                <QuickDropCard
+                  title="내 프로젝트"
+                  description="드롭하면 프로젝트 보드에 바로 추가"
+                  icon={Folder}
+                  items={collections.projects}
+                  onNavigate={() => onNavigate("projects")}
+                  onDropAsset={(asset) => onDropTarget("projects", asset)}
+                />
+              </div>
+              <div className="xl:col-span-3">
+                <QuickDropCard
+                  title="최근 노트"
+                  description="기존 노트 또는 새 노트 선택"
+                  icon={FileText}
+                  items={collections.notes}
+                  onNavigate={() => onNavigate("notes")}
+                  onDropAsset={(asset) => onDropTarget("notes", asset)}
+                />
+              </div>
+              <div className="xl:col-span-4">
+                <QuickDropCard
+                  title="레퍼런스 보드"
+                  description="새 보드 저장 또는 기존 보드 추가"
+                  icon={LayoutGrid}
+                  items={collections.references}
+                  onNavigate={() => onNavigate("references")}
+                  onDropAsset={(asset) => onDropTarget("references", asset)}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+function AssetCard({
+  asset,
+  isFavorite,
+  onToggleFavorite,
+  onOpenProduct,
+  onQuickCollect,
+  onAssetDragStart,
+}: {
+  asset: any,
+  key?: any,
+  isFavorite?: boolean,
+  onToggleFavorite?: (e: React.MouseEvent) => void,
+  onOpenProduct?: (asset: any) => void,
+  onQuickCollect?: (target: QuickDropTarget, asset: any) => void,
+  onAssetDragStart?: (asset: any, e: React.DragEvent) => void,
+}) {
   const isMarket = asset.badge === 'M';
   
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      onClick={() => onOpenProduct?.(asset)}
+      draggable
+      onDragStart={(e) => onAssetDragStart?.(asset, e as unknown as React.DragEvent)}
       className="group relative rounded-[6px] overflow-hidden bg-surface-primary border border-border-soft shadow-xl cursor-pointer flex flex-col aspect-[16/10]"
     >
       <div className="relative flex-1 overflow-hidden">
@@ -1518,6 +1880,26 @@ function AssetCard({ asset, isFavorite, onToggleFavorite }: { asset: any, key?: 
               <Eye className="w-3.5 h-3.5" /> {asset.views}
             </div>
           </div>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onQuickCollect?.("references", asset);
+              }}
+              className="rounded-md border border-white/15 bg-black/55 px-2.5 py-1.5 text-[11px] font-bold text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+            >
+              레퍼런스
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onQuickCollect?.("notes", asset);
+              }}
+              className="rounded-md border border-white/15 bg-black/55 px-2.5 py-1.5 text-[11px] font-bold text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+            >
+              메모
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1526,6 +1908,462 @@ function AssetCard({ asset, isFavorite, onToggleFavorite }: { asset: any, key?: 
         <h3 className="text-[15px] font-medium text-text-primary line-clamp-1 leading-tight">{asset.title}</h3>
       </div>
     </motion.div>
+  );
+}
+
+const PRODUCT_DETAIL_DATA: Record<number, {
+  slug: string;
+  imagePrefix: string;
+  title: string;
+  category: string;
+  price: string;
+  originalPrice: string;
+  stats: [string, string, string];
+  tags: string[];
+  description: string;
+  fileInfo: [string, string][];
+  galleryCount: number;
+}> = {
+  1: {
+    slug: 'elf',
+    imagePrefix: 'Discover_in_elf',
+    title: 'Fantasy Elf Archer',
+    category: 'Market',
+    price: '₩70,000',
+    originalPrice: '₩100,000',
+    stats: ['1.2K', '156', '4.8'],
+    tags: ['캐릭터', '몬스터', 'Rigged', 'PBR', '판타지', '궁수'],
+    description: '숲을 배경으로 한 판타지 엘프 궁수 캐릭터입니다. 실루엣이 선명하고 턴어라운드와 와이어 참고가 포함되어 게임, 애니메이션, 컨셉 제작에 바로 활용하기 좋습니다.',
+    fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함 (Humanoid)']],
+    galleryCount: 4,
+  },
+  2: {
+    slug: 'orc',
+    imagePrefix: 'Discover_in_orc',
+    title: 'Fantasy Oak Warrior',
+    category: 'Market',
+    price: '₩90,000',
+    originalPrice: '₩100,000',
+    stats: ['1.2K', '156', '4.8'],
+    tags: ['캐릭터', '몬스터', 'Rigged', 'PBR', '판타지', '오크'],
+    description: '강한 체형과 큰 목재 무기를 중심으로 구성한 오크 전사 캐릭터입니다. 장비 모듈과 턴어라운드 참고가 있어 모델링, 텍스처링, 리깅 단계에 활용할 수 있습니다.',
+    fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함 (Humanoid)']],
+    galleryCount: 5,
+  },
+  3: {
+    slug: 'wyvern',
+    imagePrefix: 'Discover_in_Wyvern',
+    title: 'Wyvern',
+    category: 'Market',
+    price: '₩89,000',
+    originalPrice: '₩120,000',
+    stats: ['1.2K', '156', '4.8'],
+    tags: ['캐릭터', '몬스터', 'Rigged', 'PBR', '판타지', '크리처'],
+    description: '커다란 날개와 긴 꼬리 실루엣이 특징인 와이번 크리처 모델입니다. 비행 포즈, 턴어라운드, 와이어 프레임 참고를 기반으로 고품질 크리처 작업에 적합합니다.',
+    fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함 (Humanoid)']],
+    galleryCount: 4,
+  },
+  4: {
+    slug: 'dinosaur',
+    imagePrefix: 'Discover_in_Dinosaur',
+    title: 'Fantasy Warrior Character',
+    category: 'Market',
+    price: '₩89,000',
+    originalPrice: '₩120,000',
+    stats: ['1.2K', '156', '4.8'],
+    tags: ['동물', '탈것', 'Rigged', 'PBR', '판타지', '사막'],
+    description: '사막과 정글 모두에 어울리는 안장 장착형 판타지 탈것 모델입니다. 측면, 후면, 상단 자료와 와이어 프레임 자료를 포함한 제작 참고형 상세입니다.',
+    fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함']],
+    galleryCount: 4,
+  },
+  5: {
+    slug: 'street',
+    imagePrefix: 'Discover_in_Street',
+    title: 'Street Dunker',
+    category: 'Market',
+    price: '₩50,000',
+    originalPrice: '₩120,000',
+    stats: ['0.2K', '20', '3.5'],
+    tags: ['캐릭터', '남자', '농구', 'PBR', '스포츠'],
+    description: '도심 스트릿 농구 문화를 기반으로 제작된 캐릭터입니다. 스포츠웨어 디테일과 자연스러운 체형 비율을 살려 캐주얼 게임, 영상, 애니메이션에 활용 가능합니다.',
+    fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함 (Humanoid)']],
+    galleryCount: 4,
+  },
+  6: {
+    slug: 'rhino',
+    imagePrefix: 'Discover_in_Rhino',
+    title: 'Rhinoceros Warrior',
+    category: 'Market',
+    price: '₩75,000',
+    originalPrice: '₩120,000',
+    stats: ['1.2K', '156', '4.8'],
+    tags: ['캐릭터', '몬스터', 'Rigged', 'PBR', '판타지', '크리처'],
+    description: '묵직한 체형의 코뿔소 전사 캐릭터입니다. 나무와 금속 장비가 섞인 판타지 방어구 구성으로 액션 게임용 적 캐릭터나 보스 캐릭터에 어울립니다.',
+    fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함 (Humanoid)']],
+    galleryCount: 5,
+  },
+  7: {
+    slug: 'posco_a',
+    imagePrefix: 'Discover_in_Posco1',
+    title: 'My Posco',
+    category: 'Art',
+    price: '문의',
+    originalPrice: '',
+    stats: ['1.2K', '156', '4.8'],
+    tags: ['산업', '건축', '모듈', 'PBR', '기업', '시뮬레이션'],
+    description: '산업 설비와 조선, 건축 모듈을 한 화면에서 확인할 수 있는 포스코 스타일 3D 에셋 구성입니다. 기업 교육, 설명형 콘텐츠, 산업 시뮬레이션에 어울립니다.',
+    fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함']],
+    galleryCount: 11,
+  },
+  8: {
+    slug: 'posco_b',
+    imagePrefix: 'Discover_in_Posco2',
+    title: 'My Posco',
+    category: 'Art',
+    price: '문의',
+    originalPrice: '',
+    stats: ['1.2K', '156', '4.8'],
+    tags: ['산업', '건축', '철골', 'PBR', '기업', '시뮬레이션'],
+    description: '철골 구조물, 와이어, 주택 구조, 건축 모듈 중심의 포스코 스타일 3D 에셋 구성입니다. 단계별 산업 모델 소개와 기술 콘텐츠에 적합합니다.',
+    fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함']],
+    galleryCount: 11,
+  },
+};
+
+const PRODUCT_FALLBACK_IMAGE_IDS: Record<number, number[]> = {
+  1: [1, 16, 17, 25],
+  2: [2, 42, 6, 41],
+  3: [3, 38, 53, 55],
+  4: [4, 26, 43, 27],
+  5: [5, 20, 21, 39],
+  6: [6, 37, 31, 38],
+  7: [7, 8, 12, 13, 14, 15, 28, 29, 32, 52],
+  8: [8, 7, 13, 14, 15, 28, 29, 32, 52, 57],
+};
+
+const PRODUCT_IMAGE_ORDER: Record<number, number[]> = {
+  1: [1, 2, 3, 4],
+  2: [1, 2, 3, 4, 5],
+  3: [4, 1, 2, 3],
+  4: [4, 1, 2, 3],
+  5: [4, 1, 2, 3],
+  6: [5, 1, 2, 3, 4],
+  7: [11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  8: [11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+};
+
+function productFallbackImage(assetId: number, order: number, fallback: string) {
+  const ids = PRODUCT_FALLBACK_IMAGE_IDS[assetId] ?? [assetId];
+  const fallbackAsset = ASSETS.find((item) => item.id === ids[(order - 1) % ids.length]);
+  return fallbackAsset?.image ?? fallback;
+}
+
+function detailImageCandidates(product: { slug: string; imagePrefix: string }, assetId: number, index: number) {
+  const padded = String(index).padStart(2, '0');
+  return [
+    `/images/${product.imagePrefix}${padded}.png`,
+    `/images/${product.imagePrefix}${index}.png`,
+    `/images/Discover_in_${product.slug}_${index}.png`,
+    `/images/Discover_in_${product.slug}_${padded}.png`,
+    `/images/Discover_in_${assetId}_${index}.png`,
+    `/images/Discover_in_${assetId}_${padded}.png`,
+    `/images/Discover_in_${product.slug}.png`,
+  ];
+}
+
+function SmartProductImage({
+  candidates,
+  fallback,
+  alt,
+  className,
+}: {
+  candidates: string[];
+  fallback: string;
+  alt: string;
+  className: string;
+}) {
+  const sources = [...candidates, fallback];
+  const [sourceIndex, setSourceIndex] = useState(0);
+  const src = sources[Math.min(sourceIndex, sources.length - 1)];
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      referrerPolicy="no-referrer"
+      className={className}
+      onError={() => {
+        setSourceIndex((prev) => Math.min(prev + 1, sources.length - 1));
+      }}
+    />
+  );
+}
+
+function ProductDetailPage({
+  assetId,
+  onNavigateHome,
+  onOpenProduct,
+  onQuickCollect,
+  onAssetDragStart,
+}: {
+  assetId: number;
+  onNavigateHome: () => void;
+  onOpenProduct: (assetId: number) => void;
+  onQuickCollect?: (target: QuickDropTarget, asset: any) => void;
+  onAssetDragStart?: (asset: any, e: React.DragEvent) => void;
+}) {
+  const asset = ASSETS.find((item) => item.id === assetId) ?? ASSETS[0];
+  const product = PRODUCT_DETAIL_DATA[asset.id] ?? PRODUCT_DETAIL_DATA[1];
+  const recommended = [5, 2, 1, 6]
+    .map((id) => ASSETS.find((item) => item.id === id))
+    .filter(Boolean) as typeof ASSETS;
+
+  const gallery = PRODUCT_IMAGE_ORDER[asset.id] ?? Array.from({ length: product.galleryCount }, (_, index) => index + 1);
+  const [heroOrder, ...detailOrders] = gallery;
+
+  return (
+    <main className="flex-1 bg-[#08090B]">
+      <div className="mx-auto w-full max-w-[2560px] px-4 py-8 sm:px-6 2xl:px-8 min-[2200px]:px-10">
+        <button
+          onClick={onNavigateHome}
+          className="mb-5 inline-flex items-center gap-2 text-[13px] font-bold text-text-tertiary transition hover:text-brand-primary"
+        >
+          <ChevronRight className="h-4 w-4 rotate-180" />
+          Discover로 돌아가기
+        </button>
+
+        <div
+          draggable
+          onDragStart={(event) => onAssetDragStart?.(asset, event)}
+          className="group relative mb-6 overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D]"
+        >
+          <SmartProductImage
+            candidates={detailImageCandidates(product, asset.id, heroOrder)}
+            fallback={productFallbackImage(asset.id, heroOrder, asset.image)}
+            alt={product.title}
+            className="h-auto w-full object-contain"
+          />
+          <div className="absolute right-4 top-4 flex gap-2 opacity-0 transition group-hover:opacity-100">
+            <button
+              onClick={(event) => {
+                event.stopPropagation();
+                onQuickCollect?.("references", asset);
+              }}
+              className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[12px] font-bold text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+            >
+              레퍼런스
+            </button>
+            <button
+              onClick={(event) => {
+                event.stopPropagation();
+                onQuickCollect?.("notes", asset);
+              }}
+              className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[12px] font-bold text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+            >
+              메모
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_360px] min-[2200px]:grid-cols-[minmax(0,1fr)_420px]">
+          <section className="min-w-0 space-y-3">
+            {detailOrders.map((order) => (
+              <div
+                key={order}
+                draggable
+                onDragStart={(event) => onAssetDragStart?.(asset, event)}
+                className="group relative overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D]"
+              >
+                <SmartProductImage
+                  candidates={detailImageCandidates(product, asset.id, order)}
+                  fallback={productFallbackImage(asset.id, order, asset.image)}
+                  alt={`${product.title} detail ${order}`}
+                  className="h-auto w-full object-contain"
+                />
+                <div className="absolute right-4 top-4 flex gap-2 opacity-0 transition group-hover:opacity-100">
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onQuickCollect?.("references", asset);
+                    }}
+                    className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[12px] font-bold text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+                  >
+                    레퍼런스
+                  </button>
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onQuickCollect?.("notes", asset);
+                    }}
+                    className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[12px] font-bold text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+                  >
+                    메모
+                  </button>
+                </div>
+              </div>
+            ))}
+          </section>
+
+          <aside className="xl:sticky xl:top-[92px] xl:self-start">
+            <div className="flex flex-col gap-5">
+              <ProductPurchasePanel asset={asset} product={product} />
+              <ProductLicensePanel />
+              <ProductStatsPanel stats={product.stats} />
+              <ProductInfoPanel product={product} />
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <section className="border-t border-[#1F2329] px-6 py-16">
+        <div className="mx-auto max-w-[2560px]">
+          <h2 className="mb-8 text-[24px] font-bold text-white">추천 모델링</h2>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {recommended.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => onOpenProduct(item.id)}
+                draggable
+                onDragStart={(event) => onAssetDragStart?.(item, event)}
+                className="overflow-hidden rounded-lg border border-[#1F2329] bg-[#181A1F] text-left transition hover:border-brand-primary/50"
+              >
+                <img src={item.image} alt={item.title} className="aspect-[16/10] w-full object-cover" referrerPolicy="no-referrer" />
+                <div className="p-3">
+                  <span className="mb-2 inline-flex rounded-sm bg-brand-primary px-1.5 py-0.5 text-[10px] font-bold text-bg-dark">
+                    Market
+                  </span>
+                  <h3 className="text-[14px] font-bold text-white line-clamp-1">{item.id === 5 ? 'Street Dunker' : 'Fantasy Character 1'}</h3>
+                  <p className="mt-1 text-[12px] text-text-tertiary">고품질 3D 캐릭터 모델</p>
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-[14px] font-bold text-brand-primary">{item.id === 5 ? '₩89,000' : '₩62K'}</span>
+                    <span className="flex items-center gap-1 text-[11px] text-text-tertiary">
+                      <Heart className="h-3 w-3" />
+                      485
+                    </span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function ProductPurchasePanel({ asset, product }: { asset: any; product: typeof PRODUCT_DETAIL_DATA[number] }) {
+  return (
+    <>
+      <div className="px-1">
+        <span className="mb-1 block text-[12px] font-bold text-brand-primary">{product.category}</span>
+        <h1 className="text-[24px] font-bold text-white">{product.title}</h1>
+      </div>
+
+      <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-4">
+        <p className="mb-4 text-[14px] font-bold text-white">Artist</p>
+        <div className="flex items-center gap-3">
+          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=kimjihwan" alt="" className="h-10 w-10 rounded-full bg-white" />
+          <div>
+            <p className="text-[13px] font-bold text-white">Kim ji hwan</p>
+            <p className="text-[12px] text-text-tertiary">3D Character Artist</p>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2 text-[12px] text-text-tertiary">
+          <span>작품 수</span>
+          <span className="text-right text-text-secondary">8개</span>
+          <span>팔로워</span>
+          <span className="text-right text-text-secondary">0.3K</span>
+        </div>
+        <button className="mt-4 w-full rounded-md bg-[#3A3A3A] py-2.5 text-[13px] font-bold text-white transition hover:bg-[#4A4A4A]">
+          팔로우
+        </button>
+      </div>
+
+      <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-4">
+        <div className="mb-4 flex items-end gap-3">
+          <span className="text-[24px] font-black text-brand-primary">{product.price}</span>
+          {product.originalPrice && <span className="pb-1 text-[13px] text-text-tertiary line-through">{product.originalPrice}</span>}
+        </div>
+        <button className="mb-2 w-full rounded-md bg-brand-primary py-3 text-[14px] font-black text-bg-dark transition hover:bg-brand-hover">
+          구매하기
+        </button>
+        <button className="mb-3 w-full rounded-md bg-[#333] py-3 text-[13px] font-bold text-white transition hover:bg-[#444]">
+          장바구니에 추가
+        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button className="flex items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[12px] font-bold text-text-secondary hover:text-white">
+            <Heart className="h-4 w-4 text-brand-primary" />
+            568
+          </button>
+          <button className="flex items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[12px] font-bold text-text-secondary hover:text-white">
+            <ShoppingBag className="h-4 w-4" />
+            공유
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ProductLicensePanel() {
+  return (
+    <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-5">
+      <h2 className="mb-4 text-[15px] font-bold text-white">라이센스</h2>
+      {['상업적 사용 가능', '무제한 다운로드', 'AI 변환 가능'].map((item) => (
+        <div key={item} className="mb-4 last:mb-0">
+          <p className="text-[13px] font-bold text-white">{item}</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-text-tertiary">게임, 영상, 광고 등 모든 상업적 프로젝트에 사용 가능합니다.</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProductStatsPanel({ stats }: { stats: [string, string, string] }) {
+  return (
+    <div className="grid grid-cols-3 rounded-lg border border-[#1F2329] bg-[#141518] p-5 text-center">
+      {[
+        ['조회수', stats[0]],
+        ['구매', stats[1]],
+        ['평점', stats[2]],
+      ].map(([label, value]) => (
+        <div key={label}>
+          <p className="text-[20px] font-black text-white">{value}</p>
+          <p className="mt-1 text-[12px] text-text-tertiary">{label}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProductInfoPanel({ product }: { product: typeof PRODUCT_DETAIL_DATA[number] }) {
+  return (
+    <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-5">
+      <h2 className="mb-4 text-[15px] font-bold text-white">파일 정보</h2>
+      <div className="space-y-3 border-b border-[#2A2E36] pb-5">
+        {product.fileInfo.map(([label, value]) => (
+          <div key={label} className="flex justify-between gap-4 text-[12px]">
+            <span className="text-text-tertiary">{label}</span>
+            <span className="text-right font-semibold text-text-secondary">{value}</span>
+          </div>
+        ))}
+      </div>
+      <h2 className="mb-3 mt-5 text-[15px] font-bold text-white">상세 설명</h2>
+      <p className="text-[12px] leading-relaxed text-text-secondary">{product.description}</p>
+      <h2 className="mb-3 mt-5 text-[15px] font-bold text-white">태그</h2>
+      <div className="flex flex-wrap gap-2">
+        {product.tags.map((tag) => (
+          <span key={tag} className="rounded-full border border-[#3A404F] px-2.5 py-1 text-[11px] font-bold text-text-secondary">
+            {tag}
+          </span>
+        ))}
+      </div>
+      <h2 className="mb-3 mt-5 text-[15px] font-bold text-white">용도</h2>
+      <div className="flex gap-3 text-text-tertiary">
+        <Box className="h-5 w-5" />
+        <Video className="h-5 w-5" />
+      </div>
+    </div>
   );
 }
 
@@ -1570,7 +2408,23 @@ function SidebarNote({ title, tags }: any) {
 
 // --- Sections ---
 
-function DiscoverSection({ isSidebarOpen, favorites, toggleFavorite, activeNav }: { isSidebarOpen: boolean, favorites: number[], toggleFavorite: (id: number) => void, activeNav?: 'market' | 'art' | 'studio' | 'support' | null }) {
+function DiscoverSection({
+  isSidebarOpen,
+  favorites,
+  toggleFavorite,
+  activeNav,
+  onOpenProduct,
+  onQuickCollect,
+  onAssetDragStart,
+}: {
+  isSidebarOpen: boolean,
+  favorites: number[],
+  toggleFavorite: (id: number) => void,
+  activeNav?: 'market' | 'art' | 'studio' | 'support' | null,
+  onOpenProduct?: (assetId: number) => void,
+  onQuickCollect?: (target: QuickDropTarget, asset: any) => void,
+  onAssetDragStart?: (asset: any, e: React.DragEvent) => void,
+}) {
   const [activeTab, setActiveTab] = useState('추천');
   const [showFilters, setShowFilters] = useState(false);
   
@@ -1924,7 +2778,7 @@ function DiscoverSection({ isSidebarOpen, favorites, toggleFavorite, activeNav }
         )}
       </AnimatePresence>
 
-      <div className={`grid gap-3 transition-all duration-300 ${
+      <div className={`grid gap-1.5 transition-all duration-300 ${
         isSidebarOpen 
           ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" 
           : "grid-cols-2 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
@@ -1934,7 +2788,19 @@ function DiscoverSection({ isSidebarOpen, favorites, toggleFavorite, activeNav }
           let displayedAsset = { ...asset };
           
           
-          return <AssetCard key={displayedAsset.id} asset={displayedAsset} isFavorite={favorites.includes(displayedAsset.id)} onToggleFavorite={(e) => { e.stopPropagation(); toggleFavorite(displayedAsset.id); }} />;
+          return (
+            <AssetCard
+              key={displayedAsset.id}
+              asset={displayedAsset}
+              isFavorite={favorites.includes(displayedAsset.id)}
+              onToggleFavorite={(e) => { e.stopPropagation(); toggleFavorite(displayedAsset.id); }}
+              onOpenProduct={() => {
+                if (displayedAsset.id <= 8) onOpenProduct?.(displayedAsset.id);
+              }}
+              onQuickCollect={onQuickCollect}
+              onAssetDragStart={onAssetDragStart}
+            />
+          );
         })}
       </div>
       <div className="flex justify-center mt-8 py-6 pb-20">
@@ -1968,19 +2834,19 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
         <div className="divide-y divide-[#161618]">
           <SidebarProject 
             title="판타지 성 전체 씬" 
-            thumb="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2036.png" 
+            thumb="/images/work_%2036.png" 
             status="Modeling" 
             progress={75} 
           />
           <SidebarProject 
             title="사이버펑크 시티" 
-            thumb="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2037.png" 
+            thumb="/images/work_%2037.png" 
             status="Image Gen" 
             progress={45} 
           />
           <SidebarProject 
             title="우주 전함 컨셉" 
-            thumb="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2038.png" 
+            thumb="/images/work_%2038.png" 
             status="Concept" 
             progress={90} 
           />
@@ -2081,13 +2947,31 @@ function ScrollToTopButton() {
 
 // --- Main App ---
 
-export type PageType = 'home' | 'uploads' | 'purchases' | 'favorites' | 'settings' | 'references' | 'projects' | 'notes' | 'note-editor' | 'studio' | 'support' | 'full_workflow' | 'full_workflow_chat' | 'turnaround';
+export type PageType = 'home' | 'uploads' | 'purchases' | 'favorites' | 'settings' | 'references' | 'projects' | 'notes' | 'note-editor' | 'studio' | 'support' | 'full_workflow' | 'full_workflow_chat' | 'turnaround' | 'modeling_generation' | 'product_detail';
 
 export default function App() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   
-  const [currentPage, setCurrentPage] = useState<PageType>('home');
+  const [currentPage, setCurrentPage] = useState<PageType>(() => {
+    const rawHash = window.location.hash.replace('#', '');
+    const hashPage = rawHash.split('/')[0] as PageType;
+    const validPages: PageType[] = ['home', 'uploads', 'purchases', 'favorites', 'settings', 'references', 'projects', 'notes', 'note-editor', 'studio', 'support', 'full_workflow', 'full_workflow_chat', 'turnaround', 'modeling_generation', 'product_detail'];
+    return validPages.includes(hashPage) ? hashPage : 'home';
+  });
   const [activeNav, setActiveNav] = useState<'market' | 'art' | 'studio' | 'support' | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<number>(() => {
+    const hashProductId = Number(window.location.hash.replace('#', '').split('/')[1]);
+    if (hashProductId >= 1 && hashProductId <= 8) return hashProductId;
+    const saved = Number(localStorage.getItem('neopoly_selected_product_id'));
+    return saved >= 1 && saved <= 8 ? saved : 1;
+  });
+
+  useEffect(() => {
+    const nextHash = currentPage === 'home' ? '' : currentPage === 'product_detail' ? `#product_detail/${selectedProductId}` : `#${currentPage}`;
+    if (window.location.hash !== nextHash) {
+      history.replaceState(null, '', `${window.location.pathname}${nextHash}`);
+    }
+  }, [currentPage, selectedProductId]);
 
   // Initialize dummy UserProfile (usually fetched from an API or local storage in reality)
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
@@ -2110,9 +2994,84 @@ export default function App() {
   // Dummy state proxies required by UserProfilePage
   const [assets, setAssets] = useState<any[]>([]); // UserProfilePage will use this if needed, but ASSETS constant is global too.
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [isAssetDragging, setIsAssetDragging] = useState(false);
+  const [isPanelDropMode, setIsPanelDropMode] = useState(false);
+  const [quickCollections, setQuickCollections] = useState<QuickCollections>(() => {
+    try {
+      const saved = localStorage.getItem(QUICK_COLLECTIONS_KEY);
+      return saved ? { ...emptyQuickCollections(), ...JSON.parse(saved) } : emptyQuickCollections();
+    } catch {
+      return emptyQuickCollections();
+    }
+  });
+  const [quickDialog, setQuickDialog] = useState<{ target: "notes" | "references"; asset: QuickCollectAsset } | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem(QUICK_COLLECTIONS_KEY, JSON.stringify(quickCollections));
+  }, [quickCollections]);
+
+  useEffect(() => {
+    const stopDragging = () => setIsAssetDragging(false);
+    window.addEventListener("dragend", stopDragging);
+    window.addEventListener("drop", stopDragging);
+    return () => {
+      window.removeEventListener("dragend", stopDragging);
+      window.removeEventListener("drop", stopDragging);
+    };
+  }, []);
 
   const toggleFavorite = (id: number) => {
     setFavorites(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
+  };
+
+  const addQuickCollection = (
+    target: QuickDropTarget,
+    asset: QuickCollectAsset,
+    groupName?: string,
+    memo?: string,
+  ) => {
+    const nextAsset = { ...asset, addedAt: Date.now(), groupName, memo };
+    setQuickCollections((prev) => ({
+      ...prev,
+      [target]: [nextAsset, ...prev[target]].slice(0, 12),
+    }));
+  };
+
+  const handleQuickCollect = (target: QuickDropTarget, asset: any) => {
+    if (target === "notes") {
+      setCurrentPage("notes");
+      return;
+    }
+    if (target === "references") {
+      setCurrentPage("references");
+      return;
+    }
+  };
+
+  const handleDropTarget = (target: QuickDropTarget, asset: QuickCollectAsset) => {
+    setIsPanelDropMode(true);
+    setIsPanelOpen(true);
+    if (target === "projects") {
+      addQuickCollection("projects", asset, "수집 프로젝트");
+      return;
+    }
+    setQuickDialog({ target, asset });
+  };
+
+  const handleAssetDragStart = (asset: any, event: React.DragEvent) => {
+    const quickAsset = toQuickCollectAsset(asset);
+    setIsAssetDragging(true);
+    event.dataTransfer.effectAllowed = "copy";
+    event.dataTransfer.setData(QUICK_ASSET_MIME, JSON.stringify(quickAsset));
+    event.dataTransfer.setData("application/json", JSON.stringify(quickAsset));
+    event.dataTransfer.setData("text/plain", quickAsset.image);
+  };
+
+  const openProductDetail = (assetId: number) => {
+    setSelectedProductId(assetId);
+    localStorage.setItem('neopoly_selected_product_id', String(assetId));
+    setCurrentPage('product_detail');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -2139,6 +3098,16 @@ export default function App() {
         <AIStudioPage onNavigate={(page) => setCurrentPage(page as PageType)} />
       ) : currentPage === 'turnaround' ? (
         <TurnaroundPage onNavigate={(page) => setCurrentPage(page as PageType)} />
+      ) : currentPage === 'modeling_generation' ? (
+        <ModelingGenerationPage onNavigate={(page) => setCurrentPage(page as PageType)} />
+      ) : currentPage === 'product_detail' ? (
+        <ProductDetailPage
+          assetId={selectedProductId}
+          onNavigateHome={() => setCurrentPage('home')}
+          onOpenProduct={openProductDetail}
+          onQuickCollect={handleQuickCollect}
+          onAssetDragStart={handleAssetDragStart}
+        />
       ) : currentPage === 'support' ? (
         <SupportPage />
       ) : currentPage === 'full_workflow' ? (
@@ -2153,14 +3122,22 @@ export default function App() {
             <div className="flex flex-col gap-8 xl:gap-12">
               <div className="flex-1 min-w-0 space-y-6">
                 <CategoryNav />
-                <DiscoverSection isSidebarOpen={false} favorites={favorites} toggleFavorite={toggleFavorite} activeNav={activeNav} />
+                <DiscoverSection
+                  isSidebarOpen={false}
+                  favorites={favorites}
+                  toggleFavorite={toggleFavorite}
+                  activeNav={activeNav}
+                  onOpenProduct={openProductDetail}
+                  onQuickCollect={handleQuickCollect}
+                  onAssetDragStart={handleAssetDragStart}
+                />
               </div>
             </div>
           </div>
 
           {/* Floating Panel Open Button */}
         <AnimatePresence>
-          {!isPanelOpen && (
+          {!isAssetDragging && !isPanelDropMode && !isPanelOpen && (
             <motion.div
               initial={{ opacity: 0, y: 50, x: "-50%" }}
               animate={{ opacity: 1, y: 0, x: "-50%" }}
@@ -2169,7 +3146,10 @@ export default function App() {
               className="fixed bottom-8 left-1/2 z-40 transform"
             >
               <button
-                onClick={() => setIsPanelOpen(true)}
+                onClick={() => {
+                  setIsPanelDropMode(false);
+                  setIsPanelOpen(true);
+                }}
                 className="flex items-center gap-2 px-8 py-3 bg-bg-secondary/95 backdrop-blur-md rounded-[8px] text-[15px] font-bold text-text-primary border border-border-primary/80 hover:border-brand-primary hover:text-brand-primary transition-all shadow-[0_15px_40px_rgba(0,0,0,0.9)] cursor-pointer tracking-wide"
               >
                 패널 열기
@@ -2180,7 +3160,7 @@ export default function App() {
 
         {/* Bottom Floating Panel */}
         <AnimatePresence>
-          {isPanelOpen && (
+          {!isAssetDragging && !isPanelDropMode && isPanelOpen && (
             <motion.div
               initial={{ opacity: 0, y: 150, x: "-50%" }}
               animate={{ opacity: 1, y: 0, x: "-50%" }}
@@ -2212,7 +3192,7 @@ export default function App() {
                     {/* Project 1 */}
                     <div className="bg-surface-primary/80 hover:bg-surface-primary border border-border-primary/20 rounded-[10px] p-2.5 transition-all hover:scale-[1.005] flex flex-col gap-3 group cursor-pointer hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
                       <div className="w-full aspect-[16/10] rounded-[6px] overflow-hidden bg-bg-secondary relative border border-border-primary/10">
-                        <img src="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2045.png" alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
+                        <img src="/images/work_%2045.png" alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
                       </div>
                       <div className="space-y-1.5 min-w-0">
                         <p className="text-[15px] font-semibold text-text-primary group-hover:text-brand-primary transition-colors truncate">판타지 성 전체 씬</p>
@@ -2229,7 +3209,7 @@ export default function App() {
                     {/* Project 2 */}
                     <div className="bg-surface-primary/80 hover:bg-surface-primary border border-border-primary/20 rounded-[10px] p-2.5 transition-all hover:scale-[1.005] flex flex-col gap-3 group cursor-pointer hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
                       <div className="w-full aspect-[16/10] rounded-[6px] overflow-hidden bg-bg-secondary relative border border-border-primary/10">
-                        <img src="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_46.png" alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
+                        <img src="/images/work_46.png" alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
                       </div>
                       <div className="space-y-1.5 min-w-0">
                         <p className="text-[15px] font-semibold text-text-primary group-hover:text-brand-primary transition-colors truncate">사이버펑크 시티</p>
@@ -2246,7 +3226,7 @@ export default function App() {
                     {/* Project 3 */}
                     <div className="bg-surface-primary/80 hover:bg-surface-primary border border-border-primary/20 rounded-[10px] p-2.5 transition-all hover:scale-[1.005] flex flex-col gap-3 group cursor-pointer hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
                       <div className="w-full aspect-[16/10] rounded-[6px] overflow-hidden bg-bg-secondary relative border border-border-primary/10">
-                        <img src="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_47.png" alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
+                        <img src="/images/work_47.png" alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
                       </div>
                       <div className="space-y-1.5 min-w-0">
                         <p className="text-[15px] font-semibold text-text-primary group-hover:text-brand-primary transition-colors truncate">우주 전함 컨셉</p>
@@ -2313,8 +3293,8 @@ export default function App() {
                   
                   <div className="grid grid-cols-1 gap-3">
                     {[
-                      { name: '판타지 성', count: '128 items', tag: '3D Assets', img: 'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2043.png' },
-                      { name: '다크 판타지', count: '318 items', tag: 'Concept', img: 'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2044.png' },
+                      { name: '판타지 성', count: '128 items', tag: '3D Assets', img: '/images/work_%2043.png' },
+                      { name: '다크 판타지', count: '318 items', tag: 'Concept', img: '/images/work_%2044.png' },
                     ].map((item) => (
                       <div 
                         key={item.name} 
@@ -2352,8 +3332,43 @@ export default function App() {
       </main>
       )}
 
+      {(currentPage === 'product_detail' || (currentPage === 'home' && (isAssetDragging || isPanelDropMode))) && (
+        <QuickCollectPanel
+          isOpen={isPanelOpen}
+          collections={quickCollections}
+          onOpen={() => setIsPanelOpen(true)}
+          onClose={() => {
+            setIsPanelOpen(false);
+            setIsPanelDropMode(false);
+          }}
+          onOpenDrop={() => {
+            setIsPanelDropMode(true);
+            setIsPanelOpen(true);
+          }}
+          onDropTarget={handleDropTarget}
+          onNavigate={(page) => {
+            setIsPanelOpen(false);
+            setIsPanelDropMode(false);
+            setCurrentPage(page);
+          }}
+        />
+      )}
+
+      <QuickCollectDialog
+        request={quickDialog}
+        onClose={() => setQuickDialog(null)}
+        onSave={(mode, groupName, memo) => {
+          if (!quickDialog) return;
+          const suffix = mode === "new" ? "새로 저장" : "기존에 추가";
+          addQuickCollection(quickDialog.target, quickDialog.asset, `${groupName} · ${suffix}`, memo);
+          setQuickDialog(null);
+          setIsPanelDropMode(true);
+          setIsPanelOpen(true);
+        }}
+      />
+
       {/* Premium Multi-Column Footer (Custom designed in Neo-Poly aesthetic matching reference screenshot) */}
-      {currentPage !== 'projects' && currentPage !== 'notes' && currentPage !== 'note-editor' && currentPage !== 'uploads' && currentPage !== 'full_workflow' && currentPage !== 'full_workflow_chat' && currentPage !== 'studio' && currentPage !== 'turnaround' && (
+      {currentPage !== 'projects' && currentPage !== 'notes' && currentPage !== 'note-editor' && currentPage !== 'uploads' && currentPage !== 'full_workflow' && currentPage !== 'full_workflow_chat' && currentPage !== 'studio' && currentPage !== 'turnaround' && currentPage !== 'modeling_generation' && (
         <footer className="bg-[#08080a] border-t border-border-soft/60 pt-16 pb-12 px-6">
           <div className="max-w-[2006px] mx-auto">
             {/* Main Footer columns */}
@@ -2462,5 +3477,3 @@ export default function App() {
     </div>
   );
 }
-
-

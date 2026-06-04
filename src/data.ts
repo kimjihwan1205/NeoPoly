@@ -22,7 +22,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2011.png",
+    image: "/images/work_%2011.png",
     badge: 'M'
   },
   {
@@ -32,7 +32,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=v1',
     likes: '754',
     views: '52',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2012.png",
+    image: "/images/work_%2012.png",
     badge: 'M'
   },
   {
@@ -42,7 +42,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
     likes: '1.1K',
     views: '87',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%203.png",
+    image: "/images/work_%203.png",
     badge: 'A'
   },
   {
@@ -52,7 +52,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
     likes: '982',
     views: '76',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%204.png",
+    image: "/images/work_%204.png",
     badge: 'M'
   },
   {
@@ -62,7 +62,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=v2',
     likes: '1.1K',
     views: '89',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%205.png",
+    image: "/images/work_%205.png",
     badge: 'M'
   },
   {
@@ -72,7 +72,7 @@ export const ASSETS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=6',
     likes: '2.3K',
     views: '189',
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%206.png",
+    image: "/images/work_%206.png",
     badge: 'M'
   },
 ];

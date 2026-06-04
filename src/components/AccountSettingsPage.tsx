@@ -90,7 +90,7 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
             <div className="flex flex-col gap-4 min-w-0">
               <span className="text-[15px] font-bold text-neutral-100">배너 이미지</span>
               <div className="relative h-[150px] w-full rounded-[14px] border border-[#1F2329] bg-[#141518] overflow-hidden group">
-                <img referrerPolicy="no-referrer" src="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2016.png" alt="Banner" className="w-full h-full object-cover opacity-70" />
+                <img referrerPolicy="no-referrer" src="/images/work_%2016.png" alt="Banner" className="w-full h-full object-cover opacity-70" />
                 <button className="absolute bottom-3 right-3 w-[34px] h-[34px] rounded-full border border-[#1F2329] bg-[#0A0B0D]/80 backdrop-blur flex items-center justify-center text-neutral-300 hover:text-white hover:bg-[#141518] transition-all">
                   <Camera className="w-[16px] h-[16px]" strokeWidth={2} />
                 </button>
@@ -242,7 +242,7 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
 
           <div className="rounded-2xl border border-[#1F2329] bg-[#0A0B0D] overflow-hidden flex flex-col shadow-xl">
             <div className="h-[140px] bg-[#141518] relative">
-              <img referrerPolicy="no-referrer" src="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2016.png" alt="Banner" className="w-full h-full object-cover opacity-80" />
+              <img referrerPolicy="no-referrer" src="/images/work_%2016.png" alt="Banner" className="w-full h-full object-cover opacity-80" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0A0B0D] via-[#0A0B0D]/20 flex"></div>
             </div>
             
@@ -300,13 +300,13 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="aspect-[4/5] rounded-xl bg-[#141518] overflow-hidden border border-[#1F2329] group cursor-pointer shadow-sm">
-                    <img referrerPolicy="no-referrer" src="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%201.png" className="w-full h-full object-cover opacity-85 group-hover:scale-105 group-hover:opacity-100 transition-all duration-300" />
+                    <img referrerPolicy="no-referrer" src="/images/work_%201.png" className="w-full h-full object-cover opacity-85 group-hover:scale-105 group-hover:opacity-100 transition-all duration-300" />
                   </div>
                   <div className="aspect-[4/5] rounded-xl bg-[#141518] overflow-hidden border border-[#1F2329] group cursor-pointer shadow-sm">
-                    <img referrerPolicy="no-referrer" src="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%205.png" className="w-full h-full object-cover opacity-85 group-hover:scale-105 group-hover:opacity-100 transition-all duration-300" />
+                    <img referrerPolicy="no-referrer" src="/images/work_%205.png" className="w-full h-full object-cover opacity-85 group-hover:scale-105 group-hover:opacity-100 transition-all duration-300" />
                   </div>
                   <div className="aspect-[4/5] rounded-xl bg-[#141518] overflow-hidden border border-[#1F2329] group cursor-pointer shadow-sm">
-                    <img referrerPolicy="no-referrer" src="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%209.png" className="w-full h-full object-cover opacity-85 group-hover:scale-105 group-hover:opacity-100 transition-all duration-300" />
+                    <img referrerPolicy="no-referrer" src="/images/work_%209.png" className="w-full h-full object-cover opacity-85 group-hover:scale-105 group-hover:opacity-100 transition-all duration-300" />
                   </div>
                 </div>
               </div>

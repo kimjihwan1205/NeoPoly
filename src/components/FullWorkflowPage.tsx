@@ -32,6 +32,7 @@ import {
   Wand2,
   ChevronLeft,
   Puzzle,
+  Box,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import FullWorkflowIntroPage from "./FullWorkflowIntroPage";
@@ -57,7 +58,7 @@ const PROJECTS = [
     status: "In Progress",
     statusColor: COLORS.gold,
     date: "2024.05.20",
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%202.png",
+    image: "/images/work_%202.png",
   },
   {
     id: 2,
@@ -65,7 +66,7 @@ const PROJECTS = [
     status: "In Progress",
     statusColor: COLORS.gold,
     date: "2024.05.18",
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%206.png",
+    image: "/images/work_%206.png",
   },
   {
     id: 3,
@@ -73,7 +74,7 @@ const PROJECTS = [
     status: "Ready",
     statusColor: "#60A5FA",
     date: "2024.05.15",
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%207.png",
+    image: "/images/work_%207.png",
   },
   {
     id: 4,
@@ -81,7 +82,7 @@ const PROJECTS = [
     status: "Published",
     statusColor: "#4ADE80",
     date: "2024.05.10",
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%203.png",
+    image: "/images/work_%203.png",
   },
   {
     id: 5,
@@ -89,7 +90,7 @@ const PROJECTS = [
     status: "Draft",
     statusColor: COLORS.muted,
     date: "2024.05.08",
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%204.png",
+    image: "/images/work_%204.png",
   },
   {
     id: 6,
@@ -97,7 +98,7 @@ const PROJECTS = [
     status: "In Progress",
     statusColor: COLORS.gold,
     date: "2024.05.05",
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%205.png",
+    image: "/images/work_%205.png",
   },
   {
     id: 7,
@@ -105,7 +106,7 @@ const PROJECTS = [
     status: "Concept",
     statusColor: COLORS.muted,
     date: "2024.05.01",
-    image: "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%209.png",
+    image: "/images/work_%209.png",
   },
 ];
 
@@ -208,6 +209,34 @@ const INITIAL_MESSAGES: MessageInfo[] = [
   },
 ];
 
+const ORC_MESSAGES: MessageInfo[] = [
+  {
+    id: "orc-1",
+    role: "assistant",
+    content: "오크 전사 노트를 불러왔어요. 이 자료를 기반으로 3D 캐릭터 제작용 이미지를 구성할게요.",
+    time: "오후 2:30",
+  },
+  {
+    id: "orc-2",
+    role: "user",
+    content: "강인한 오크 캐릭터를 장비가 잘 보이는 전신 기준으로 만들고 싶어.",
+    time: "오후 2:31",
+  },
+  {
+    id: "orc-3",
+    role: "assistant",
+    content: "좋아요. 정면 턴어라운드와 장비 파츠를 기준으로 갑옷, 팔 보호구, 허리 장식이 잘 분리되는 시안을 생성하겠습니다.",
+    time: "오후 2:32",
+    chips: [
+      { label: "오크 전사", isSelected: true },
+      { label: "장비 분리" },
+      { label: "정면 전신" },
+      { label: "턴어라운드" },
+      { label: "게임용 모델링" },
+    ],
+  },
+];
+
 function StatusDot({ color }: { color: string }) {
   return (
     <span
@@ -264,13 +293,60 @@ export default function FullWorkflowPage({
   const [isModularSelected, setIsModularSelected] = useState<boolean>(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [hasGeneratedImages, setHasGeneratedImages] = useState<boolean>(false);
+  const [isOrcWorkflow, setIsOrcWorkflow] = useState<boolean>(false);
+  const hasSelectedGeneratedImage = selectedGridImage !== null;
 
-  const DUMMY_GENERATED_IMAGES = [
-    "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2010.png",
-    "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2011.png",
-    "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2012.png",
-    "https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2013.png",
+  const handleGeneratedImageSelect = (imageIndex: number) => {
+    if (selectedGridImage === imageIndex) {
+      setSelectedGridImage(null);
+      setIsTurnaroundSelected(false);
+      setIsModularSelected(false);
+      return;
+    }
+    setSelectedGridImage(imageIndex);
+  };
+
+  const handleToggleTurnaround = () => {
+    if (!hasSelectedGeneratedImage) return;
+    setIsTurnaroundSelected((current) => !current);
+  };
+
+  const handleToggleModular = () => {
+    if (!hasSelectedGeneratedImage) return;
+    setIsModularSelected((current) => !current);
+  };
+
+  const handleDirectModeling = () => {
+    if (!hasSelectedGeneratedImage) return;
+    onNavigate?.("modeling_generation");
+  };
+
+  const handleRefineSelectedSettings = () => {
+    if (!hasSelectedGeneratedImage) return;
+    if (isTurnaroundSelected && onNavigate) {
+      onNavigate("turnaround");
+      return;
+    }
+    setWorkflowStep("prompt");
+    setRightPanelMode("expert");
+    setExpertTab(isTurnaroundSelected ? "turnaround" : "modular");
+  };
+
+  const DUMMY_GENERATED_IMAGES = isOrcWorkflow ? [
+    "/images/orc/orc_2D_front.png",
+    "/images/orc/orc_2D_45.png",
+    "/images/orc/orc_2D_side.png",
+    "/images/orc/orc_2D_back.png",
+  ] : [
+    "/images/work_%2010.png",
+    "/images/work_%2011.png",
+    "/images/work_%2012.png",
+    "/images/work_%2013.png",
   ];
+
+  const GENERATED_IMAGE_BACKGROUNDS = isOrcWorkflow
+    ? ["#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"]
+    : ["#8C7F75", "#8C8C9F", "#9C9687", "#8C8985"];
 
   const handleStartProjectWithAssets = () => {
     // Collect all image URLs from staged Notes
@@ -278,6 +354,7 @@ export default function FullWorkflowPage({
       .map((noteId) => NOTES.find((n) => n.id === noteId))
       .filter(Boolean)
       .flatMap((n) => n!.images || []);
+    const hasOrcNote = stagedNotes.includes(4);
 
     // Also include ASSETS that match these URLs
     const noteAssetIds = ASSETS.filter((a) => noteImages.includes(a.image)).map(
@@ -294,20 +371,23 @@ export default function FullWorkflowPage({
     const newProjectId = Date.now();
     const newProject = {
       id: newProjectId,
-      name: "새로운 프로젝트",
+      name: hasOrcNote ? "오크 전사 모델링" : "새로운 프로젝트",
       status: "Just Started",
       statusColor: COLORS.gold,
       date: new Date().toLocaleDateString("ko-KR").replace(/\./g, "."),
       image:
-        mergedRefIds.length > 0
+        hasOrcNote
+          ? "/images/orc/orc_2D_front.png"
+          : mergedRefIds.length > 0
           ? ASSETS.find((a) => a.id === mergedRefIds[0])?.image || ""
           : "",
     };
 
     setProjects((prev) => [newProject, ...prev]);
     setActiveProject(newProjectId);
-    setMessages([]);
-    setHasGeneratedImages(false);
+    setMessages(hasOrcNote ? ORC_MESSAGES : []);
+    setIsOrcWorkflow(hasOrcNote);
+    setHasGeneratedImages(hasOrcNote);
     setHasUnsavedChanges(false);
   };
 
@@ -315,6 +395,7 @@ export default function FullWorkflowPage({
     setSelectedReferences([]);
     setStagedNotes([]);
     setStagedReferences([]);
+    setIsOrcWorkflow(false);
 
     const newProjectId = Date.now();
     const newProject = {
@@ -337,6 +418,9 @@ export default function FullWorkflowPage({
     setWorkflowStep("image-generation");
     setHasGeneratedImages(true);
     setHasUnsavedChanges(false);
+    setSelectedGridImage(null);
+    setIsTurnaroundSelected(false);
+    setIsModularSelected(false);
   };
 
   const scrollToBottom = () => {
@@ -712,21 +796,22 @@ export default function FullWorkflowPage({
               </div>
             </>
             ) : (
-              <div className="flex-1 p-5 lg:p-8 custom-scrollbar relative flex flex-col min-h-0 bg-[#050505]">
-                <div className="max-w-[1400px] w-full h-full flex flex-col min-h-0 mx-auto">
+              <div className="flex-1 p-4 lg:p-6 2xl:p-8 custom-scrollbar relative flex flex-col min-h-0 bg-[#050505]">
+                <div className="max-w-[2200px] w-full h-full flex flex-col min-h-0 mx-auto">
                   <div className="mb-4 lg:mb-5 shrink-0 flex items-center gap-3">
                     <h2 className="text-[20px] font-bold text-white tracking-tight">생성된 이미지</h2>
                     <span className="bg-[#141518] border border-[#2A2E36] px-2.5 py-0.5 rounded-full text-[13px] text-white font-bold">4</span>
                   </div>
                   
-                  <div className="grid grid-cols-2 grid-rows-2 gap-4 lg:gap-5 flex-1 min-h-0">
+                  <div className="grid grid-cols-2 grid-rows-2 gap-3 lg:gap-4 2xl:gap-5 flex-1 min-h-0">
                     {[0, 1, 2, 3].map((i) => (
                       <button 
                         key={i}
-                        onClick={() => setSelectedGridImage(i)}
+                        onClick={() => handleGeneratedImageSelect(i)}
+                        style={{ backgroundColor: GENERATED_IMAGE_BACKGROUNDS[i] }}
                         className={`group relative rounded-xl overflow-hidden border-[2px] transition-all duration-300 block w-full h-full ${selectedGridImage === i ? 'border-[#E0A12E]' : 'border-[#1F2329] hover:border-[#555A64]'}`}
                       >
-                        <img referrerPolicy="no-referrer" src={DUMMY_GENERATED_IMAGES[i]} alt={`시안 ${i+1}`} className="absolute inset-0 w-full h-full object-cover" />
+                        <img referrerPolicy="no-referrer" src={DUMMY_GENERATED_IMAGES[i]} alt={`생성 이미지 ${i+1}`} className="absolute inset-0 h-full w-full object-contain" />
                         
                         {/* Status Badge */}
                         <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
@@ -1125,11 +1210,11 @@ export default function FullWorkflowPage({
                       {/* Ref 1 */}
                       <div className="bg-[#0A0B0D] border border-[#1F2329] rounded-xl p-2.5 flex gap-3 pr-3">
                         <div className="w-[50px] h-[50px] rounded-lg overflow-hidden shrink-0 border border-[#2A2E36]">
-                          <img referrerPolicy="no-referrer" src={ASSETS[3]?.image || ''} className="w-full h-full object-cover" alt="" />
+                          <img referrerPolicy="no-referrer" src={isOrcWorkflow ? "/images/orc/orc_2D_front.png" : ASSETS[3]?.image || ''} className="w-full h-full object-cover" alt="" />
                         </div>
                         <div className="flex-1 flex flex-col justify-center">
                           <div className="flex items-start justify-between mb-1.5">
-                            <span className="text-[13px] font-medium text-neutral-300">메인 컨셉</span>
+                            <span className="text-[13px] font-medium text-neutral-300">{isOrcWorkflow ? "오크 정면 메인 시안" : "메인 컨셉"}</span>
                             <X className="w-3 h-3 text-neutral-400 hover:text-white cursor-pointer" />
                           </div>
                           <div className="flex items-center gap-2">
@@ -1143,11 +1228,11 @@ export default function FullWorkflowPage({
                       {/* Ref 2 */}
                       <div className="bg-[#0A0B0D] border border-[#1F2329] rounded-xl p-2.5 flex gap-3 pr-3">
                         <div className="w-[50px] h-[50px] rounded-lg overflow-hidden shrink-0 border border-[#2A2E36] bg-white">
-                          <img referrerPolicy="no-referrer" src="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2014.png" className="w-full h-full object-cover" alt="" />
+                          <img referrerPolicy="no-referrer" src={isOrcWorkflow ? "/images/orc/orc_default_item01.png" : "/images/work_%2014.png"} className="w-full h-full object-cover" alt="" />
                         </div>
                         <div className="flex-1 flex flex-col justify-center">
                           <div className="flex items-start justify-between mb-1.5">
-                            <span className="text-[13px] font-medium text-neutral-300">바지 장신구</span>
+                            <span className="text-[13px] font-medium text-neutral-300">{isOrcWorkflow ? "스파이크 팔 보호구" : "바지 장신구"}</span>
                             <X className="w-3 h-3 text-neutral-400 hover:text-white cursor-pointer" />
                           </div>
                           <div className="flex items-center gap-2">
@@ -1161,11 +1246,11 @@ export default function FullWorkflowPage({
                       {/* Ref 3 */}
                       <div className="bg-[#0A0B0D] border border-[#1F2329] rounded-xl p-2.5 flex gap-3 pr-3">
                         <div className="w-[50px] h-[50px] rounded-lg overflow-hidden shrink-0 border border-[#2A2E36]">
-                          <img referrerPolicy="no-referrer" src="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2015.png" className="w-full h-full object-cover" alt="" />
+                          <img referrerPolicy="no-referrer" src={isOrcWorkflow ? "/images/orc/orc_default_item04.png" : "/images/work_%2015.png"} className="w-full h-full object-cover" alt="" />
                         </div>
                         <div className="flex-1 flex flex-col justify-center">
                           <div className="flex items-start justify-between mb-1.5">
-                            <span className="text-[13px] font-medium text-neutral-300 line-clamp-1">무기 디자인, 무기는 왼손에 들고있음</span>
+                            <span className="text-[13px] font-medium text-neutral-300 line-clamp-1">{isOrcWorkflow ? "해골 벨트와 허리 장식" : "무기 디자인, 무기는 왼손에 들고있음"}</span>
                             <X className="w-3 h-3 text-neutral-400 hover:text-white cursor-pointer shrink-0" />
                           </div>
                           <div className="flex items-center gap-2">
@@ -1195,14 +1280,13 @@ export default function FullWorkflowPage({
 
                     <div className="bg-[#141518] border border-[#2A2E36] rounded-xl p-4 flex flex-col gap-3 shadow-inner">
                       <p className="text-[14px] text-neutral-200 leading-relaxed font-medium">
-                        강인한 체형의 오크 캐릭터.
-                        스파이크가 달린 가죽과 금속 갑옷, 해골 장식,
-                        큰 철퇴 무기, 전신 샷, 어두운 배경, 시네마틱 조명,
-                        리얼리스틱, 고디테일.
+                        {isOrcWorkflow
+                          ? "강인한 오크 전사 캐릭터. 정면 전신 기준, 넓은 어깨와 녹색 피부, 금속 어깨 갑옷, 스파이크 팔 보호구, 해골 허리 장식, 가죽 바지와 부츠, 장비 파츠 분리 가능, 게임용 3D 모델링에 적합한 선명한 실루엣."
+                          : "강인한 체형의 오크 캐릭터. 스파이크가 달린 가죽과 금속 갑옷, 해골 장식, 큰 철퇴 무기, 전신 샷, 어두운 배경, 시네마틱 조명, 리얼리스틱, 고디테일."}
                       </p>
 
                       <div className="flex flex-wrap gap-1.5 mt-1">
-                        {["오크", "전사", "판타지", "갑옷", "금속", "무기"].map((tag, idx) => (
+                        {(isOrcWorkflow ? ["오크", "전사", "정면", "장비", "모듈화", "턴어라운드"] : ["오크", "전사", "판타지", "갑옷", "금속", "무기"]).map((tag, idx) => (
                           <span key={idx} className="px-2.5 py-1 bg-[#1C1E23] border border-[#2A2E36] rounded-full text-[11px] text-neutral-300">
                             {tag}
                           </span>
@@ -1227,20 +1311,22 @@ export default function FullWorkflowPage({
                     {/* Preprocessing Options */}
                     <div className="flex gap-2">
                       <button
-                        onClick={() => setIsTurnaroundSelected(!isTurnaroundSelected)}
-                        className={`flex-1 flex items-center justify-start px-4 py-3.5 rounded-xl border text-[13px] font-semibold transition-colors ${isTurnaroundSelected ? "bg-[#141518] border-[#E0A12E] text-[#E0A12E]" : "bg-[#0A0B0D] border-[#2A2E36] text-neutral-400 hover:border-[#555A64] hover:text-white"}`}
+                        disabled={!hasSelectedGeneratedImage}
+                        onClick={handleToggleTurnaround}
+                        className={`flex-1 flex items-center justify-start px-4 py-3.5 rounded-xl border text-[13px] font-semibold transition-colors ${!hasSelectedGeneratedImage ? "bg-[#08090B] border-[#1F2329] text-neutral-600 cursor-not-allowed" : isTurnaroundSelected ? "bg-[#141518] border-[#E0A12E] text-[#E0A12E]" : "bg-[#0A0B0D] border-[#2A2E36] text-neutral-400 hover:border-[#555A64] hover:text-white"}`}
                       >
-                        <div className={`w-4 h-4 rounded-[4px] border shrink-0 mr-3 flex items-center justify-center transition-colors ${isTurnaroundSelected ? 'bg-[#E0A12E] border-[#E0A12E]' : 'border-[#555A64]'}`}>
+                        <div className={`w-4 h-4 rounded-[4px] border shrink-0 mr-3 flex items-center justify-center transition-colors ${isTurnaroundSelected ? 'bg-[#E0A12E] border-[#E0A12E]' : hasSelectedGeneratedImage ? 'border-[#555A64]' : 'border-[#2A2E36]'}`}>
                           {isTurnaroundSelected && <Check className="w-3 h-3 text-black stroke-[3]" />}
                         </div>
                         <RefreshCw className="w-4 h-4 mr-2 shrink-0" />
                         <span className="flex-1 text-left">턴어라운드 제작</span>
                       </button>
                       <button
-                        onClick={() => setIsModularSelected(!isModularSelected)}
-                        className={`flex-1 flex items-center justify-start px-4 py-3.5 rounded-xl border text-[13px] font-semibold transition-colors ${isModularSelected ? "bg-[#141518] border-[#E0A12E] text-[#E0A12E]" : "bg-[#0A0B0D] border-[#2A2E36] text-neutral-400 hover:border-[#555A64] hover:text-white"}`}
+                        disabled={!hasSelectedGeneratedImage}
+                        onClick={handleToggleModular}
+                        className={`flex-1 flex items-center justify-start px-4 py-3.5 rounded-xl border text-[13px] font-semibold transition-colors ${!hasSelectedGeneratedImage ? "bg-[#08090B] border-[#1F2329] text-neutral-600 cursor-not-allowed" : isModularSelected ? "bg-[#141518] border-[#E0A12E] text-[#E0A12E]" : "bg-[#0A0B0D] border-[#2A2E36] text-neutral-400 hover:border-[#555A64] hover:text-white"}`}
                       >
-                        <div className={`w-4 h-4 rounded-[4px] border shrink-0 mr-3 flex items-center justify-center transition-colors ${isModularSelected ? 'bg-[#E0A12E] border-[#E0A12E]' : 'border-[#555A64]'}`}>
+                        <div className={`w-4 h-4 rounded-[4px] border shrink-0 mr-3 flex items-center justify-center transition-colors ${isModularSelected ? 'bg-[#E0A12E] border-[#E0A12E]' : hasSelectedGeneratedImage ? 'border-[#555A64]' : 'border-[#2A2E36]'}`}>
                           {isModularSelected && <Check className="w-3 h-3 text-black stroke-[3]" />}
                         </div>
                         <Puzzle className="w-4 h-4 mr-2 shrink-0" />
@@ -1261,25 +1347,20 @@ export default function FullWorkflowPage({
                         <ChevronLeft className="w-4 h-4 text-neutral-400" /> 이전 단계
                       </button>
                       {(!isTurnaroundSelected && !isModularSelected) ? (
-                        <button 
-                          className="w-[70%] bg-[#E0A12E] hover:bg-[#F0B43A] text-black font-bold py-3.5 rounded-xl shadow-[0_0_15px_rgba(224,161,46,0.3)] transition-all flex items-center justify-center gap-1.5 text-[14px]"
+                        <button
+                          disabled={!hasSelectedGeneratedImage}
+                          onClick={handleDirectModeling}
+                          className={`w-[70%] font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-1.5 text-[14px] ${hasSelectedGeneratedImage ? "bg-[#E0A12E] hover:bg-[#F0B43A] text-black shadow-[0_0_15px_rgba(224,161,46,0.3)]" : "bg-[#202126] text-neutral-500 cursor-not-allowed"}`}
                         >
-                          이대로 3D 모델링 즉시 생성 🚀
+                          3D 모델링 생성 <Box className="w-4 h-4" />
                         </button>
                       ) : (
                         <button 
-                          onClick={() => {
-                            if (isTurnaroundSelected && onNavigate) {
-                               onNavigate("turnaround");
-                            } else {
-                               setWorkflowStep("prompt"); 
-                               setRightPanelMode("expert");
-                               setExpertTab(isTurnaroundSelected ? "turnaround" : "modular");
-                            }
-                          }}
-                          className="w-[70%] bg-[#E0A12E] hover:bg-[#F0B43A] text-black font-bold py-3.5 rounded-xl shadow-[0_0_15px_rgba(224,161,46,0.3)] transition-all flex items-center justify-center gap-1.5 text-[14px]"
+                          disabled={!hasSelectedGeneratedImage}
+                          onClick={handleRefineSelectedSettings}
+                          className={`w-[70%] font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-1.5 text-[14px] ${hasSelectedGeneratedImage ? "bg-[#E0A12E] hover:bg-[#F0B43A] text-black shadow-[0_0_15px_rgba(224,161,46,0.3)]" : "bg-[#202126] text-neutral-500 cursor-not-allowed"}`}
                         >
-                          선택한 설정으로 정교화 시작 <ChevronRight className="w-4 h-4" />
+                          선택한 설정으로 정교화 <ChevronRight className="w-4 h-4" />
                         </button>
                       )}
                     </div>

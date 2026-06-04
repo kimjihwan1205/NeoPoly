@@ -1,135 +1,262 @@
-import React, { useState } from 'react';
-import { Search, ChevronDown, MessageCircle, FileText, HelpCircle, BookOpen, ExternalLink } from 'lucide-react';
-import ChatbotWidget from './ChatbotWidget';
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  BookOpen,
+  ChevronDown,
+  ExternalLink,
+  FileText,
+  HelpCircle,
+  MessageCircle,
+  Search,
+  X,
+} from "lucide-react";
+import ChatbotWidget from "./ChatbotWidget";
+
+const FAQS = [
+  {
+    question: "NeoPoly를 무료로 사용할 수 있나요?",
+    answer:
+      "기본 레퍼런스 탐색과 일부 작업 도구는 무료로 사용할 수 있습니다. 고급 AI 생성, 대용량 렌더링, 상업용 에셋 다운로드는 플랜에 따라 제한될 수 있습니다.",
+  },
+  {
+    question: "구매한 에셋을 상업 프로젝트에 사용할 수 있나요?",
+    answer:
+      "상업용 라이선스로 표시된 에셋은 게임, 영상, 프로토타입 등 상업 프로젝트에서 사용할 수 있습니다. 각 에셋 상세 페이지의 라이선스 표기를 확인하세요.",
+  },
+  {
+    question: "AI Studio에서 생성한 이미지는 누구에게 소유권이 있나요?",
+    answer:
+      "사용자가 입력한 프롬프트와 생성 결과물은 사용자의 작업물로 관리됩니다. 단, 기존 저작물을 과도하게 모방하는 입력은 피하는 것이 안전합니다.",
+  },
+  {
+    question: "렌더링에는 크레딧이 얼마나 필요한가요?",
+    answer:
+      "기본 2K 렌더링은 1크레딧, 4K 및 영상 추출은 작업량에 따라 더 많은 크레딧을 사용할 수 있습니다.",
+  },
+  {
+    question: "환불 요청은 어떻게 하나요?",
+    answer:
+      "다운로드 전 에셋은 계정 내 구매 내역에서 환불 요청이 가능합니다. 파일 손상이나 설명과 다른 문제가 있으면 고객센터로 문의해 주세요.",
+  },
+];
+
+const GUIDES = [
+  {
+    title: "시작하기 가이드",
+    desc: "에셋 탐색, 노트 작성, AI Studio 기본 흐름",
+    icon: BookOpen,
+  },
+  {
+    title: "정책 및 이용 약관",
+    desc: "서비스 이용, 개인정보, 저작권 관련 안내",
+    icon: FileText,
+  },
+  {
+    title: "커뮤니티 연결",
+    desc: "다른 크리에이터와 작업 노하우를 공유",
+    icon: MessageCircle,
+  },
+];
 
 export default function SupportPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [contactOpen, setContactOpen] = useState(false);
+  const [toast, setToast] = useState("");
+  const [selectedGuide, setSelectedGuide] = useState<string | null>(null);
 
-  const faqs = [
-    { question: 'NeoPoly 플랫폼은 무료로 사용할 수 있나요?', answer: '기본 기능인 에셋 브라우징과 무료 에셋 다운로드는 누구나 이용할 수 있습니다. 프리미엄 에셋과 AI Studio의 고급 제너레이션 기능은 크레딧을 소모하거나 구독 플랜이 필요합니다.' },
-    { question: '구매한 에셋의 상업적 이용이 가능한가요?', answer: '네, NeoMarket에서 상업용 라이선스로 표기된 에셋은 영리 목적의 프로젝트(게임, 영상 등)에 제한 없이 사용 가능합니다.' },
-    { question: 'AI Studio에서 생성된 이미지의 저작권은 누구에게 있나요?', answer: 'AI Studio로 생성한 이미지의 소유권은 생성자(사용자)에게 귀속됩니다. 단, 원본 창작물을 지나치게 모방한 경우 저작권 침해 소지가 있을 수 있으니 주의하시기 바랍니다.' },
-    { question: '렌더링을 위해 크레딧은 얼마나 소모되나요?', answer: '기본 2K 렌더링은 1 크레딧이며, 4K 및 턴테이블 영상 추출 시 각각 2 크레딧, 5 크레딧이 추가로 소모됩니다.' },
-    { question: '환불 정책이 어떻게 되나요?', answer: '디지털 에셋 특성상 다운로드 후에는 원칙적으로 환불이 불가합니다. 단, 파일이 손상되었거나 설명과 확연히 다를 경우 고객센터를 통해 7일 이내 환불을 요청하실 수 있습니다.' },
-  ];
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(""), 1800);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  const filteredFaqs = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return FAQS;
+    return FAQS.filter((faq) =>
+      `${faq.question} ${faq.answer}`.toLowerCase().includes(query),
+    );
+  }, [searchQuery]);
 
   return (
-    <div className="min-h-[calc(100vh-76px)] bg-bg-dark text-text-primary font-sans relative">
-      {/* Hero Section */}
+    <div className="relative min-h-[calc(100vh-76px)] bg-bg-dark font-sans text-text-primary">
       <div className="relative overflow-hidden border-b border-[#1F2329] bg-[#0A0B0D]">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#E0A12E]/5 to-transparent"></div>
-        <div className="max-w-[1200px] mx-auto px-6 py-12 relative z-10 flex flex-col items-center text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#141518] border border-[#2A2E36] text-[#E0A12E] text-[12px] font-bold mb-6 shadow-sm">
-            <HelpCircle className="w-3.5 h-3.5" />
-            <span>고객 지원 센터</span>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#E0A12E]/5 to-transparent" />
+        <div className="relative z-10 mx-auto flex max-w-[1200px] flex-col items-center px-6 py-12 text-center">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-3 py-1.5 text-[12px] font-bold text-[#E0A12E]">
+            <HelpCircle className="h-3.5 w-3.5" />
+            고객 지원 센터
           </div>
-          <h1 className="text-[32px] sm:text-[42px] font-bold tracking-tight text-white mb-4">무엇을 도와드릴까요?</h1>
-          <p className="text-[15px] sm:text-[17px] text-neutral-400 max-w-[600px] leading-relaxed mb-10">NeoPoly 이용과 관련된 궁금한 점이나 문제를 해결해보세요.<br/>검색 또는 자주 묻는 질문을 확인하실 수 있습니다.</p>
-          
-          <div className="w-full max-w-[640px] relative mt-2 group shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
-            <button className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-neutral-400 hover:text-[#E0A12E] group-focus-within:text-[#E0A12E] transition-colors">
-              <Search className="w-5 h-5" />
-            </button>
-            <input 
-              type="text" 
-              placeholder="궁금한 내용을 검색해보세요 (예: 크레딧, 환불, 저작권)" 
+          <h1 className="mb-4 text-[32px] font-bold text-white sm:text-[42px]">
+            무엇을 도와드릴까요?
+          </h1>
+          <p className="mb-10 max-w-[600px] text-[15px] leading-relaxed text-neutral-400 sm:text-[17px]">
+            NeoPoly 사용 중 궁금한 점을 검색하거나 1:1 문의를 남길 수 있습니다.
+          </p>
+
+          <div className="group relative mt-2 w-full max-w-[640px] shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
+            <Search className="absolute left-6 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400 transition group-focus-within:text-[#E0A12E]" />
+            <input
+              type="text"
+              placeholder="예: 크레딧, 환불, 저작권"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-14 pl-14 pr-6 rounded-2xl bg-[#141518] border border-[#2A2E36] focus:border-[#E0A12E]/60 text-white text-[15px] focus:outline-none transition-all placeholder:text-neutral-400"
+              className="h-14 w-full rounded-lg border border-[#2A2E36] bg-[#141518] pl-14 pr-6 text-[15px] text-white outline-none transition placeholder:text-neutral-500 focus:border-[#E0A12E]/60"
             />
           </div>
         </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-6 py-20">
-        <div className="flex flex-col lg:flex-row gap-16">
-          {/* FAQ Area */}
+      <div className="mx-auto max-w-[1200px] px-6 py-20">
+        <div className="flex flex-col gap-16 lg:flex-row">
           <div className="flex-1">
             <div className="mb-10">
-              <h2 className="text-[24px] font-bold text-white mb-2 tracking-tight">자주 묻는 질문 (FAQ)</h2>
-              <p className="text-[14px] text-neutral-400">가장 많이 들어오는 질문들을 모아두었어요.</p>
+              <h2 className="mb-2 text-[24px] font-bold text-white">
+                자주 묻는 질문
+              </h2>
+              <p className="text-[14px] text-neutral-400">
+                검색어에 맞는 답변만 자동으로 정리됩니다.
+              </p>
             </div>
-            
+
             <div className="flex flex-col gap-4">
-              {faqs.map((faq, i) => (
-                <div key={i} className="bg-[#0A0B0D] border border-[#1F2329] rounded-xl overflow-hidden hover:border-[#3A404F] transition-colors">
+              {filteredFaqs.map((faq) => (
+                <div
+                  key={faq.question}
+                  className="overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D] transition hover:border-[#3A404F]"
+                >
                   <details className="group">
-                    <summary className="flex justify-between items-center font-medium cursor-pointer list-none py-5 px-6">
-                      <span className="text-[15px] font-bold text-white group-hover:text-[#E0A12E] transition-colors pr-8 leading-snug">
+                    <summary className="flex cursor-pointer list-none items-center justify-between px-6 py-5 font-medium">
+                      <span className="pr-8 text-[15px] font-bold leading-snug text-white transition group-hover:text-[#E0A12E]">
                         {faq.question}
                       </span>
-                      <span className="transition group-open:rotate-180 flex-shrink-0 text-neutral-400">
-                        <ChevronDown className="w-5 h-5" />
+                      <span className="shrink-0 text-neutral-400 transition group-open:rotate-180">
+                        <ChevronDown className="h-5 w-5" />
                       </span>
                     </summary>
-                    <div className="text-neutral-400 mt-1 group-open:animate-fadeIn pt-1 pb-6 px-6 text-[14px] leading-relaxed border-t border-[#1F2329]/50">
+                    <div className="border-t border-[#1F2329]/50 px-6 pb-6 pt-4 text-[14px] leading-relaxed text-neutral-400">
                       {faq.answer}
                     </div>
                   </details>
                 </div>
               ))}
+              {filteredFaqs.length === 0 && (
+                <div className="rounded-lg border border-[#1F2329] bg-[#0A0B0D] p-8 text-center text-[14px] text-neutral-400">
+                  검색 결과가 없습니다. 1:1 문의로 내용을 보내주세요.
+                </div>
+              )}
             </div>
-            
-            <div className="mt-10 p-6 bg-[#0A0B0D] border border-[#2A2E36] rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-64 h-64 bg-[#E0A12E]/5 rounded-full blur-[80px] -mr-20 -mt-20"></div>
-               <div className="relative z-10 flex flex-col gap-2">
-                 <h3 className="text-[16px] font-bold text-white">원하는 답변을 찾지 못하셨나요?</h3>
-                 <p className="text-[13px] text-neutral-400">우측 하단의 AI 도우미 또는 문의 접수를 이용해주세요.</p>
-               </div>
-               <button className="whitespace-nowrap px-6 py-2.5 rounded-xl bg-[#141518] border border-[#2A2E36] text-[13px] font-bold text-white hover:bg-[#1C1F26] transition-colors relative z-10">
-                 1:1 문의 접수하기
-               </button>
+
+            <div className="relative mt-10 flex flex-col items-center justify-between gap-6 overflow-hidden rounded-lg border border-[#2A2E36] bg-[#0A0B0D] p-6 sm:flex-row">
+              <div className="absolute right-0 top-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-[#E0A12E]/5 blur-[80px]" />
+              <div className="relative z-10 flex flex-col gap-2">
+                <h3 className="text-[16px] font-bold text-white">
+                  원하는 답을 찾지 못했나요?
+                </h3>
+                <p className="text-[13px] text-neutral-400">
+                  문의 내용을 남기면 지원 요청으로 저장됩니다.
+                </p>
+              </div>
+              <button
+                onClick={() => setContactOpen(true)}
+                className="relative z-10 whitespace-nowrap rounded-lg border border-[#2A2E36] bg-[#141518] px-6 py-2.5 text-[13px] font-bold text-white transition hover:bg-[#1C1F26]"
+              >
+                1:1 문의 접수하기
+              </button>
             </div>
           </div>
 
-          {/* Docs & Guides */}
-          <div className="w-full lg:w-[340px] xl:w-[380px] shrink-0 flex flex-col gap-6">
+          <div className="flex w-full shrink-0 flex-col gap-6 lg:w-[360px]">
             <div className="mb-4">
-              <h2 className="text-[24px] font-bold text-white mb-2 tracking-tight">가이드 및 리소스</h2>
-              <p className="text-[14px] text-neutral-400">서비스 이용에 필요한 유용한 정보와 정책을 확인하세요.</p>
+              <h2 className="mb-2 text-[24px] font-bold text-white">
+                가이드 및 리소스
+              </h2>
+              <p className="text-[14px] text-neutral-400">
+                필요한 문서를 바로 열어 확인하세요.
+              </p>
             </div>
-            
-            <a href="#" className="flex items-start gap-4 p-5 bg-[#0A0B0D] border border-[#1F2329] hover:border-[#E0A12E]/40 rounded-2xl group transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-[#141518] border border-[#2A2E36] flex items-center justify-center shrink-0 group-hover:bg-[#E0A12E]/10 group-hover:border-[#E0A12E]/30 transition-colors">
-                <BookOpen className="w-5 h-5 text-neutral-400 group-hover:text-[#E0A12E] transition-colors" />
-              </div>
-              <div className="flex flex-col gap-1.5 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[15px] font-bold text-white group-hover:text-[#E0A12E] transition-colors">시작하기 가이드</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-neutral-500" />
-                </div>
-                <p className="text-[13px] text-neutral-400 leading-relaxed">신규 사용자를 위한 에셋 구매 및 스튜디오 활용법 안내</p>
-              </div>
-            </a>
 
-            <a href="#" className="flex items-start gap-4 p-5 bg-[#0A0B0D] border border-[#1F2329] hover:border-[#E0A12E]/40 rounded-2xl group transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-[#141518] border border-[#2A2E36] flex items-center justify-center shrink-0 group-hover:bg-[#E0A12E]/10 group-hover:border-[#E0A12E]/30 transition-colors">
-                <FileText className="w-5 h-5 text-neutral-400 group-hover:text-[#E0A12E] transition-colors" />
-              </div>
-              <div className="flex flex-col gap-1.5 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[15px] font-bold text-white group-hover:text-[#E0A12E] transition-colors">정책 및 이용약관</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-neutral-500" />
-                </div>
-                <p className="text-[13px] text-neutral-400 leading-relaxed">서비스 이용약관, 개인정보처리방침 및 저작권 규정 안내</p>
-              </div>
-            </a>
+            {GUIDES.map((guide) => {
+              const Icon = guide.icon;
+              return (
+                <button
+                  key={guide.title}
+                  onClick={() => {
+                    setSelectedGuide(guide.title);
+                    setToast(`${guide.title}를 열었습니다.`);
+                  }}
+                  className="group flex items-start gap-4 rounded-lg border border-[#1F2329] bg-[#0A0B0D] p-5 text-left transition hover:border-[#E0A12E]/40"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] transition group-hover:border-[#E0A12E]/30 group-hover:bg-[#E0A12E]/10">
+                    <Icon className="h-5 w-5 text-neutral-400 transition group-hover:text-[#E0A12E]" />
+                  </span>
+                  <span className="flex min-w-0 flex-col gap-1.5">
+                    <span className="flex items-center gap-1.5 text-[15px] font-bold text-white transition group-hover:text-[#E0A12E]">
+                      {guide.title}
+                      <ExternalLink className="h-3.5 w-3.5 text-neutral-500" />
+                    </span>
+                    <span className="text-[13px] leading-relaxed text-neutral-400">
+                      {guide.desc}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
 
-            <a href="#" className="flex items-start gap-4 p-5 bg-[#0A0B0D] border border-[#1F2329] hover:border-[#E0A12E]/40 rounded-2xl group transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-[#141518] border border-[#2A2E36] flex items-center justify-center shrink-0 group-hover:bg-[#E0A12E]/10 group-hover:border-[#E0A12E]/30 transition-colors">
-                <MessageCircle className="w-5 h-5 text-neutral-400 group-hover:text-[#E0A12E] transition-colors" />
+            {selectedGuide && (
+              <div className="rounded-lg border border-[#2A2E36] bg-[#111215] p-5">
+                <h3 className="mb-2 text-[15px] font-bold text-white">
+                  {selectedGuide}
+                </h3>
+                <p className="text-[13px] leading-relaxed text-neutral-400">
+                  현재는 앱 내부 도움말로 연결됩니다. 실제 배포 시 문서 URL을 붙이면 같은 버튼에서 바로 열립니다.
+                </p>
               </div>
-              <div className="flex flex-col gap-1.5 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[15px] font-bold text-white group-hover:text-[#E0A12E] transition-colors">Discord 커뮤니티</span>
-                  <ExternalLink className="w-3.5 h-3.5 text-neutral-500" />
-                </div>
-                <p className="text-[13px] text-neutral-400 leading-relaxed">다른 크리에이터들과 소통하고 팁을 공유해보세요.</p>
-              </div>
-            </a>
+            )}
           </div>
         </div>
       </div>
+
+      {contactOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#050505]/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-[520px] rounded-lg border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.8)]">
+            <div className="flex items-center justify-between border-b border-[#1F2329] px-6 py-5">
+              <h3 className="text-[18px] font-bold text-white">1:1 문의 접수</h3>
+              <button
+                onClick={() => setContactOpen(false)}
+                className="text-neutral-400 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-4 p-6">
+              <input
+                placeholder="제목"
+                className="h-11 rounded-lg border border-[#2A2E36] bg-[#141518] px-4 text-white outline-none placeholder:text-neutral-500 focus:border-[#E0A12E]/60"
+              />
+              <textarea
+                placeholder="문의 내용을 적어주세요."
+                className="h-36 resize-none rounded-lg border border-[#2A2E36] bg-[#141518] px-4 py-3 text-white outline-none placeholder:text-neutral-500 focus:border-[#E0A12E]/60"
+              />
+              <button
+                onClick={() => {
+                  setContactOpen(false);
+                  setToast("문의가 접수되었습니다.");
+                }}
+                className="rounded-lg bg-[#E0A12E] px-5 py-3 text-[14px] font-bold text-[#050505] transition hover:bg-[#F0B43A]"
+              >
+                문의 보내기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className="fixed bottom-8 right-8 z-[150] rounded-lg border border-[#2A2E36] bg-[#111317] px-4 py-3 text-[13px] font-semibold text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
+          {toast}
+        </div>
+      )}
+
       <ChatbotWidget />
     </div>
   );

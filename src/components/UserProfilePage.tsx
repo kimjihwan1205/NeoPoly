@@ -25,8 +25,8 @@ const BANNER_PRESETS = [
   { id: 'grad1', label: 'Neo-Poly Gold', class: 'bg-gradient-to-r from-[#141518] via-[#2A2315] to-[#403118]' },
   { id: 'grad2', label: 'Twilight Dark', class: 'bg-gradient-to-r from-[#141518] via-[#1B1B26] to-[#0D0D14]' },
   { id: 'grad3', label: 'Cosmic Nebula', class: 'bg-gradient-to-r from-[#1F112D] via-[#141518] to-[#0F1E29]' },
-  { id: 'castle', label: 'Classic Castle', url: 'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%205.png' },
-  { id: 'dark_ref', label: 'Minimalist Dark', url: 'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%205.png' },
+  { id: 'castle', label: 'Classic Castle', url: '/images/work_%205.png' },
+  { id: 'dark_ref', label: 'Minimalist Dark', url: '/images/work_%205.png' },
 ];
 
 export default function UserProfilePage({
@@ -60,7 +60,7 @@ export default function UserProfilePage({
   const [projectStatus, setProjectStatus] = useState('Completed');
   const [projectTags, setProjectTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
-  const [projectImage, setProjectImage] = useState('https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%201.png');
+  const [projectImage, setProjectImage] = useState('/images/work_%201.png');
 
   // File Input Refs
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -144,7 +144,7 @@ export default function UserProfilePage({
       setProjectProgress(100);
       setProjectStatus('Completed');
       setProjectTags(['3D Render', 'ArtStation']);
-      setProjectImage('https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%201.png');
+      setProjectImage('/images/work_%201.png');
     }
     setIsProjectModalOpen(true);
   };
@@ -233,12 +233,12 @@ export default function UserProfilePage({
 
   // Predefined project presets for easy testing
   const projectPresets = [
-    'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%201.png',
-    'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%202.png',
-    'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%203.png',
-    'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%204.png',
-    'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2016.png',
-    'https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%2017.png',
+    '/images/work_%201.png',
+    '/images/work_%202.png',
+    '/images/work_%203.png',
+    '/images/work_%204.png',
+    '/images/work_%2016.png',
+    '/images/work_%2017.png',
   ];
 
   // Filters for user assets and favorite assets

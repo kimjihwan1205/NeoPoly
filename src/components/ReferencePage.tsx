@@ -3,14 +3,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Search, Plus, Link as LinkIcon, Bookmark, Download, MoreHorizontal, 
-  LayoutGrid, List, Sparkles, Filter, ChevronDown, ChevronRight, 
-  Trash2, Clock, Folder, Wand2, CheckSquare, Check, X
-} from 'lucide-react';
-import { ASSETS } from '../App';
+import React, { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import {
+  Bookmark,
+  Check,
+  CheckSquare,
+  ChevronDown,
+  ChevronRight,
+  Clock,
+  Download,
+  Filter,
+  Folder,
+  LayoutGrid,
+  Link as LinkIcon,
+  List,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+  Wand2,
+  X,
+} from "lucide-react";
+import { ASSETS } from "../App";
 
 interface ReferencePageProps {
   favorites: number[];
@@ -20,296 +35,657 @@ interface ReferencePageProps {
   onAcceptSelection?: (selectedIds: number[]) => void;
 }
 
-export default function ReferencePage({ favorites = [], toggleFavorite = () => {}, onNavigate = () => {}, isPopup = false, onAcceptSelection }: ReferencePageProps) {
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [activeBadge, setActiveBadge] = useState('전체');
-  
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [refFavorites, setRefFavorites] = useState<number[]>([1, 4, 7]);
-  const trashIds = [2, 5];
-  const [previewImage, setPreviewImage] = useState<typeof ASSETS[0] | null>(null);
+export type ReferenceAsset = (typeof ASSETS)[number] & {
+  type?: string;
+  category?: string;
+};
 
+const LOCAL_LOAD_IMAGES = [
+  "/images/work_%2011.png",
+  "/images/work_%2012.png",
+  "/images/work_%203.png",
+  "/images/work_%206.png",
+  "/images/work_%2016.png",
+  "/images/work_%2017.png",
+  "/images/work_%2019.png",
+  "/images/work_%2023.png",
+  "/images/work_%2025.png",
+  "/images/work_%2026.png",
+  "/images/work_%2027.png",
+  "/images/work_%2031.png",
+  "/images/work_%2034.png",
+  "/images/work_%2037.png",
+  "/images/work_%2038.png",
+  "/images/work_%2039.png",
+  "/images/work_%2040.png",
+  "/images/work_%2041.png",
+  "/images/work_%2042.png",
+  "/images/work_%2044.png",
+  "/images/work_%2045.png",
+  "/images/work_46.png",
+  "/images/work_47.png",
+  "/images/work_48.png",
+  "/images/work_49.png",
+  "/images/work_50.png",
+  "/images/work_51.png",
+  "/images/work_53.png",
+  "/images/work_54.png",
+  "/images/work_55.png",
+  "/images/work_56.png",
+  "/images/work_57.png",
+  "/images/work_59.png",
+  "/images/work_60.png",
+];
+
+const CURATED_ASSET_IDS = new Set([
+  1, 2, 3, 6, 16, 17, 19, 23, 25, 26, 27, 31, 34, 37, 38, 39, 40, 41, 42,
+  44, 45, 46, 47, 48, 49, 50, 51, 53, 54, 55, 56, 57, 59, 60,
+]);
+
+const LOW_PRIORITY_KEYWORDS = [
+  "posco",
+  "주방",
+  "현대",
+  "산업",
+  "사일로",
+  "빌딩",
+  "스포츠카",
+  "미니언",
+  "토피어리",
+  "과일",
+  "스시",
+  "콘솔",
+  "주택",
+];
+
+const VISUAL_DUPLICATE_PENALTIES = new Map<number, number>([
+  [23, 72],
+]);
+
+export const REFERENCE_BOARDS = [
+  { id: "character", label: "캐릭터 컨셉", image: "/images/work_%2011.png", keyword: "캐릭터" },
+  { id: "environment", label: "판타지 배경", image: "/images/work_%2025.png", keyword: "판타지" },
+  { id: "armor", label: "갑옷 / 의상", image: "/images/work_47.png", keyword: "갑옷" },
+  { id: "weapon", label: "무기 / 장비", image: "/images/work_%2023.png", keyword: "무기" },
+  { id: "orc", label: "오크 전사 무드", image: "/images/work_%2042.png", keyword: "오크" },
+];
+
+const BADGES = ["전체", "M", "A"];
+
+const MASONRY_PROFILES = [
+  { rows: 10, position: "center" },
+  { rows: 14, position: "50% 35%" },
+  { rows: 18, position: "center top" },
+  { rows: 22, position: "center" },
+  { rows: 13, position: "50% 62%" },
+  { rows: 17, position: "center" },
+  { rows: 11, position: "left center" },
+  { rows: 20, position: "right center" },
+  { rows: 15, position: "center bottom" },
+  { rows: 24, position: "50% 42%" },
+  { rows: 9, position: "center" },
+  { rows: 16, position: "50% 58%" },
+  { rows: 23, position: "center top" },
+  { rows: 12, position: "center" },
+];
+
+function buildGeneratedAsset(index: number, offset: number): ReferenceAsset {
+  const id = 1000 + offset + index;
+  const image = LOCAL_LOAD_IMAGES[(offset + index) % LOCAL_LOAD_IMAGES.length];
+  const themes = [
+    ["오크 전사 참고 이미지", "캐릭터"],
+    ["판타지 실루엣 무드", "판타지"],
+    ["갑옷 디테일 레퍼런스", "갑옷"],
+    ["무기 형태 레퍼런스", "무기"],
+    ["크리처 조형 참고", "캐릭터"],
+  ];
+  const [title, category] = themes[(offset + index) % themes.length];
+
+  return {
+    id,
+    title,
+    author: `NeoRef_${id}`,
+    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`,
+    likes: String(120 + index * 17),
+    views: String(600 + index * 83),
+    image,
+    badge: index % 2 === 0 ? "M" : "A",
+    type: "Reference",
+    category,
+  };
+}
+
+function referenceScore(asset: ReferenceAsset) {
+  let score = 0;
+  const text = `${asset.title} ${asset.type ?? ""} ${asset.category ?? ""} ${asset.image}`.toLowerCase();
+
+  if (CURATED_ASSET_IDS.has(asset.id)) score += 80;
+  score -= VISUAL_DUPLICATE_PENALTIES.get(asset.id) ?? 0;
+
+  [
+    "오크",
+    "orc",
+    "판타지",
+    "fantasy",
+    "기사",
+    "갑옷",
+    "전사",
+    "중세",
+    "무기",
+    "검",
+    "단검",
+    "괴물",
+    "크리처",
+    "드래곤",
+    "와이번",
+    "흑기사",
+    "여기사",
+    "사제",
+    "성직자",
+    "사무라이",
+    "pbr",
+  ].forEach((keyword) => {
+    if (text.includes(keyword.toLowerCase())) score += 24;
+  });
+
+  LOW_PRIORITY_KEYWORDS.forEach((keyword) => {
+    if (text.includes(keyword)) score -= 90;
+  });
+
+  return score;
+}
+
+export function boardMatchesAsset(board: (typeof REFERENCE_BOARDS)[number], asset: ReferenceAsset) {
+  const haystack = `${asset.title} ${asset.type ?? ""} ${asset.category ?? ""}`.toLowerCase();
+
+  if (board.id === "character") {
+    return (
+      haystack.includes("캐릭터") ||
+      haystack.includes("전사") ||
+      haystack.includes("기사") ||
+      haystack.includes("오크") ||
+      haystack.includes("크리처") ||
+      haystack.includes("괴물")
+    );
+  }
+  if (board.id === "environment") {
+    return haystack.includes("판타지") || haystack.includes("숲") || haystack.includes("성채") || haystack.includes("요새");
+  }
+  if (board.id === "armor") {
+    return haystack.includes("갑옷") || haystack.includes("기사") || haystack.includes("망토") || haystack.includes("의상");
+  }
+  if (board.id === "weapon") {
+    return haystack.includes("무기") || haystack.includes("검") || haystack.includes("단검") || haystack.includes("총");
+  }
+  if (board.id === "orc") {
+    return haystack.includes("오크") || haystack.includes("orc");
+  }
+
+  return haystack.includes(board.keyword.toLowerCase());
+}
+
+export default function ReferencePage({
+  favorites = [],
+  toggleFavorite = () => {},
+  onNavigate = () => {},
+  isPopup = false,
+  onAcceptSelection,
+}: ReferencePageProps) {
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [activeBadge, setActiveBadge] = useState("전체");
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [refFavorites, setRefFavorites] = useState<number[]>(() =>
+    favorites.length ? favorites : [1, 4, 7],
+  );
+  const [trashIds, setTrashIds] = useState<Set<number>>(new Set([2, 5]));
+  const [previewImage, setPreviewImage] = useState<ReferenceAsset | null>(null);
   const [displayLimit, setDisplayLimit] = useState(40);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [externalAssets, setExternalAssets] = useState<typeof ASSETS>([]);
+  const [extraAssets, setExtraAssets] = useState<ReferenceAsset[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [boards, setBoards] = useState(REFERENCE_BOARDS);
+  const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(""), 1800);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  const allAssets = useMemo<ReferenceAsset[]>(() => {
+    const merged = [...(ASSETS as ReferenceAsset[]), ...extraAssets];
+    const uniqueByImage = new Map<string, ReferenceAsset>();
+
+    merged.forEach((asset) => {
+      if (!uniqueByImage.has(asset.image)) uniqueByImage.set(asset.image, asset);
+    });
+
+    return Array.from(uniqueByImage.values()).sort((a, b) => {
+      const scoreDiff = referenceScore(b) - referenceScore(a);
+      return scoreDiff || a.id - b.id;
+    });
+  }, [extraAssets]);
+
+  const displayedAssets = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    let result = allAssets.slice(0, displayLimit);
+
+    if (activeCategory === "favorites") {
+      result = allAssets.filter((asset) => refFavorites.includes(asset.id));
+    } else if (activeCategory === "recent") {
+      result = allAssets.slice(0, 12);
+    } else if (activeCategory === "trash") {
+      result = allAssets.filter((asset) => trashIds.has(asset.id));
+    } else {
+      result = result.filter((asset) => !trashIds.has(asset.id));
+      const board = boards.find((item) => item.id === activeCategory);
+      if (board) {
+        result = result.filter((asset) => boardMatchesAsset(board, asset));
+      }
+    }
+
+    if (activeBadge !== "전체") {
+      result = result.filter((asset) => asset.badge === activeBadge);
+    }
+
+    if (query) {
+      result = result.filter((asset) => {
+        const haystack = `${asset.title} ${asset.author} ${asset.type ?? ""} ${asset.category ?? ""}`.toLowerCase();
+        return haystack.includes(query);
+      });
+    }
+
+    return result;
+  }, [
+    activeBadge,
+    activeCategory,
+    allAssets,
+    boards,
+    displayLimit,
+    refFavorites,
+    searchQuery,
+    trashIds,
+  ]);
+
+  const boardCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    boards.forEach((board) => {
+      counts.set(
+        board.id,
+        allAssets.filter((asset) => !trashIds.has(asset.id) && boardMatchesAsset(board, asset)).length,
+      );
+    });
+    return counts;
+  }, [allAssets, boards, trashIds]);
+
+  const toggleRefFavorite = (id: number) => {
+    setRefFavorites((prev) =>
+      prev.includes(id) ? prev.filter((favorite) => favorite !== id) : [...prev, id],
+    );
+    toggleFavorite(id);
+  };
+
+  const handleCardClick = (e: React.MouseEvent, asset: ReferenceAsset) => {
+    if (e.ctrlKey || e.metaKey || isPopup) {
+      e.preventDefault();
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(asset.id)) next.delete(asset.id);
+        else next.add(asset.id);
+        return next;
+      });
+      return;
+    }
+    setPreviewImage(asset);
+  };
 
   const handleLoadMore = () => {
     setIsLoadingMore(true);
-    // ArtStation API 대신 임의의 데이터를 생성하여 API 호출처럼 시뮬레이션
-    setTimeout(() => {
-      const newItems = Array.from({ length: 15 }).map((_, i) => {
-        const newId = 1000 + externalAssets.length + i;
-        const randomTitles = ['사이버펑크 캐릭터', '중세 성', '판타지 크리처', '메카닉 전사', '우주함선', '마법사 지팡이', '황무지 배경', '고대의 유적'];
-        return {
-          id: newId,
-          title: randomTitles[Math.floor(Math.random() * randomTitles.length)] + ' 아트',
-          author: 'Artist_' + newId,
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${newId}`,
-          likes: Math.floor(Math.random() * 2000 + 100).toString(),
-          views: Math.floor(Math.random() * 5000 + 500).toString(),
-          image: `https://picsum.photos/seed/${newId}/600/800`,
-          badge: ['M', 'T', 'R'][Math.floor(Math.random() * 3)],
-          type: '3D 모델'
-        } as any;
-      });
-      setExternalAssets(prev => [...prev, ...newItems]);
-      setDisplayLimit(prev => prev + 15);
+    window.setTimeout(() => {
+      const offset = extraAssets.length;
+      const nextItems = Array.from({ length: 12 }).map((_, index) =>
+        buildGeneratedAsset(index, offset),
+      );
+      setExtraAssets((prev) => [...prev, ...nextItems]);
+      setDisplayLimit((prev) => prev + 12);
       setIsLoadingMore(false);
-    }, 1200);
+      setToast("기존 레퍼런스 이미지를 더 불러왔습니다.");
+    }, 500);
   };
 
-  const toggleRefFavorite = (id: number) => {
-    setRefFavorites(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
+  const createBoard = () => {
+    const name = window.prompt("새 보드 이름을 입력하세요.");
+    if (!name?.trim()) return;
+    const next = {
+      id: `custom-${Date.now()}`,
+      label: name.trim(),
+      image: "/images/work_48.png",
+      keyword: name.trim(),
+    };
+    setBoards((prev) => [next, ...prev]);
+    setActiveCategory(next.id);
+    setToast("새 보드를 만들었습니다.");
   };
 
-  const handleCardClick = (e: React.MouseEvent, id: number) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      const newSet = new Set(selectedIds);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      setSelectedIds(newSet);
-    } else {
-      const asset = ASSETS.find(a => a.id === id);
-      if (asset) {
-        setPreviewImage(asset);
-      }
-    }
+  const downloadAsset = (asset: ReferenceAsset) => {
+    const link = document.createElement("a");
+    link.href = asset.image;
+    link.download = `${asset.title.replace(/\s+/g, "_")}.png`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setToast("이미지 다운로드를 시작했습니다.");
   };
 
-  const heights = ['h-[280px]', 'h-[360px]', 'h-[440px]', 'h-[520px]', 'h-[240px]', 'h-[320px]', 'h-[400px]'];
+  const sendSelectedToTrash = () => {
+    if (selectedIds.size === 0) return;
+    setTrashIds((prev) => new Set([...prev, ...selectedIds]));
+    setSelectedIds(new Set());
+    setToast("선택한 항목을 휴지통으로 보냈습니다.");
+  };
 
   return (
-    <div className={`flex bg-bg-dark ${isPopup ? 'h-full min-h-0' : 'min-h-[calc(100vh-76px)]'} text-text-primary font-sans relative`}>
-      <aside className={`w-[300px] shrink-0 border-r border-[#161618] bg-[#08090B] p-5 hidden lg:flex flex-col ${isPopup ? 'h-full overflow-y-auto custom-scrollbar' : 'h-[calc(100vh-76px)] sticky top-[76px]'}`}>
+    <div
+      className={`relative flex bg-bg-dark font-sans text-text-primary ${
+        isPopup ? "h-full min-h-0" : "min-h-[calc(100vh-76px)]"
+      }`}
+    >
+      <aside
+        className={`hidden w-[300px] shrink-0 flex-col border-r border-[#161618] bg-[#08090B] p-5 lg:flex ${
+          isPopup ? "h-full overflow-y-auto" : "sticky top-[76px] h-[calc(100vh-76px)]"
+        }`}
+      >
         <div className="mb-8 mt-2">
           {!isPopup && (
             <>
-              <h2 className="text-[20px] font-bold text-white mb-2 tracking-tight">레퍼런스</h2>
-              <p className="text-[14px] text-text-secondary leading-relaxed mb-6">영감이 되는 이미지를 수집하고<br/>프로젝트에 활용해보세요.</p>
+              <h2 className="mb-2 text-[20px] font-bold text-white">레퍼런스</h2>
+              <p className="mb-6 text-[14px] leading-relaxed text-text-secondary">
+                필요한 이미지를 모으고 프로젝트에 연결하세요.
+              </p>
             </>
           )}
-          <button className="flex items-center justify-center gap-1.5 w-full py-3 rounded-xl border border-[#3A404F]/60 bg-[#15161A] hover:bg-[#22252B] hover:border-[#E0A12E]/50 text-[#E0A12E] shadow-sm transition-all font-bold text-[15px] tracking-wide">
-            <Plus className="w-[18px] h-[18px]" />
-            <span>새 보드 만들기</span>
+          <button
+            onClick={createBoard}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-bold text-[#E0A12E] transition hover:border-[#E0A12E]/50 hover:bg-[#22252B]"
+          >
+            <Plus className="h-[18px] w-[18px]" />
+            새 보드 만들기
           </button>
         </div>
 
-        <div className="flex flex-col gap-1 mb-8">
-          <MenuBtn icon={<LayoutGrid className="w-[18px] h-[18px]"/>} label="전체" count="3,842" active={activeCategory === 'all'} onClick={() => setActiveCategory('all')} />
-          <MenuBtn icon={<Bookmark className="w-[18px] h-[18px]"/>} label="즐겨찾기" count={refFavorites.length.toString()} active={activeCategory === 'favorites'} onClick={() => setActiveCategory('favorites')} />
-          <MenuBtn icon={<Clock className="w-[18px] h-[18px]"/>} label="최근 추가" count="10" active={activeCategory === 'recent'} onClick={() => setActiveCategory('recent')} />
-          <MenuBtn icon={<Trash2 className="w-[18px] h-[18px]"/>} label="휴지통" count={trashIds.length.toString()} active={activeCategory === 'trash'} onClick={() => setActiveCategory('trash')} />
+        <div className="mb-8 flex flex-col gap-1">
+          <MenuBtn
+            icon={<LayoutGrid className="h-[18px] w-[18px]" />}
+            label="전체"
+            count={allAssets.length - trashIds.size}
+            active={activeCategory === "all"}
+            onClick={() => setActiveCategory("all")}
+          />
+          <MenuBtn
+            icon={<Bookmark className="h-[18px] w-[18px]" />}
+            label="즐겨찾기"
+            count={refFavorites.length}
+            active={activeCategory === "favorites"}
+            onClick={() => setActiveCategory("favorites")}
+          />
+          <MenuBtn
+            icon={<Clock className="h-[18px] w-[18px]" />}
+            label="최근 추가"
+            count={Math.min(12, allAssets.length)}
+            active={activeCategory === "recent"}
+            onClick={() => setActiveCategory("recent")}
+          />
+          <MenuBtn
+            icon={<Trash2 className="h-[18px] w-[18px]" />}
+            label="휴지통"
+            count={trashIds.size}
+            active={activeCategory === "trash"}
+            onClick={() => setActiveCategory("trash")}
+          />
         </div>
 
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-3 px-1">
-            <span className="text-[14px] font-bold text-text-primary tracking-tight">보드</span>
-            <button className="text-text-tertiary hover:text-white transition-colors"><Plus className="w-4 h-4" /></button>
+          <div className="mb-3 flex items-center justify-between px-1">
+            <span className="text-[14px] font-bold text-text-primary">보드</span>
+            <button onClick={createBoard} className="text-text-tertiary transition hover:text-white">
+              <Plus className="h-4 w-4" />
+            </button>
           </div>
           <div className="flex flex-col gap-0.5">
-            <BoardBtn img="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%201.png" label="엘프 컨셉" count="246" dot={activeCategory === '엘프 컨셉'} onClick={() => setActiveCategory('엘프 컨셉')} />
-            <BoardBtn img="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%202.png" label="판타지 환경" count="183" dot={activeCategory === '판타지 환경'} onClick={() => setActiveCategory('판타지 환경')} />
-            <BoardBtn img="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%203.png" label="갑옷 / 의상" count="198" dot={activeCategory === '갑옷 / 의상'} onClick={() => setActiveCategory('갑옷 / 의상')} />
-            <BoardBtn img="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%204.png" label="무기 / 소품" count="221" dot={activeCategory === '무기 / 소품'} onClick={() => setActiveCategory('무기 / 소품')} />
-            <BoardBtn img="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%205.png" label="캐릭터 레퍼런스" count="158" dot={activeCategory === '캐릭터 레퍼런스'} onClick={() => setActiveCategory('캐릭터 레퍼런스')} />
-            <BoardBtn img="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%206.png" label="다크 판타지 무드" count="176" dot={activeCategory === '다크 판타지 무드'} onClick={() => setActiveCategory('다크 판타지 무드')} />
-            <BoardBtn img="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%207.png" label="건축 레퍼런스" count="237" dot={activeCategory === '건축 레퍼런스'} onClick={() => setActiveCategory('건축 레퍼런스')} />
-            <BoardBtn img="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%208.png" label="색감 / 조명" count="124" dot={activeCategory === '색감 / 조명'} onClick={() => setActiveCategory('색감 / 조명')} />
-            <BoardBtn img="https://raw.githubusercontent.com/kimjihwan1205/NeoPoly/main/work_%209.png" label="아이디어 스케치" count="93" dot={activeCategory === '아이디어 스케치'} onClick={() => setActiveCategory('아이디어 스케치')} />
+            {boards.map((board) => (
+              <BoardBtn
+                key={board.id}
+                img={board.image}
+                label={board.label}
+                count={String(boardCounts.get(board.id) ?? 0)}
+                active={activeCategory === board.id}
+                onClick={() => setActiveCategory(board.id)}
+              />
+            ))}
           </div>
         </div>
       </aside>
 
-      <main className={`flex-1 min-w-0 px-6 py-6 w-full ${isPopup ? 'h-full overflow-y-auto custom-scrollbar' : 'overscroll-y-auto'}`}>
-        {!['favorites', 'recent', 'trash'].includes(activeCategory) && (
+      <main
+        className={`min-w-0 flex-1 px-6 py-6 ${
+          isPopup ? "h-full overflow-y-auto" : "overscroll-y-auto"
+        }`}
+      >
+        {!["favorites", "recent", "trash"].includes(activeCategory) && (
           <>
-            <div className="flex items-center gap-4 mb-6">
-              <div className="relative flex-1 max-w-[480px]">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-text-tertiary" />
-                <input 
-                  type="text" 
-                  placeholder="레퍼런스 검색..." 
-                  className="w-full bg-[#111215] border border-[#2A2E36] rounded-[8px] pl-10 pr-10 py-2.5 text-[14px] text-white focus:outline-none focus:border-brand-primary/50 transition-colors"
+            <div className="mb-6 flex items-center gap-4">
+              <div className="relative max-w-[480px] flex-1">
+                <Search className="absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-text-tertiary" />
+                <input
+                  type="text"
+                  placeholder="레퍼런스 검색"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-lg border border-[#2A2E36] bg-[#111215] py-2.5 pl-10 pr-10 text-[14px] text-white outline-none transition placeholder:text-neutral-500 focus:border-brand-primary/50"
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 rounded bg-[#1A1C20] px-1.5 py-0.5 text-text-tertiary text-[10px] border border-[#2A2E36] font-sans">/</div>
-              </div>
-              
-              <div className="flex-1"></div>
-              
-              <button className="px-4 py-2 bg-[#111215] border border-[#2A2E36] hover:bg-surface-primary rounded-[8px] text-[13px] font-bold text-text-secondary hover:text-white transition-colors flex items-center gap-2">
-                <Filter className="w-4 h-4" /> 필터
-              </button>
-              
-              <div className="flex items-center bg-[#111215] border border-[#2A2E36] rounded-[8px] px-3 py-2 cursor-pointer hover:bg-surface-primary transition-colors text-[13px] font-bold text-text-secondary">
-                최신순 <ChevronDown className="w-4 h-4 ml-6" />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-[#2A2E36] bg-[#1A1C20] px-1.5 py-0.5 font-sans text-[10px] text-text-tertiary">
+                  /
+                </div>
               </div>
 
-              <div className="flex items-center gap-1 bg-[#111215] border border-[#2A2E36] p-1 rounded-[8px]">
-                <button className="p-1 rounded bg-[#2A2E36] text-white"><LayoutGrid className="w-4 h-4" /></button>
-                <button className="p-1 rounded text-text-tertiary hover:text-white"><List className="w-4 h-4" /></button>
+              <div className="flex-1" />
+
+              <button
+                onClick={() => setActiveCategory("favorites")}
+                className="flex items-center gap-2 rounded-lg border border-[#2A2E36] bg-[#111215] px-4 py-2 text-[13px] font-bold text-text-secondary transition hover:bg-surface-primary hover:text-white"
+              >
+                <Filter className="h-4 w-4" />
+                즐겨찾기
+              </button>
+
+              <div className="flex cursor-pointer items-center rounded-lg border border-[#2A2E36] bg-[#111215] px-3 py-2 text-[13px] font-bold text-text-secondary transition hover:bg-surface-primary">
+                최신순
+                <ChevronDown className="ml-6 h-4 w-4" />
+              </div>
+
+              <div className="flex items-center gap-1 rounded-lg border border-[#2A2E36] bg-[#111215] p-1">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`rounded p-1 ${
+                    viewMode === "grid" ? "bg-[#2A2E36] text-white" : "text-text-tertiary hover:text-white"
+                  }`}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={`rounded p-1 ${
+                    viewMode === "list" ? "bg-[#2A2E36] text-white" : "text-text-tertiary hover:text-white"
+                  }`}
+                >
+                  <List className="h-4 w-4" />
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 mb-8 overflow-x-auto scrollbar-hide pb-2 -mx-2 px-2">
-              {['전체', '엘프 컨셉', '판타지 환경', '갑옷 / 의상', '무기 / 소품', '다크 판타지', '건축', '색감 / 조명'].map((badge) => (
+            <div className="-mx-2 mb-8 flex items-center gap-2 overflow-x-auto px-2 pb-2">
+              {BADGES.map((badge) => (
                 <button
                   key={badge}
                   onClick={() => setActiveBadge(badge)}
-                  className={`px-4 py-2 rounded-full border text-[13px] font-bold whitespace-nowrap transition-all ${
+                  className={`whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-bold transition ${
                     activeBadge === badge
-                      ? 'bg-[#E0A12E]/10 border-[#E0A12E]/30 text-brand-primary'
-                      : 'bg-transparent border-[#2A2E36] text-text-secondary hover:text-white hover:border-[#4B505A]'
+                      ? "border-[#E0A12E]/30 bg-[#E0A12E]/10 text-brand-primary"
+                      : "border-[#2A2E36] bg-transparent text-text-secondary hover:border-[#4B505A] hover:text-white"
                   }`}
                 >
                   {badge}
                 </button>
               ))}
-              <button className="px-3 py-2 rounded-full border border-[transparent] hover:bg-[#1A1C20] text-text-tertiary hover:text-white transition-all">
-                <Plus className="w-[18px] h-[18px]" />
+              <button
+                onClick={createBoard}
+                className="rounded-full border border-transparent px-3 py-2 text-text-tertiary transition hover:bg-[#1A1C20] hover:text-white"
+              >
+                <Plus className="h-[18px] w-[18px]" />
               </button>
             </div>
           </>
         )}
 
-        {activeCategory === 'favorites' && (
-          <div className="mb-8 mt-2 pb-6 border-b border-border-soft flex items-center justify-between">
-            <div>
-              <h1 className="text-[28px] font-bold text-white flex items-center gap-3 mb-2">
-                <span className="w-10 h-10 rounded-[8px] bg-red-500/10 flex items-center justify-center border border-red-500/20">
-                  <Bookmark className="w-5 h-5 text-red-500 fill-red-500" />
-                </span> 즐겨찾기
-              </h1>
-              <p className="text-text-secondary text-[14px]">내가 북마크한 레퍼런스 이미지들입니다.</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
-                <input type="text" placeholder="즐겨찾기 내 검색..." className="bg-[#111215] border border-[#2A2E36] rounded-[8px] pl-9 pr-4 py-2 text-[13px] text-white focus:outline-none focus:border-brand-primary/50 transition-colors w-[200px]" />
-              </div>
-              <button className="px-4 py-2 bg-[#111215] border border-[#2A2E36] hover:bg-surface-primary rounded-[8px] text-[13px] font-bold text-text-secondary hover:text-white transition-colors">최신순</button>
-            </div>
-          </div>
+        {activeCategory === "favorites" && (
+          <SectionHeader
+            icon={<Bookmark className="h-5 w-5 fill-red-500 text-red-500" />}
+            title="즐겨찾기"
+            desc="북마크한 레퍼런스 이미지입니다."
+          />
         )}
 
-        {activeCategory === 'recent' && (
-          <div className="mb-8 mt-2 pb-6 border-b border-border-soft flex items-center justify-between">
-            <div>
-              <h1 className="text-[28px] font-bold text-white flex items-center gap-3 mb-2">
-                <span className="w-10 h-10 rounded-[8px] bg-brand-primary/10 flex items-center justify-center border border-brand-primary/20">
-                  <Clock className="w-5 h-5 text-brand-primary" />
-                </span> 최근 추가
-              </h1>
-              <p className="text-text-secondary text-[14px]">오늘 추가된 이미지 항목입니다.</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button className="px-4 py-2 bg-[#111215] border border-[#2A2E36] hover:bg-surface-primary rounded-[8px] text-[13px] font-bold text-text-secondary hover:text-white transition-colors flex items-center gap-2"><Filter className="w-4 h-4"/> 필터</button>
-            </div>
-          </div>
+        {activeCategory === "recent" && (
+          <SectionHeader
+            icon={<Clock className="h-5 w-5 text-brand-primary" />}
+            title="최근 추가"
+            desc="최근 추가된 레퍼런스 항목입니다."
+          />
         )}
 
-        {activeCategory === 'trash' && (
-          <div className="mb-8 mt-2 pb-6 border-b border-border-soft flex items-center justify-between">
+        {activeCategory === "trash" && (
+          <div className="mb-8 mt-2 flex items-center justify-between border-b border-border-soft pb-6">
             <div>
-              <h1 className="text-[28px] font-bold text-white flex items-center gap-3 mb-2">
-                <span className="w-10 h-10 rounded-[8px] bg-gray-500/10 flex items-center justify-center border border-gray-500/20">
-                  <Trash2 className="w-5 h-5 text-text-tertiary" />
-                </span> 휴지통
+              <h1 className="mb-2 flex items-center gap-3 text-[28px] font-bold text-white">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-500/20 bg-gray-500/10">
+                  <Trash2 className="h-5 w-5 text-text-tertiary" />
+                </span>
+                휴지통
               </h1>
-              <p className="text-text-secondary text-[14px]">휴지통의 항목은 30일 후 영구 삭제됩니다.</p>
+              <p className="text-[14px] text-text-secondary">삭제 대기 중인 항목입니다.</p>
             </div>
-            <button className="px-4 py-2 border border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-[8px] text-[13px] font-bold transition-colors">
+            <button
+              onClick={() => {
+                setTrashIds(new Set());
+                setToast("휴지통을 비웠습니다.");
+              }}
+              className="rounded-lg border border-red-500/30 px-4 py-2 text-[13px] font-bold text-red-400 transition hover:bg-red-500/10"
+            >
               휴지통 비우기
             </button>
           </div>
         )}
 
-        <div className="text-[13px] text-neutral-400 flex items-center gap-2 mb-4 px-1">
-          <CheckSquare className="w-4 h-4 text-neutral-400" /> Ctrl(Cmd) 키를 누르고 클릭하면 여러 개를 다중 선택할 수 있습니다.
+        <div className="mb-4 flex items-center gap-2 px-1 text-[13px] text-neutral-400">
+          <CheckSquare className="h-4 w-4 text-neutral-400" />
+          Ctrl 또는 Cmd를 누른 채 클릭하면 여러 항목을 선택할 수 있습니다.
         </div>
 
-        <div className="columns-2 md:columns-3 xl:columns-4 2xl:columns-5 gap-[14px]">
-          {(() => {
-            const allAssets = [...ASSETS, ...externalAssets];
-            let displayedAssets = allAssets.slice(0, displayLimit);
-            if (activeCategory === 'favorites') {
-              displayedAssets = allAssets.filter(a => refFavorites.includes(a.id));
-            } else if (activeCategory === 'recent') {
-              displayedAssets = allAssets.slice(0, 10);
-            } else if (activeCategory === 'trash') {
-              displayedAssets = allAssets.filter(a => trashIds.includes(a.id));
-            } else {
-              displayedAssets = displayedAssets.filter(a => !trashIds.includes(a.id));
-            }
-            return displayedAssets;
-          })().map((asset, i) => {
-            const h = heights[(asset.id * 3 + 17) % heights.length];
-            const isSelected = selectedIds.has(asset.id);
-            const isFav = refFavorites.includes(asset.id);
-            
-            return (
-              <motion.div
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
+        {viewMode === "grid" ? (
+          <div className="grid grid-cols-2 gap-4 [grid-auto-flow:dense] [grid-auto-rows:8px] md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            {displayedAssets.map((asset, index) => {
+              const profile = MASONRY_PROFILES[(asset.id * 3 + index * 7) % MASONRY_PROFILES.length];
+              return (
+                <ReferenceCard
+                  key={asset.id}
+                  asset={asset}
+                  rowSpan={profile.rows}
+                  objectPosition={profile.position}
+                  isSelected={selectedIds.has(asset.id)}
+                  isFavorite={refFavorites.includes(asset.id)}
+                  onClick={(e) => handleCardClick(e, asset)}
+                  onFavorite={(e) => {
+                    e.stopPropagation();
+                    toggleRefFavorite(asset.id);
+                  }}
+                  onDownload={(e) => {
+                    e.stopPropagation();
+                    downloadAsset(asset);
+                  }}
+                  onLink={(e) => {
+                    e.stopPropagation();
+                    setToast("프로젝트 연결 준비가 완료되었습니다.");
+                  }}
+                  onAdd={(e) => {
+                    e.stopPropagation();
+                    setSelectedIds((prev) => new Set([...prev, asset.id]));
+                    setToast("보드 선택 항목에 추가했습니다.");
+                  }}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3">
+            {displayedAssets.map((asset) => (
+              <button
                 key={asset.id}
-                onClick={(e) => handleCardClick(e as any, asset.id)}
-                className={`relative group rounded-[10px] overflow-hidden mb-[14px] cursor-pointer break-inside-avoid shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition-all ${
-                  isSelected ? 'border-2 border-brand-primary shadow-[0_0_20px_rgba(224,161,46,0.15)]' : 'border border-[#1F2329] hover:border-brand-primary/40'
+                onClick={(e) => handleCardClick(e, asset)}
+                className={`grid grid-cols-[120px_1fr_auto] items-center gap-4 rounded-lg border bg-[#0A0B0D] p-3 text-left transition ${
+                  selectedIds.has(asset.id)
+                    ? "border-brand-primary"
+                    : "border-[#1F2329] hover:border-brand-primary/40"
                 }`}
               >
-                <div className={`w-full ${h} overflow-hidden bg-surface-secondary`}>
-                  <img src={asset.image} alt={asset.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <img
+                  referrerPolicy="no-referrer"
+                  src={asset.image}
+                  alt={asset.title}
+                  className="h-[90px] w-[120px] rounded-lg object-cover"
+                />
+                <div>
+                  <h3 className="text-[16px] font-bold text-white">{asset.title}</h3>
+                  <p className="mt-1 text-[13px] text-neutral-400">{asset.author}</p>
+                  <p className="mt-2 text-[12px] text-neutral-500">{asset.type ?? asset.badge}</p>
                 </div>
+                <Bookmark
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleRefFavorite(asset.id);
+                  }}
+                  className={`h-5 w-5 ${
+                    refFavorites.includes(asset.id) ? "fill-red-500 text-red-500" : "text-neutral-400"
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
+        )}
 
-                {isSelected && (
-                  <div className="absolute top-3 left-3 w-5 h-5 bg-brand-primary rounded-full flex items-center justify-center text-bg-dark shadow-md z-20 shrink-0">
-                    <Check className="w-3.5 h-3.5 stroke-[3]" />
-                  </div>
-                )}
-                
-                {isFav && !isSelected && (
-                  <div className="absolute top-3 right-3 text-red-500 z-20">
-                    <Bookmark className="w-[22px] h-[22px] fill-red-500" />
-                  </div>
-                )}
+        {displayedAssets.length === 0 && (
+          <div className="flex h-[260px] items-center justify-center rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-[14px] text-neutral-400">
+            조건에 맞는 레퍼런스가 없습니다.
+          </div>
+        )}
 
-                <div className="absolute bottom-3 inset-x-0 flex justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200 z-10 pointer-events-none">
-                  <div className="pointer-events-auto flex items-center gap-1.5 bg-[#1A1C20]/90 backdrop-blur-md border border-[#2A2E36]/80 p-1.5 rounded-[10px] shadow-xl">
-                    <ActionButton icon={<Plus className="w-3.5 h-3.5"/>} title="임시 보드 추가" />
-                    <ActionButton icon={<LinkIcon className="w-3.5 h-3.5"/>} title="프로젝트 연결" />
-                    <ActionButton 
-                      icon={<Bookmark className={`w-3.5 h-3.5 ${isFav ? 'text-red-400 fill-red-400' : ''}`}/>} 
-                      title="즐겨찾기" 
-                      onClick={(e) => { e.stopPropagation(); toggleRefFavorite(asset.id); }}
-                    />
-                    <ActionButton icon={<Download className="w-3.5 h-3.5"/>} title="다운로드" />
-                    <div className="w-[1px] h-4 bg-[#2A2E36] mx-1"></div>
-                    <ActionButton icon={<MoreHorizontal className="w-3.5 h-3.5"/>} title="더보기 (분석 메뉴 등)" />
-                  </div>
-                </div>
-              </motion.div>
-            )
-          })}
-        </div>
-        
-        {!['favorites', 'recent', 'trash'].includes(activeCategory) && (
-          <div className="flex justify-center mt-8 py-6 pb-20">
-            <button 
+        {!["favorites", "recent", "trash"].includes(activeCategory) && (
+          <div className="mt-8 flex justify-center py-6 pb-20">
+            <button
               onClick={handleLoadMore}
               disabled={isLoadingMore}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-surface-primary border border-[#2A2E36] text-[14px] font-bold text-text-tertiary hover:text-white transition-all hover:bg-[#111215]"
+              className="flex items-center gap-2 rounded-full border border-[#2A2E36] bg-surface-primary px-6 py-2.5 text-[14px] font-bold text-text-tertiary transition hover:bg-[#111215] hover:text-white"
             >
               {isLoadingMore ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
-                  로딩중...
-                </div>
+                <>
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-primary border-t-transparent" />
+                  불러오는 중
+                </>
               ) : (
-                <>더보기 <ChevronDown className="w-4 h-4" /></>
+                <>
+                  더 보기
+                  <ChevronDown className="h-4 w-4" />
+                </>
               )}
             </button>
           </div>
@@ -318,47 +694,64 @@ export default function ReferencePage({ favorites = [], toggleFavorite = () => {
 
       <AnimatePresence>
         {selectedIds.size > 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 30 }}
-            className="fixed bottom-8 left-[calc(50%+140px)] -translate-x-1/2 flex items-center bg-[#1A1C20] border border-[#2A2E36] rounded-[12px] p-2 px-4 shadow-[0_20px_40px_rgba(0,0,0,0.6)] z-50 gap-4"
+            className="fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-lg border border-[#2A2E36] bg-[#1A1C20] p-2 px-4 shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
           >
-            <div className="flex items-center gap-2 pr-4 border-r border-[#2A2E36]">
-              <div className="w-5 h-5 bg-brand-primary rounded-full flex justify-center items-center text-bg-dark text-[11px] font-bold">
+            <div className="flex items-center gap-2 border-r border-[#2A2E36] pr-4">
+              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary text-[11px] font-bold text-bg-dark">
                 {selectedIds.size}
               </div>
               <span className="text-[13px] font-bold text-white">선택됨</span>
             </div>
-            
+
             <div className="flex items-center gap-2">
               {isPopup ? (
-                <button 
+                <button
                   onClick={() => onAcceptSelection?.(Array.from(selectedIds))}
-                  className="px-6 py-1.5 bg-[#E0A12E] hover:bg-[#E0A12E]/90 text-bg-dark rounded-[6px] text-[13px] font-bold transition-colors flex gap-2 items-center shadow-[0_0_12px_rgba(224,161,46,0.15)]"
+                  className="flex items-center gap-2 rounded-md bg-[#E0A12E] px-6 py-1.5 text-[13px] font-bold text-bg-dark transition hover:bg-[#E0A12E]/90"
                 >
-                  선택 항목 가져오기 <ChevronRight className="w-4 h-4 ml-1" />
+                  선택 항목 가져오기
+                  <ChevronRight className="h-4 w-4" />
                 </button>
               ) : (
                 <>
-                  <button className="px-3 py-1.5 hover:bg-surface-primary rounded-[6px] text-[13px] font-medium text-text-secondary hover:text-white transition-colors flex gap-2 items-center">
-                    <Folder className="w-4 h-4" /> 보드 이동
+                  <button
+                    onClick={() => setToast("선택 항목을 보드에 추가했습니다.")}
+                    className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
+                  >
+                    <Folder className="h-4 w-4" />
+                    보드 추가
                   </button>
-                  <button className="px-3 py-1.5 hover:bg-surface-primary rounded-[6px] text-[13px] font-medium text-text-secondary hover:text-white transition-colors flex gap-2 items-center">
-                    <LinkIcon className="w-4 h-4" /> 프로젝트 연결
+                  <button
+                    onClick={() => {
+                      setToast("선택 항목을 프로젝트와 연결했습니다.");
+                      onNavigate("projects");
+                    }}
+                    className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                    프로젝트 연결
                   </button>
-                  <button className="px-4 py-1.5 bg-[#E0A12E]/10 border border-[#E0A12E]/30 text-brand-primary hover:bg-[#E0A12E]/20 rounded-[6px] text-[13px] font-bold transition-colors flex gap-2 items-center shadow-[0_0_12px_rgba(224,161,46,0.15)]">
-                    <Wand2 className="w-4 h-4" /> AI Studio 보내기
+                  <button
+                    onClick={() => onNavigate("studio")}
+                    className="flex items-center gap-2 rounded-md border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-4 py-1.5 text-[13px] font-bold text-brand-primary transition hover:bg-[#E0A12E]/20"
+                  >
+                    <Wand2 className="h-4 w-4" />
+                    AI Studio 보내기
                   </button>
                 </>
               )}
             </div>
-            
-            <div className="pl-2">
-              <button onClick={() => setSelectedIds(new Set())} className="p-1.5 hover:bg-surface-primary rounded-full text-text-tertiary hover:text-white transition-colors">
-                <Trash2 className="w-[18px] h-[18px]" />
-              </button>
-            </div>
+
+            <button
+              onClick={sendSelectedToTrash}
+              className="rounded-full p-1.5 text-text-tertiary transition hover:bg-surface-primary hover:text-white"
+            >
+              <Trash2 className="h-[18px] w-[18px]" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -369,46 +762,48 @@ export default function ReferencePage({ favorites = [], toggleFavorite = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#050505]/95 backdrop-blur-sm p-8"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#050505]/95 p-8 backdrop-blur-sm"
             onClick={() => setPreviewImage(null)}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative max-w-full max-h-full flex flex-col"
+              className="relative flex max-h-full max-w-full flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-              <button 
+              <button
                 onClick={() => setPreviewImage(null)}
-                className="absolute -top-12 right-0 p-2 text-neutral-400 hover:text-white transition-colors bg-surface-primary/50 rounded-full hover:bg-surface-primary"
+                className="absolute -top-12 right-0 rounded-full bg-surface-primary/50 p-2 text-neutral-400 transition hover:bg-surface-primary hover:text-white"
               >
-                <X className="w-6 h-6" />
+                <X className="h-6 w-6" />
               </button>
-              <img 
-                src={previewImage.image} 
-                alt={previewImage.title} 
-                className="max-w-[90vw] max-h-[85vh] object-contain rounded-[8px] shadow-[0_20px_60px_rgba(0,0,0,0.8)] border border-[#1F2329]" 
+              <img
                 referrerPolicy="no-referrer"
+                src={previewImage.image}
+                alt={previewImage.title}
+                className="max-h-[85vh] max-w-[90vw] rounded-lg border border-[#1F2329] object-contain shadow-[0_20px_60px_rgba(0,0,0,0.8)]"
               />
               <div className="mt-4 flex items-center justify-between px-2">
                 <div>
-                  <h3 className="text-[20px] font-bold text-white tracking-tight">{previewImage.title}</h3>
-                  <p className="text-[14px] text-neutral-400 mt-1">{previewImage.badge}</p>
+                  <h3 className="text-[20px] font-bold text-white">{previewImage.title}</h3>
+                  <p className="mt-1 text-[14px] text-neutral-400">{previewImage.author}</p>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => { toggleRefFavorite(previewImage.id); }} className={`p-2.5 rounded-[8px] bg-surface-primary border border-[#1F2329] hover:bg-[#111215] hover:text-white transition-colors ${refFavorites.includes(previewImage.id) ? 'text-red-400' : 'text-neutral-400'}`}>
-                    <Bookmark className={`w-5 h-5 ${refFavorites.includes(previewImage.id) ? 'fill-red-400' : ''}`} />
+                  <button
+                    onClick={() => toggleRefFavorite(previewImage.id)}
+                    className={`rounded-lg border border-[#1F2329] bg-surface-primary p-2.5 transition hover:bg-[#111215] hover:text-white ${
+                      refFavorites.includes(previewImage.id) ? "text-red-400" : "text-neutral-400"
+                    }`}
+                  >
+                    <Bookmark className={`h-5 w-5 ${refFavorites.includes(previewImage.id) ? "fill-red-400" : ""}`} />
                   </button>
-                  <button onClick={() => {
-                      const newSet = new Set(selectedIds);
-                      if (newSet.has(previewImage.id)) newSet.delete(previewImage.id);
-                      else newSet.add(previewImage.id);
-                      setSelectedIds(newSet);
-                    }} className={`p-2.5 rounded-[8px] border transition-colors flex items-center gap-2 px-4 ${selectedIds.has(previewImage.id) ? 'bg-brand-primary text-bg-dark border-brand-primary font-bold' : 'bg-surface-primary border-[#1F2329] text-white hover:bg-[#111215]'}`}>
-                    <CheckSquare className="w-4 h-4" />
-                    {selectedIds.has(previewImage.id) ? '선택 취소' : '선택하기'}
+                  <button
+                    onClick={() => downloadAsset(previewImage)}
+                    className="flex items-center gap-2 rounded-lg border border-[#1F2329] bg-surface-primary px-4 py-2.5 text-white transition hover:bg-[#111215]"
+                  >
+                    <Download className="h-4 w-4" />
+                    다운로드
                   </button>
                 </div>
               </div>
@@ -416,46 +811,198 @@ export default function ReferencePage({ favorites = [], toggleFavorite = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  )
-}
 
-function MenuBtn({ icon, label, count, active, onClick }: { icon: any, label: string, count: string, active?: boolean, onClick?: () => void }) {
-  return (
-    <button onClick={onClick} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[16px] font-semibold tracking-tight transition-colors border border-transparent ${active ? 'bg-[#15161A] text-white' : 'text-text-secondary hover:text-white hover:bg-[#111215]'}`}>
-      <div className="flex items-center gap-3">
-        <span className={`w-[18px] h-[18px] flex items-center justify-center ${active ? 'text-[#E0A12E]' : 'text-neutral-400'}`}>
-          {icon}
-        </span>
-        <span className="tracking-tight">{label}</span>
-      </div>
-      <span className={`text-[13px] font-sans ${active ? 'text-text-secondary' : 'text-neutral-500'}`}>{count}</span>
-    </button>
-  )
-}
-
-function BoardBtn({ img, label, count, dot, onClick }: { img: string, label: string, count: string, dot?: boolean, onClick?: () => void }) {
-  return (
-    <button onClick={onClick} className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-[16px] font-semibold tracking-tight transition-colors border border-transparent ${dot ? 'bg-[#15161A] text-white' : 'text-text-secondary hover:text-white hover:bg-[#111215]'}`}>
-      <div className="flex items-center gap-3.5">
-        <div className="w-8 h-8 rounded-[6px] overflow-hidden shrink-0 border border-[#2A2E36]">
-          <img referrerPolicy="no-referrer" src={img} alt="" className="w-full h-full object-cover" />
+      {toast && (
+        <div className="fixed bottom-8 right-8 z-[80] rounded-lg border border-[#2A2E36] bg-[#111317] px-4 py-3 text-[13px] font-semibold text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
+          {toast}
         </div>
-        <span className={`tracking-tight ${dot ? 'text-[#E0A12E]' : ''}`}>{label}</span>
-      </div>
-      <span className={`text-[13px] font-sans ${dot ? 'text-text-secondary' : 'text-neutral-500'}`}>{count}</span>
-    </button>
-  )
+      )}
+    </div>
+  );
 }
 
-function ActionButton({ icon, title, onClick }: { icon: any, title: string, onClick?: (e:React.MouseEvent) => void }) {
+function SectionHeader({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
   return (
-    <button 
+    <div className="mb-8 mt-2 flex items-center justify-between border-b border-border-soft pb-6">
+      <div>
+        <h1 className="mb-2 flex items-center gap-3 text-[28px] font-bold text-white">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518]">
+            {icon}
+          </span>
+          {title}
+        </h1>
+        <p className="text-[14px] text-text-secondary">{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function MenuBtn({
+  icon,
+  label,
+  count,
+  active,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  count: number;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center justify-between rounded-lg border border-transparent px-3 py-2.5 text-[16px] font-semibold transition ${
+        active
+          ? "bg-[#15161A] text-white"
+          : "text-text-secondary hover:bg-[#111215] hover:text-white"
+      }`}
+    >
+      <span className="flex items-center gap-3">
+        <span className={active ? "text-[#E0A12E]" : "text-neutral-400"}>{icon}</span>
+        {label}
+      </span>
+      <span className={active ? "text-[13px] text-text-secondary" : "text-[13px] text-neutral-500"}>
+        {count}
+      </span>
+    </button>
+  );
+}
+
+function BoardBtn({
+  img,
+  label,
+  count,
+  active,
+  onClick,
+}: {
+  img: string;
+  label: string;
+  count: string;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex w-full items-center justify-between rounded-lg border border-transparent px-3 py-3 text-[16px] font-semibold transition ${
+        active
+          ? "bg-[#15161A] text-[#E0A12E]"
+          : "text-text-secondary hover:bg-[#111215] hover:text-white"
+      }`}
+    >
+      <span className="flex items-center gap-3.5">
+        <span className="h-8 w-8 shrink-0 overflow-hidden rounded-md border border-[#2A2E36]">
+          <img referrerPolicy="no-referrer" src={img} alt="" className="h-full w-full object-cover" />
+        </span>
+        {label}
+      </span>
+      <span className="font-sans text-[13px] text-neutral-500">{count}</span>
+    </button>
+  );
+}
+
+function ReferenceCard({
+  asset,
+  rowSpan,
+  objectPosition,
+  isSelected,
+  isFavorite,
+  onClick,
+  onFavorite,
+  onDownload,
+  onLink,
+  onAdd,
+}: {
+  asset: ReferenceAsset;
+  rowSpan: number;
+  objectPosition: string;
+  isSelected: boolean;
+  isFavorite: boolean;
+  onClick: (e: React.MouseEvent) => void;
+  onFavorite: (e: React.MouseEvent) => void;
+  onDownload: (e: React.MouseEvent) => void;
+  onLink: (e: React.MouseEvent) => void;
+  onAdd: (e: React.MouseEvent) => void;
+}) {
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      onClick={onClick}
+      style={{ gridRowEnd: `span ${rowSpan}` }}
+      className={`group relative h-full min-h-[180px] w-full cursor-pointer overflow-hidden rounded-lg text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition ${
+        isSelected
+          ? "border-2 border-brand-primary shadow-[0_0_20px_rgba(224,161,46,0.15)]"
+          : "border border-[#1F2329] hover:border-brand-primary/40"
+      }`}
+    >
+      <div className="h-full w-full overflow-hidden bg-surface-secondary">
+        <img
+          referrerPolicy="no-referrer"
+          src={asset.image}
+          alt={asset.title}
+          className="h-full w-full object-cover"
+          style={{ objectPosition }}
+        />
+      </div>
+
+      {isSelected && (
+        <div className="absolute left-3 top-3 z-20 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-primary text-bg-dark shadow-md">
+          <Check className="h-3.5 w-3.5 stroke-[3]" />
+        </div>
+      )}
+
+      {isFavorite && !isSelected && (
+        <div className="absolute right-3 top-3 z-20 text-red-500">
+          <Bookmark className="h-[22px] w-[22px] fill-red-500" />
+        </div>
+      )}
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex translate-y-2 justify-center opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+        <div className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-[#2A2E36]/80 bg-[#1A1C20]/90 p-1.5 shadow-xl backdrop-blur-md">
+          <ActionButton icon={<Plus className="h-3.5 w-3.5" />} title="보드 추가" onClick={onAdd} />
+          <ActionButton icon={<LinkIcon className="h-3.5 w-3.5" />} title="프로젝트 연결" onClick={onLink} />
+          <ActionButton
+            icon={<Bookmark className={`h-3.5 w-3.5 ${isFavorite ? "fill-red-400 text-red-400" : ""}`} />}
+            title="즐겨찾기"
+            onClick={onFavorite}
+          />
+          <ActionButton icon={<Download className="h-3.5 w-3.5" />} title="다운로드" onClick={onDownload} />
+          <span className="mx-1 h-4 w-px bg-[#2A2E36]" />
+          <ActionButton icon={<MoreHorizontal className="h-3.5 w-3.5" />} title="더보기" />
+        </div>
+      </div>
+    </motion.button>
+  );
+}
+
+function ActionButton({
+  icon,
+  title,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  onClick?: (e: React.MouseEvent) => void;
+}) {
+  return (
+    <button
       onClick={onClick}
       title={title}
-      className="p-2 hover:bg-surface-primary rounded-[6px] text-text-secondary hover:text-white transition-colors flex items-center justify-center hover:scale-110 active:scale-95"
+      className="flex items-center justify-center rounded-md p-2 text-text-secondary transition hover:scale-105 hover:bg-surface-primary hover:text-white active:scale-95"
     >
       {icon}
     </button>
-  )
+  );
 }
