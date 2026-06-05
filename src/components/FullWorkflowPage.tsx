@@ -213,31 +213,19 @@ const ORC_MESSAGES: MessageInfo[] = [
   {
     id: "orc-1",
     role: "assistant",
-
     content: "오크 전사 노트를 불러왔어요. 정면 전신, 45도, 측면, 후면 뷰와 장비 파츠를 기준으로 3D 모델링에 바로 이어질 수 있는 제작 시안을 구성할게요.",
-
-    content: "오크 전사 노트를 불러왔어요. 이 자료를 기반으로 3D 캐릭터 제작용 이미지를 구성할게요.",
-
     time: "오후 2:30",
   },
   {
     id: "orc-2",
     role: "user",
-
     content: "녹색 피부의 강인한 오크 전사를 만들고 싶어. 어깨 갑옷, 팔 보호구, 해골 벨트, 큰 목재 무기가 잘 보였으면 좋겠어.",
-
-    content: "강인한 오크 캐릭터를 장비가 잘 보이는 전신 기준으로 만들고 싶어.",
-
     time: "오후 2:31",
   },
   {
     id: "orc-3",
     role: "assistant",
-
     content: "좋아요. 캐릭터 실루엣은 넓은 어깨와 묵직한 체형으로 유지하고, 장비는 어깨 갑옷, 스파이크 팔 보호구, 해골 벨트, 목재 무기가 분리해서 읽히도록 프롬프트를 정리했습니다.",
-
-    content: "좋아요. 정면 턴어라운드와 장비 파츠를 기준으로 갑옷, 팔 보호구, 허리 장식이 잘 분리되는 시안을 생성하겠습니다.",
-
     time: "오후 2:32",
     chips: [
       { label: "오크 전사", isSelected: true },
@@ -305,10 +293,7 @@ export default function FullWorkflowPage({
   const [isModularSelected, setIsModularSelected] = useState<boolean>(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [hasGeneratedImages, setHasGeneratedImages] = useState<boolean>(false);
-
   const [hasReturnedFromGeneratedStep, setHasReturnedFromGeneratedStep] = useState<boolean>(false);
-
-
   const [isOrcWorkflow, setIsOrcWorkflow] = useState<boolean>(false);
   const hasSelectedGeneratedImage = selectedGridImage !== null;
 
@@ -403,12 +388,8 @@ export default function FullWorkflowPage({
     setActiveProject(newProjectId);
     setMessages(hasOrcNote ? ORC_MESSAGES : []);
     setIsOrcWorkflow(hasOrcNote);
-
     setHasGeneratedImages(false);
     setHasReturnedFromGeneratedStep(false);
-
-    setHasGeneratedImages(hasOrcNote);
-
     setHasUnsavedChanges(false);
   };
 
@@ -432,19 +413,14 @@ export default function FullWorkflowPage({
     setActiveProject(newProjectId);
     setMessages([]);
     setHasGeneratedImages(false);
-
     setHasReturnedFromGeneratedStep(false);
-
-
     setHasUnsavedChanges(false);
   };
 
   const handleGenerateImage = () => {
     setWorkflowStep("image-generation");
     setHasGeneratedImages(true);
-
     setHasReturnedFromGeneratedStep(false);
-
     setHasUnsavedChanges(false);
     setSelectedGridImage(null);
     setIsTurnaroundSelected(false);
@@ -641,11 +617,7 @@ export default function FullWorkflowPage({
                           </button>
                           <button
                             onClick={handleStartProjectWithAssets}
-
                             className="flex-[2] py-3 bg-[#E0A12E] hover:bg-[#F0B43A] text-[#050505] rounded-xl text-[14px] font-bold transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(224,161,46,0.2)]"
-
-                            className="flex-[2] py-3 bg-[#F5F5F5] hover:bg-white text-[#050505] rounded-xl text-[14px] font-bold transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
-
                           >
                             작업 시작 <ChevronRight className="w-4 h-4" />
                           </button>
@@ -1033,11 +1005,7 @@ export default function FullWorkflowPage({
                             onClick={() => setWorkflowStep("image-generation")}
                             className="w-full bg-[#141518] hover:bg-[#1C1E23] border border-[#2A2E36] text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center gap-2 text-[15px]"
                           >
-
                             {hasReturnedFromGeneratedStep ? "이전으로 복귀" : "이미지 시안 확인"} ▶
-
-                            시안 화면으로 복귀 ▶
-
                           </button>
                         )
                       ) : (
@@ -1045,11 +1013,7 @@ export default function FullWorkflowPage({
                           onClick={handleGenerateImage}
                           className="w-full bg-[#E0A12E] hover:bg-[#F0B43A] text-black font-bold py-4 rounded-xl shadow-[0_0_15px_rgba(224,161,46,0.2)] transition-all flex items-center justify-center gap-2 text-[15px]"
                         >
-
                           작업 시작 <Sparkles className="w-5 h-5" />
-
-                          이미지 생성하기 <Sparkles className="w-5 h-5" />
-
                         </button>
                       )}
                     </div>
@@ -1380,10 +1344,7 @@ export default function FullWorkflowPage({
                         onClick={() => { 
                           setWorkflowStep("prompt"); 
                           setRightPanelMode("prompt");
-
                           setHasReturnedFromGeneratedStep(true);
-
-
                           setHasUnsavedChanges(false);
                         }} 
                         className="w-[30%] bg-[#0A0B0D] hover:bg-[#141518] border border-[#2A2E36] text-neutral-300 py-3.5 rounded-xl transition-colors flex items-center justify-center gap-1.5 text-[13px] font-medium"

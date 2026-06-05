@@ -120,7 +120,6 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                 </div>
 
                 <div className="grid min-w-0 flex-1 grid-cols-2 gap-4">
-<<<<<<< HEAD
                   {TURNAROUND_VIEWS.map((view, index) => {
                     const isRegeneratingView = isGenerating || regeneratingViews.has(view.id);
                     return (
@@ -181,37 +180,6 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                       </motion.div>
                     );
                   })}
-=======
-                  {TURNAROUND_VIEWS.map((view, index) => (
-                    <motion.div
-                      key={view.id}
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.04 }}
-                      className="relative min-h-[260px] overflow-hidden rounded-xl border border-[#1F2329] bg-[#101216] p-4"
-                    >
-                      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(224,161,46,0.09),transparent_58%)]" />
-                      <div className="relative z-10 mb-3 flex items-center justify-between">
-                        <div>
-                          <p className="text-[15px] font-bold text-white">{view.label}</p>
-                          <p className="mt-0.5 text-[11px] font-mono text-neutral-500">{view.angle}</p>
-                        </div>
-                        <span className="rounded-full border border-[#4ADE80]/30 bg-[#4ADE80]/10 px-2 py-0.5 text-[11px] font-medium text-[#4ADE80]">
-                          Ready
-                        </span>
-                      </div>
-                      <div className="relative z-10 flex h-[calc(100%-52px)] items-center justify-center">
-                        <img
-                          src={view.img}
-                          alt={`오크 ${view.label}`}
-                          className={`max-h-full max-w-full object-contain transition-all duration-300 ${
-                            isGenerating ? "scale-95 blur-sm opacity-35" : "opacity-100"
-                          }`}
-                        />
-                      </div>
-                    </motion.div>
-                  ))}
->>>>>>> c80425d0882cb1807b024b299664fd89da59b6a3
 
                   {isGenerating && (
                     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-xl bg-black/40 backdrop-blur-sm">
