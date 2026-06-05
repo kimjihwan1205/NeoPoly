@@ -35,10 +35,10 @@ const MODULAR_PARTS = [
 export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   const [expertTab, setExpertTab] = useState<"turnaround" | "modular">("turnaround");
   const [isGenerating, setIsGenerating] = useState(false);
-<<<<<<< HEAD
+
   const [regeneratingViews, setRegeneratingViews] = useState<Set<string>>(new Set());
-=======
->>>>>>> c80425d0882cb1807b024b299664fd89da59b6a3
+
+
   const [isGeneratingModular, setIsGeneratingModular] = useState(false);
   const [hasGeneratedModular, setHasGeneratedModular] = useState(true);
   const [selectedPart, setSelectedPart] = useState<string>("left-bracer");
