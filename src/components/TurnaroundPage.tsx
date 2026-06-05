@@ -48,7 +48,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
     window.setTimeout(() => setIsGenerating(false), 900);
   };
 
-<<<<<<< HEAD
+
   const handleRegenerateView = (viewId: string) => {
     setRegeneratingViews((current) => new Set(current).add(viewId));
     window.setTimeout(() => {
@@ -60,8 +60,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
     }, 900);
   };
 
-=======
->>>>>>> c80425d0882cb1807b024b299664fd89da59b6a3
+
   const handleGenerateModular = () => {
     setIsGeneratingModular(true);
     window.setTimeout(() => {
