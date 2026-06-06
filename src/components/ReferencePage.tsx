@@ -32,6 +32,8 @@ interface ReferencePageProps {
   toggleFavorite: (id: number) => void;
   onNavigate: (page: string) => void;
   isPopup?: boolean;
+  hideSidebar?: boolean;
+  boardCategory?: string;
   onAcceptSelection?: (selectedIds: number[]) => void;
 }
 
@@ -229,6 +231,8 @@ export default function ReferencePage({
   toggleFavorite = () => {},
   onNavigate = () => {},
   isPopup = false,
+  hideSidebar = false,
+  boardCategory,
   onAcceptSelection,
 }: ReferencePageProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -246,6 +250,10 @@ export default function ReferencePage({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [boards, setBoards] = useState(REFERENCE_BOARDS);
   const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    if (boardCategory) setActiveCategory(boardCategory);
+  }, [boardCategory]);
 
   useEffect(() => {
     if (!toast) return;
@@ -391,11 +399,12 @@ export default function ReferencePage({
         isPopup ? "h-full min-h-0" : "min-h-[calc(100vh-76px)]"
       }`}
     >
-      <aside
-        className={`hidden w-[300px] shrink-0 flex-col border-r border-[#161618] bg-[#08090B] p-5 lg:flex ${
-          isPopup ? "h-full overflow-y-auto" : "sticky top-[76px] h-[calc(100vh-76px)]"
-        }`}
-      >
+      {!hideSidebar && (
+        <aside
+          className={`hidden w-[300px] shrink-0 flex-col border-r border-[#161618] bg-[#08090B] p-5 lg:flex ${
+            isPopup ? "h-full overflow-y-auto" : "sticky top-[76px] h-[calc(100vh-76px)]"
+          }`}
+        >
         <div className="mb-8 mt-2">
           {!isPopup && (
             <>
@@ -465,7 +474,8 @@ export default function ReferencePage({
             ))}
           </div>
         </div>
-      </aside>
+        </aside>
+      )}
 
       <main
         className={`min-w-0 flex-1 px-6 py-6 ${

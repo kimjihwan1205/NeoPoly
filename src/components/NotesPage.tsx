@@ -24,6 +24,9 @@ import NoteSidebar from "./NoteSidebar";
 interface NotesPageProps {
   onNavigate: (page: string) => void;
   isPopup?: boolean;
+  hideSidebar?: boolean;
+  hideDetailPanel?: boolean;
+  boardFilter?: string;
   onSelectNote?: (noteId: number) => void;
   onAcceptSelection?: (noteIds: number[]) => void;
 }
@@ -169,11 +172,14 @@ function loadChecklist() {
 export default function NotesPage({
   onNavigate,
   isPopup,
+  hideSidebar = false,
+  hideDetailPanel = false,
+  boardFilter,
   onSelectNote,
   onAcceptSelection,
 }: NotesPageProps) {
   const [notes, setNotes] = useState<NoteItem[]>(loadNotes);
-  const [activeNote, setActiveNote] = useState<number | null>(notes[0]?.id ?? null);
+  const [activeNote, setActiveNote] = useState<number | null>(() => hideDetailPanel ? null : notes[0]?.id ?? null);
   const [selectedNotes, setSelectedNotes] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -184,6 +190,10 @@ export default function NotesPage({
     loadChecklist,
   );
   const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    if (boardFilter) setFilter(boardFilter);
+  }, [boardFilter]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
@@ -306,14 +316,16 @@ export default function NotesPage({
         isPopup ? "h-full" : "h-[calc(100vh-76px)]"
       }`}
     >
-      <NoteSidebar
-        onNavigate={onNavigate}
-        activeFilter={filter}
-        onFilterChange={setFilter}
-        totalCount={notes.filter((note) => !trashIds.has(note.id)).length}
-        starredCount={notes.filter((note) => note.starred && !trashIds.has(note.id)).length}
-        trashCount={trashIds.size}
-      />
+      {!hideSidebar && (
+        <NoteSidebar
+          onNavigate={onNavigate}
+          activeFilter={filter}
+          onFilterChange={setFilter}
+          totalCount={notes.filter((note) => !trashIds.has(note.id)).length}
+          starredCount={notes.filter((note) => note.starred && !trashIds.has(note.id)).length}
+          trashCount={trashIds.size}
+        />
+      )}
 
       <main className="relative flex-1 overflow-y-auto bg-bg-dark px-6 py-6">
         <div className="mx-auto flex h-full w-full max-w-[2400px] flex-col gap-6">
@@ -483,7 +495,7 @@ export default function NotesPage({
       </main>
 
       <AnimatePresence>
-        {activeNoteData && (
+        {!hideDetailPanel && activeNoteData && (
           <motion.aside
             initial={{ width: 0, opacity: 0, x: 20 }}
             animate={{ width: 400, opacity: 1, x: 0 }}

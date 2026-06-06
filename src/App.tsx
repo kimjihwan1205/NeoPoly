@@ -835,22 +835,22 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
         <nav className="hidden lg:block">
           <ul className="flex items-center gap-5 lg:gap-7 xl:gap-10 text-[15px] lg:text-[15px] xl:text-[16px] font-semibold text-text-tertiary whitespace-nowrap">
             <li 
-              className={`${activeNav === 'market' ? 'text-brand-primary border-b-[2px] border-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
-              onClick={() => { if(setActiveNav) setActiveNav('market'); if(onNavigate) onNavigate('home'); }}
+              className={`${currentPage === 'home' ? 'text-brand-primary border-b-[2px] border-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
+              onClick={() => { if(setActiveNav) setActiveNav(null); if(onNavigate) onNavigate('home'); }}
             >
-              Market
-            </li>
-            <li 
-              className={`${activeNav === 'art' ? 'text-brand-primary border-b-[2px] border-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
-              onClick={() => { if(setActiveNav) setActiveNav('art'); if(onNavigate) onNavigate('home'); }}
-            >
-              Art
+              Discover
             </li>
             <li 
               className={`${activeNav === 'studio' || currentPage === 'studio' || currentPage === 'full_workflow' || currentPage === 'full_workflow_chat' || currentPage === 'turnaround' || currentPage === 'modeling_generation' ? 'text-brand-primary border-b-[2px] border-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav('studio'); if(onNavigate) onNavigate('studio'); }}
             >
               AI Studio
+            </li>
+            <li 
+              className={`${currentPage === 'board' || currentPage === 'notes' || currentPage === 'references' || currentPage === 'note-editor' || currentPage === 'projects' ? 'text-brand-primary border-b-[2px] border-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
+              onClick={() => { if(setActiveNav) setActiveNav(null); if(onNavigate) onNavigate('board'); }}
+            >
+              Board
             </li>
 
             <li 
@@ -2251,6 +2251,291 @@ function ProductDetailPage({
   );
 }
 
+function BoardPage({
+  onNavigate,
+  favorites,
+  toggleFavorite,
+}: {
+  onNavigate: (page: PageType) => void;
+  favorites: number[];
+  toggleFavorite: (id: number) => void;
+}) {
+  const [boardView, setBoardView] = useState<"all" | "notes" | "references">("all");
+  const [boardNoteFilter, setBoardNoteFilter] = useState("all");
+  const [boardReferenceCategory, setBoardReferenceCategory] = useState("all");
+
+  const boardItems = [
+    { id: "all" as const, label: "전체", desc: "노트와 레퍼런스 함께 보기", icon: LayoutGrid },
+    { id: "notes" as const, label: "노트", desc: "아이디어 / 작업 메모", icon: FileText },
+    { id: "references" as const, label: "레퍼런스", desc: "이미지 / 보드 / 자료", icon: ImageIcon },
+  ];
+
+  const liveNotes = NOTES;
+  const liveReferences = ASSETS.filter((asset) =>
+    REFERENCE_BOARDS.some((board) => boardMatchesAsset(board, asset as any)),
+  );
+  const noteTags = liveNotes.flatMap((note) => note.tags);
+  const noteFilterFor = (noteIndex: number, tagIndex: number) => liveNotes[noteIndex]?.tags[tagIndex] ?? "all";
+  const noteCountFor = (filter: string) =>
+    filter === "all" ? liveNotes.length : liveNotes.filter((note) => note.tags.includes(filter)).length;
+  const referenceCountFor = (category: string) => {
+    if (category === "all") return liveReferences.length;
+    if (category === "favorites") return favorites.length;
+    if (category === "recent") return Math.min(12, liveReferences.length);
+    const board = REFERENCE_BOARDS.find((item) => item.id === category);
+    return board ? ASSETS.filter((asset) => boardMatchesAsset(board, asset as any)).length : 0;
+  };
+
+  const noteFolders = [
+    { label: "캐릭터 컨셉", filter: noteFilterFor(0, 2) },
+    { label: "환경 / 배경", filter: noteFilterFor(2, 0) },
+    { label: "무기 / 장비", filter: noteFilterFor(5, 0) },
+    { label: "오크 제작", filter: noteFilterFor(3, 0) },
+  ];
+
+  const submenuButton = (
+    label: string,
+    count: number,
+    active: boolean,
+    onClick: () => void,
+    icon?: React.ReactNode,
+  ) => (
+    <button
+      key={label}
+      onClick={onClick}
+      className={`flex w-full items-center justify-between rounded-md px-4 py-3 text-[15px] font-bold transition ${
+        active ? "bg-[#171A20] text-white" : "text-text-tertiary hover:bg-[#121417] hover:text-white"
+      }`}
+    >
+      <span className="flex min-w-0 items-center gap-2.5">
+        {icon && <span className={active ? "text-brand-primary" : "text-text-tertiary"}>{icon}</span>}
+        <span className="truncate">{label}</span>
+      </span>
+      <span className={`ml-3 shrink-0 text-[14px] ${active ? "text-brand-primary" : "text-text-tertiary"}`}>
+        {count}
+      </span>
+    </button>
+  );
+
+  const renderNoteSubMenu = () => (
+    <div className="ml-4 mt-2 space-y-4 pl-1">
+      <div className="space-y-1.5">
+        {submenuButton("전체 노트", liveNotes.length, boardNoteFilter === "all", () => setBoardNoteFilter("all"), <LayoutGrid className="h-4 w-4" />)}
+        {submenuButton("즐겨찾기", liveNotes.filter((note) => note.starred).length, boardNoteFilter === "starred", () => setBoardNoteFilter("starred"), <Star className="h-4 w-4" />)}
+        {submenuButton("최근 수정", liveNotes.length, false, () => setBoardNoteFilter("all"), <Clock className="h-4 w-4" />)}
+        {submenuButton("휴지통", 0, boardNoteFilter === "trash", () => setBoardNoteFilter("trash"), <Trash2 className="h-4 w-4" />)}
+      </div>
+      <div>
+        <p className="mb-2 px-4 text-[14px] font-black uppercase tracking-[0.08em] text-text-tertiary">폴더</p>
+        <div className="space-y-1.5">
+          {noteFolders.map((folder) =>
+            submenuButton(
+              folder.label,
+              noteCountFor(folder.filter),
+              boardNoteFilter === folder.filter,
+              () => setBoardNoteFilter(folder.filter),
+              <Folder className="h-4 w-4" />,
+            ),
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderReferenceSubMenu = () => (
+    <div className="ml-4 mt-2 space-y-4 pl-1">
+      <div className="space-y-1.5">
+        {submenuButton("전체", referenceCountFor("all"), boardReferenceCategory === "all", () => setBoardReferenceCategory("all"), <LayoutGrid className="h-4 w-4" />)}
+        {submenuButton("즐겨찾기", referenceCountFor("favorites"), boardReferenceCategory === "favorites", () => setBoardReferenceCategory("favorites"), <Star className="h-4 w-4" />)}
+        {submenuButton("최근 추가", referenceCountFor("recent"), boardReferenceCategory === "recent", () => setBoardReferenceCategory("recent"), <Clock className="h-4 w-4" />)}
+      </div>
+      <div>
+        <p className="mb-2 px-4 text-[14px] font-black uppercase tracking-[0.08em] text-text-tertiary">보드</p>
+        <div className="space-y-2">
+          {REFERENCE_BOARDS.map((board) => {
+            const active = boardReferenceCategory === board.id;
+            return (
+              <button
+                key={board.id}
+                onClick={() => setBoardReferenceCategory(board.id)}
+                className={`flex w-full items-center gap-3 rounded-md p-2.5 text-left transition ${
+                  active ? "bg-[#171A20] text-white" : "text-text-secondary hover:bg-[#121417] hover:text-white"
+                }`}
+              >
+                <img
+                  src={board.image}
+                  alt=""
+                  className="h-11 w-11 shrink-0 rounded object-cover"
+                  referrerPolicy="no-referrer"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[15px] font-black">{board.label}</span>
+                  <span className="mt-0.5 block text-[13px] font-bold text-text-tertiary">
+                    {referenceCountFor(board.id)}개
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
+  const sidebarButton = (item: (typeof boardItems)[number]) => {
+    const Icon = item.icon;
+    const active = boardView === item.id;
+    return (
+      <div key={item.id}>
+        <button
+          onClick={() => setBoardView(item.id)}
+          className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3.5 text-left transition ${
+            active
+              ? "border-brand-primary/50 bg-brand-primary/10 text-white"
+              : "border-transparent text-text-secondary hover:border-[#2A2E36] hover:bg-[#111317] hover:text-white"
+          }`}
+        >
+          <Icon className={`h-5 w-5 shrink-0 ${active ? "text-brand-primary" : "text-text-tertiary"}`} />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[16px] font-black">{item.label}</span>
+            <span className="mt-0.5 block truncate text-[13px] font-semibold text-text-tertiary">{item.desc}</span>
+          </span>
+        </button>
+        {item.id === "notes" && boardView === "notes" && renderNoteSubMenu()}
+        {item.id === "references" && boardView === "references" && renderReferenceSubMenu()}
+      </div>
+    );
+  };
+
+  const renderOverviewNote = (note: (typeof NOTES)[number]) => (
+    <div
+      key={note.id}
+      className="group flex min-h-[240px] flex-col rounded-lg border border-[#242832] bg-[#121419] p-4 text-left transition hover:border-brand-primary/50 hover:bg-[#171A20]"
+    >
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="line-clamp-2 text-[17px] font-black leading-tight text-white">{note.title}</h3>
+          <p className="mt-1 text-[12px] font-semibold text-text-tertiary">{note.date}</p>
+        </div>
+        {note.starred && <Star className="h-4 w-4 shrink-0 fill-brand-primary text-brand-primary" />}
+      </div>
+      <p className="line-clamp-3 text-[13px] leading-relaxed text-text-secondary">{note.desc}</p>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {note.tags.slice(0, 3).map((tag) => (
+          <span key={tag} className="rounded-full border border-[#2A2E36] px-2 py-1 text-[11px] font-bold text-text-tertiary">
+            {tag}
+          </span>
+        ))}
+      </div>
+      <div className="mt-auto grid grid-cols-3 gap-2 pt-4">
+        {note.images.slice(0, 3).map((image) => (
+          <img key={image} src={image} alt="" className="aspect-square rounded object-cover" referrerPolicy="no-referrer" />
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderOverviewReference = (asset: (typeof ASSETS)[number]) => (
+    <div
+      key={asset.id}
+      className="group h-[260px] overflow-hidden rounded-lg border border-[#242832] bg-[#080A0E] transition hover:border-brand-primary/50"
+    >
+      <img
+        src={asset.image}
+        alt={asset.title}
+        className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+        referrerPolicy="no-referrer"
+      />
+    </div>
+  );
+
+  return (
+    <main className="flex h-[calc(100vh-76px)] overflow-hidden bg-bg-dark text-text-primary">
+      <aside className="hidden w-[300px] shrink-0 border-r border-[#1C1E24] bg-[#0B0D10] p-5 lg:flex lg:flex-col">
+        <div className="mb-6">
+          <p className="text-[12px] font-black uppercase tracking-[0.18em] text-brand-primary">Board</p>
+          <h1 className="mt-2 text-[25px] font-black text-white">작업 보드</h1>
+          <p className="mt-2 text-[13px] font-semibold leading-relaxed text-text-tertiary">
+            노트와 레퍼런스를 같은 공간에서 정리합니다.
+          </p>
+        </div>
+        <div className="space-y-2">{boardItems.map(sidebarButton)}</div>
+        <div className="mt-auto rounded-lg border border-dashed border-[#2A2E36] p-4">
+          <p className="text-[13px] font-black text-white">연결맵</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-text-tertiary">
+            노트와 레퍼런스의 직접 연결, AI 추천 연결은 다음 단계에서 붙일 수 있어요.
+          </p>
+        </div>
+      </aside>
+
+      <section className="min-w-0 flex-1 overflow-hidden p-4 lg:p-5">
+        <div className="mb-4 flex gap-2 lg:hidden">
+          {boardItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setBoardView(item.id)}
+              className={`flex-1 rounded-lg border px-3 py-2 text-[14px] font-black ${
+                boardView === item.id
+                  ? "border-brand-primary bg-brand-primary text-bg-dark"
+                  : "border-[#2A2E36] bg-[#111317] text-text-secondary"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        {boardView === "all" ? (
+          <div className="grid h-full min-h-0 grid-cols-1 gap-4 xl:grid-cols-2">
+            <div className="min-w-0 overflow-hidden rounded-lg border border-[#1C1E24] bg-bg-dark">
+              <div className="flex items-center justify-between border-b border-[#1C1E24] px-5 py-4">
+                <div>
+                  <p className="text-[12px] font-black uppercase tracking-[0.12em] text-brand-primary">Notes</p>
+                  <h2 className="mt-1 text-[22px] font-black text-white">노트</h2>
+                </div>
+                <span className="text-[14px] font-bold text-text-tertiary">{liveNotes.length}개</span>
+              </div>
+              <div className="grid min-h-0 flex-1 content-start grid-cols-1 gap-3 overflow-y-auto p-4 pb-8 md:grid-cols-3">
+                {liveNotes.map(renderOverviewNote)}
+              </div>
+            </div>
+
+            <div className="min-w-0 overflow-hidden rounded-lg border border-[#1C1E24] bg-bg-dark">
+              <div className="flex items-center justify-between border-b border-[#1C1E24] px-5 py-4">
+                <div>
+                  <p className="text-[12px] font-black uppercase tracking-[0.12em] text-brand-primary">References</p>
+                  <h2 className="mt-1 text-[22px] font-black text-white">레퍼런스</h2>
+                </div>
+                <span className="text-[14px] font-bold text-text-tertiary">{liveReferences.length}개</span>
+              </div>
+              <div className="grid min-h-0 flex-1 content-start grid-cols-1 gap-3 overflow-y-auto p-4 pb-8 md:grid-cols-3">
+                {liveReferences.map(renderOverviewReference)}
+              </div>
+            </div>
+          </div>
+        ) : boardView === "notes" ? (
+          <NotesPage
+            onNavigate={onNavigate}
+            isPopup
+            hideSidebar
+            hideDetailPanel
+            boardFilter={boardNoteFilter}
+          />
+        ) : (
+          <ReferencePage
+            favorites={favorites}
+            toggleFavorite={toggleFavorite}
+            onNavigate={onNavigate}
+            isPopup
+            hideSidebar
+            boardCategory={boardReferenceCategory}
+          />
+        )}
+      </section>
+    </main>
+  );
+}
+
 function ProductPurchasePanel({ asset, product }: { asset: any; product: typeof PRODUCT_DETAIL_DATA[number] }) {
   return (
     <>
@@ -2947,7 +3232,7 @@ function ScrollToTopButton() {
 
 // --- Main App ---
 
-export type PageType = 'home' | 'uploads' | 'purchases' | 'favorites' | 'settings' | 'references' | 'projects' | 'notes' | 'note-editor' | 'studio' | 'support' | 'full_workflow' | 'full_workflow_chat' | 'turnaround' | 'modeling_generation' | 'product_detail';
+export type PageType = 'home' | 'uploads' | 'purchases' | 'favorites' | 'settings' | 'board' | 'references' | 'projects' | 'notes' | 'note-editor' | 'studio' | 'support' | 'full_workflow' | 'full_workflow_chat' | 'turnaround' | 'modeling_generation' | 'product_detail';
 
 export default function App() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -2955,7 +3240,7 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState<PageType>(() => {
     const rawHash = window.location.hash.replace('#', '');
     const hashPage = rawHash.split('/')[0] as PageType;
-    const validPages: PageType[] = ['home', 'uploads', 'purchases', 'favorites', 'settings', 'references', 'projects', 'notes', 'note-editor', 'studio', 'support', 'full_workflow', 'full_workflow_chat', 'turnaround', 'modeling_generation', 'product_detail'];
+    const validPages: PageType[] = ['home', 'uploads', 'purchases', 'favorites', 'settings', 'board', 'references', 'projects', 'notes', 'note-editor', 'studio', 'support', 'full_workflow', 'full_workflow_chat', 'turnaround', 'modeling_generation', 'product_detail'];
     return validPages.includes(hashPage) ? hashPage : 'home';
   });
   const [activeNav, setActiveNav] = useState<'market' | 'art' | 'studio' | 'support' | null>(null);
@@ -3084,6 +3369,12 @@ export default function App() {
         <PurchasedAssetsPage />
       ) : currentPage === 'favorites' ? (
         <FavoritesPage favorites={favorites} toggleFavorite={toggleFavorite} />
+      ) : currentPage === 'board' ? (
+        <BoardPage
+          onNavigate={(page) => setCurrentPage(page as PageType)}
+          favorites={favorites}
+          toggleFavorite={toggleFavorite}
+        />
       ) : currentPage === 'references' ? (
         <ReferencePage favorites={favorites} toggleFavorite={toggleFavorite} onNavigate={(page) => setCurrentPage(page as PageType)} />
       ) : currentPage === 'projects' ? (
@@ -3368,7 +3659,7 @@ export default function App() {
       />
 
       {/* Premium Multi-Column Footer (Custom designed in Neo-Poly aesthetic matching reference screenshot) */}
-      {currentPage !== 'projects' && currentPage !== 'notes' && currentPage !== 'note-editor' && currentPage !== 'uploads' && currentPage !== 'full_workflow' && currentPage !== 'full_workflow_chat' && currentPage !== 'studio' && currentPage !== 'turnaround' && currentPage !== 'modeling_generation' && (
+      {currentPage !== 'board' && currentPage !== 'projects' && currentPage !== 'notes' && currentPage !== 'note-editor' && currentPage !== 'uploads' && currentPage !== 'full_workflow' && currentPage !== 'full_workflow_chat' && currentPage !== 'studio' && currentPage !== 'turnaround' && currentPage !== 'modeling_generation' && (
         <footer className="bg-[#08080a] border-t border-border-soft/60 pt-16 pb-12 px-6">
           <div className="max-w-[2006px] mx-auto">
             {/* Main Footer columns */}
