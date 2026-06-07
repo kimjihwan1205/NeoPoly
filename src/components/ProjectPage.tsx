@@ -191,7 +191,7 @@ function EmptyProjectImage({ compact = false }: { compact?: boolean }) {
   return (
     <div
       className={`flex h-full w-full items-center justify-center border border-dashed border-[#2A2E36] bg-[#08090B] ${
-        compact ? "text-[11px]" : "text-[13px]"
+        compact ? "text-[14px]" : "text-[14px]"
       } text-neutral-500`}
     >
       <div className="flex flex-col items-center gap-2">
@@ -334,12 +334,12 @@ export default function ProjectPage({
         }`}
       >
         <div className="mb-6">
-          <h2 className="mb-5 text-[22px] font-bold text-[#F5F5F5]">
+          <h2 className="mb-5 text-[24px] font-bold text-[#F5F5F5]">
             내 프로젝트
           </h2>
           <button
             onClick={() => setIsNewProjectModalOpen(true)}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-bold text-[#E0A12E] transition hover:border-[#E0A12E]/50 hover:bg-[#22252B]"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-medium text-[#E0A12E] transition hover:border-[#E0A12E]/50 hover:bg-[#22252B]"
           >
             <Plus className="h-[18px] w-[18px]" />
             새 프로젝트
@@ -366,17 +366,17 @@ export default function ProjectPage({
                   }}
                 />
                 <div className="relative z-10 min-w-0 flex-1 pl-6 pr-[100px]">
-                  <div className="truncate text-[18px] font-bold text-[#F5F5F5]">
+                  <div className="truncate text-[18px] font-semibold text-[#F5F5F5]">
                     {project.name}
                   </div>
                   <div
-                    className="mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold"
+                    className="mt-1.5 flex items-center gap-1.5 text-[14px] font-medium"
                     style={{ color: project.statusColor }}
                   >
                     <StatusDot color={project.statusColor} />
                     {project.status}
                   </div>
-                  <div className="mt-2 text-[13px] text-neutral-400">
+                  <div className="mt-2 text-[14px] text-neutral-400">
                     {project.date}
                   </div>
                 </div>
@@ -412,7 +412,7 @@ export default function ProjectPage({
       </aside>
 
       <main
-        className={`min-w-0 flex-1 overflow-y-auto px-6 py-6 ${
+        className={`min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 ${
           isPopup ? "h-full pb-24" : "h-[calc(100vh-76px)]"
         }`}
       >
@@ -443,7 +443,7 @@ export default function ProjectPage({
                         if (e.key === "Enter") commitRename();
                         if (e.key === "Escape") setRenaming(false);
                       }}
-                      className="h-11 min-w-[260px] rounded-lg border border-[#E0A12E]/50 bg-[#08090B] px-3 text-[26px] font-bold text-white outline-none"
+                      className="h-11 min-w-[260px] rounded-lg border border-[#E0A12E]/50 bg-[#08090B] px-3 text-[24px] font-bold text-white outline-none"
                       autoFocus
                     />
                   ) : (
@@ -462,7 +462,7 @@ export default function ProjectPage({
                     <PenLine className="h-5 w-5" />
                   </button>
                   <span
-                    className="flex h-7 items-center rounded-md px-3 text-[13px] font-semibold"
+                    className="flex h-7 items-center rounded-md px-3 text-[14px] font-medium"
                     style={{
                       color: activeProjData.statusColor,
                       backgroundColor: `${activeProjData.statusColor}24`,
@@ -471,14 +471,14 @@ export default function ProjectPage({
                     {activeProjData.status}
                   </span>
                 </div>
-                <p className="mt-2.5 max-w-[640px] text-[14px] leading-6 text-neutral-300">
+                <p className="mt-2.5 max-w-[680px] text-[15px] leading-[1.65] text-neutral-300">
                   {activeProjData.description}
                 </p>
                 <div className="mt-3.5 flex flex-wrap gap-2">
                   {activeProjData.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="flex h-[26px] items-center rounded-md border border-[#22252B] bg-[#181A1F] px-2 text-[12px] text-neutral-300"
+                      className="flex h-[26px] items-center rounded-md border border-[#22252B] bg-[#181A1F] px-2 text-[14px] text-neutral-300"
                     >
                       {tag}
                     </span>
@@ -547,13 +547,13 @@ export default function ProjectPage({
                         }`}
                       />
                       <span
-                        className={`mt-2 text-[13px] font-semibold ${
+                        className={`mt-2 text-[14px] font-medium ${
                           active ? "text-[#E0A12E]" : "text-neutral-300"
                         }`}
                       >
                         {step.title}
                       </span>
-                      <span className="mt-0.5 text-[11px] text-neutral-500">
+                      <span className="mt-0.5 text-[14px] text-neutral-500">
                         {step.label}
                       </span>
                     </button>
@@ -570,13 +570,13 @@ export default function ProjectPage({
             <div className="flex flex-col gap-2">
               <section className="flex flex-col rounded-lg border border-[#181A1F] bg-[#151618] p-4">
                 <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[16px] font-semibold text-[#F5F5F5]">
+                  <div className="flex items-center gap-2 text-[15px] font-medium text-[#F5F5F5]">
                     모델링 뷰어
                     <Info className="h-4 w-4 text-neutral-400" />
                   </div>
                   <button
                     onClick={() => setToast("셰이딩 모드를 전환했습니다.")}
-                    className="rounded-md border border-[#22252B] bg-[#15181D] px-3 py-1.5 text-[12px] text-neutral-300 transition hover:bg-[#1A1D23]"
+                    className="rounded-md border border-[#22252B] bg-[#15181D] px-3 py-1.5 text-[14px] text-neutral-300 transition hover:bg-[#1A1D23]"
                   >
                     Shaded
                   </button>
@@ -616,7 +616,7 @@ export default function ProjectPage({
                     <div className="flex flex-col items-center gap-3 text-neutral-500">
                       <ImageIcon className="h-10 w-10" />
                       <span className="text-[14px]">아직 대표 이미지가 없습니다.</span>
-                      <span className="text-[12px] text-neutral-600">
+                      <span className="text-[14px] text-neutral-600">
                         노트나 레퍼런스를 연결한 뒤 작업 단계에서 이미지를 확정하세요.
                       </span>
                     </div>
@@ -650,8 +650,8 @@ export default function ProjectPage({
 
               <section className="relative flex h-[260px] flex-col rounded-lg border border-[#181A1F] bg-[#151618] p-5">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-[16px] font-semibold text-[#F5F5F5]">
-                    레퍼런스 보드
+                  <h3 className="text-[15px] font-medium text-[#F5F5F5]">
+                    보드 레퍼런스
                   </h3>
                   <div className="flex items-center gap-2">
                     <button
@@ -667,8 +667,8 @@ export default function ProjectPage({
                       <ChevronRight className="h-[14px] w-[14px]" />
                     </button>
                     <button
-                      onClick={() => onNavigate?.("references")}
-                      className="text-[13px] font-medium text-[#4C88D9] transition hover:text-[#5B9FE6]"
+                      onClick={() => onNavigate?.("board")}
+                      className="text-[14px] font-medium text-[#4C88D9] transition hover:text-[#5B9FE6]"
                     >
                       모두 보기
                     </button>
@@ -682,7 +682,7 @@ export default function ProjectPage({
                     boardImages.map((thumb) => (
                       <button
                         key={thumb}
-                        onClick={() => onNavigate?.("references")}
+                        onClick={() => onNavigate?.("board")}
                         className="h-full min-w-[150px] shrink-0 overflow-hidden rounded-lg border border-[#181A1F] bg-[#050505]"
                       >
                         <img
@@ -694,7 +694,7 @@ export default function ProjectPage({
                       </button>
                     ))
                   ) : (
-                    <div className="flex h-full min-w-full items-center justify-center rounded-lg border border-dashed border-[#2A2E36] bg-[#0A0B0D] text-[13px] text-neutral-500">
+                    <div className="flex h-full min-w-full items-center justify-center rounded-lg border border-dashed border-[#2A2E36] bg-[#0A0B0D] text-[14px] text-neutral-500">
                       연결된 노트나 레퍼런스가 없습니다.
                     </div>
                   )}
@@ -709,7 +709,7 @@ export default function ProjectPage({
                     <button
                       key={tab}
                       onClick={() => setInfoTab(tab)}
-                      className={`flex-1 rounded-md border py-1.5 text-[13px] font-bold transition ${
+                      className={`flex-1 rounded-md border py-1.5 text-[14px] font-medium transition ${
                         infoTab === tab
                           ? "border-[#22252B] bg-[#181A1F] text-white"
                           : "border-transparent text-neutral-400 hover:text-white"
@@ -765,24 +765,24 @@ export default function ProjectPage({
 
               <section className="flex flex-1 flex-col rounded-lg border border-[#181A1F] bg-[#151618] p-6">
                 <div className="mb-5 flex items-center gap-2">
-                  <h3 className="text-[16px] font-semibold text-[#F5F5F5]">
+                  <h3 className="text-[15px] font-medium text-[#F5F5F5]">
                     작업 노트
                   </h3>
                   <PenLine className="h-[14px] w-[14px] text-neutral-400" />
                 </div>
 
-                <div className="space-y-5 text-[14px] leading-6 text-neutral-300">
+                <div className="space-y-5 text-[15px] leading-[1.65] text-neutral-300">
                   <div>
-                    <div className="mb-2 text-[13px] font-semibold text-white">
+                    <div className="mb-2 text-[14px] font-medium text-white">
                       현재 체크 포인트
                     </div>
-                    <ul className="space-y-1.5 text-[13px] text-neutral-300">
+                    <ul className="space-y-1.5 text-[14px] text-neutral-300">
                       <li>컨셉 이미지와 정면 기준이 연결됨</li>
                       <li>장비 파츠는 모듈화 페이지에서 재사용 가능</li>
                       <li>3D 모델은 모델링 생성 페이지에서 확인 가능</li>
                     </ul>
                   </div>
-                  <div className="rounded-lg border border-[#22252B] bg-[#050505] p-4 text-[13px] text-neutral-300">
+                  <div className="rounded-lg border border-[#22252B] bg-[#050505] p-4 text-[14px] text-neutral-300">
                     <div className="mb-1 font-sans text-neutral-500">메모</div>
                     {activeProjData.description}
                   </div>
@@ -790,10 +790,10 @@ export default function ProjectPage({
 
                 <div className="mt-auto pt-5">
                   <button
-                    onClick={() => onNavigate?.("notes")}
-                    className="group flex h-10 w-full items-center justify-between rounded-lg border border-[#22252B] bg-[#15181D] px-4 text-[13px] font-medium text-neutral-400 transition hover:bg-[#1A1D23] hover:text-white"
+                    onClick={() => onNavigate?.("board")}
+                    className="group flex h-10 w-full items-center justify-between rounded-lg border border-[#22252B] bg-[#15181D] px-4 text-[14px] font-medium text-neutral-400 transition hover:bg-[#1A1D23] hover:text-white"
                   >
-                    노트 전체 보기
+                    보드에서 보기
                     <ChevronRight className="h-[14px] w-[14px] transition group-hover:translate-x-1" />
                   </button>
                 </div>
@@ -810,7 +810,7 @@ export default function ProjectPage({
       />
 
       {toast && (
-        <div className="fixed bottom-8 right-8 z-[80] rounded-lg border border-[#2A2E36] bg-[#111317] px-4 py-3 text-[13px] font-semibold text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
+        <div className="fixed bottom-8 right-8 z-[80] rounded-lg border border-[#2A2E36] bg-[#111317] px-4 py-3 text-[14px] font-medium text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
           {toast}
         </div>
       )}
@@ -822,13 +822,13 @@ export default function ProjectPage({
           exit={{ opacity: 0, y: 30 }}
           className="fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-lg border border-[#2A2E36] bg-[#1A1C20] p-2 px-4 shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
         >
-          <span className="text-[14px] font-semibold text-white">
+          <span className="text-[14px] font-medium text-white">
             {activeProjData.name} 프로젝트를 이어서 진행합니다.
           </span>
           <div className="h-5 w-px bg-[#2A2E36]" />
           <button
             onClick={() => onSelectProject?.(activeProject)}
-            className="flex items-center gap-2 rounded-lg bg-[#E0A12E] px-5 py-2.5 text-[14px] font-bold text-black transition hover:bg-[#F0B43A]"
+            className="flex items-center gap-2 rounded-lg bg-[#E0A12E] px-5 py-2.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
           >
             시작하기
             <CheckCircle2 className="h-4 w-4" />

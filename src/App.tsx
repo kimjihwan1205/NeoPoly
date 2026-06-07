@@ -833,28 +833,28 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
         
         {/* Navigation Menu (Left-aligned, comfortable spacing) */}
         <nav className="hidden lg:block">
-          <ul className="flex items-center gap-5 lg:gap-7 xl:gap-10 text-[15px] lg:text-[15px] xl:text-[16px] font-semibold text-text-tertiary whitespace-nowrap">
+          <ul className="flex items-center gap-5 lg:gap-7 xl:gap-10 text-[17px] lg:text-[17px] xl:text-[17px] font-medium text-text-tertiary whitespace-nowrap">
             <li 
-              className={`${currentPage === 'home' ? 'text-brand-primary border-b-[2px] border-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
+              className={`${currentPage === 'home' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav(null); if(onNavigate) onNavigate('home'); }}
             >
               Discover
             </li>
             <li 
-              className={`${activeNav === 'studio' || currentPage === 'studio' || currentPage === 'full_workflow' || currentPage === 'full_workflow_chat' || currentPage === 'turnaround' || currentPage === 'modeling_generation' ? 'text-brand-primary border-b-[2px] border-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
+              className={`${activeNav === 'studio' || currentPage === 'studio' || currentPage === 'full_workflow' || currentPage === 'full_workflow_chat' || currentPage === 'turnaround' || currentPage === 'modeling_generation' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav('studio'); if(onNavigate) onNavigate('studio'); }}
             >
               AI Studio
             </li>
             <li 
-              className={`${currentPage === 'board' || currentPage === 'notes' || currentPage === 'references' || currentPage === 'note-editor' || currentPage === 'projects' ? 'text-brand-primary border-b-[2px] border-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
+              className={`${currentPage === 'board' || currentPage === 'notes' || currentPage === 'references' || currentPage === 'note-editor' || currentPage === 'projects' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav(null); if(onNavigate) onNavigate('board'); }}
             >
               Board
             </li>
 
             <li 
-              className={`${activeNav === 'support' || currentPage === 'support' ? 'text-brand-primary border-b-[2px] border-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
+              className={`${activeNav === 'support' || currentPage === 'support' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav('support'); if(onNavigate) onNavigate('support'); }}
             >
               Support
@@ -879,7 +879,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
               }}
               onKeyDown={handleKeyDown}
               placeholder={isAiSearch ? "예: '마법 효과가 부착된 웅장한 다크 엘프 전사용 대검 찾아줘'" : "에셋, 컬렉션 검색"} 
-              className={`w-full bg-surface-primary border rounded-full h-[40px] pl-4 pr-10 text-[12px] md:text-[15px] leading-relaxed font-semibold font-sans focus:outline-none transition-all text-text-primary/95 placeholder:text-text-tertiary/75 ${
+              className={`w-full bg-surface-primary border rounded-full h-[40px] pl-4 pr-10 text-[14px] md:text-[15px] leading-relaxed font-medium font-sans focus:outline-none transition-all text-text-primary/95 placeholder:text-text-tertiary/75 ${
                 isAiSearch 
                   ? 'border-brand-primary/80 ring-2 ring-brand-primary/10 shadow-[0_0_15px_rgba(224,161,46,0.3)] bg-surface-primary/90' 
                   : 'border-border-primary/80 focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/10'
@@ -902,7 +902,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
           <button
             type="button"
             onClick={() => setIsAiSearch(!isAiSearch)}
-            className={`flex items-center gap-1.5 px-3 h-[40px] rounded-full text-[12px] md:text-[12px] font-bold tracking-tight transition-all shrink-0 select-none border cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 h-[40px] rounded-full text-[14px] md:text-[14px] font-medium tracking-tight transition-all shrink-0 select-none border cursor-pointer ${
               isAiSearch
                 ? 'bg-brand-primary/15 text-brand-primary border-brand-primary/60 shadow-[0_0_12px_rgba(224,161,46,0.3)]'
                 : 'bg-[#15161A] hover:bg-[#1C1F26] text-text-secondary border-border-primary/70 hover:border-brand-primary/30'
@@ -910,7 +910,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
             title="AI 자연어로 대화식 검색 전환"
           >
             <Sparkles className={`w-[13px] h-[13px] md:w-[14px] md:h-[14px] ${isAiSearch ? 'text-brand-primary scale-110 animate-pulse' : 'text-text-tertiary'}`} />
-            <span className="hidden xl:inline text-[12px] font-sans">AI 자연어</span>
+            <span className="hidden xl:inline text-[14px] font-sans">AI 자연어</span>
             <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all ${isAiSearch ? 'bg-brand-primary shadow-[0_0_8px_#E0A12E]' : 'bg-[#555A64]'}`} />
           </button>
 
@@ -927,14 +927,14 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                 {/* 1. 유사 항목 찾기 Drag & Drop Area */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-semibold text-text-primary flex items-center gap-1.5 font-sans">
+                    <span className="text-[14px] font-medium text-text-primary flex items-center gap-1.5 font-sans">
                       <Sparkles className="w-3.5 h-3.5 text-brand-primary" /> AI 이미지 유사도 검색
                     </span>
                     {uploadedImage && (
                       <button 
                         type="button"
                         onClick={() => { setUploadedImage(null); setSimilarityResults(null); }}
-                        className="text-[12px] text-brand-primary hover:underline font-medium font-sans"
+                        className="text-[14px] text-brand-primary hover:underline font-medium font-sans"
                       >
                         초기화
                       </button>
@@ -989,8 +989,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                         }}
                       />
                       <Upload className="w-5 h-5 text-brand-primary" />
-                      <p className="text-[12px] font-semibold text-text-secondary font-sans">유사 이미지 검색 (드롭 / 클릭)</p>
-                      <p className="text-[12px] text-text-tertiary font-sans">여기에 이미지를 놓으시면 유사 3D 모델을 매칭합니다</p>
+                      <p className="text-[14px] font-medium text-text-secondary font-sans">유사 이미지 검색 (드롭 / 클릭)</p>
+                      <p className="text-[14px] text-text-tertiary font-sans">여기에 이미지를 놓으시면 유사 3D 모델을 매칭합니다</p>
                     </label>
                   ) : (
                     <div className="bg-bg-dark/40 border border-border-primary/30 rounded-[8px] p-3.5 flex flex-col gap-3.5">
@@ -1002,8 +1002,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                           referrerPolicy="no-referrer"
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="text-[12px] font-semibold text-text-primary font-sans">업로드된 이미지 기반 매칭 중</p>
-                          <p className="text-[12px] text-brand-primary/80 flex items-center gap-1 font-medium font-sans">
+                          <p className="text-[14px] font-medium text-text-primary font-sans">업로드된 이미지 기반 매칭 중</p>
+                          <p className="text-[14px] text-brand-primary/80 flex items-center gap-1 font-medium font-sans">
                             <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-ping" /> AI 알고리즘 비전 스캔 완료
                           </p>
                         </div>
@@ -1011,17 +1011,17 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 
                       {/* Display Similarity Results */}
                       <div className="space-y-2 border-t border-border-primary/20 pt-3">
-                        <p className="text-[12px] font-sans font-semibold uppercase tracking-wider text-text-secondary">유사 항목 매칭 결과</p>
+                        <p className="text-[14px] font-sans font-medium uppercase tracking-wider text-text-secondary">유사 항목 매칭 결과</p>
                         <div className="grid grid-cols-2 gap-2.5">
                           {similarityResults?.map((res, index) => (
                             <div key={index} className="bg-surface-primary/60 hover:bg-surface-primary p-2.5 rounded-[6px] border border-border-primary/20 flex flex-col gap-2 group cursor-pointer">
                               <div className="relative aspect-[16/10] rounded-[4px] overflow-hidden bg-black/40">
                                 <img referrerPolicy="no-referrer" src={res.img} alt="" className="w-full h-full object-cover" />
-                                <span className="absolute top-1 right-1 bg-brand-primary text-bg-dark px-1 py-0.5 rounded-[3px] text-[9px] font-bold font-sans">{res.simLevel}</span>
+                                <span className="absolute top-1 right-1 bg-brand-primary text-bg-dark px-1 py-0.5 rounded-[3px] text-[14px] font-medium font-sans">{res.simLevel}</span>
                               </div>
                               <div className="min-w-0">
-                                <p className="text-[12px] font-semibold text-text-primary truncate group-hover:text-brand-primary transition-colors font-sans">{res.title}</p>
-                                <p className="text-[10px] text-text-tertiary font-sans truncate font-sans">by {res.creator}</p>
+                                <p className="text-[14px] font-medium text-text-primary truncate group-hover:text-brand-primary transition-colors font-sans">{res.title}</p>
+                                <p className="text-[14px] text-text-tertiary font-sans truncate font-sans">by {res.creator}</p>
                               </div>
                             </div>
                           ))}
@@ -1037,13 +1037,13 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                     {/* Recent Search List */}
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between px-0.5">
-                        <span className="text-[12px] text-text-tertiary uppercase tracking-wider font-semibold flex items-center gap-1 font-sans">
+                        <span className="text-[14px] text-text-tertiary uppercase tracking-wider font-medium flex items-center gap-1 font-sans">
                           <Clock className="w-3 h-3" /> 최근 검색어
                         </span>
                         {recentSearches.length > 0 && (
                           <button 
                             onClick={() => setRecentSearches([])}
-                            className="text-[12px] text-brand-primary font-bold hover:underline cursor-pointer border-0 bg-transparent font-sans"
+                            className="text-[14px] text-brand-primary font-medium hover:underline cursor-pointer border-0 bg-transparent font-sans"
                           >
                             전체 삭제
                           </button>
@@ -1055,7 +1055,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                           {recentSearches.map((item, idx) => (
                             <div 
                               key={idx} 
-                              className="flex items-center gap-1.5 bg-surface-primary/60 hover:bg-surface-primary border border-border-primary/45 rounded-full px-3 py-1 text-[12.5px] font-semibold text-text-secondary hover:text-text-primary transition-all cursor-pointer group"
+                              className="flex items-center gap-1.5 bg-surface-primary/60 hover:bg-surface-primary border border-border-primary/45 rounded-full px-3 py-1 text-[14px] font-medium text-text-secondary hover:text-text-primary transition-all cursor-pointer group"
                               onClick={() => setSearchQuery(item)}
                             >
                               <span className="font-sans">{item}</span>
@@ -1072,13 +1072,13 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                           ))}
                         </div>
                       ) : (
-                        <p className="text-[12px] text-text-tertiary pl-0.5 font-sans">최근 검색 기록이 없습니다.</p>
+                        <p className="text-[14px] text-text-tertiary pl-0.5 font-sans">최근 검색 기록이 없습니다.</p>
                       )}
                     </div>
 
                     {/* Highly curated Suggested Keywords */}
                     <div className="space-y-2.5 pt-1">
-                      <span className="text-[12px] text-text-tertiary uppercase tracking-wider font-semibold flex items-center gap-1 font-sans">
+                      <span className="text-[14px] text-text-tertiary uppercase tracking-wider font-medium flex items-center gap-1 font-sans">
                         <Sparkles className="w-3 h-3 text-brand-primary" /> 추천 태그 키워드
                       </span>
                       <div className="flex flex-wrap gap-2">
@@ -1086,7 +1086,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                           <button 
                             key={idx} 
                             onClick={() => setSearchQuery(item)}
-                            className="bg-brand-primary/5 hover:bg-brand-primary/15 border border-brand-primary/20 hover:border-border-primary/60 rounded-full px-3 py-1 text-[12.5px] font-bold text-brand-primary transition-all cursor-pointer font-sans"
+                            className="bg-brand-primary/5 hover:bg-brand-primary/15 border border-brand-primary/20 hover:border-border-primary/60 rounded-full px-3 py-1 text-[14px] font-medium text-brand-primary transition-all cursor-pointer font-sans"
                           >
                             #{item}
                           </button>
@@ -1097,7 +1097,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                 ) : (
                   /* 3. 검색어 입력 시 - 추천 검색어 및 실시간 에셋 매칭 결과 보드 */
                   <div className="space-y-3.5 pt-2 border-t border-border-primary/25 max-h-[290px] overflow-y-auto custom-scrollbar pr-1">
-                    <span className="text-[12px] text-text-tertiary uppercase tracking-wider font-semibold block font-sans">매칭 추천 에셋</span>
+                    <span className="text-[14px] text-text-tertiary uppercase tracking-wider font-medium block font-sans">매칭 추천 에셋</span>
                     {filteredAssets.length > 0 ? (
                       <div className="grid grid-cols-1 gap-2">
                         {filteredAssets.slice(0, 4).map((asset) => (
@@ -1111,8 +1111,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                               className="w-11 h-11 rounded-[4px] object-cover border border-border-primary/20" 
                             />
                             <div className="min-w-0 flex-1">
-                              <h5 className="text-[12px] font-semibold text-text-primary group-hover:text-brand-primary transition-colors truncate font-sans">{asset.title}</h5>
-                              <p className="text-[12px] text-text-tertiary font-sans truncate">by {asset.author}</p>
+                              <h5 className="text-[14px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate font-sans">{asset.title}</h5>
+                              <p className="text-[14px] text-text-tertiary font-sans truncate">by {asset.author}</p>
                             </div>
                             <ChevronRight className="w-4 h-4 text-text-tertiary group-hover:text-text-primary transition-colors hover:scale-105" />
                           </div>
@@ -1120,8 +1120,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                       </div>
                     ) : (
                       <div className="text-center py-7 font-sans">
-                        <p className="text-[12px] text-text-tertiary">"{searchQuery}"에 일치하는 에셋이 캐시에 없습니다.</p>
-                        <p className="text-[12px] text-text-tertiary mt-1">자유롭게 다른 키워드 또는 다크 판타지 등으로 검색해보세요.</p>
+                        <p className="text-[14px] text-text-tertiary">"{searchQuery}"에 일치하는 에셋이 캐시에 없습니다.</p>
+                        <p className="text-[14px] text-text-tertiary mt-1">자유롭게 다른 키워드 또는 다크 판타지 등으로 검색해보세요.</p>
                       </div>
                     )}
                   </div>
@@ -1141,7 +1141,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
             >
               <ShoppingBag className="w-[19px] h-[19px] md:w-[21px] md:h-[21px]" />
               {cartItems.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-brand-primary text-bg-dark text-[10px] font-extrabold w-[16px] h-[16px] md:w-[18px] md:h-[18px] rounded-full flex items-center justify-center font-sans border border-[#08090B]">
+                <span className="absolute -top-0.5 -right-0.5 bg-brand-primary text-bg-dark text-[14px] font-medium min-w-[22px] h-[22px] px-1 rounded-full flex items-center justify-center font-sans border border-[#08090B]">
                   {cartItems.length}
                 </span>
               )}
@@ -1156,13 +1156,13 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                     className="absolute top-full right-[-50px] sm:right-0 mt-3.5 w-80 md:w-96 bg-[#0E1011]/98 border border-border-primary rounded-[12px] p-4.5 shadow-[0_25px_60px_rgba(0,0,0,0.98)] backdrop-blur-2xl z-50 flex flex-col gap-4 text-left"
                   >
                     <div className="flex items-center justify-between border-b border-border-primary pb-3">
-                      <span className="text-[16px] font-bold text-text-primary font-sans flex items-center gap-2">
-                        <ShoppingBag className="w-[18px] h-[18px] text-brand-primary" /> 장바구니 <span className="text-[12px] text-brand-primary font-sans font-bold bg-brand-primary/15 px-2 py-0.5 rounded-full">{cartItems.length}</span>
+                      <span className="text-[15px] font-medium text-text-primary font-sans flex items-center gap-2">
+                        <ShoppingBag className="w-[18px] h-[18px] text-brand-primary" /> 장바구니 <span className="text-[14px] text-brand-primary font-sans font-medium bg-brand-primary/15 px-2 py-0.5 rounded-full">{cartItems.length}</span>
                       </span>
                       {cartItems.length > 0 && (
                         <button 
                           onClick={() => setCartItems([])} 
-                          className="text-[12px] text-text-tertiary hover:text-red-400 font-semibold transition-colors font-sans border-0 bg-transparent cursor-pointer"
+                          className="text-[14px] text-text-tertiary hover:text-red-400 font-medium transition-colors font-sans border-0 bg-transparent cursor-pointer"
                         >
                           전체 비우기
                         </button>
@@ -1175,11 +1175,11 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                           <div key={item.id} className="flex items-center gap-3 p-2 bg-surface-primary/40 rounded-[8px] border border-border-primary/10 hover:border-brand-primary/20 transition-all group">
                             <img referrerPolicy="no-referrer" src={item.image} alt="" className="w-12 h-12 rounded-[4px] object-cover border border-border-primary/30 shrink-0" />
                             <div className="min-w-0 flex-1">
-                              <h5 className="text-[15px] font-semibold text-text-primary truncate font-sans">{item.title}</h5>
-                              <span className="text-[12px] text-text-tertiary font-sans">{item.category}</span>
+                              <h5 className="text-[15px] font-medium text-text-primary truncate font-sans">{item.title}</h5>
+                              <span className="text-[14px] text-text-tertiary font-sans">{item.category}</span>
                             </div>
                             <div className="text-right shrink-0">
-                              <p className="text-[15px] font-bold text-brand-primary font-sans">{item.price}</p>
+                              <p className="text-[15px] font-medium text-brand-primary font-sans">{item.price}</p>
                               <button 
                                 onClick={(e) => handleRemoveCartItem(item.id, e)}
                                 className="text-text-tertiary hover:text-red-400 p-1 rounded-full transition-colors inline-block mt-0.5 border-0 bg-transparent cursor-pointer"
@@ -1194,7 +1194,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                         <div className="text-center py-8 text-text-tertiary font-sans space-y-2">
                           <ShoppingBag className="w-8 h-8 mx-auto opacity-30 text-text-tertiary animate-pulse" />
                           <p className="text-[15px]">장바구니가 비어 있습니다.</p>
-                          <p className="text-[12px] text-text-tertiary/60">인기 다크 판타지 에셋을 추가해 보세요.</p>
+                          <p className="text-[14px] text-text-tertiary/60">인기 다크 판타지 에셋을 추가해 보세요.</p>
                         </div>
                       )}
                     </div>
@@ -1203,9 +1203,9 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                       <div className="border-t border-border-primary pt-3.5 space-y-3.5">
                         <div className="flex items-center justify-between text-[15px]">
                           <span className="text-text-secondary font-sans font-medium">총 주문 금액:</span>
-                          <span className="text-[18px] font-extrabold text-brand-primary font-sans">{formattedTotalPrice}</span>
+                          <span className="text-[18px] font-semibold text-brand-primary font-sans">{formattedTotalPrice}</span>
                         </div>
-                        <button className="w-full py-2.5 bg-brand-primary hover:bg-[#F2B038] text-bg-dark text-[15px] font-bold rounded-[6px] tracking-wide transition-colors cursor-pointer text-center font-sans shadow-lg shadow-brand-primary/10 border-0">
+                        <button className="w-full py-2.5 bg-brand-primary hover:bg-[#F2B038] text-bg-dark text-[15px] font-medium rounded-[6px] tracking-wide transition-colors cursor-pointer text-center font-sans shadow-lg shadow-brand-primary/10 border-0">
                           결제 진행하기
                         </button>
                       </div>
@@ -1237,23 +1237,23 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                     className="absolute top-full right-[-10px] sm:right-0 mt-3.5 w-[340px] md:w-[420px] bg-[#0E1011]/98 border border-border-primary rounded-[12px] p-5 shadow-[0_25px_60px_rgba(0,0,0,0.98)] backdrop-blur-2xl z-50 flex flex-col gap-4 text-left"
                   >
                     <div className="flex items-center justify-between border-b border-border-primary pb-3.5">
-                      <span className="text-[16px] font-bold text-text-primary font-sans flex items-center gap-2 tracking-tight">
+                      <span className="text-[15px] font-medium text-text-primary font-sans flex items-center gap-2 tracking-tight">
                         <Bell className="w-[18px] h-[18px] text-brand-primary" /> 알림 센터 
-                        <span className="text-[12px] text-brand-primary font-bold bg-brand-primary/10 px-2 py-0.5 rounded-md">
+                        <span className="text-[14px] text-brand-primary font-medium bg-brand-primary/10 px-2 py-0.5 rounded-md">
                           {notifications.filter(n => n.unread).length}개 안읽음
                         </span>
                       </span>
                       <div className="flex gap-4">
                         <button 
                           onClick={handleMarkAllRead} 
-                          className="text-[12px] text-brand-primary hover:text-[#f3ba4b] font-semibold font-sans border-0 bg-transparent cursor-pointer transition-colors"
+                          className="text-[14px] text-brand-primary hover:text-[#f3ba4b] font-medium font-sans border-0 bg-transparent cursor-pointer transition-colors"
                         >
                           모두 읽음
                         </button>
                         {notifications.length > 0 && (
                           <button 
                             onClick={() => setNotifications([])} 
-                            className="text-[12px] text-text-secondary hover:text-red-400 font-semibold font-sans border-0 bg-transparent cursor-pointer transition-colors"
+                            className="text-[14px] text-text-secondary hover:text-red-400 font-medium font-sans border-0 bg-transparent cursor-pointer transition-colors"
                           >
                             전체 삭제
                           </button>
@@ -1284,10 +1284,10 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                             </div>
                             
                             <div className="min-w-0 flex-1 space-y-1">
-                              <p className={`text-[15px] leading-relaxed transition-colors font-sans ${notif.unread ? 'text-text-primary font-semibold' : 'text-text-secondary group-hover:text-text-primary'}`}>
+                              <p className={`text-[15px] leading-relaxed transition-colors font-sans ${notif.unread ? 'text-text-primary font-medium' : 'text-text-secondary group-hover:text-text-primary'}`}>
                                 {notif.title}
                               </p>
-                              <span className="text-[12px] text-text-tertiary block mt-1 font-sans">{notif.time}</span>
+                              <span className="text-[14px] text-text-tertiary block mt-1 font-sans">{notif.time}</span>
                             </div>
 
                             <button 
@@ -1333,20 +1333,20 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
           <img referrerPolicy="no-referrer" src="https://api.dicebear.com/7.x/avataaars/svg?seed=mainuser" alt="Profile" className="w-[42px] h-[42px] rounded-full border border-border-soft object-cover" />
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="text-[15px] font-bold text-text-primary tracking-tight">NeoCreator</span>
-              <span className="text-[10px] bg-brand-primary/20 text-brand-primary border border-brand-primary/30 px-1.5 py-[1px] rounded uppercase font-bold tracking-wider">PRO</span>
+              <span className="text-[15px] font-medium text-text-primary tracking-tight">NeoCreator</span>
+              <span className="text-[14px] bg-brand-primary/20 text-brand-primary border border-brand-primary/30 px-1.5 py-[1px] rounded uppercase font-medium tracking-wider">PRO</span>
             </div>
-            <span className="text-[12px] text-text-secondary">rlawlghks898@gmail.com</span>
+            <span className="text-[14px] text-text-secondary">rlawlghks898@gmail.com</span>
           </div>
         </div>
 
         {/* AI Studio Credit Box */}
         <div className="mx-4 mt-4 p-3.5 bg-surface-primary/60 border border-border-soft/60 rounded-[8px]">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[12px] text-text-secondary flex items-center gap-1.5 font-bold tracking-tight">
+            <span className="text-[14px] text-text-secondary flex items-center gap-1.5 font-medium tracking-tight">
               <Sparkles className="w-4 h-4 text-brand-primary" /> AI 스튜디오 크레딧
             </span>
-            <span className="text-[12px] text-brand-primary font-sans font-bold tracking-tight">320 / 500 CC</span>
+            <span className="text-[14px] text-brand-primary font-sans font-medium tracking-tight">320 / 500 CC</span>
           </div>
           <div className="h-1.5 bg-white/5 rounded-full overflow-hidden w-full mt-2.5">
             <div className="h-full bg-brand-primary w-[64%] shadow-[0_0_8px_rgba(224,161,46,0.6)]"></div>
@@ -1355,26 +1355,23 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 
         {/* Primary Action Button */}
         <div className="mx-4 mt-3">
-          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('uploads'); }} className="w-full flex items-center justify-center gap-2 py-3 bg-[#1A1814] text-brand-primary text-[14px] font-bold rounded-[8px] border border-brand-primary/20 hover:bg-[#1F1A12] hover:border-brand-primary/40 transition-colors cursor-pointer tracking-tight shadow-sm">
+          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('uploads'); }} className="w-full flex items-center justify-center gap-2 py-3 bg-[#1A1814] text-brand-primary text-[14px] font-medium rounded-[8px] border border-brand-primary/20 hover:bg-[#1F1A12] hover:border-brand-primary/40 transition-colors cursor-pointer tracking-tight shadow-sm">
             <Upload className="w-[18px] h-[18px]" /> 내가 업로드한 작업물 관리
           </button>
         </div>
 
         {/* Menu Items */}
         <div className="flex flex-col mt-4 px-2">
-          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('projects'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-semibold tracking-tight">
+          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('projects'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
             <Folder className="w-[20px] h-[20px]" /> 내 프로젝트 라이브러리
           </button>
-          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('notes'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-semibold tracking-tight">
-            <FileText className="w-[20px] h-[20px]" /> 아이디어 노트
+          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('board'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
+            <LayoutGrid className="w-[20px] h-[20px]" /> Board
           </button>
-          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('references'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-semibold tracking-tight">
-            <LayoutGrid className="w-[20px] h-[20px]" /> 레퍼런스 보드
-          </button>
-          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('favorites'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-semibold tracking-tight">
+          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('favorites'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
             <Heart className="w-[20px] h-[20px]" /> 관심 목록
           </button>
-          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('purchases'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-semibold tracking-tight">
+          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('purchases'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
             <LayoutGrid className="w-[20px] h-[20px]" /> 구매한 에셋
           </button>
           <button 
@@ -1382,7 +1379,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
               setIsProfileMenuOpen(false);
               if(onNavigate) onNavigate('settings');
             }}
-            className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-semibold tracking-tight"
+            className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight"
           >
             <Settings className="w-[20px] h-[20px]" /> 계정 및 프로필 설정
           </button>
@@ -1390,7 +1387,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 
         {/* Footer */}
         <div className="border-t border-[#2A2E36]/50 mt-2 p-1.5 px-2">
-          <button className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-[#9A9DA3] hover:bg-red-500/10 hover:text-[#E46B6B] transition-colors cursor-pointer rounded-lg text-[14px] font-semibold tracking-tight">
+          <button className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-[#9A9DA3] hover:bg-red-500/10 hover:text-[#E46B6B] transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
             <LogOut className="w-[20px] h-[20px]" /> 로그아웃
           </button>
         </div>
@@ -1420,7 +1417,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: any) => void }) {
         <div className="absolute inset-0 bg-gradient-to-t from-bg-dark/70 via-transparent to-transparent"></div>
       </div>
       
-      <div className="max-w-[2006px] mx-auto px-6 h-full flex flex-col justify-center items-center md:items-start relative z-10 pt-4 text-center md:text-left">
+      <div className="max-w-[2560px] mx-auto px-4 sm:px-6 2xl:px-8 min-[2200px]:px-10 h-full flex flex-col justify-center items-center md:items-start relative z-10 pt-4 text-center md:text-left">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1428,7 +1425,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: any) => void }) {
           className="max-w-2xl w-full md:pl-[8%] lg:pl-[10%] md:translate-x-[300px]"
         >
           <div className="space-y-3 mb-8">
-            <h1 className="text-[36px] md:text-[44px] font-bold leading-[1.2] tracking-tight text-text-primary drop-shadow-2xl font-display">
+            <h1 className="text-[32px] md:text-[44px] font-bold leading-[1.2] tracking-tight text-text-primary drop-shadow-2xl font-display">
               아이디어를 현실로<br />
               <span className="text-text-primary/95">3D 제작의 모든 과정</span>
             </h1>
@@ -1440,7 +1437,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: any) => void }) {
           
           <button 
             onClick={() => onNavigate && onNavigate('studio')}
-            className="group relative px-6 py-2 border border-brand-primary/80 text-brand-primary rounded-sm text-[12px] font-bold transition-all hover:bg-brand-primary hover:text-bg-dark bg-transparent">
+            className="group relative px-6 py-2 border border-brand-primary/80 text-brand-primary rounded-sm text-[14px] font-medium transition-all hover:bg-brand-primary hover:text-bg-dark bg-transparent">
             AI 스튜디오 시작
           </button>
         </motion.div>
@@ -1468,7 +1465,7 @@ function CategoryNav() {
             <div className={`flex items-center justify-center transition-all mb-1`}>
               <cat.icon className={active === cat.id ? "w-[30px] h-[30px]" : "w-[30px] h-[30px] opacity-60 group-hover:opacity-100 transition-opacity"} />
             </div>
-            <span className={`text-[16px] font-semibold tracking-tight`}>{cat.label}</span>
+            <span className={`text-[15px] font-medium tracking-tight`}>{cat.label}</span>
           </button>
         ))}
       </div>
@@ -1559,13 +1556,13 @@ function QuickDropCard({
             <Icon className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-[15px] font-bold text-white">{title}</h3>
-            <p className="text-[11px] text-text-tertiary">{description}</p>
+            <h3 className="text-[15px] font-medium text-white">{title}</h3>
+            <p className="text-[14px] text-text-tertiary">{description}</p>
           </div>
         </div>
         <button
           onClick={onNavigate}
-          className="text-[11px] font-bold text-text-tertiary transition hover:text-brand-primary"
+          className="text-[14px] font-medium text-text-tertiary transition hover:text-brand-primary"
         >
           열기 <ChevronRight className="inline h-3 w-3" />
         </button>
@@ -1576,15 +1573,15 @@ function QuickDropCard({
           <div key={`${item.id}-${item.addedAt}`} className="overflow-hidden rounded-lg border border-[#1F2329] bg-[#141518]">
             <img src={item.image} alt={item.title} className="aspect-[16/10] w-full object-cover" referrerPolicy="no-referrer" />
             <div className="p-2">
-              <p className="truncate text-[11px] font-bold text-white">{item.title}</p>
-              {item.groupName && <p className="mt-0.5 truncate text-[10px] text-brand-primary">{item.groupName}</p>}
+              <p className="truncate text-[14px] font-medium text-white">{item.title}</p>
+              {item.groupName && <p className="mt-0.5 truncate text-[14px] text-brand-primary">{item.groupName}</p>}
             </div>
           </div>
         ))}
       </div>
 
       {items.length === 0 && (
-        <div className="flex h-[120px] items-center justify-center rounded-lg border border-dashed border-[#2A2E36] text-[12px] font-bold text-text-tertiary">
+        <div className="flex h-[120px] items-center justify-center rounded-lg border border-dashed border-[#2A2E36] text-[14px] font-medium text-text-tertiary">
           이미지를 여기에 드롭
         </div>
       )}
@@ -1642,7 +1639,7 @@ function QuickCollectDialog({
       <div className="w-full max-w-[600px] rounded-xl border border-[#2A2E36] bg-[#0E1011] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.65)]">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <p className="text-[12px] font-bold text-brand-primary">{isNote ? "노트에 추가" : "레퍼런스 보드에 추가"}</p>
+            <p className="text-[14px] font-medium text-brand-primary">{isNote ? "노트에 추가" : "보드 레퍼런스에 추가"}</p>
             <h3 className="mt-1 text-[20px] font-bold text-white">{request.asset.title}</h3>
           </div>
           <button onClick={onClose} className="rounded-md p-1.5 text-text-tertiary transition hover:bg-[#1A1C20] hover:text-white">
@@ -1658,7 +1655,7 @@ function QuickCollectDialog({
             <button
               key={id}
               onClick={() => setMode(id as "existing" | "new")}
-              className={`flex-1 rounded-md px-3 py-2 text-[13px] font-bold transition ${
+              className={`flex-1 rounded-md px-3 py-2 text-[14px] font-medium transition ${
                 mode === id ? "bg-brand-primary text-bg-dark" : "text-text-tertiary hover:text-white"
               }`}
             >
@@ -1682,8 +1679,8 @@ function QuickCollectDialog({
                   referrerPolicy="no-referrer"
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-bold text-white">{option.name}</span>
-                  <span className="mt-0.5 block text-[11px] font-semibold text-text-tertiary">{option.count}</span>
+                  <span className="block truncate text-[14px] font-medium text-white">{option.name}</span>
+                  <span className="mt-0.5 block text-[14px] font-medium text-text-tertiary">{option.count}</span>
                 </span>
                 <Plus className="h-4 w-4 shrink-0 text-brand-primary" />
               </button>
@@ -1694,18 +1691,18 @@ function QuickCollectDialog({
             <input
               value={newName}
               onChange={(event) => setNewName(event.target.value)}
-              className="w-full rounded-lg border border-[#2A2E36] bg-[#08090B] px-4 py-3 text-[14px] font-bold text-white outline-none focus:border-brand-primary"
+              className="w-full rounded-lg border border-[#2A2E36] bg-[#08090B] px-4 py-3 text-[14px] font-medium text-white outline-none focus:border-brand-primary"
               placeholder={isNote ? "새 노트 이름" : "새 보드 이름"}
             />
             <textarea
               value={memo}
               onChange={(event) => setMemo(event.target.value)}
-              className="h-28 w-full resize-none rounded-lg border border-[#2A2E36] bg-[#08090B] px-4 py-3 text-[13px] text-white outline-none focus:border-brand-primary"
+              className="h-28 w-full resize-none rounded-lg border border-[#2A2E36] bg-[#08090B] px-4 py-3 text-[14px] text-white outline-none focus:border-brand-primary"
               placeholder={isNote ? "옆에 남길 메모를 입력하세요." : "보드 설명이나 참고 메모를 입력하세요."}
             />
             <button
-              onClick={() => onSave("new", newName.trim() || (isNote ? "새 노트" : "새 레퍼런스 보드"), memo)}
-              className="w-full rounded-lg bg-brand-primary py-3 text-[14px] font-black text-bg-dark transition hover:bg-brand-hover"
+              onClick={() => onSave("new", newName.trim() || (isNote ? "새 노트" : "새 보드"), memo)}
+              className="w-full rounded-lg bg-brand-primary py-3 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover"
             >
               저장하기
             </button>
@@ -1754,7 +1751,7 @@ function QuickCollectPanel({
                 event.preventDefault();
                 onOpenDrop(readDraggedAsset(event));
               }}
-              className="flex items-center gap-2 rounded-[8px] border border-border-primary/80 bg-bg-secondary/95 px-8 py-3 text-[15px] font-bold tracking-wide text-text-primary shadow-[0_15px_40px_rgba(0,0,0,0.9)] backdrop-blur-md transition-all hover:border-brand-primary hover:text-brand-primary"
+              className="flex items-center gap-2 rounded-[8px] border border-border-primary/80 bg-bg-secondary/95 px-8 py-3 text-[15px] font-medium tracking-wide text-text-primary shadow-[0_15px_40px_rgba(0,0,0,0.9)] backdrop-blur-md transition-all hover:border-brand-primary hover:text-brand-primary"
             >
               <PanelRightOpen className="h-4 w-4" />
               패널 열기
@@ -1797,17 +1794,17 @@ function QuickCollectPanel({
                   description="기존 노트 또는 새 노트 선택"
                   icon={FileText}
                   items={collections.notes}
-                  onNavigate={() => onNavigate("notes")}
+                  onNavigate={() => onNavigate("board")}
                   onDropAsset={(asset) => onDropTarget("notes", asset)}
                 />
               </div>
               <div className="xl:col-span-4">
                 <QuickDropCard
-                  title="레퍼런스 보드"
+                  title="보드 레퍼런스"
                   description="새 보드 저장 또는 기존 보드 추가"
                   icon={LayoutGrid}
                   items={collections.references}
-                  onNavigate={() => onNavigate("references")}
+                  onNavigate={() => onNavigate("board")}
                   onDropAsset={(asset) => onDropTarget("references", asset)}
                 />
               </div>
@@ -1856,7 +1853,7 @@ function AssetCard({
         />
 
         {/* Badge - M or A */}
-        <div className={`absolute top-2 right-2 w-6 h-6 rounded-[6px] flex items-center justify-center text-[12px] font-extrabold backdrop-blur-[8px] z-20 transition-all duration-200 ${
+        <div className={`absolute top-2 right-2 h-7 min-w-7 px-1 rounded-[6px] flex items-center justify-center text-[14px] font-medium backdrop-blur-[8px] z-20 transition-all duration-200 ${
           isMarket 
             ? 'bg-[#E0A12E]/40 text-[#F0B43A] group-hover:bg-[#E0A12E]/50' 
             : 'bg-[#4C88D9]/40 text-[#A0C5FF] group-hover:bg-[#4C88D9]/50'
@@ -1869,10 +1866,10 @@ function AssetCard({
           <h3 className="text-[17px] font-normal text-text-primary line-clamp-2 leading-[1.3] mb-0.5">
             {asset.title}
           </h3>
-          <p className="text-[12px] text-text-secondary font-medium">
+          <p className="text-[15px] text-text-secondary font-medium">
             {asset.author}
           </p>
-          <div className="flex items-center gap-3 mt-2 text-[12px] text-text-secondary">
+          <div className="flex items-center gap-3 mt-2 text-[14px] text-text-secondary">
             <div className="flex items-center gap-1 opacity-75 cursor-pointer hover:opacity-100 transition-opacity" onClick={onToggleFavorite}>
               <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} /> {asset.likes}
             </div>
@@ -1880,13 +1877,13 @@ function AssetCard({
               <Eye className="w-3.5 h-3.5" /> {asset.views}
             </div>
           </div>
-          <div className="mt-3 flex gap-2">
+          <div className="hidden">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onQuickCollect?.("references", asset);
               }}
-              className="rounded-md border border-white/15 bg-black/55 px-2.5 py-1.5 text-[11px] font-bold text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+              className="rounded-md border border-white/15 bg-black/55 px-2.5 py-1.5 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
             >
               레퍼런스
             </button>
@@ -1895,7 +1892,7 @@ function AssetCard({
                 e.stopPropagation();
                 onQuickCollect?.("notes", asset);
               }}
-              className="rounded-md border border-white/15 bg-black/55 px-2.5 py-1.5 text-[11px] font-bold text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+              className="rounded-md border border-white/15 bg-black/55 px-2.5 py-1.5 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
             >
               메모
             </button>
@@ -2126,7 +2123,7 @@ function ProductDetailPage({
       <div className="mx-auto w-full max-w-[2560px] px-4 py-8 sm:px-6 2xl:px-8 min-[2200px]:px-10">
         <button
           onClick={onNavigateHome}
-          className="mb-5 inline-flex items-center gap-2 text-[13px] font-bold text-text-tertiary transition hover:text-brand-primary"
+          className="mb-5 inline-flex items-center gap-2 text-[14px] font-medium text-text-tertiary transition hover:text-brand-primary"
         >
           <ChevronRight className="h-4 w-4 rotate-180" />
           Discover로 돌아가기
@@ -2149,7 +2146,7 @@ function ProductDetailPage({
                 event.stopPropagation();
                 onQuickCollect?.("references", asset);
               }}
-              className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[12px] font-bold text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+              className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
             >
               레퍼런스
             </button>
@@ -2158,7 +2155,7 @@ function ProductDetailPage({
                 event.stopPropagation();
                 onQuickCollect?.("notes", asset);
               }}
-              className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[12px] font-bold text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+              className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
             >
               메모
             </button>
@@ -2186,7 +2183,7 @@ function ProductDetailPage({
                       event.stopPropagation();
                       onQuickCollect?.("references", asset);
                     }}
-                    className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[12px] font-bold text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+                    className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
                   >
                     레퍼런스
                   </button>
@@ -2195,7 +2192,7 @@ function ProductDetailPage({
                       event.stopPropagation();
                       onQuickCollect?.("notes", asset);
                     }}
-                    className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[12px] font-bold text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+                    className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
                   >
                     메모
                   </button>
@@ -2215,29 +2212,29 @@ function ProductDetailPage({
         </div>
       </div>
 
-      <section className="border-t border-[#1F2329] px-6 py-16">
+      <section className="border-t border-[#1F2329] px-4 py-14 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-[2560px]">
           <h2 className="mb-8 text-[24px] font-bold text-white">추천 모델링</h2>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
             {recommended.map((item) => (
               <button
                 key={item.id}
                 onClick={() => onOpenProduct(item.id)}
                 draggable
                 onDragStart={(event) => onAssetDragStart?.(item, event)}
-                className="overflow-hidden rounded-lg border border-[#1F2329] bg-[#181A1F] text-left transition hover:border-brand-primary/50"
+                className="overflow-hidden rounded-lg border border-[#242832] bg-[#101215] text-left transition hover:border-brand-primary/50"
               >
                 <img src={item.image} alt={item.title} className="aspect-[16/10] w-full object-cover" referrerPolicy="no-referrer" />
-                <div className="p-3">
-                  <span className="mb-2 inline-flex rounded-sm bg-brand-primary px-1.5 py-0.5 text-[10px] font-bold text-bg-dark">
+                <div className="border-t border-[#262A31] bg-[#15171D] p-4">
+                  <span className="mb-2.5 inline-flex rounded-sm bg-brand-primary px-2 py-0.5 text-[14px] font-medium text-bg-dark">
                     Market
                   </span>
-                  <h3 className="text-[14px] font-bold text-white line-clamp-1">{item.id === 5 ? 'Street Dunker' : 'Fantasy Character 1'}</h3>
-                  <p className="mt-1 text-[12px] text-text-tertiary">고품질 3D 캐릭터 모델</p>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[14px] font-bold text-brand-primary">{item.id === 5 ? '₩89,000' : '₩62K'}</span>
-                    <span className="flex items-center gap-1 text-[11px] text-text-tertiary">
-                      <Heart className="h-3 w-3" />
+                  <h3 className="text-[15px] font-medium leading-tight text-white line-clamp-1">{item.id === 5 ? 'Street Dunker' : 'Fantasy Character 1'}</h3>
+                  <p className="mt-1.5 text-[14px] font-medium leading-snug text-text-secondary">고품질 3D 캐릭터 모델</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-[15px] font-medium text-brand-primary">{item.id === 5 ? '₩89,000' : '₩62K'}</span>
+                    <span className="flex items-center gap-1.5 text-[14px] font-medium text-text-tertiary">
+                      <Heart className="h-3.5 w-3.5" />
                       485
                     </span>
                   </div>
@@ -2303,7 +2300,7 @@ function BoardPage({
     <button
       key={label}
       onClick={onClick}
-      className={`flex w-full items-center justify-between rounded-md px-4 py-3 text-[15px] font-bold transition ${
+      className={`flex w-full items-center justify-between rounded-md px-4 py-3 text-[15px] font-medium transition ${
         active ? "bg-[#171A20] text-white" : "text-text-tertiary hover:bg-[#121417] hover:text-white"
       }`}
     >
@@ -2318,7 +2315,7 @@ function BoardPage({
   );
 
   const renderNoteSubMenu = () => (
-    <div className="ml-4 mt-2 space-y-4 pl-1">
+    <div className="ml-4 mt-3 space-y-4 pl-1">
       <div className="space-y-1.5">
         {submenuButton("전체 노트", liveNotes.length, boardNoteFilter === "all", () => setBoardNoteFilter("all"), <LayoutGrid className="h-4 w-4" />)}
         {submenuButton("즐겨찾기", liveNotes.filter((note) => note.starred).length, boardNoteFilter === "starred", () => setBoardNoteFilter("starred"), <Star className="h-4 w-4" />)}
@@ -2326,7 +2323,7 @@ function BoardPage({
         {submenuButton("휴지통", 0, boardNoteFilter === "trash", () => setBoardNoteFilter("trash"), <Trash2 className="h-4 w-4" />)}
       </div>
       <div>
-        <p className="mb-2 px-4 text-[14px] font-black uppercase tracking-[0.08em] text-text-tertiary">폴더</p>
+        <p className="mb-2 px-4 text-[14px] font-medium uppercase tracking-[0.08em] text-text-tertiary">폴더</p>
         <div className="space-y-1.5">
           {noteFolders.map((folder) =>
             submenuButton(
@@ -2343,14 +2340,14 @@ function BoardPage({
   );
 
   const renderReferenceSubMenu = () => (
-    <div className="ml-4 mt-2 space-y-4 pl-1">
+    <div className="ml-4 mt-3 space-y-4 pl-1">
       <div className="space-y-1.5">
         {submenuButton("전체", referenceCountFor("all"), boardReferenceCategory === "all", () => setBoardReferenceCategory("all"), <LayoutGrid className="h-4 w-4" />)}
         {submenuButton("즐겨찾기", referenceCountFor("favorites"), boardReferenceCategory === "favorites", () => setBoardReferenceCategory("favorites"), <Star className="h-4 w-4" />)}
         {submenuButton("최근 추가", referenceCountFor("recent"), boardReferenceCategory === "recent", () => setBoardReferenceCategory("recent"), <Clock className="h-4 w-4" />)}
       </div>
       <div>
-        <p className="mb-2 px-4 text-[14px] font-black uppercase tracking-[0.08em] text-text-tertiary">보드</p>
+        <p className="mb-2 px-4 text-[14px] font-medium uppercase tracking-[0.08em] text-text-tertiary">보드</p>
         <div className="space-y-2">
           {REFERENCE_BOARDS.map((board) => {
             const active = boardReferenceCategory === board.id;
@@ -2369,8 +2366,8 @@ function BoardPage({
                   referrerPolicy="no-referrer"
                 />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-black">{board.label}</span>
-                  <span className="mt-0.5 block text-[13px] font-bold text-text-tertiary">
+                  <span className="block truncate text-[15px] font-medium">{board.label}</span>
+                  <span className="mt-0.5 block text-[14px] font-medium text-text-tertiary">
                     {referenceCountFor(board.id)}개
                   </span>
                 </span>
@@ -2386,7 +2383,7 @@ function BoardPage({
     const Icon = item.icon;
     const active = boardView === item.id;
     return (
-      <div key={item.id}>
+      <div key={item.id} className="py-3 first:pt-0 last:pb-0">
         <button
           onClick={() => setBoardView(item.id)}
           className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3.5 text-left transition ${
@@ -2397,8 +2394,8 @@ function BoardPage({
         >
           <Icon className={`h-5 w-5 shrink-0 ${active ? "text-brand-primary" : "text-text-tertiary"}`} />
           <span className="min-w-0 flex-1">
-            <span className="block text-[16px] font-black">{item.label}</span>
-            <span className="mt-0.5 block truncate text-[13px] font-semibold text-text-tertiary">{item.desc}</span>
+            <span className="block text-[15px] font-medium">{item.label}</span>
+            <span className="mt-0.5 block truncate text-[14px] font-medium text-text-tertiary">{item.desc}</span>
           </span>
         </button>
         {item.id === "notes" && boardView === "notes" && renderNoteSubMenu()}
@@ -2414,15 +2411,15 @@ function BoardPage({
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="line-clamp-2 text-[17px] font-black leading-tight text-white">{note.title}</h3>
-          <p className="mt-1 text-[12px] font-semibold text-text-tertiary">{note.date}</p>
+          <h3 className="line-clamp-2 text-[17px] font-semibold leading-tight text-white">{note.title}</h3>
+          <p className="mt-1 text-[14px] font-medium text-text-tertiary">{note.date}</p>
         </div>
         {note.starred && <Star className="h-4 w-4 shrink-0 fill-brand-primary text-brand-primary" />}
       </div>
-      <p className="line-clamp-3 text-[13px] leading-relaxed text-text-secondary">{note.desc}</p>
+      <p className="line-clamp-3 text-[15px] leading-[1.6] text-text-secondary">{note.desc}</p>
       <div className="mt-3 flex flex-wrap gap-1.5">
         {note.tags.slice(0, 3).map((tag) => (
-          <span key={tag} className="rounded-full border border-[#2A2E36] px-2 py-1 text-[11px] font-bold text-text-tertiary">
+          <span key={tag} className="rounded-full border border-[#2A2E36] px-2 py-1 text-[14px] font-medium text-text-tertiary">
             {tag}
           </span>
         ))}
@@ -2453,16 +2450,16 @@ function BoardPage({
     <main className="flex h-[calc(100vh-76px)] overflow-hidden bg-bg-dark text-text-primary">
       <aside className="hidden w-[300px] shrink-0 border-r border-[#1C1E24] bg-[#0B0D10] p-5 lg:flex lg:flex-col">
         <div className="mb-6">
-          <p className="text-[12px] font-black uppercase tracking-[0.18em] text-brand-primary">Board</p>
-          <h1 className="mt-2 text-[25px] font-black text-white">작업 보드</h1>
-          <p className="mt-2 text-[13px] font-semibold leading-relaxed text-text-tertiary">
+          <p className="text-[14px] font-medium uppercase tracking-[0.18em] text-brand-primary">Board</p>
+          <h1 className="mt-2 text-[24px] font-bold text-white">작업 보드</h1>
+          <p className="mt-2 text-[15px] font-medium leading-[1.6] text-text-tertiary">
             노트와 레퍼런스를 같은 공간에서 정리합니다.
           </p>
         </div>
-        <div className="space-y-2">{boardItems.map(sidebarButton)}</div>
+        <div className="divide-y divide-[#1C1E24]">{boardItems.map(sidebarButton)}</div>
         <div className="mt-auto rounded-lg border border-dashed border-[#2A2E36] p-4">
-          <p className="text-[13px] font-black text-white">연결맵</p>
-          <p className="mt-1 text-[12px] leading-relaxed text-text-tertiary">
+          <p className="text-[14px] font-medium text-white">연결맵</p>
+          <p className="mt-1 text-[15px] leading-[1.6] text-text-tertiary">
             노트와 레퍼런스의 직접 연결, AI 추천 연결은 다음 단계에서 붙일 수 있어요.
           </p>
         </div>
@@ -2474,7 +2471,7 @@ function BoardPage({
             <button
               key={item.id}
               onClick={() => setBoardView(item.id)}
-              className={`flex-1 rounded-lg border px-3 py-2 text-[14px] font-black ${
+              className={`flex-1 rounded-lg border px-3 py-2 text-[14px] font-medium ${
                 boardView === item.id
                   ? "border-brand-primary bg-brand-primary text-bg-dark"
                   : "border-[#2A2E36] bg-[#111317] text-text-secondary"
@@ -2487,26 +2484,26 @@ function BoardPage({
 
         {boardView === "all" ? (
           <div className="grid h-full min-h-0 grid-cols-1 gap-4 xl:grid-cols-2">
-            <div className="min-w-0 overflow-hidden rounded-lg border border-[#1C1E24] bg-bg-dark">
-              <div className="flex items-center justify-between border-b border-[#1C1E24] px-5 py-4">
+            <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-[#1C1E24] bg-bg-dark">
+              <div className="flex shrink-0 items-center justify-between border-b border-[#1C1E24] px-5 py-4">
                 <div>
-                  <p className="text-[12px] font-black uppercase tracking-[0.12em] text-brand-primary">Notes</p>
-                  <h2 className="mt-1 text-[22px] font-black text-white">노트</h2>
+                  <p className="text-[14px] font-medium uppercase tracking-[0.12em] text-brand-primary">Notes</p>
+                  <h2 className="mt-1 text-[24px] font-bold text-white">노트</h2>
                 </div>
-                <span className="text-[14px] font-bold text-text-tertiary">{liveNotes.length}개</span>
+                <span className="text-[14px] font-medium text-text-tertiary">{liveNotes.length}개</span>
               </div>
               <div className="grid min-h-0 flex-1 content-start grid-cols-1 gap-3 overflow-y-auto p-4 pb-8 md:grid-cols-3">
                 {liveNotes.map(renderOverviewNote)}
               </div>
             </div>
 
-            <div className="min-w-0 overflow-hidden rounded-lg border border-[#1C1E24] bg-bg-dark">
-              <div className="flex items-center justify-between border-b border-[#1C1E24] px-5 py-4">
+            <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-[#1C1E24] bg-bg-dark">
+              <div className="flex shrink-0 items-center justify-between border-b border-[#1C1E24] px-5 py-4">
                 <div>
-                  <p className="text-[12px] font-black uppercase tracking-[0.12em] text-brand-primary">References</p>
-                  <h2 className="mt-1 text-[22px] font-black text-white">레퍼런스</h2>
+                  <p className="text-[14px] font-medium uppercase tracking-[0.12em] text-brand-primary">References</p>
+                  <h2 className="mt-1 text-[24px] font-bold text-white">레퍼런스</h2>
                 </div>
-                <span className="text-[14px] font-bold text-text-tertiary">{liveReferences.length}개</span>
+                <span className="text-[14px] font-medium text-text-tertiary">{liveReferences.length}개</span>
               </div>
               <div className="grid min-h-0 flex-1 content-start grid-cols-1 gap-3 overflow-y-auto p-4 pb-8 md:grid-cols-3">
                 {liveReferences.map(renderOverviewReference)}
@@ -2540,47 +2537,47 @@ function ProductPurchasePanel({ asset, product }: { asset: any; product: typeof 
   return (
     <>
       <div className="px-1">
-        <span className="mb-1 block text-[12px] font-bold text-brand-primary">{product.category}</span>
+        <span className="mb-1 block text-[14px] font-medium text-brand-primary">{product.category}</span>
         <h1 className="text-[24px] font-bold text-white">{product.title}</h1>
       </div>
 
       <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-4">
-        <p className="mb-4 text-[14px] font-bold text-white">Artist</p>
+        <p className="mb-4 text-[14px] font-medium text-white">Artist</p>
         <div className="flex items-center gap-3">
           <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=kimjihwan" alt="" className="h-10 w-10 rounded-full bg-white" />
           <div>
-            <p className="text-[13px] font-bold text-white">Kim ji hwan</p>
-            <p className="text-[12px] text-text-tertiary">3D Character Artist</p>
+            <p className="text-[14px] font-medium text-white">Kim ji hwan</p>
+            <p className="text-[14px] text-text-tertiary">3D Character Artist</p>
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-2 text-[12px] text-text-tertiary">
+        <div className="mt-4 grid grid-cols-2 gap-2 text-[14px] text-text-tertiary">
           <span>작품 수</span>
           <span className="text-right text-text-secondary">8개</span>
           <span>팔로워</span>
           <span className="text-right text-text-secondary">0.3K</span>
         </div>
-        <button className="mt-4 w-full rounded-md bg-[#3A3A3A] py-2.5 text-[13px] font-bold text-white transition hover:bg-[#4A4A4A]">
+        <button className="mt-4 w-full rounded-md bg-[#3A3A3A] py-2.5 text-[14px] font-medium text-white transition hover:bg-[#4A4A4A]">
           팔로우
         </button>
       </div>
 
       <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-4">
         <div className="mb-4 flex items-end gap-3">
-          <span className="text-[24px] font-black text-brand-primary">{product.price}</span>
-          {product.originalPrice && <span className="pb-1 text-[13px] text-text-tertiary line-through">{product.originalPrice}</span>}
+          <span className="text-[24px] font-bold text-brand-primary">{product.price}</span>
+          {product.originalPrice && <span className="pb-1 text-[14px] text-text-tertiary line-through">{product.originalPrice}</span>}
         </div>
-        <button className="mb-2 w-full rounded-md bg-brand-primary py-3 text-[14px] font-black text-bg-dark transition hover:bg-brand-hover">
+        <button className="mb-2 w-full rounded-md bg-brand-primary py-3 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover">
           구매하기
         </button>
-        <button className="mb-3 w-full rounded-md bg-[#333] py-3 text-[13px] font-bold text-white transition hover:bg-[#444]">
+        <button className="mb-3 w-full rounded-md bg-[#333] py-3 text-[14px] font-medium text-white transition hover:bg-[#444]">
           장바구니에 추가
         </button>
         <div className="grid grid-cols-2 gap-2">
-          <button className="flex items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[12px] font-bold text-text-secondary hover:text-white">
+          <button className="flex items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
             <Heart className="h-4 w-4 text-brand-primary" />
             568
           </button>
-          <button className="flex items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[12px] font-bold text-text-secondary hover:text-white">
+          <button className="flex items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
             <ShoppingBag className="h-4 w-4" />
             공유
           </button>
@@ -2593,11 +2590,11 @@ function ProductPurchasePanel({ asset, product }: { asset: any; product: typeof 
 function ProductLicensePanel() {
   return (
     <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-5">
-      <h2 className="mb-4 text-[15px] font-bold text-white">라이센스</h2>
+      <h2 className="mb-4 text-[15px] font-medium text-white">라이센스</h2>
       {['상업적 사용 가능', '무제한 다운로드', 'AI 변환 가능'].map((item) => (
         <div key={item} className="mb-4 last:mb-0">
-          <p className="text-[13px] font-bold text-white">{item}</p>
-          <p className="mt-1 text-[12px] leading-relaxed text-text-tertiary">게임, 영상, 광고 등 모든 상업적 프로젝트에 사용 가능합니다.</p>
+          <p className="text-[14px] font-medium text-white">{item}</p>
+          <p className="mt-1 text-[15px] leading-[1.6] text-text-tertiary">게임, 영상, 광고 등 모든 상업적 프로젝트에 사용 가능합니다.</p>
         </div>
       ))}
     </div>
@@ -2613,8 +2610,8 @@ function ProductStatsPanel({ stats }: { stats: [string, string, string] }) {
         ['평점', stats[2]],
       ].map(([label, value]) => (
         <div key={label}>
-          <p className="text-[20px] font-black text-white">{value}</p>
-          <p className="mt-1 text-[12px] text-text-tertiary">{label}</p>
+          <p className="text-[20px] font-bold text-white">{value}</p>
+          <p className="mt-1 text-[14px] text-text-tertiary">{label}</p>
         </div>
       ))}
     </div>
@@ -2624,26 +2621,26 @@ function ProductStatsPanel({ stats }: { stats: [string, string, string] }) {
 function ProductInfoPanel({ product }: { product: typeof PRODUCT_DETAIL_DATA[number] }) {
   return (
     <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-5">
-      <h2 className="mb-4 text-[15px] font-bold text-white">파일 정보</h2>
+      <h2 className="mb-4 text-[15px] font-medium text-white">파일 정보</h2>
       <div className="space-y-3 border-b border-[#2A2E36] pb-5">
         {product.fileInfo.map(([label, value]) => (
-          <div key={label} className="flex justify-between gap-4 text-[12px]">
+          <div key={label} className="flex justify-between gap-4 text-[14px]">
             <span className="text-text-tertiary">{label}</span>
             <span className="text-right font-semibold text-text-secondary">{value}</span>
           </div>
         ))}
       </div>
-      <h2 className="mb-3 mt-5 text-[15px] font-bold text-white">상세 설명</h2>
-      <p className="text-[12px] leading-relaxed text-text-secondary">{product.description}</p>
-      <h2 className="mb-3 mt-5 text-[15px] font-bold text-white">태그</h2>
+      <h2 className="mb-3 mt-5 text-[15px] font-medium text-white">상세 설명</h2>
+      <p className="text-[15px] leading-[1.65] text-text-secondary">{product.description}</p>
+      <h2 className="mb-3 mt-5 text-[15px] font-medium text-white">태그</h2>
       <div className="flex flex-wrap gap-2">
         {product.tags.map((tag) => (
-          <span key={tag} className="rounded-full border border-[#3A404F] px-2.5 py-1 text-[11px] font-bold text-text-secondary">
+          <span key={tag} className="rounded-full border border-[#3A404F] px-2.5 py-1 text-[14px] font-medium text-text-secondary">
             {tag}
           </span>
         ))}
       </div>
-      <h2 className="mb-3 mt-5 text-[15px] font-bold text-white">용도</h2>
+      <h2 className="mb-3 mt-5 text-[15px] font-medium text-white">용도</h2>
       <div className="flex gap-3 text-text-tertiary">
         <Box className="h-5 w-5" />
         <Video className="h-5 w-5" />
@@ -2663,10 +2660,10 @@ function SidebarProject({ title, thumb, status, progress }: any) {
       <div className="flex-1 min-w-0 space-y-2">
         <div className="flex justify-between items-start gap-2">
           <p className="text-[17px] font-normal text-text-primary group-hover:text-brand-primary transition-colors line-clamp-2 leading-[1.3] flex-1">{title}</p>
-          <span className="text-[12px] font-sans text-[#8B909A] font-medium pt-1">{progress}%</span>
+          <span className="text-[14px] font-sans text-[#8B909A] font-medium pt-1">{progress}%</span>
         </div>
         <div className="space-y-2">
-          <div className="text-[12px] text-text-secondary font-semibold uppercase tracking-wider">{status}</div>
+          <div className="text-[14px] text-text-secondary font-medium uppercase tracking-wider">{status}</div>
           <div className="h-[4px] bg-border-soft rounded-full overflow-hidden">
             <div className="h-full bg-brand-primary shadow-[0_0_8px_rgba(224,161,46,0.4)]" style={{ width: `${progress}%` }}></div>
           </div>
@@ -2682,7 +2679,7 @@ function SidebarNote({ title, tags }: any) {
       <h4 className="text-[17px] font-normal text-text-primary mb-3 group-hover:text-brand-primary transition-colors">{title}</h4>
       <div className="flex flex-wrap gap-2 mb-3">
         {tags.map((tag: string) => (
-          <span key={tag} className="text-[12px] px-2.5 py-1 bg-surface-primary text-text-secondary rounded font-bold border border-border-primary/35 uppercase tracking-tighter">
+          <span key={tag} className="text-[14px] px-2.5 py-1 bg-surface-primary text-text-secondary rounded font-medium border border-border-primary/35 uppercase tracking-tighter">
             {tag}
           </span>
         ))}
@@ -2710,7 +2707,7 @@ function DiscoverSection({
   onQuickCollect?: (target: QuickDropTarget, asset: any) => void,
   onAssetDragStart?: (asset: any, e: React.DragEvent) => void,
 }) {
-  const [activeTab, setActiveTab] = useState('추천');
+  const [activeTab, setActiveTab] = useState<'전체' | '마켓' | '아트' | '최신' | '팔로잉'>('전체');
   const [showFilters, setShowFilters] = useState(false);
   
   // Filter States
@@ -2721,7 +2718,23 @@ function DiscoverSection({
   const [polyRange, setPolyRange] = useState({ min: '0', max: '1,000,000' });
   const [license, setLicense] = useState<string[]>([]);
 
-  const tabs = ['추천', '최신', '팔로잉', '에디터 픽'];
+  const tabs: Array<typeof activeTab> = ['전체', '마켓', '아트', '최신', '팔로잉'];
+  const followingAssetIds = new Set([1, 2, 3, 4, 5, 6, 7, 8]);
+  const discoverAssets = (() => {
+    if (activeTab === '전체') {
+      return ASSETS;
+    }
+    if (activeTab === '마켓') {
+      return ASSETS.filter((asset) => asset.badge === 'M');
+    }
+    if (activeTab === '아트') {
+      return ASSETS.filter((asset) => asset.badge === 'A');
+    }
+    if (activeTab === '최신') {
+      return [...ASSETS].sort((a, b) => b.id - a.id);
+    }
+    return ASSETS.filter((asset) => followingAssetIds.has(asset.id));
+  })();
   
   const formats = ['.FBX', '.OBJ', '.ABC', '.BLEND', '.MAX', '.GLB'];
   const polyOptions = ['Low Poly', 'Mid Poly', 'High Poly'];
@@ -2802,15 +2815,15 @@ function DiscoverSection({
 
   return (
     <div className="flex-1 min-w-0 relative">
-      <div className="flex items-end justify-between mb-6 pb-2 border-b border-border-soft/50 h-[46px]">
-        <div className="flex items-end gap-10">
+      <div className="mb-6 flex flex-col gap-3 border-b border-border-soft/50 pb-3 sm:h-[46px] sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:pb-2">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:gap-8 lg:gap-10">
           <h2 className="text-[30px] font-bold tracking-tight text-text-primary leading-none font-display">Discover</h2>
-          <div className="flex items-center gap-6 mb-[-2px]">
+          <div className="mb-[-2px] flex min-w-0 items-end gap-4 overflow-x-auto scrollbar-hide pr-1 sm:self-end sm:gap-6">
             {tabs.map(tab => (
               <button 
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`text-[17px] font-semibold transition-all relative py-1 ${
+                className={`text-[18px] font-medium transition-all relative py-1 ${
                   activeTab === tab ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
                 }`}
               >
@@ -2822,11 +2835,11 @@ function DiscoverSection({
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-4 pl-[1px] pt-0 flex-1 justify-end min-w-0 h-8 self-end">
+        <div className="flex h-8 min-w-0 flex-1 items-center justify-end gap-4 self-end pl-[1px] pt-0">
           {/* Active Filter Tags */}
           <div className="hidden xl:flex items-center justify-end flex-nowrap gap-2 max-w-[700px] overflow-x-auto scrollbar-hide h-8 flex-1 min-w-0">
             {activeFilters.map((filter) => (
-              <span key={filter} className="flex items-center gap-1.5 h-7 px-3 bg-surface-primary border border-border-soft text-[15px] font-bold text-text-tertiary rounded-sm whitespace-nowrap">
+              <span key={filter} className="flex items-center gap-1.5 h-7 px-3 bg-surface-primary border border-border-soft text-[15px] font-medium text-text-tertiary rounded-sm whitespace-nowrap">
                 {filter}
                 <button
                   type="button"
@@ -2857,7 +2870,7 @@ function DiscoverSection({
             initial={{ y: 5, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 5, opacity: 0 }}
-            className="absolute top-[50px] right-0 z-50 bg-[#0E1011]/95 backdrop-blur-md rounded-[8px] border border-border-primary p-6 shadow-[0_30px_60px_rgba(0,0,0,0.9)] w-[80%] max-w-[1000px]"
+            className="absolute left-0 right-0 top-[74px] z-50 rounded-[8px] border border-border-primary bg-[#0E1011]/95 p-5 shadow-[0_30px_60px_rgba(0,0,0,0.9)] backdrop-blur-md sm:left-auto sm:top-[50px] sm:w-[80%] sm:max-w-[1000px] sm:p-6"
           >
             <button 
               onClick={() => setShowFilters(false)}
@@ -2869,7 +2882,7 @@ function DiscoverSection({
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
               {/* 가격 필터 */}
               <div className="space-y-4 col-span-1 md:col-span-3">
-                <h4 className="text-[15px] font-bold text-text-tertiary uppercase tracking-wider">가격</h4>
+                <h4 className="text-[15px] font-medium text-text-tertiary uppercase tracking-wider">가격</h4>
                 <div className="flex gap-2">
                   {['free', 'paid'].map((type) => (
                     <button
@@ -2881,7 +2894,7 @@ function DiscoverSection({
                           setPriceType(type as any);
                         }
                       }}
-                      className={`px-3 py-1.5 rounded-sm text-[15px] font-bold border transition-all ${
+                      className={`px-3 py-1.5 rounded-sm text-[15px] font-medium border transition-all ${
                         priceType === type 
                         ? 'bg-brand-primary border-brand-primary text-bg-dark' 
                         : 'bg-surface-primary border-border-soft text-text-tertiary hover:border-brand-primary/50'
@@ -2902,7 +2915,7 @@ function DiscoverSection({
                       disabled={priceType !== 'paid'}
                       className="w-full bg-surface-primary border border-border-soft rounded-sm px-3 py-1.5 text-[15px] text-text-secondary focus:outline-none focus:border-brand-primary/50 transition-all font-sans" 
                     />
-                    <span className="text-text-tertiary text-[12px]">~</span>
+                    <span className="text-text-tertiary text-[14px]">~</span>
                     <input 
                       type="text" 
                       value={priceRange.max}
@@ -2917,13 +2930,13 @@ function DiscoverSection({
 
               {/* 파일 형식 */}
               <div className="space-y-4 col-span-1 md:col-span-3">
-                <h4 className="text-[15px] font-bold text-text-tertiary uppercase tracking-wider">파일 형식</h4>
+                <h4 className="text-[15px] font-medium text-text-tertiary uppercase tracking-wider">파일 형식</h4>
                 <div className="flex flex-wrap gap-2">
                   {formats.map((fmt) => (
                     <button
                       key={fmt}
                       onClick={() => toggleFilter(selectedFormats, setSelectedFormats, fmt)}
-                      className={`px-3 py-1.5 min-w-[60px] rounded-sm text-[15px] font-bold border transition-all ${
+                      className={`px-3 py-1.5 min-w-[60px] rounded-sm text-[15px] font-medium border transition-all ${
                         selectedFormats.includes(fmt)
                         ? 'bg-brand-primary border-brand-primary text-bg-dark'
                         : 'bg-surface-primary border-border-soft text-text-tertiary hover:border-brand-primary/50'
@@ -2937,7 +2950,7 @@ function DiscoverSection({
 
               {/* 폴리곤 수 */}
               <div className="space-y-4 col-span-1 md:col-span-4 flex flex-col">
-                <h4 className="text-[15px] font-bold text-text-tertiary uppercase tracking-wider">폴리곤 수</h4>
+                <h4 className="text-[15px] font-medium text-text-tertiary uppercase tracking-wider">폴리곤 수</h4>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   {[...polyOptions, '직접 설정'].map((opt) => {
                     let tooltipText = '';
@@ -2976,7 +2989,7 @@ function DiscoverSection({
                         }`}>{opt}</span>
                         
                         {tooltipText && !isDisabled && (
-                          <div className="absolute bottom-full left-0 mb-2 hidden group-hover/item:block bg-surface-secondary border border-border-primary/80 text-[12px] text-text-secondary px-2.5 py-1.5 rounded-sm shadow-[0_4px_12px_rgba(0,0,0,0.8)] whitespace-nowrap z-[110] pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+                          <div className="absolute bottom-full left-0 mb-2 hidden group-hover/item:block bg-surface-secondary border border-border-primary/80 text-[14px] text-text-secondary px-2.5 py-1.5 rounded-sm shadow-[0_4px_12px_rgba(0,0,0,0.8)] whitespace-nowrap z-[110] pointer-events-none animate-in fade-in zoom-in-95 duration-150">
                             <span className="text-brand-primary font-bold mr-1">범위:</span> {tooltipText}
                           </div>
                         )}
@@ -2987,7 +3000,7 @@ function DiscoverSection({
                 
                 {polyCount.includes('직접 설정') && (
                   <div className="space-y-3 pt-3 mt-1 border-t border-border-soft/20 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <div className="flex items-center justify-between text-[12px] font-sans text-text-tertiary">
+                    <div className="flex items-center justify-between text-[14px] font-sans text-text-tertiary">
                       <span>최소: 0 Poly</span>
                       <span>최대: {polyRange.max} Poly</span>
                     </div>
@@ -3012,7 +3025,7 @@ function DiscoverSection({
 
               {/* 라이선스 */}
               <div className="space-y-4 col-span-1 md:col-span-2">
-                <h4 className="text-[15px] font-bold text-text-tertiary uppercase tracking-wider">라이선스</h4>
+                <h4 className="text-[15px] font-medium text-text-tertiary uppercase tracking-wider">라이선스</h4>
                 <div className="space-y-3">
                   {licenseOptions.map((opt) => (
                     <label 
@@ -3035,7 +3048,7 @@ function DiscoverSection({
             </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-8 pt-5 border-t border-border-soft/20">
-              <div className="text-[12px] text-text-tertiary select-none flex items-center gap-1.5 pl-1 font-sans sm:translate-y-[2px]">
+              <div className="text-[14px] text-text-tertiary select-none flex items-center gap-1.5 pl-1 font-sans sm:translate-y-[2px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-primary" />
                 선택하지 않은 영역은 전체로 분류됩니다.
               </div>
@@ -3047,13 +3060,13 @@ function DiscoverSection({
                     setPolyCount([]);
                     setLicense([]);
                   }}
-                  className="text-[15px] font-bold text-text-tertiary hover:text-text-primary px-4 py-2 transition-colors uppercase tracking-wider"
+                  className="text-[15px] font-medium text-text-tertiary hover:text-text-primary px-4 py-2 transition-colors uppercase tracking-wider"
                 >
                   초기화
                 </button>
                 <button 
                   onClick={() => setShowFilters(false)}
-                  className="bg-brand-primary text-bg-dark text-[15px] font-bold px-6 py-2 rounded-sm hover:bg-brand-hover transition-all uppercase tracking-wider shadow-none"
+                  className="bg-brand-primary text-bg-dark text-[15px] font-medium px-6 py-2 rounded-sm hover:bg-brand-hover transition-all uppercase tracking-wider shadow-none"
                 >
                   필터 적용
                 </button>
@@ -3068,8 +3081,7 @@ function DiscoverSection({
           ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" 
           : "grid-cols-2 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
       }`}>
-        {ASSETS.filter(asset => !activeNav || (activeNav === 'market' ? asset.badge === 'M' : asset.badge === 'A'))
-        .map((asset, index) => {
+        {discoverAssets.map((asset, index) => {
           let displayedAsset = { ...asset };
           
           
@@ -3089,7 +3101,7 @@ function DiscoverSection({
         })}
       </div>
       <div className="flex justify-center mt-8 py-6 pb-20">
-        <button className="flex items-center gap-2 px-4 py-2 text-[14px] font-bold text-text-tertiary hover:text-white transition-colors">
+        <button className="flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-text-tertiary hover:text-white transition-colors">
           더보기 <ChevronDown className="w-4 h-4" />
         </button>
       </div>
@@ -3103,7 +3115,7 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
       <section className="bg-surface-primary rounded-[8px] border border-border-soft/40 p-5 shadow-2xl relative min-h-[100px]">
         <div className="flex items-center justify-between mb-5 px-1">
           <div className="flex items-center gap-3">
-            <h3 className="text-[18px] font-bold text-text-primary tracking-tight">내 프로젝트</h3>
+            <h3 className="text-[18px] font-semibold text-text-primary tracking-tight">내 프로젝트</h3>
             {onToggleSidebar && (
               <button 
                 onClick={onToggleSidebar}
@@ -3114,7 +3126,7 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
               </button>
             )}
           </div>
-          <button className="text-[12px] font-bold text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
+          <button className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
         </div>
         <div className="divide-y divide-[#161618]">
           <SidebarProject 
@@ -3140,8 +3152,8 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
 
       <section className="bg-surface-primary rounded-[8px] border border-border-soft/40 p-5 shadow-2xl">
         <div className="flex items-center justify-between mb-5 px-1">
-          <h3 className="text-[18px] font-semibold text-text-primary tracking-tight">최근 노트</h3>
-          <button className="text-[12px] font-bold text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
+          <h3 className="text-[18px] font-semibold text-text-primary tracking-tight">보드 노트</h3>
+          <button className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
         </div>
         <div className="divide-y divide-[#161618]">
           <SidebarNote 
@@ -3161,8 +3173,8 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
 
       <section className="bg-surface-primary rounded-[8px] border border-border-soft/40 p-5 shadow-2xl">
         <div className="flex items-center justify-between mb-5 px-1">
-          <h3 className="text-[18px] font-semibold text-text-primary tracking-tight">레퍼런스 보드</h3>
-          <button className="text-[12px] font-bold text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
+          <h3 className="text-[18px] font-semibold text-text-primary tracking-tight">보드 레퍼런스</h3>
+          <button className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
         </div>
         <div className="divide-y divide-[#161618]">
           {[
@@ -3177,13 +3189,13 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
                 </div>
                 <div>
                   <div className="text-[17px] font-normal text-text-primary group-hover:text-brand-primary transition-colors">{item.name}</div>
-                  <div className="text-[12px] text-text-secondary font-medium">{item.count}</div>
+                  <div className="text-[15px] text-text-secondary font-medium">{item.count}</div>
                 </div>
               </div>
             </div>
           ))}
         </div>
-        <button className="w-full mt-4 flex items-center gap-2 px-4 py-3 bg-surface-primary/30 hover:bg-surface-primary rounded-[8px] text-[12px] font-bold text-brand-primary border border-dashed border-brand-primary/20 hover:border-border-primary/60 transition-all justify-center group">
+        <button className="w-full mt-4 flex items-center gap-2 px-4 py-3 bg-surface-primary/30 hover:bg-surface-primary rounded-[8px] text-[14px] font-medium text-brand-primary border border-dashed border-brand-primary/20 hover:border-border-primary/60 transition-all justify-center group">
             <Plus className="w-3.5 h-3.5" /> 새 보드 만들기
         </button>
       </section>
@@ -3232,15 +3244,17 @@ function ScrollToTopButton() {
 
 // --- Main App ---
 
-export type PageType = 'home' | 'uploads' | 'purchases' | 'favorites' | 'settings' | 'board' | 'references' | 'projects' | 'notes' | 'note-editor' | 'studio' | 'support' | 'full_workflow' | 'full_workflow_chat' | 'turnaround' | 'modeling_generation' | 'product_detail';
+export type PageType = 'home' | 'uploads' | 'purchases' | 'favorites' | 'settings' | 'board' | 'projects' | 'note-editor' | 'studio' | 'support' | 'full_workflow' | 'full_workflow_chat' | 'turnaround' | 'modeling_generation' | 'product_detail';
 
 export default function App() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   
   const [currentPage, setCurrentPage] = useState<PageType>(() => {
     const rawHash = window.location.hash.replace('#', '');
-    const hashPage = rawHash.split('/')[0] as PageType;
-    const validPages: PageType[] = ['home', 'uploads', 'purchases', 'favorites', 'settings', 'board', 'references', 'projects', 'notes', 'note-editor', 'studio', 'support', 'full_workflow', 'full_workflow_chat', 'turnaround', 'modeling_generation', 'product_detail'];
+    const legacyHashPage = rawHash.split('/')[0];
+    const normalizedHashPage = legacyHashPage === 'notes' || legacyHashPage === 'references' ? 'board' : legacyHashPage;
+    const hashPage = normalizedHashPage as PageType;
+    const validPages: PageType[] = ['home', 'uploads', 'purchases', 'favorites', 'settings', 'board', 'projects', 'note-editor', 'studio', 'support', 'full_workflow', 'full_workflow_chat', 'turnaround', 'modeling_generation', 'product_detail'];
     return validPages.includes(hashPage) ? hashPage : 'home';
   });
   const [activeNav, setActiveNav] = useState<'market' | 'art' | 'studio' | 'support' | null>(null);
@@ -3324,11 +3338,11 @@ export default function App() {
 
   const handleQuickCollect = (target: QuickDropTarget, asset: any) => {
     if (target === "notes") {
-      setCurrentPage("notes");
+      setCurrentPage("board");
       return;
     }
     if (target === "references") {
-      setCurrentPage("references");
+      setCurrentPage("board");
       return;
     }
   };
@@ -3375,12 +3389,8 @@ export default function App() {
           favorites={favorites}
           toggleFavorite={toggleFavorite}
         />
-      ) : currentPage === 'references' ? (
-        <ReferencePage favorites={favorites} toggleFavorite={toggleFavorite} onNavigate={(page) => setCurrentPage(page as PageType)} />
       ) : currentPage === 'projects' ? (
         <ProjectPage onNavigate={(page) => setCurrentPage(page as PageType)} />
-      ) : currentPage === 'notes' ? (
-        <NotesPage onNavigate={(page) => setCurrentPage(page as PageType)} />
       ) : currentPage === 'note-editor' ? (
         <NoteEditorPage onNavigate={(page) => setCurrentPage(page as PageType)} />
       ) : currentPage === 'settings' ? (
@@ -3409,7 +3419,7 @@ export default function App() {
         <main className="flex-1 pb-32 bg-bg-dark">
           <Hero onNavigate={(page) => setCurrentPage(page as PageType)} />
           
-          <div className="max-w-[2560px] mx-auto px-6 py-6">
+          <div className="mx-auto w-full max-w-[2560px] px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10">
             <div className="flex flex-col gap-8 xl:gap-12">
               <div className="flex-1 min-w-0 space-y-6">
                 <CategoryNav />
@@ -3441,7 +3451,7 @@ export default function App() {
                   setIsPanelDropMode(false);
                   setIsPanelOpen(true);
                 }}
-                className="flex items-center gap-2 px-8 py-3 bg-bg-secondary/95 backdrop-blur-md rounded-[8px] text-[15px] font-bold text-text-primary border border-border-primary/80 hover:border-brand-primary hover:text-brand-primary transition-all shadow-[0_15px_40px_rgba(0,0,0,0.9)] cursor-pointer tracking-wide"
+                className="flex items-center gap-2 px-8 py-3 bg-bg-secondary/95 backdrop-blur-md rounded-[8px] text-[15px] font-medium text-text-primary border border-border-primary/80 hover:border-brand-primary hover:text-brand-primary transition-all shadow-[0_15px_40px_rgba(0,0,0,0.9)] cursor-pointer tracking-wide"
               >
                 패널 열기
               </button>
@@ -3473,8 +3483,8 @@ export default function App() {
                 {/* 내 프로젝트 Section */}
                 <div className="xl:col-span-6 space-y-4">
                   <div className="flex items-center justify-between px-1">
-                    <h3 onClick={() => { setIsPanelOpen(false); setCurrentPage('projects'); }} className="text-[17px] font-bold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">내 프로젝트</h3>
-                    <button onClick={() => { setIsPanelOpen(false); setCurrentPage('projects'); }} className="text-[12px] font-bold text-text-tertiary hover:text-text-primary transition-colors">
+                    <h3 onClick={() => { setIsPanelOpen(false); setCurrentPage('projects'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">내 프로젝트</h3>
+                    <button onClick={() => { setIsPanelOpen(false); setCurrentPage('projects'); }} className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">
                       모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" />
                     </button>
                   </div>
@@ -3486,10 +3496,10 @@ export default function App() {
                         <img src="/images/work_%2045.png" alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
                       </div>
                       <div className="space-y-1.5 min-w-0">
-                        <p className="text-[15px] font-semibold text-text-primary group-hover:text-brand-primary transition-colors truncate">판타지 성 전체 씬</p>
-                        <div className="flex items-center justify-between text-[12px] font-sans mt-1">
-                          <span className="text-[10px] text-text-secondary font-semibold uppercase tracking-wider">Modeling</span>
-                          <span className="text-[12px] font-medium text-[#8B909A]">75%</span>
+                        <p className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">판타지 성 전체 씬</p>
+                        <div className="flex items-center justify-between text-[14px] font-sans mt-1">
+                          <span className="text-[14px] text-text-secondary font-medium uppercase tracking-wider">Modeling</span>
+                          <span className="text-[14px] font-medium text-[#8B909A]">75%</span>
                         </div>
                         <div className="h-[3px] bg-white/5 rounded-full overflow-hidden mt-1">
                           <div className="h-full bg-brand-primary shadow-[0_0_8px_rgba(224,161,46,0.5)]" style={{ width: `75%` }}></div>
@@ -3503,10 +3513,10 @@ export default function App() {
                         <img src="/images/work_46.png" alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
                       </div>
                       <div className="space-y-1.5 min-w-0">
-                        <p className="text-[15px] font-semibold text-text-primary group-hover:text-brand-primary transition-colors truncate">사이버펑크 시티</p>
-                        <div className="flex items-center justify-between text-[12px] font-sans mt-1">
-                          <span className="text-[10px] text-text-secondary font-semibold uppercase tracking-wider">Image Gen</span>
-                          <span className="text-[12px] font-medium text-[#8B909A]">45%</span>
+                        <p className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">사이버펑크 시티</p>
+                        <div className="flex items-center justify-between text-[14px] font-sans mt-1">
+                          <span className="text-[14px] text-text-secondary font-medium uppercase tracking-wider">Image Gen</span>
+                          <span className="text-[14px] font-medium text-[#8B909A]">45%</span>
                         </div>
                         <div className="h-[3px] bg-white/5 rounded-full overflow-hidden mt-1">
                           <div className="h-full bg-brand-primary shadow-[0_0_8px_rgba(224,161,46,0.5)]" style={{ width: `45%` }}></div>
@@ -3520,10 +3530,10 @@ export default function App() {
                         <img src="/images/work_47.png" alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
                       </div>
                       <div className="space-y-1.5 min-w-0">
-                        <p className="text-[15px] font-semibold text-text-primary group-hover:text-brand-primary transition-colors truncate">우주 전함 컨셉</p>
-                        <div className="flex items-center justify-between text-[12px] font-sans mt-1">
-                          <span className="text-[10px] text-text-secondary font-semibold uppercase tracking-wider">Concept</span>
-                          <span className="text-[12px] font-medium text-[#8B909A]">90%</span>
+                        <p className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">우주 전함 컨셉</p>
+                        <div className="flex items-center justify-between text-[14px] font-sans mt-1">
+                          <span className="text-[14px] text-text-secondary font-medium uppercase tracking-wider">Concept</span>
+                          <span className="text-[14px] font-medium text-[#8B909A]">90%</span>
                         </div>
                         <div className="h-[3px] bg-white/5 rounded-full overflow-hidden mt-1">
                           <div className="h-full bg-brand-primary shadow-[0_0_8px_rgba(224,161,46,0.5)]" style={{ width: `90%` }}></div>
@@ -3539,8 +3549,8 @@ export default function App() {
                 {/* 최근 노트 Section */}
                 <div className="xl:col-span-3 space-y-4">
                   <div className="flex items-center justify-between px-1">
-                    <h3 onClick={() => { setIsPanelOpen(false); setCurrentPage('notes'); }} className="text-[17px] font-bold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">최근 노트</h3>
-                    <button onClick={() => { setIsPanelOpen(false); setCurrentPage('notes'); }} className="text-[12px] font-bold text-text-tertiary hover:text-text-primary transition-colors">
+                    <h3 onClick={() => { setIsPanelOpen(false); setCurrentPage('board'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">보드 노트</h3>
+                    <button onClick={() => { setIsPanelOpen(false); setCurrentPage('board'); }} className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">
                       모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" />
                     </button>
                   </div>
@@ -3549,10 +3559,10 @@ export default function App() {
                     {/* Note 1 */}
                     <div className="h-[82px] flex flex-col justify-center bg-surface-primary/85 hover:bg-surface-primary px-3.5 rounded-[10px] border border-border-primary/20 transition-all hover:scale-[1.005] hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)] cursor-pointer group">
                       <div className="flex flex-col gap-2 w-full">
-                        <h4 className="text-[15px] font-semibold text-text-primary group-hover:text-brand-primary transition-colors truncate">판타지 성 컨셉 방향</h4>
+                        <h4 className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">판타지 성 컨셉 방향</h4>
                         <div className="flex gap-1.5">
-                          <span className="text-[10px] px-2 py-0.5 bg-surface-primary text-text-secondary rounded font-bold border border-border-primary/35 uppercase tracking-tighter">아이디어</span>
-                          <span className="text-[10px] px-2 py-0.5 bg-surface-primary text-text-secondary rounded font-bold border border-border-primary/35 uppercase tracking-tighter">레퍼런스</span>
+                          <span className="text-[14px] px-2 py-0.5 bg-surface-primary text-text-secondary rounded font-medium border border-border-primary/35 uppercase tracking-tighter">아이디어</span>
+                          <span className="text-[14px] px-2 py-0.5 bg-surface-primary text-text-secondary rounded font-medium border border-border-primary/35 uppercase tracking-tighter">레퍼런스</span>
                         </div>
                       </div>
                     </div>
@@ -3560,23 +3570,23 @@ export default function App() {
                     {/* Note 2 */}
                     <div className="h-[82px] flex flex-col justify-center bg-surface-primary/85 hover:bg-surface-primary px-3.5 rounded-[10px] border border-border-primary/20 transition-all hover:scale-[1.005] hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)] cursor-pointer group">
                       <div className="flex flex-col gap-2 w-full">
-                        <h4 className="text-[15px] font-semibold text-text-primary group-hover:text-brand-primary transition-colors truncate">메카 워커 디자인 노트</h4>
+                        <h4 className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">메카 워커 디자인 노트</h4>
                         <div className="flex gap-1.5">
-                          <span className="text-[10px] px-2 py-0.5 bg-surface-primary text-text-secondary rounded font-bold border border-border-primary/35 uppercase tracking-tighter">구조</span>
-                          <span className="text-[10px] px-2 py-0.5 bg-surface-primary text-text-secondary rounded font-bold border border-border-primary/35 uppercase tracking-tighter">무장</span>
+                          <span className="text-[14px] px-2 py-0.5 bg-surface-primary text-text-secondary rounded font-medium border border-border-primary/35 uppercase tracking-tighter">구조</span>
+                          <span className="text-[14px] px-2 py-0.5 bg-surface-primary text-text-secondary rounded font-medium border border-border-primary/35 uppercase tracking-tighter">무장</span>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* 레퍼런스 보드 Section */}
+                {/* 보드 레퍼런스 Section */}
                 <div className="xl:col-span-3 space-y-4 xl:pr-6">
                   <div className="flex items-center justify-between px-1">
-                    <h3 onClick={() => { setIsPanelOpen(false); setCurrentPage('references'); }} className="text-[17px] font-bold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">레퍼런스 보드</h3>
+                    <h3 onClick={() => { setIsPanelOpen(false); setCurrentPage('board'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">보드 레퍼런스</h3>
                     <button 
-                      onClick={() => { setIsPanelOpen(false); setCurrentPage('references'); }}
-                      className="text-[12px] font-bold text-text-tertiary hover:text-text-primary transition-colors"
+                      onClick={() => { setIsPanelOpen(false); setCurrentPage('board'); }}
+                      className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors"
                     >
                       모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" />
                     </button>
@@ -3605,10 +3615,10 @@ export default function App() {
                         
                         {/* Foreground content safely situated on top of backdrop */}
                         <div className="relative z-10 flex flex-col justify-end h-full p-3.5">
-                          <h4 className="text-[15px] font-semibold text-text-primary group-hover:text-brand-primary transition-colors truncate">{item.name}</h4>
+                          <h4 className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">{item.name}</h4>
                           <div className="flex gap-1.5 mt-2">
-                            <span className="text-[10px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-bold border border-border-primary/30 uppercase tracking-tighter">{item.count}</span>
-                            <span className="text-[10px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-bold border border-border-primary/30 uppercase tracking-tighter">{item.tag}</span>
+                            <span className="text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter">{item.count}</span>
+                            <span className="text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter">{item.tag}</span>
                           </div>
                         </div>
                       </div>
@@ -3659,14 +3669,14 @@ export default function App() {
       />
 
       {/* Premium Multi-Column Footer (Custom designed in Neo-Poly aesthetic matching reference screenshot) */}
-      {currentPage !== 'board' && currentPage !== 'projects' && currentPage !== 'notes' && currentPage !== 'note-editor' && currentPage !== 'uploads' && currentPage !== 'full_workflow' && currentPage !== 'full_workflow_chat' && currentPage !== 'studio' && currentPage !== 'turnaround' && currentPage !== 'modeling_generation' && (
-        <footer className="bg-[#08080a] border-t border-border-soft/60 pt-16 pb-12 px-6">
-          <div className="max-w-[2006px] mx-auto">
+      {currentPage !== 'board' && currentPage !== 'projects' && currentPage !== 'note-editor' && currentPage !== 'uploads' && currentPage !== 'full_workflow' && currentPage !== 'full_workflow_chat' && currentPage !== 'studio' && currentPage !== 'turnaround' && currentPage !== 'modeling_generation' && (
+        <footer className="bg-[#08080a] border-t border-border-soft/60 pt-16 pb-12 px-4 sm:px-6 2xl:px-8 min-[2200px]:px-10">
+          <div className="max-w-[2560px] mx-auto">
             {/* Main Footer columns */}
             <div className="grid grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-6 pb-12 border-b border-border-soft/30">
               {/* Column 1: 회사 소개 */}
             <div className="col-span-1 lg:col-span-2 space-y-4">
-              <h4 className="text-[15px] md:text-[16px] font-bold text-text-primary tracking-tight font-sans">회사 소개</h4>
+              <h4 className="text-[15px] md:text-[15px] font-medium text-text-primary tracking-tight font-sans">회사 소개</h4>
               <ul className="space-y-3 text-[15px] text-text-secondary">
                 <li className="hover:text-brand-primary cursor-pointer transition-colors">회사 정보</li>
                 <li className="hover:text-brand-primary cursor-pointer transition-colors">회사 블로그</li>
@@ -3677,7 +3687,7 @@ export default function App() {
 
             {/* Column 2: 고객 지원 */}
             <div className="col-span-1 lg:col-span-2 space-y-4">
-              <h4 className="text-[15px] md:text-[16px] font-bold text-text-primary tracking-tight font-sans">고객 지원</h4>
+              <h4 className="text-[15px] md:text-[15px] font-medium text-text-primary tracking-tight font-sans">고객 지원</h4>
               <ul className="space-y-3 text-[15px] text-text-secondary">
                 <li className="hover:text-brand-primary cursor-pointer transition-colors">고객 지원 채팅</li>
                 <li className="hover:text-brand-primary cursor-pointer transition-colors">AI 답변 채팅</li>
@@ -3687,7 +3697,7 @@ export default function App() {
 
             {/* Column 3: 법률 정책 */}
             <div className="col-span-1 lg:col-span-2 space-y-4">
-              <h4 className="text-[15px] md:text-[16px] font-bold text-text-primary tracking-tight font-sans">법률 정책</h4>
+              <h4 className="text-[15px] md:text-[15px] font-medium text-text-primary tracking-tight font-sans">법률 정책</h4>
               <ul className="space-y-3 text-[15px] text-text-secondary">
                 <li className="hover:text-brand-primary cursor-pointer transition-colors">서비스 약관</li>
                 <li className="hover:text-brand-primary cursor-pointer transition-colors">3D 모델 라이선스</li>
@@ -3697,7 +3707,7 @@ export default function App() {
 
             {/* Column 4: 기업 */}
             <div className="col-span-1 lg:col-span-2 space-y-4">
-              <h4 className="text-[15px] md:text-[16px] font-bold text-text-primary tracking-tight font-sans">기업</h4>
+              <h4 className="text-[15px] md:text-[15px] font-medium text-text-primary tracking-tight font-sans">기업</h4>
               <ul className="space-y-3 text-[15px] text-text-secondary">
                 <li className="hover:text-brand-primary cursor-pointer transition-colors">브랜드 관리</li>
                 <li className="hover:text-brand-primary cursor-pointer transition-colors">제휴사</li>
@@ -3706,11 +3716,11 @@ export default function App() {
 
             {/* Column 5: 제휴사 WITH DOG block */}
             <div className="col-span-1 lg:col-span-2 space-y-4">
-              <h4 className="text-[15px] md:text-[16px] font-bold text-text-primary tracking-tight font-sans">제휴사</h4>
+              <h4 className="text-[15px] md:text-[15px] font-medium text-text-primary tracking-tight font-sans">제휴사</h4>
               <div className="space-y-3">
                 <div className="flex items-center gap-1.5 bg-surface-primary hover:bg-[#1A1C22] px-3.5 py-1.5 border border-border-primary rounded-[6px] w-fit cursor-pointer transition-all shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
-                  <span className="text-text-primary text-[12px] font-extrabold font-sans">With</span>
-                  <span className="text-[#3282f6] text-[12px] font-black font-sans tracking-tight">DOG</span>
+                  <span className="text-text-primary text-[14px] font-medium font-sans">With</span>
+                  <span className="text-[#3282f6] text-[14px] font-medium font-sans tracking-tight">DOG</span>
                 </div>
                 <p className="text-[15px] text-text-secondary hover:text-brand-primary cursor-pointer transition-colors">제휴사</p>
               </div>
@@ -3731,8 +3741,8 @@ export default function App() {
                   className="flex items-center justify-center text-text-secondary hover:text-brand-primary transition-all p-1 group hover:scale-105" 
                   aria-label="Naver Blog"
                 >
-                  <div className="flex items-center font-sans font-extrabold text-[12px] tracking-tight text-text-secondary group-hover:text-brand-primary whitespace-nowrap">
-                    <span className="text-bg-dark bg-[#a7a8ab] group-hover:bg-brand-primary group-hover:text-bg-dark text-[9px] px-1 py-[1.5px] rounded-[3px] mr-[3px] leading-none font-sans font-black transition-colors">N</span>
+                  <div className="flex items-center font-sans font-medium text-[14px] tracking-tight text-text-secondary group-hover:text-brand-primary whitespace-nowrap">
+                    <span className="text-bg-dark bg-[#a7a8ab] group-hover:bg-brand-primary group-hover:text-bg-dark text-[14px] px-1 py-[1.5px] rounded-[3px] mr-[3px] leading-none font-sans font-medium transition-colors">N</span>
                     blog
                   </div>
                 </a>
@@ -3748,7 +3758,7 @@ export default function App() {
           </div>
 
           {/* Bottom copyright line */}
-          <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[12px] text-text-tertiary">
+          <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-[14px] text-text-tertiary">
             <div className="flex items-center gap-2 font-sans">
               <span>NEOPOLY</span>
               <span className="w-1 h-1 rounded-full bg-brand-primary/40" />

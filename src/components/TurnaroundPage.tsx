@@ -85,7 +85,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                   {expertTab === "turnaround" ? "ORC TURNAROUND" : "ORC MODULES"}
                 </span>
               </h1>
-              <span className="ml-2 rounded-md border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-2.5 py-1 text-[12px] font-bold tracking-wider text-[#E0A12E]">
+              <span className="ml-2 rounded-md border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-2.5 py-1 text-[14px] font-medium tracking-wider text-[#E0A12E]">
                 AI VISION
               </span>
             </div>
@@ -96,7 +96,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
               ) : (
                 <Layers className="h-3.5 w-3.5 text-[#E0A12E]" />
               )}
-              <span className="text-[12px] font-medium text-neutral-300">
+              <span className="text-[14px] font-medium text-neutral-300">
                 {expertTab === "turnaround" ? "Front / 45 / Side / Back" : "Equipment Separation"}
               </span>
             </div>
@@ -107,8 +107,8 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
               <>
                 <div className="flex w-[300px] shrink-0 flex-col gap-4 xl:w-[360px]">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-[14px] font-bold text-white">메인 오크 레퍼런스</h3>
-                    <span className="text-[11px] font-normal text-[#E0A12E]">업로드 이미지 적용됨</span>
+                    <h3 className="text-[14px] font-medium text-white">메인 오크 레퍼런스</h3>
+                    <span className="text-[14px] font-normal text-[#E0A12E]">업로드 이미지 적용됨</span>
                   </div>
                   <div className="relative flex-1 max-h-[620px] overflow-hidden rounded-xl border border-[#2A2E36] bg-[#141518]">
                     <img
@@ -133,12 +133,12 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(224,161,46,0.09),transparent_58%)]" />
                         <div className="relative z-10 mb-3 flex items-center justify-between gap-3">
                           <div>
-                            <p className="text-[15px] font-bold text-white">{view.label}</p>
-                            <p className="mt-0.5 text-[11px] font-mono text-neutral-500">{view.angle}</p>
+                            <p className="text-[15px] font-medium text-white">{view.label}</p>
+                            <p className="mt-0.5 text-[14px] font-mono text-neutral-500">{view.angle}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <span
-                              className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+                              className={`rounded-full border px-2 py-0.5 text-[14px] font-medium ${
                                 isRegeneratingView
                                   ? "border-[#E0A12E]/30 bg-[#E0A12E]/10 text-[#E0A12E]"
                                   : "border-[#4ADE80]/30 bg-[#4ADE80]/10 text-[#4ADE80]"
@@ -171,7 +171,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                           />
                           {isRegeneratingView && (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="rounded-full border border-[#E0A12E]/30 bg-black/45 px-3 py-1.5 text-[12px] font-bold text-[#E0A12E] backdrop-blur-sm">
+                              <div className="rounded-full border border-[#E0A12E]/30 bg-black/45 px-3 py-1.5 text-[14px] font-medium text-[#E0A12E] backdrop-blur-sm">
                                 {view.label} 뷰 재생성 중
                               </div>
                             </div>
@@ -184,8 +184,8 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                   {isGenerating && (
                     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-xl bg-black/40 backdrop-blur-sm">
                       <Loader2 className="mb-4 h-12 w-12 animate-spin text-[#E0A12E]" />
-                      <p className="text-[14px] font-semibold text-white">오크 턴어라운드 뷰를 동기화하는 중...</p>
-                      <p className="mt-2 text-[12px] text-neutral-400">정면 기준으로 각도별 실루엣을 맞추고 있습니다.</p>
+                      <p className="text-[14px] font-medium text-white">오크 턴어라운드 뷰를 동기화하는 중...</p>
+                      <p className="mt-2 text-[14px] text-neutral-400">정면 기준으로 각도별 실루엣을 맞추고 있습니다.</p>
                     </div>
                   )}
                 </div>
@@ -194,11 +194,11 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
               <div className="flex h-full w-full gap-6">
                 <div className="flex min-w-0 flex-[3] flex-col gap-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="flex items-center gap-2 text-[14px] font-bold text-white">
+                    <h3 className="flex items-center gap-2 text-[14px] font-medium text-white">
                       <Layers className="h-4 w-4 text-neutral-400" />
                       오크 정면 장비 분석
                     </h3>
-                    <span className="rounded-full border border-[#4ADE80]/30 bg-[#4ADE80]/10 px-2 py-0.5 text-[11px] font-medium text-[#4ADE80]">
+                    <span className="rounded-full border border-[#4ADE80]/30 bg-[#4ADE80]/10 px-2 py-0.5 text-[14px] font-medium text-[#4ADE80]">
                       장비 파츠 추출 완료
                     </span>
                   </div>
@@ -250,15 +250,15 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                     {isGeneratingModular && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
                         <Wand2 className="mb-4 h-12 w-12 animate-pulse text-[#E0A12E]" />
-                        <p className="text-[14px] font-semibold text-white">오크 장비 파츠를 다시 분리하는 중...</p>
-                        <p className="mt-2 text-[12px] text-neutral-400">정면 이미지에서 장비 영역만 추출합니다.</p>
+                        <p className="text-[14px] font-medium text-white">오크 장비 파츠를 다시 분리하는 중...</p>
+                        <p className="mt-2 text-[14px] text-neutral-400">정면 이미지에서 장비 영역만 추출합니다.</p>
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div className="flex min-w-0 flex-[2] flex-col gap-4">
-                  <h3 className="text-[14px] font-bold text-white">
+                  <h3 className="text-[14px] font-medium text-white">
                     <span className="text-neutral-400">추출된 장비 파츠</span>
                     <span className="ml-2 text-[#E0A12E]">({MODULAR_PARTS.length}개)</span>
                   </h3>
@@ -279,10 +279,10 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="truncate text-[14px] font-bold text-white">{part.label}</span>
+                            <span className="truncate text-[14px] font-medium text-white">{part.label}</span>
                             <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: part.color }} />
                           </div>
-                          <span className="mt-1 block text-[12px] font-mono text-neutral-500">ORC_{part.id.toUpperCase()}_01</span>
+                          <span className="mt-1 block text-[14px] font-mono text-neutral-500">ORC_{part.id.toUpperCase()}_01</span>
                         </div>
                       </button>
                     ))}
@@ -298,7 +298,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
         <div className="flex shrink-0 border-b border-[#1F2329] bg-[#050505] px-6">
           <button
             onClick={() => setExpertTab("turnaround")}
-            className={`mr-6 border-b-2 py-4 text-[14px] font-bold transition-colors ${
+            className={`mr-6 border-b-2 py-4 text-[14px] font-medium transition-colors ${
               expertTab === "turnaround" ? "border-[#E0A12E] text-[#E0A12E]" : "border-transparent text-neutral-400 hover:text-white"
             }`}
           >
@@ -306,7 +306,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
           </button>
           <button
             onClick={() => setExpertTab("modular")}
-            className={`mr-6 border-b-2 py-4 text-[14px] font-bold transition-colors ${
+            className={`mr-6 border-b-2 py-4 text-[14px] font-medium transition-colors ${
               expertTab === "modular" ? "border-[#E0A12E] text-[#E0A12E]" : "border-transparent text-neutral-400 hover:text-white"
             }`}
           >
@@ -325,11 +325,11 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                 className="flex flex-col gap-6"
               >
                 <div className="space-y-4">
-                  <label className="text-[13px] font-bold text-white">생성 뷰 구성</label>
+                  <label className="text-[14px] font-medium text-white">생성 뷰 구성</label>
                   <div className="space-y-3 rounded-xl border border-[#2A2E36] bg-[#141518] p-4">
                     {TURNAROUND_VIEWS.map((view) => (
                       <div key={view.id} className="flex items-center justify-between">
-                        <span className="text-[13px] font-medium text-neutral-300">{view.label} ({view.angle})</span>
+                        <span className="text-[14px] font-medium text-neutral-300">{view.label} ({view.angle})</span>
                         <Check className="h-4 w-4 text-[#E0A12E]" />
                       </div>
                     ))}
@@ -337,12 +337,12 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                 </div>
 
                 <div className="space-y-3">
-                  <label className="flex justify-between text-[13px] font-bold text-white">
+                  <label className="flex justify-between text-[14px] font-medium text-white">
                     <span>캐릭터 일관성</span>
-                    <span className="font-mono text-[12px] text-[#E0A12E]">92%</span>
+                    <span className="font-mono text-[14px] text-[#E0A12E]">92%</span>
                   </label>
                   <input type="range" min="0" max="100" defaultValue="92" className="h-1 w-full appearance-none rounded-full bg-[#2A2E36] accent-[#E0A12E] outline-none" />
-                  <p className="text-[11px] leading-relaxed text-neutral-500">
+                  <p className="text-[14px] leading-relaxed text-neutral-500">
                     메인 오크 정면 이미지를 기준으로 체형, 장비 위치, 실루엣을 각 뷰에 맞춰 유지합니다.
                   </p>
                 </div>
@@ -350,7 +350,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                 <button
                   onClick={handleGenerate}
                   disabled={isGenerating}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#2A2E36] bg-[#1F2329] py-3.5 text-[13px] font-bold text-white transition-all hover:border-neutral-500 hover:bg-[#2A2E36] disabled:text-neutral-500"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#2A2E36] bg-[#1F2329] py-3.5 text-[14px] font-medium text-white transition-all hover:border-neutral-500 hover:bg-[#2A2E36] disabled:text-neutral-500"
                 >
                   {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                   {isGenerating ? "재생성 중..." : "턴어라운드 재생성"}
@@ -365,26 +365,26 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                 className="flex flex-col gap-6"
               >
                 <div className="space-y-3">
-                  <label className="flex items-end justify-between text-[13px] font-bold text-white">
+                  <label className="flex items-end justify-between text-[14px] font-medium text-white">
                     <span>장비 모듈 추출</span>
-                    <span className="text-[11px] font-normal text-[#4ADE80]">정면 기준</span>
+                    <span className="text-[14px] font-normal text-[#4ADE80]">정면 기준</span>
                   </label>
-                  <p className="mb-2 text-[12px] text-neutral-400">
+                  <p className="mb-2 text-[14px] text-neutral-400">
                     오크 정면 이미지에서 팔 보호구, 어깨 장비, 벨트처럼 분리 가능한 장비만 골라 3D 작업용 모듈로 정리합니다.
                   </p>
                 </div>
 
                 <div className="rounded-xl border border-[#E0A12E]/30 bg-[#141518] p-4">
                   <div className="mb-3 flex items-center justify-between">
-                    <span className="text-[14px] font-bold text-white">{selectedPartData.label}</span>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-neutral-300">선택됨</span>
+                    <span className="text-[14px] font-medium text-white">{selectedPartData.label}</span>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[14px] text-neutral-300">선택됨</span>
                   </div>
                   <div className="mb-4 flex h-32 items-center justify-center overflow-hidden rounded-lg border border-[#1F2329] bg-[#050505]">
                     <img src={selectedPartData.image} alt={selectedPartData.label} className="h-full w-full object-contain p-2" />
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {["#오크", "#장비", "#모듈", "#정면추출"].map((tag) => (
-                      <span key={tag} className="rounded-md bg-[#2A2E36] px-2.5 py-1 text-[11px] text-neutral-300">
+                      <span key={tag} className="rounded-md bg-[#2A2E36] px-2.5 py-1 text-[14px] text-neutral-300">
                         {tag}
                       </span>
                     ))}
@@ -394,7 +394,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                 <button
                   onClick={handleGenerateModular}
                   disabled={isGeneratingModular}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#E0A12E] py-3.5 text-[13px] font-bold text-black transition-all hover:bg-[#F0B43A] disabled:opacity-70"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#E0A12E] py-3.5 text-[14px] font-medium text-black transition-all hover:bg-[#F0B43A] disabled:opacity-70"
                 >
                   {isGeneratingModular ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                   {isGeneratingModular ? "분리 중..." : "장비 파츠 다시 분리"}
@@ -408,14 +408,14 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
           <div className="flex gap-2">
             <button
               onClick={() => onNavigate?.("full_workflow")}
-              className="flex w-[30%] items-center justify-center gap-1.5 rounded-xl border border-[#2A2E36] bg-[#0A0B0D] py-3.5 text-[13px] font-medium text-neutral-300 transition-colors hover:bg-[#141518]"
+              className="flex w-[30%] items-center justify-center gap-1.5 rounded-xl border border-[#2A2E36] bg-[#0A0B0D] py-3.5 text-[14px] font-medium text-neutral-300 transition-colors hover:bg-[#141518]"
             >
               <ChevronLeft className="h-4 w-4 text-neutral-400" />
               이전
             </button>
             <button
               onClick={() => onNavigate?.("modeling_generation")}
-              className="flex w-[70%] items-center justify-center gap-1.5 rounded-xl bg-[#E0A12E] py-4 text-[14px] font-bold text-black shadow-[0_0_15px_rgba(224,161,46,0.3)] transition-all hover:bg-[#F0B43A]"
+              className="flex w-[70%] items-center justify-center gap-1.5 rounded-xl bg-[#E0A12E] py-4 text-[14px] font-medium text-black shadow-[0_0_15px_rgba(224,161,46,0.3)] transition-all hover:bg-[#F0B43A]"
             >
               이대로 3D 모델링 생성
               <ChevronLeft className="h-4 w-4 rotate-180" />

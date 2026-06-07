@@ -81,12 +81,12 @@ export default function SupportPage() {
     <div className="relative min-h-[calc(100vh-76px)] bg-bg-dark font-sans text-text-primary">
       <div className="relative overflow-hidden border-b border-[#1F2329] bg-[#0A0B0D]">
         <div className="absolute inset-0 bg-gradient-to-b from-[#E0A12E]/5 to-transparent" />
-        <div className="relative z-10 mx-auto flex max-w-[1200px] flex-col items-center px-6 py-12 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-3 py-1.5 text-[12px] font-bold text-[#E0A12E]">
+        <div className="relative z-10 mx-auto flex max-w-[1200px] flex-col items-center px-4 py-12 text-center sm:px-6 2xl:px-8 min-[2200px]:px-10">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-3 py-1.5 text-[14px] font-medium text-[#E0A12E]">
             <HelpCircle className="h-3.5 w-3.5" />
             고객 지원 센터
           </div>
-          <h1 className="mb-4 text-[32px] font-bold text-white sm:text-[42px]">
+          <h1 className="mb-4 text-[32px] font-bold text-white sm:text-[32px]">
             무엇을 도와드릴까요?
           </h1>
           <p className="mb-10 max-w-[600px] text-[15px] leading-relaxed text-neutral-400 sm:text-[17px]">
@@ -106,7 +106,7 @@ export default function SupportPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1200px] px-6 py-20">
+      <div className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6 2xl:px-8 min-[2200px]:px-10">
         <div className="flex flex-col gap-16 lg:flex-row">
           <div className="flex-1">
             <div className="mb-10">
@@ -126,14 +126,14 @@ export default function SupportPage() {
                 >
                   <details className="group">
                     <summary className="flex cursor-pointer list-none items-center justify-between px-6 py-5 font-medium">
-                      <span className="pr-8 text-[15px] font-bold leading-snug text-white transition group-hover:text-[#E0A12E]">
+                      <span className="pr-8 text-[15px] font-medium leading-snug text-white transition group-hover:text-[#E0A12E]">
                         {faq.question}
                       </span>
                       <span className="shrink-0 text-neutral-400 transition group-open:rotate-180">
                         <ChevronDown className="h-5 w-5" />
                       </span>
                     </summary>
-                    <div className="border-t border-[#1F2329]/50 px-6 pb-6 pt-4 text-[14px] leading-relaxed text-neutral-400">
+                    <div className="border-t border-[#1F2329]/50 px-6 pb-6 pt-4 text-[15px] leading-[1.6] text-neutral-300">
                       {faq.answer}
                     </div>
                   </details>
@@ -149,16 +149,16 @@ export default function SupportPage() {
             <div className="relative mt-10 flex flex-col items-center justify-between gap-6 overflow-hidden rounded-lg border border-[#2A2E36] bg-[#0A0B0D] p-6 sm:flex-row">
               <div className="absolute right-0 top-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-[#E0A12E]/5 blur-[80px]" />
               <div className="relative z-10 flex flex-col gap-2">
-                <h3 className="text-[16px] font-bold text-white">
+                <h3 className="text-[15px] font-medium text-white">
                   원하는 답을 찾지 못했나요?
                 </h3>
-                <p className="text-[13px] text-neutral-400">
+                <p className="text-[14px] text-neutral-400">
                   문의 내용을 남기면 지원 요청으로 저장됩니다.
                 </p>
               </div>
               <button
                 onClick={() => setContactOpen(true)}
-                className="relative z-10 whitespace-nowrap rounded-lg border border-[#2A2E36] bg-[#141518] px-6 py-2.5 text-[13px] font-bold text-white transition hover:bg-[#1C1F26]"
+                className="relative z-10 whitespace-nowrap rounded-lg border border-[#2A2E36] bg-[#141518] px-6 py-2.5 text-[14px] font-medium text-white transition hover:bg-[#1C1F26]"
               >
                 1:1 문의 접수하기
               </button>
@@ -190,11 +190,11 @@ export default function SupportPage() {
                     <Icon className="h-5 w-5 text-neutral-400 transition group-hover:text-[#E0A12E]" />
                   </span>
                   <span className="flex min-w-0 flex-col gap-1.5">
-                    <span className="flex items-center gap-1.5 text-[15px] font-bold text-white transition group-hover:text-[#E0A12E]">
+                    <span className="flex items-center gap-1.5 text-[15px] font-medium text-white transition group-hover:text-[#E0A12E]">
                       {guide.title}
                       <ExternalLink className="h-3.5 w-3.5 text-neutral-500" />
                     </span>
-                    <span className="text-[13px] leading-relaxed text-neutral-400">
+                    <span className="text-[15px] leading-[1.6] text-neutral-300">
                       {guide.desc}
                     </span>
                   </span>
@@ -204,10 +204,10 @@ export default function SupportPage() {
 
             {selectedGuide && (
               <div className="rounded-lg border border-[#2A2E36] bg-[#111215] p-5">
-                <h3 className="mb-2 text-[15px] font-bold text-white">
+                <h3 className="mb-2 text-[15px] font-medium text-white">
                   {selectedGuide}
                 </h3>
-                <p className="text-[13px] leading-relaxed text-neutral-400">
+                <p className="text-[15px] leading-[1.6] text-neutral-300">
                   현재는 앱 내부 도움말로 연결됩니다. 실제 배포 시 문서 URL을 붙이면 같은 버튼에서 바로 열립니다.
                 </p>
               </div>
@@ -220,7 +220,7 @@ export default function SupportPage() {
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#050505]/80 p-4 backdrop-blur-sm">
           <div className="w-full max-w-[520px] rounded-lg border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.8)]">
             <div className="flex items-center justify-between border-b border-[#1F2329] px-6 py-5">
-              <h3 className="text-[18px] font-bold text-white">1:1 문의 접수</h3>
+              <h3 className="text-[18px] font-semibold text-white">1:1 문의 접수</h3>
               <button
                 onClick={() => setContactOpen(false)}
                 className="text-neutral-400 hover:text-white"
@@ -242,7 +242,7 @@ export default function SupportPage() {
                   setContactOpen(false);
                   setToast("문의가 접수되었습니다.");
                 }}
-                className="rounded-lg bg-[#E0A12E] px-5 py-3 text-[14px] font-bold text-[#050505] transition hover:bg-[#F0B43A]"
+                className="rounded-lg bg-[#E0A12E] px-5 py-3 text-[14px] font-medium text-[#050505] transition hover:bg-[#F0B43A]"
               >
                 문의 보내기
               </button>
@@ -252,7 +252,7 @@ export default function SupportPage() {
       )}
 
       {toast && (
-        <div className="fixed bottom-8 right-8 z-[150] rounded-lg border border-[#2A2E36] bg-[#111317] px-4 py-3 text-[13px] font-semibold text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
+        <div className="fixed bottom-8 right-8 z-[150] rounded-lg border border-[#2A2E36] bg-[#111317] px-4 py-3 text-[14px] font-medium text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
           {toast}
         </div>
       )}

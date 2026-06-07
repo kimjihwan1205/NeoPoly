@@ -21,9 +21,9 @@ export default function PurchasedAssetsPage() {
     : purchasedAssets.filter(asset => asset.badge === (filter === '마켓 에셋' ? 'M' : 'A'));
 
   return (
-    <main className="flex-1 bg-bg-dark font-sans text-text-primary px-6 py-6 max-w-[2006px] mx-auto w-full">
+    <main className="flex-1 bg-bg-dark font-sans text-text-primary px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 max-w-[2560px] mx-auto w-full">
       <div className="flex flex-col mb-10">
-        <h1 className="text-[32px] md:text-[40px] font-bold tracking-tight text-white mb-2 flex items-center gap-3">
+        <h1 className="text-[32px] md:text-[32px] font-bold tracking-tight text-white mb-2 flex items-center gap-3">
           <LayoutGrid className="w-8 h-8 md:w-10 md:h-10 text-brand-primary" />
           구매한 에셋
         </h1>
@@ -38,7 +38,7 @@ export default function PurchasedAssetsPage() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-[6px] text-[14px] font-bold transition-all border ${
+              className={`px-4 py-2 rounded-[6px] text-[14px] font-medium transition-all border ${
                 filter === f 
                   ? 'bg-brand-primary border-brand-primary text-bg-dark' 
                   : 'bg-surface-primary border-border-soft text-text-secondary hover:text-text-primary hover:border-border-primary'
@@ -69,15 +69,15 @@ export default function PurchasedAssetsPage() {
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.007] group-hover:brightness-90"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute top-3 left-3 bg-green-500/20 text-green-400 border border-green-500/40 px-2 py-0.5 rounded text-[11px] font-bold tracking-wider uppercase flex items-center gap-1 backdrop-blur-md">
+                <div className="absolute top-3 left-3 bg-green-500/20 text-green-400 border border-green-500/40 px-2 py-0.5 rounded text-[14px] font-medium tracking-wider uppercase flex items-center gap-1 backdrop-blur-md">
                   <Check className="w-3 h-3" /> Purchased
                 </div>
               </div>
               <div className="p-5 flex flex-col flex-1">
-                <h3 className="text-[16px] font-bold mb-1 leading-tight text-white group-hover:text-brand-primary transition-colors">{asset.title}</h3>
-                <p className="text-[13px] text-text-secondary mb-5">By <span className="text-white font-medium">{asset.author}</span></p>
+                <h3 className="text-[15px] font-medium mb-1 leading-tight text-white group-hover:text-brand-primary transition-colors">{asset.title}</h3>
+                <p className="text-[14px] text-text-secondary mb-5">By <span className="text-white font-medium">{asset.author}</span></p>
                 <div className="mt-auto">
-                  <button className="w-full py-2.5 bg-surface-secondary hover:bg-[#1A1814] text-text-primary hover:text-brand-primary border border-border-soft hover:border-brand-primary/50 text-[14px] font-bold rounded-[6px] transition-all flex items-center justify-center gap-2">
+                  <button className="w-full py-2.5 bg-surface-secondary hover:bg-[#1A1814] text-text-primary hover:text-brand-primary border border-border-soft hover:border-brand-primary/50 text-[14px] font-medium rounded-[6px] transition-all flex items-center justify-center gap-2">
                     <Download className="w-4 h-4" /> 다운로드 받기
                   </button>
                 </div>
@@ -88,7 +88,7 @@ export default function PurchasedAssetsPage() {
         {filteredAssets.length === 0 && (
           <div className="col-span-full py-20 flex flex-col items-center justify-center text-text-tertiary">
             <Filter className="w-12 h-12 mb-4 opacity-50" />
-            <p className="text-[16px] font-medium">해당하는 에셋이 없습니다.</p>
+            <p className="text-[15px] font-medium">해당하는 에셋이 없습니다.</p>
           </div>
         )}
       </div>

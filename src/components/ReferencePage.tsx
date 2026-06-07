@@ -35,6 +35,8 @@ interface ReferencePageProps {
   hideSidebar?: boolean;
   boardCategory?: string;
   onAcceptSelection?: (selectedIds: number[]) => void;
+  onSelectionChange?: (selectedIds: number[]) => void;
+  hideSelectionActionBar?: boolean;
 }
 
 export type ReferenceAsset = (typeof ASSETS)[number] & {
@@ -197,7 +199,10 @@ function referenceScore(asset: ReferenceAsset) {
   return score;
 }
 
-export function boardMatchesAsset(board: (typeof REFERENCE_BOARDS)[number], asset: ReferenceAsset) {
+type ReferenceBoard = (typeof REFERENCE_BOARDS)[number] & { assetIds?: number[]; memo?: string };
+
+export function boardMatchesAsset(board: ReferenceBoard, asset: ReferenceAsset) {
+  if (board.assetIds?.includes(asset.id)) return true;
   const haystack = `${asset.title} ${asset.type ?? ""} ${asset.category ?? ""}`.toLowerCase();
 
   if (board.id === "character") {
@@ -234,6 +239,8 @@ export default function ReferencePage({
   hideSidebar = false,
   boardCategory,
   onAcceptSelection,
+  onSelectionChange,
+  hideSelectionActionBar = false,
 }: ReferencePageProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [activeBadge, setActiveBadge] = useState("전체");
@@ -248,12 +255,22 @@ export default function ReferencePage({
   const [extraAssets, setExtraAssets] = useState<ReferenceAsset[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [boards, setBoards] = useState(REFERENCE_BOARDS);
+  const [boards, setBoards] = useState<ReferenceBoard[]>(REFERENCE_BOARDS);
   const [toast, setToast] = useState("");
+  const [isCreateBoardOpen, setIsCreateBoardOpen] = useState(false);
+  const [newBoardName, setNewBoardName] = useState("");
+  const [newBoardMemo, setNewBoardMemo] = useState("");
+  const [newBoardImage, setNewBoardImage] = useState("");
+  const [newBoardAssetIds, setNewBoardAssetIds] = useState<number[]>([]);
 
   useEffect(() => {
     if (boardCategory) setActiveCategory(boardCategory);
   }, [boardCategory]);
+  useEffect(() => {
+    onSelectionChange?.(Array.from(selectedIds));
+  }, [onSelectionChange, selectedIds]);
+
+
 
   useEffect(() => {
     if (!toast) return;
@@ -334,18 +351,18 @@ export default function ReferencePage({
     toggleFavorite(id);
   };
 
+  const toggleAssetSelection = (assetId: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(assetId)) next.delete(assetId);
+      else next.add(assetId);
+      return next;
+    });
+  };
+
   const handleCardClick = (e: React.MouseEvent, asset: ReferenceAsset) => {
-    if (e.ctrlKey || e.metaKey || isPopup) {
-      e.preventDefault();
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        if (next.has(asset.id)) next.delete(asset.id);
-        else next.add(asset.id);
-        return next;
-      });
-      return;
-    }
-    setPreviewImage(asset);
+    e.preventDefault();
+    toggleAssetSelection(asset.id);
   };
 
   const handleLoadMore = () => {
@@ -362,18 +379,39 @@ export default function ReferencePage({
     }, 500);
   };
 
+  const openCreateBoard = () => {
+    setNewBoardName("");
+    setNewBoardMemo("");
+    setNewBoardImage("");
+    setNewBoardAssetIds([]);
+    setIsCreateBoardOpen(true);
+  };
+
+  const openCreateBoardFromSelection = () => {
+    const selectedAssets = allAssets.filter((asset) => selectedIds.has(asset.id));
+    setNewBoardName("");
+    setNewBoardMemo(`${selectedIds.size}개의 선택한 레퍼런스를 묶은 보드`);
+    setNewBoardImage(selectedAssets[0]?.image ?? "");
+    setNewBoardAssetIds(Array.from(selectedIds));
+    setIsCreateBoardOpen(true);
+  };
+
   const createBoard = () => {
-    const name = window.prompt("새 보드 이름을 입력하세요.");
-    if (!name?.trim()) return;
-    const next = {
+    const name = newBoardName.trim();
+    if (!name) return;
+    const next: ReferenceBoard = {
       id: `custom-${Date.now()}`,
-      label: name.trim(),
-      image: "/images/work_48.png",
-      keyword: name.trim(),
+      label: name,
+      image: newBoardImage.trim() || "/images/work_48.png",
+      keyword: newBoardMemo.trim() || name,
+      memo: newBoardMemo.trim(),
+      assetIds: newBoardAssetIds.length > 0 ? newBoardAssetIds : undefined,
     };
     setBoards((prev) => [next, ...prev]);
     setActiveCategory(next.id);
-    setToast("새 보드를 만들었습니다.");
+    setIsCreateBoardOpen(false);
+    if (newBoardAssetIds.length > 0) setSelectedIds(new Set());
+    setToast(newBoardAssetIds.length > 0 ? "선택 항목을 새 보드로 묶었습니다." : "새 보드를 만들었습니다.");
   };
 
   const downloadAsset = (asset: ReferenceAsset) => {
@@ -415,7 +453,7 @@ export default function ReferencePage({
             </>
           )}
           <button
-            onClick={createBoard}
+            onClick={openCreateBoard}
             className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-bold text-[#E0A12E] transition hover:border-[#E0A12E]/50 hover:bg-[#22252B]"
           >
             <Plus className="h-[18px] w-[18px]" />
@@ -457,7 +495,7 @@ export default function ReferencePage({
         <div className="mb-8">
           <div className="mb-3 flex items-center justify-between px-1">
             <span className="text-[14px] font-bold text-text-primary">보드</span>
-            <button onClick={createBoard} className="text-text-tertiary transition hover:text-white">
+            <button onClick={openCreateBoard} className="text-text-tertiary transition hover:text-white">
               <Plus className="h-4 w-4" />
             </button>
           </div>
@@ -478,7 +516,7 @@ export default function ReferencePage({
       )}
 
       <main
-        className={`min-w-0 flex-1 px-6 py-6 ${
+        className={`min-w-0 flex-1 px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 ${
           isPopup ? "h-full overflow-y-auto" : "overscroll-y-auto"
         }`}
       >
@@ -501,6 +539,13 @@ export default function ReferencePage({
 
               <div className="flex-1" />
 
+              <button
+                onClick={openCreateBoard}
+                className="flex items-center gap-2 rounded-lg border border-[#E0A12E]/35 bg-[#E0A12E]/10 px-4 py-2 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-[#E0A12E]/15"
+              >
+                <Plus className="h-4 w-4" />
+                새 보드 추가
+              </button>
               <button
                 onClick={() => setActiveCategory("favorites")}
                 className="flex items-center gap-2 rounded-lg border border-[#2A2E36] bg-[#111215] px-4 py-2 text-[13px] font-bold text-text-secondary transition hover:bg-surface-primary hover:text-white"
@@ -549,7 +594,7 @@ export default function ReferencePage({
                 </button>
               ))}
               <button
-                onClick={createBoard}
+                onClick={openCreateBoard}
                 className="rounded-full border border-transparent px-3 py-2 text-text-tertiary transition hover:bg-[#1A1C20] hover:text-white"
               >
                 <Plus className="h-[18px] w-[18px]" />
@@ -599,7 +644,7 @@ export default function ReferencePage({
 
         <div className="mb-4 flex items-center gap-2 px-1 text-[13px] text-neutral-400">
           <CheckSquare className="h-4 w-4 text-neutral-400" />
-          Ctrl 또는 Cmd를 누른 채 클릭하면 여러 항목을 선택할 수 있습니다.
+          이미지를 클릭해서 여러 항목을 선택할 수 있습니다. 선택 후 아래 작업바에서 보드로 묶거나 연결하세요.
         </div>
 
         {viewMode === "grid" ? (
@@ -629,8 +674,8 @@ export default function ReferencePage({
                   }}
                   onAdd={(e) => {
                     e.stopPropagation();
-                    setSelectedIds((prev) => new Set([...prev, asset.id]));
-                    setToast("보드 선택 항목에 추가했습니다.");
+                    toggleAssetSelection(asset.id);
+                    setToast("선택 상태를 변경했습니다.");
                   }}
                 />
               );
@@ -703,7 +748,89 @@ export default function ReferencePage({
       </main>
 
       <AnimatePresence>
-        {selectedIds.size > 0 && (
+        {isCreateBoardOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
+            onClick={() => setIsCreateBoardOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 18, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              transition={{ duration: 0.18 }}
+              className="w-full max-w-[520px] rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.75)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-[#1C1E24] px-5 py-4">
+                <div>
+                  <p className="text-[14px] font-medium text-brand-primary">Reference Board</p>
+                  <h3 className="mt-1 text-[20px] font-medium text-white">{newBoardAssetIds.length > 0 ? "선택 항목 보드로 묶기" : "새 보드 추가"}</h3>
+                </div>
+                <button
+                  onClick={() => setIsCreateBoardOpen(false)}
+                  className="rounded-lg p-2 text-neutral-400 transition hover:bg-[#15161A] hover:text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4 p-5">
+                <label className="block">
+                  <span className="mb-2 block text-[14px] font-medium text-neutral-300">보드명</span>
+                  <input
+                    value={newBoardName}
+                    onChange={(e) => setNewBoardName(e.target.value)}
+                    placeholder={newBoardAssetIds.length > 0 ? "예: 오크 장비 모음" : "예: 오크 장비 레퍼런스"}
+                    className="h-12 w-full rounded-lg border border-[#1C1E24] bg-[#111215] px-4 text-[15px] text-white outline-none placeholder:text-neutral-500 focus:border-brand-primary/50"
+                    autoFocus
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-[14px] font-medium text-neutral-300">보드 설명 / 키워드</span>
+                  <textarea
+                    value={newBoardMemo}
+                    onChange={(e) => setNewBoardMemo(e.target.value)}
+                    placeholder="어떤 레퍼런스를 모을 보드인지 적어주세요."
+                    className="min-h-[100px] w-full resize-none rounded-lg border border-[#1C1E24] bg-[#111215] px-4 py-3 text-[14px] leading-relaxed text-white outline-none placeholder:text-neutral-500 focus:border-brand-primary/50"
+                  />
+                </label>
+                <label className="block rounded-xl border border-dashed border-[#2A2E36] bg-[#0C0C0E] p-4 transition focus-within:border-brand-primary/50">
+                  <span className="mb-2 flex items-center gap-2 text-[14px] font-medium text-neutral-300">
+                    <LayoutGrid className="h-4 w-4 text-brand-primary" /> 대표 이미지
+                  </span>
+                  <input
+                    value={newBoardImage}
+                    onChange={(e) => setNewBoardImage(e.target.value)}
+                    placeholder="이미지 URL 또는 경로, 비워두면 기본 이미지"
+                    className="w-full bg-transparent text-[14px] text-white outline-none placeholder:text-neutral-500"
+                  />
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-[#1C1E24] px-5 py-4">
+                <button
+                  onClick={() => setIsCreateBoardOpen(false)}
+                  className="rounded-lg border border-[#2A2E36] px-4 py-2 text-[14px] font-medium text-neutral-300 transition hover:bg-[#15161A] hover:text-white"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={createBoard}
+                  disabled={!newBoardName.trim()}
+                  className="rounded-lg bg-brand-primary px-5 py-2 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {newBoardAssetIds.length > 0 ? "보드로 묶기" : "보드 저장"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {selectedIds.size > 0 && !hideSelectionActionBar && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -718,22 +845,31 @@ export default function ReferencePage({
             </div>
 
             <div className="flex items-center gap-2">
-              {isPopup ? (
-                <button
-                  onClick={() => onAcceptSelection?.(Array.from(selectedIds))}
-                  className="flex items-center gap-2 rounded-md bg-[#E0A12E] px-6 py-1.5 text-[13px] font-bold text-bg-dark transition hover:bg-[#E0A12E]/90"
-                >
-                  선택 항목 가져오기
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              ) : (
+              {isPopup && onAcceptSelection ? (
                 <>
                   <button
-                    onClick={() => setToast("선택 항목을 보드에 추가했습니다.")}
+                    onClick={() => onAcceptSelection?.(Array.from(selectedIds))}
+                    className="flex items-center gap-2 rounded-md bg-[#E0A12E] px-6 py-1.5 text-[13px] font-bold text-bg-dark transition hover:bg-[#E0A12E]/90"
+                  >
+                    선택 항목 가져오기
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={openCreateBoardFromSelection}
                     className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
                   >
                     <Folder className="h-4 w-4" />
-                    보드 추가
+                    보드로 묶기
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={openCreateBoardFromSelection}
+                    className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
+                  >
+                    <Folder className="h-4 w-4" />
+                    보드로 묶기
                   </button>
                   <button
                     onClick={() => {
@@ -981,7 +1117,7 @@ function ReferenceCard({
 
       <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex translate-y-2 justify-center opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100">
         <div className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-[#2A2E36]/80 bg-[#1A1C20]/90 p-1.5 shadow-xl backdrop-blur-md">
-          <ActionButton icon={<Plus className="h-3.5 w-3.5" />} title="보드 추가" onClick={onAdd} />
+          <ActionButton icon={<CheckSquare className="h-3.5 w-3.5" />} title={isSelected ? "선택 해제" : "선택"} onClick={onAdd} />
           <ActionButton icon={<LinkIcon className="h-3.5 w-3.5" />} title="프로젝트 연결" onClick={onLink} />
           <ActionButton
             icon={<Bookmark className={`h-3.5 w-3.5 ${isFavorite ? "fill-red-400 text-red-400" : ""}`} />}

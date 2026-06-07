@@ -52,7 +52,7 @@ export default function NoteSidebar({
     <aside className="hidden h-full w-[300px] shrink-0 flex-col overflow-y-auto border-r border-[#161618] bg-[#08090B] p-5 lg:flex">
       <div className="mb-8">
         <h2
-          className="mb-2 cursor-pointer text-[26px] font-bold text-white transition hover:text-brand-primary"
+          className="mb-2 cursor-pointer text-[24px] font-bold text-white transition hover:text-brand-primary"
           onClick={() => applyFilter("all")}
         >
           Notes
@@ -64,7 +64,7 @@ export default function NoteSidebar({
 
       <button
         onClick={() => onNavigate("note-editor")}
-        className="mb-6 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-bold text-[#E0A12E] transition hover:border-[#E0A12E]/50 hover:bg-[#22252B]"
+        className="mb-6 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-medium text-[#E0A12E] transition hover:border-[#E0A12E]/50 hover:bg-[#22252B]"
       >
         <Plus className="h-[18px] w-[18px]" />
         새 노트
@@ -103,7 +103,7 @@ export default function NoteSidebar({
 
       <div className="mb-8 px-1">
         <div className="mb-3 flex items-center justify-between px-2">
-          <span className="text-[14px] font-bold text-neutral-400">
+          <span className="text-[14px] font-medium text-neutral-400">
             노트 폴더
           </span>
           <button
@@ -129,7 +129,7 @@ export default function NoteSidebar({
 
       <div>
         <div className="mb-3 flex items-center justify-between px-2">
-          <span className="text-[14px] font-bold text-neutral-400">태그</span>
+          <span className="text-[14px] font-medium text-neutral-400">태그</span>
           <Tag className="h-3.5 w-3.5 text-neutral-500" />
         </div>
         <div className="flex flex-wrap gap-2 px-1">
@@ -137,7 +137,7 @@ export default function NoteSidebar({
             <button
               key={tag}
               onClick={() => applyFilter(tag)}
-              className={`rounded-full border px-2.5 py-1 text-[13px] font-semibold transition ${
+              className={`rounded-full border px-2.5 py-1 text-[14px] font-medium transition ${
                 activeFilter === tag
                   ? "border-[#E0A12E]/40 bg-[#E0A12E]/10 text-[#E0A12E]"
                   : "border-[#22252A] bg-[#15161A] text-text-secondary hover:border-[#3A404F] hover:text-white"
@@ -168,7 +168,7 @@ function MenuBtn({
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center justify-between rounded-lg border border-transparent px-3 py-2.5 text-[16px] font-semibold transition ${
+      className={`flex w-full items-center justify-between rounded-lg border border-transparent px-3 py-2.5 text-[15px] font-medium transition ${
         active
           ? "bg-[#15161A] text-white"
           : "text-text-secondary hover:bg-[#111215] hover:text-white"
@@ -184,7 +184,7 @@ function MenuBtn({
         </span>
         {label}
       </span>
-      <span className={active ? "text-[13px] text-text-secondary" : "text-[13px] text-neutral-500"}>
+      <span className={active ? "text-[14px] text-text-secondary" : "text-[14px] text-neutral-500"}>
         {count}
       </span>
     </button>

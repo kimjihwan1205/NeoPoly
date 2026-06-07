@@ -125,7 +125,7 @@ const WORKFLOW_CARDS = [
 ];
 
 const QUICK_TOOLS = [
-  { label: "레퍼런스 보드 열기", icon: LayoutGrid, page: "references" },
+  { label: "Board 열기", icon: LayoutGrid, page: "board" },
   { label: "프롬프트 빌더 열기", icon: Paintbrush, page: "full_workflow_chat" },
   { label: "이미지 생성하기", icon: Wand2, page: "full_workflow" },
   { label: "턴어라운드 생성", icon: Rotate3D, page: "turnaround" },
@@ -168,8 +168,8 @@ export default function AIStudioPage({
 
   return (
     <div className="flex h-[calc(100vh-76px)] w-full flex-1 flex-col overflow-hidden bg-[#050505] font-sans text-white">
-      <div className="custom-scrollbar flex-1 overflow-y-auto px-6 py-8">
-        <div className="mx-auto flex w-full max-w-[2006px] flex-col gap-5">
+      <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-8 sm:px-6 2xl:px-8 min-[2200px]:px-10">
+        <div className="mx-auto flex w-full max-w-[2560px] flex-col gap-5">
           <div className="flex flex-col gap-5">
             <div className="flex items-center justify-between">
               <h1 className="text-[20px] font-bold text-white">

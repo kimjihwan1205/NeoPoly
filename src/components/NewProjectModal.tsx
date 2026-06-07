@@ -137,7 +137,7 @@ export default function NewProjectModal({
 
         <div className="relative z-10 flex items-center justify-between border-b border-[#1F2329] px-8 py-6">
           <div>
-            <h2 className="mb-2 text-[22px] font-bold text-white">
+            <h2 className="mb-2 text-[24px] font-bold text-white">
               새 프로젝트 만들기
             </h2>
             <p className="text-[14px] text-neutral-400">
@@ -154,7 +154,7 @@ export default function NewProjectModal({
 
         <div className="relative z-10 flex flex-col gap-7 p-8">
           <label className="flex flex-col gap-2.5">
-            <span className="ml-1 text-[14px] font-bold text-white">
+            <span className="ml-1 text-[14px] font-medium text-white">
               프로젝트 이름
             </span>
             <input
@@ -171,7 +171,7 @@ export default function NewProjectModal({
           </label>
 
           <label className="flex flex-col gap-2.5">
-            <span className="ml-1 text-[14px] font-bold text-white">
+            <span className="ml-1 text-[14px] font-medium text-white">
               설명 <span className="font-normal text-neutral-500">선택</span>
             </span>
             <textarea
@@ -183,7 +183,7 @@ export default function NewProjectModal({
           </label>
 
           <div className="flex flex-col gap-3">
-            <span className="ml-1 text-[14px] font-bold text-white">
+            <span className="ml-1 text-[14px] font-medium text-white">
               템플릿
             </span>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -209,13 +209,13 @@ export default function NewProjectModal({
                       {template.icon}
                     </span>
                     <span
-                      className={`mb-1 text-[14px] font-bold ${
+                      className={`mb-1 text-[14px] font-medium ${
                         active ? "text-[#E0A12E]" : "text-white"
                       }`}
                     >
                       {template.title}
                     </span>
-                    <span className="text-[12px] leading-relaxed text-neutral-400">
+                    <span className="text-[14px] leading-relaxed text-neutral-400">
                       {template.desc}
                     </span>
                   </button>
@@ -226,10 +226,10 @@ export default function NewProjectModal({
 
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <span className="ml-1 text-[14px] font-bold text-white">
+              <span className="ml-1 text-[14px] font-medium text-white">
                 연결 자료
               </span>
-              <span className="text-[12px] text-neutral-500">
+              <span className="text-[14px] text-neutral-500">
                 대표 이미지는 비워두고 자료만 연결됩니다.
               </span>
             </div>
@@ -244,11 +244,11 @@ export default function NewProjectModal({
                     : "border-[#2A2E36] bg-[#141518] text-neutral-300 hover:border-[#60A5FA]/50"
                 }`}
               >
-                <span className="flex items-center gap-2 text-[13px] font-bold">
+                <span className="flex items-center gap-2 text-[14px] font-medium">
                   <FileText className="h-4 w-4" />
                   노트 선택
                 </span>
-                <span className="text-[12px]">{selectedNoteIds.length}</span>
+                <span className="text-[14px]">{selectedNoteIds.length}</span>
               </button>
               <button
                 onClick={() =>
@@ -262,11 +262,11 @@ export default function NewProjectModal({
                     : "border-[#2A2E36] bg-[#141518] text-neutral-300 hover:border-[#4ADE80]/50"
                 }`}
               >
-                <span className="flex items-center gap-2 text-[13px] font-bold">
+                <span className="flex items-center gap-2 text-[14px] font-medium">
                   <ImageIcon className="h-4 w-4" />
                   레퍼런스 선택
                 </span>
-                <span className="text-[12px]">{selectedReferenceIds.length}</span>
+                <span className="text-[14px]">{selectedReferenceIds.length}</span>
               </button>
             </div>
 
@@ -303,7 +303,7 @@ export default function NewProjectModal({
                           alt={item.title}
                           className="h-20 w-full object-cover"
                         />
-                        <span className="block truncate bg-[#111317] px-2 py-2 text-[12px] font-semibold text-neutral-200">
+                        <span className="block truncate bg-[#111317] px-2 py-2 text-[14px] font-medium text-neutral-200">
                           {item.title}
                         </span>
                         {active && (
@@ -323,14 +323,14 @@ export default function NewProjectModal({
         <div className="relative z-10 flex justify-end gap-3 border-t border-[#1F2329] bg-[#101114] p-6">
           <button
             onClick={onClose}
-            className="rounded-lg px-6 py-3 text-[14px] font-bold text-neutral-400 transition hover:text-white"
+            className="rounded-lg px-6 py-3 text-[14px] font-medium text-neutral-400 transition hover:text-white"
           >
             취소
           </button>
           <button
             onClick={handleCreate}
             disabled={!projectName.trim()}
-            className={`flex items-center gap-2 rounded-lg px-8 py-3 text-[14px] font-bold transition ${
+            className={`flex items-center gap-2 rounded-lg px-8 py-3 text-[14px] font-medium transition ${
               projectName.trim()
                 ? "bg-[#E0A12E] text-[#050505] hover:bg-[#F0B43A]"
                 : "cursor-not-allowed bg-[#1A1C21] text-neutral-500"

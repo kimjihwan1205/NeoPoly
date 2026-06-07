@@ -98,7 +98,7 @@ export default function NoteEditorPage({ onNavigate }: NoteEditorPageProps) {
         </div>
 
         {/* Editor Wrapper */}
-        <div className="max-w-[2400px] w-full mx-auto px-6 py-6 flex-1 flex flex-col gap-6">
+        <div className="max-w-[2560px] w-full mx-auto px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 flex-1 flex flex-col gap-6">
           {/* Title Area */}
           <div className="relative group">
             <div className="flex items-center justify-between absolute right-0 top-2 opacity-0 group-hover:opacity-100 transition-opacity">

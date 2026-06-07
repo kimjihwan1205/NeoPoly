@@ -108,7 +108,7 @@ function StepRail({
             }`}
           >
             <span
-              className={`flex h-7 w-7 items-center justify-center rounded-full border text-[11px] font-bold ${
+              className={`flex h-7 w-7 items-center justify-center rounded-full border text-[14px] font-medium ${
                 active
                   ? "border-[#E0A12E] bg-[#E0A12E] text-black"
                   : complete
@@ -119,8 +119,8 @@ function StepRail({
               {complete ? <Check className="h-3.5 w-3.5" /> : step.number}
             </span>
             <span className="text-left">
-              <span className="block text-[13px] font-bold leading-tight">{step.title}</span>
-              <span className="mt-0.5 block text-[11px] leading-tight text-neutral-500">{step.description}</span>
+              <span className="block text-[14px] font-medium leading-tight">{step.title}</span>
+              <span className="mt-0.5 block text-[14px] leading-tight text-neutral-500">{step.description}</span>
             </span>
             {index < STEPS.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-neutral-600" />}
           </div>
@@ -168,7 +168,7 @@ function ViewportTools({
         <button
           key={label as string}
           onClick={() => onToolSelect(label as string)}
-          className={`flex h-[58px] flex-col items-center justify-center gap-1 border-b border-[#1F2329] text-[10px] transition-colors last:border-b-0 ${
+          className={`flex h-[58px] flex-col items-center justify-center gap-1 border-b border-[#1F2329] text-[14px] transition-colors last:border-b-0 ${
             activeTool === label || (label === "그리드" && gridEnabled)
               ? "bg-[#E0A12E]/10 text-[#E0A12E]"
               : "text-neutral-400 hover:bg-[#141518] hover:text-white"
@@ -641,10 +641,10 @@ function ThreeModelPreview({
   return (
     <div className="relative h-full w-full">
       <div ref={mountRef} className="absolute inset-0 cursor-grab active:cursor-grabbing" />
-      <div className="pointer-events-none absolute left-24 top-4 rounded-lg border border-[#1F2329] bg-[#080A0D]/75 px-3 py-2 text-[11px] text-neutral-400 backdrop-blur">
+      <div className="pointer-events-none absolute left-24 top-4 rounded-lg border border-[#1F2329] bg-[#080A0D]/75 px-3 py-2 text-[14px] text-neutral-400 backdrop-blur">
         {toolHint}
       </div>
-      <div className="pointer-events-none absolute right-4 top-4 rounded-lg border border-[#1F2329] bg-[#080A0D]/75 px-3 py-2 text-[11px] text-neutral-400 backdrop-blur">
+      <div className="pointer-events-none absolute right-4 top-4 rounded-lg border border-[#1F2329] bg-[#080A0D]/75 px-3 py-2 text-[14px] text-neutral-400 backdrop-blur">
         {loadState === "textured"
           ? `${ORC_MODEL_FILE} PBR 적용됨`
           : loadState === "loaded"
@@ -691,7 +691,7 @@ function ModelViewport({ activeStep }: { activeStep: ModelingStep }) {
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
-              className={`rounded-md border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+              className={`rounded-md border px-3 py-1.5 text-[14px] font-medium transition-colors ${
                 viewMode === mode
                   ? "border-[#E0A12E] bg-[#E0A12E]/10 text-[#E0A12E]"
                   : "border-[#1F2329] bg-[#0A0B0D] text-neutral-400 hover:text-white"
@@ -701,7 +701,7 @@ function ModelViewport({ activeStep }: { activeStep: ModelingStep }) {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2 text-[12px] text-neutral-400">
+        <div className="flex items-center gap-2 text-[14px] text-neutral-400">
           <button className="rounded-md border border-[#1F2329] bg-[#0A0B0D] p-2 hover:text-white" title="카메라 저장">
             <Camera className="h-4 w-4" />
           </button>
@@ -744,8 +744,8 @@ function ModelViewport({ activeStep }: { activeStep: ModelingStep }) {
             ["상태", activeStep === "generate" ? "Ready" : "A-"],
           ].map(([label, value]) => (
             <div key={label} className="rounded-lg border border-[#1F2329] bg-[#080A0D]/80 px-4 py-3 backdrop-blur">
-              <p className="text-[11px] text-neutral-500">{label}</p>
-              <p className="mt-1 text-[15px] font-bold text-white">{value}</p>
+              <p className="text-[14px] text-neutral-500">{label}</p>
+              <p className="mt-1 text-[15px] font-medium text-white">{value}</p>
             </div>
           ))}
         </div>
@@ -757,11 +757,11 @@ function ModelViewport({ activeStep }: { activeStep: ModelingStep }) {
 function SectionTitle({ title, helper }: { title: string; helper?: string }) {
   return (
     <div className="flex items-center justify-between">
-      <h3 className="flex items-center gap-1.5 text-[14px] font-bold text-white">
+      <h3 className="flex items-center gap-1.5 text-[14px] font-medium text-white">
         {title}
         {helper && <CircleHelp className="h-3.5 w-3.5 text-neutral-500" />}
       </h3>
-      {helper && <span className="text-[11px] text-neutral-500">{helper}</span>}
+      {helper && <span className="text-[14px] text-neutral-500">{helper}</span>}
     </div>
   );
 }
@@ -823,13 +823,13 @@ function RightPanel({
     <aside className="flex w-full shrink-0 flex-col border-t border-[#1F2329] bg-[#050505] lg:h-full lg:w-[390px] lg:border-l lg:border-t-0">
       <div className="flex h-[58px] shrink-0 items-center justify-between border-b border-[#1F2329] px-5">
         <div>
-          <h2 className="flex items-center gap-2 text-[16px] font-bold text-white">
+          <h2 className="flex items-center gap-2 text-[15px] font-medium text-white">
             {panelCopy.title}
             <CircleHelp className="h-4 w-4 text-neutral-500" />
           </h2>
-          <p className="mt-0.5 text-[11px] text-neutral-500">NeoPoly Orc Modeling Pipeline</p>
+          <p className="mt-0.5 text-[14px] text-neutral-500">NeoPoly Orc Modeling Pipeline</p>
         </div>
-        <button className="rounded-md border border-[#1F2329] bg-[#0A0B0D] px-3 py-1.5 text-[11px] text-neutral-400 hover:text-white">
+        <button className="rounded-md border border-[#1F2329] bg-[#0A0B0D] px-3 py-1.5 text-[14px] text-neutral-400 hover:text-white">
           저장됨
         </button>
       </div>
@@ -840,7 +840,7 @@ function RightPanel({
             <div className="rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4">
               <SectionTitle title="AI 프롬프트 수정" />
               <textarea
-                className="mt-3 h-24 w-full resize-none rounded-lg border border-[#2A2E36] bg-[#111419] p-3 text-[13px] text-neutral-200 outline-none placeholder:text-neutral-600 focus:border-[#E0A12E]"
+                className="mt-3 h-24 w-full resize-none rounded-lg border border-[#2A2E36] bg-[#111419] p-3 text-[14px] text-neutral-200 outline-none placeholder:text-neutral-600 focus:border-[#E0A12E]"
                 placeholder={panelCopy.prompt}
                 value={promptDrafts[activeStep as "generate" | "polish"] ?? ""}
                 onChange={(event) =>
@@ -852,14 +852,14 @@ function RightPanel({
               />
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {["어깨 갑옷 더 날카롭게", "무기 스파이크 크게", "허리 벨트 정리", "피부 주름 강조"].map((item) => (
-                  <button key={item} className="rounded-md border border-[#1F2329] bg-[#141518] px-2 py-2 text-[11px] text-neutral-400 hover:border-[#E0A12E] hover:text-white">
+                  <button key={item} className="rounded-md border border-[#1F2329] bg-[#141518] px-2 py-2 text-[14px] text-neutral-400 hover:border-[#E0A12E] hover:text-white">
                     {item}
                   </button>
                 ))}
               </div>
               <button
                 onClick={runAction}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-3 text-[14px] font-bold text-black transition-colors hover:bg-[#F0B43A]"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-3 text-[14px] font-medium text-black transition-colors hover:bg-[#F0B43A]"
               >
                 {isProcessing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 {panelCopy.button}
@@ -877,7 +877,7 @@ function RightPanel({
                   <button
                     key={id}
                     onClick={() => setScope(id)}
-                    className={`rounded-lg border py-2 text-[12px] font-bold ${
+                    className={`rounded-lg border py-2 text-[14px] font-medium ${
                       scope === id ? "border-[#E0A12E] bg-[#E0A12E]/10 text-[#E0A12E]" : "border-[#1F2329] bg-[#141518] text-neutral-400"
                     }`}
                   >
@@ -897,7 +897,7 @@ function RightPanel({
                     <div className="aspect-square overflow-hidden">
                       <img src={module.image} alt={module.label} className="h-full w-full object-contain p-1 opacity-85 group-hover:opacity-100" />
                     </div>
-                    <span className="block truncate px-1 py-1 text-[10px] text-neutral-400">{module.label}</span>
+                    <span className="block truncate px-1 py-1 text-[14px] text-neutral-400">{module.label}</span>
                   </button>
                 ))}
               </div>
@@ -936,8 +936,8 @@ function RightPanel({
                     }`}
                   >
                     <Icon className={`h-5 w-5 ${quality === count ? "text-[#E0A12E]" : "text-neutral-400"}`} />
-                    <p className="mt-3 text-[13px] font-bold text-white">{label as string}</p>
-                    <p className="mt-1 text-[18px] font-bold text-[#E0A12E]">{count as string}</p>
+                    <p className="mt-3 text-[14px] font-medium text-white">{label as string}</p>
+                    <p className="mt-1 text-[18px] font-semibold text-[#E0A12E]">{count as string}</p>
                   </button>
                 ))}
               </div>
@@ -946,13 +946,13 @@ function RightPanel({
             <div className="rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4">
               <SectionTitle title="리메시 목표" />
               <div className="mt-5">
-                <div className="mb-2 flex items-center justify-between text-[12px] text-neutral-400">
+                <div className="mb-2 flex items-center justify-between text-[14px] text-neutral-400">
                   <span>목표 폴리곤</span>
-                  <span className="text-[18px] font-bold text-white">{quality === "500K" ? "500,000" : quality}</span>
+                  <span className="text-[18px] font-semibold text-white">{quality === "500K" ? "500,000" : quality}</span>
                 </div>
                 <input type="range" min="1" max="100" defaultValue="48" className="w-full accent-[#E0A12E]" />
               </div>
-              <div className="mt-5 grid grid-cols-2 gap-2 text-[12px] text-neutral-300">
+              <div className="mt-5 grid grid-cols-2 gap-2 text-[14px] text-neutral-300">
                 {["실루엣 유지", "하드 엣지 유지", "UV 경계 유지", "쿼드 기반"].map((item) => (
                   <label key={item} className="flex items-center gap-2 rounded-lg border border-[#1F2329] bg-[#141518] px-3 py-2">
                     <input type="checkbox" defaultChecked className="accent-[#E0A12E]" />
@@ -975,15 +975,15 @@ function RightPanel({
                   ["Metallic / Height 맵 대기", "확인"],
                 ].map(([label, level]) => (
                   <div key={label} className="flex items-center justify-between rounded-lg border border-[#1F2329] bg-[#141518] px-3 py-2.5">
-                    <span className="flex items-center gap-2 text-[12px] text-neutral-300">
+                    <span className="flex items-center gap-2 text-[14px] text-neutral-300">
                       <Zap className="h-3.5 w-3.5 text-[#E0A12E]" />
                       {label}
                     </span>
-                    <span className="text-[11px] text-[#4ADE80]">{level}</span>
+                    <span className="text-[14px] text-[#4ADE80]">{level}</span>
                   </div>
                 ))}
               </div>
-              <button className="mt-3 w-full rounded-lg bg-[#E0A12E] py-2.5 text-[13px] font-bold text-black hover:bg-[#F0B43A]">
+              <button className="mt-3 w-full rounded-lg bg-[#E0A12E] py-2.5 text-[14px] font-medium text-black hover:bg-[#F0B43A]">
                 모두 자동 점검
               </button>
             </div>
@@ -993,7 +993,7 @@ function RightPanel({
               <div className="mt-3 space-y-2">
                 {TEXTURE_MAPS.map((map) => (
                   <div key={map.id} className="flex items-center justify-between rounded-lg border border-[#1F2329] bg-[#141518] px-3 py-2">
-                    <span className="flex min-w-0 items-center gap-2 text-[12px] text-neutral-300">
+                    <span className="flex min-w-0 items-center gap-2 text-[14px] text-neutral-300">
                       <span className="h-4 w-4 shrink-0 rounded-sm border border-white/10" style={{ backgroundColor: map.color }} />
                       <span className="truncate">{map.label}</span>
                     </span>
@@ -1007,7 +1007,7 @@ function RightPanel({
       </div>
 
       <div className="shrink-0 border-t border-[#1F2329] bg-[#08090B] p-5">
-        <div className="mb-3 flex items-center gap-2 rounded-lg border border-[#1F2329] bg-[#0A0B0D] px-3 py-2 text-[12px] text-neutral-400">
+        <div className="mb-3 flex items-center gap-2 rounded-lg border border-[#1F2329] bg-[#0A0B0D] px-3 py-2 text-[14px] text-neutral-400">
           <History className="h-4 w-4 text-[#4ADE80]" />
           {activeStep === "generate" ? `내 컴퓨터의 ${ORC_MODEL_FILE} 모델을 웹 뷰어에 연결했습니다.` : "이전 단계 결과가 유지됩니다."}
         </div>
@@ -1015,7 +1015,7 @@ function RightPanel({
           <button
             disabled={!prevStep}
             onClick={() => prevStep && setActiveStep(prevStep)}
-            className={`flex w-[34%] items-center justify-center gap-2 rounded-lg border py-3 text-[13px] font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
+            className={`flex w-[34%] items-center justify-center gap-2 rounded-lg border py-3 text-[14px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
               prevStep
                 ? "border-[#E0A12E]/45 bg-[#E0A12E]/10 text-[#F0B43A] hover:border-[#E0A12E] hover:bg-[#E0A12E]/15"
                 : "border-[#2A2E36] bg-[#0A0B0D] text-neutral-500"
@@ -1026,7 +1026,7 @@ function RightPanel({
           </button>
           <button
             onClick={() => (nextStep ? setActiveStep(nextStep) : runAction())}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-3 text-[14px] font-bold text-black transition-colors hover:bg-[#F0B43A]"
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-3 text-[14px] font-medium text-black transition-colors hover:bg-[#F0B43A]"
           >
             {nextStep ? `다음 단계: ${STEPS[activeIndex + 1].title}` : "최종 모델 저장"}
             <ArrowRight className="h-4 w-4" />
@@ -1045,21 +1045,21 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
       <div className="flex h-[58px] shrink-0 items-center justify-between border-b border-[#1F2329] bg-[#050505] px-5">
         <div className="flex items-center gap-3">
           <div>
-            <h1 className="flex items-center gap-2 text-[18px] font-bold text-white">
+            <h1 className="flex items-center gap-2 text-[18px] font-semibold text-white">
               <Box className="h-5 w-5 text-[#E0A12E]" />
               오크 3D 모델링 생성
             </h1>
-            <p className="mt-0.5 text-[12px] text-neutral-500">
+            <p className="mt-0.5 text-[14px] text-neutral-500">
               {ORC_MODEL_FILE} 모델을 웹에서 직접 돌려보며 단계별 후작업을 진행합니다.
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 rounded-lg border border-[#1F2329] bg-[#0A0B0D] px-3 py-2 text-[12px] text-neutral-400 hover:text-white">
+          <button className="flex items-center gap-2 rounded-lg border border-[#1F2329] bg-[#0A0B0D] px-3 py-2 text-[14px] text-neutral-400 hover:text-white">
             <PanelRight className="h-4 w-4" />
             작업 히스토리
           </button>
-          <button className="flex items-center gap-2 rounded-lg border border-[#1F2329] bg-[#0A0B0D] px-3 py-2 text-[12px] text-neutral-400 hover:text-white">
+          <button className="flex items-center gap-2 rounded-lg border border-[#1F2329] bg-[#0A0B0D] px-3 py-2 text-[14px] text-neutral-400 hover:text-white">
             <Cpu className="h-4 w-4 text-[#E0A12E]" />
             Studio D
             <ChevronDown className="h-3.5 w-3.5" />

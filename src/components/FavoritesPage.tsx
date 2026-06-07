@@ -18,9 +18,9 @@ export default function FavoritesPage({ favorites, toggleFavorite }: FavoritesPa
   const favoriteAssets = ASSETS.filter(a => favorites.includes(a.id));
 
   return (
-    <main className="flex-1 bg-bg-dark font-sans text-text-primary px-6 py-6 max-w-[2006px] mx-auto w-full">
+    <main className="flex-1 bg-bg-dark font-sans text-text-primary px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 max-w-[2560px] mx-auto w-full">
       <div className="flex flex-col mb-10">
-        <h1 className="text-[32px] md:text-[40px] font-bold tracking-tight text-white mb-2 flex items-center gap-3">
+        <h1 className="text-[32px] md:text-[32px] font-bold tracking-tight text-white mb-2 flex items-center gap-3">
           <Heart className="w-8 h-8 md:w-10 md:h-10 text-red-500 fill-red-500" />
           관심 목록
         </h1>
@@ -61,7 +61,7 @@ export default function FavoritesPage({ favorites, toggleFavorite }: FavoritesPa
                     <h3 className="text-[15px] font-normal text-text-primary line-clamp-2 leading-[1.3] mb-0.5">
                       {asset.title}
                     </h3>
-                    <p className="text-[12px] text-text-secondary font-medium">
+                    <p className="text-[14px] text-text-secondary font-medium">
                       {asset.author}
                     </p>
                   </div>

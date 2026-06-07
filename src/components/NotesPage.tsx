@@ -29,6 +29,8 @@ interface NotesPageProps {
   boardFilter?: string;
   onSelectNote?: (noteId: number) => void;
   onAcceptSelection?: (noteIds: number[]) => void;
+  onSelectionChange?: (noteIds: number[]) => void;
+  hideSelectionActionBar?: boolean;
 }
 
 export type NoteItem = {
@@ -177,6 +179,8 @@ export default function NotesPage({
   boardFilter,
   onSelectNote,
   onAcceptSelection,
+  onSelectionChange,
+  hideSelectionActionBar = false,
 }: NotesPageProps) {
   const [notes, setNotes] = useState<NoteItem[]>(loadNotes);
   const [activeNote, setActiveNote] = useState<number | null>(() => hideDetailPanel ? null : notes[0]?.id ?? null);
@@ -190,6 +194,11 @@ export default function NotesPage({
     loadChecklist,
   );
   const [toast, setToast] = useState("");
+  const [isCreateNoteOpen, setIsCreateNoteOpen] = useState(false);
+  const [newNoteTitle, setNewNoteTitle] = useState("");
+  const [newNoteMemo, setNewNoteMemo] = useState("");
+  const [newNoteReference, setNewNoteReference] = useState("");
+  const [newNoteTags, setNewNoteTags] = useState("");
 
   useEffect(() => {
     if (boardFilter) setFilter(boardFilter);
@@ -202,6 +211,11 @@ export default function NotesPage({
   useEffect(() => {
     localStorage.setItem(CHECKLIST_KEY, JSON.stringify(checklists));
   }, [checklists]);
+  useEffect(() => {
+    onSelectionChange?.(Array.from(selectedNotes));
+  }, [onSelectionChange, selectedNotes]);
+
+
 
   useEffect(() => {
     if (!toast) return;
@@ -268,6 +282,42 @@ export default function NotesPage({
     setChecklists((prev) => ({ ...prev, [key]: next }));
   };
 
+  const openCreateNote = () => {
+    setNewNoteTitle("");
+    setNewNoteMemo("");
+    setNewNoteReference("");
+    setNewNoteTags("");
+    setIsCreateNoteOpen(true);
+  };
+
+  const createNote = () => {
+    const title = newNoteTitle.trim();
+    if (!title) return;
+    const nextId = Math.max(0, ...notes.map((note) => note.id)) + 1;
+    const now = new Date();
+    const tags = newNoteTags
+      .split(/[,#\s]+/)
+      .map((tag) => tag.trim())
+      .filter(Boolean)
+      .map((tag) => (tag.startsWith("#") ? tag : `#${tag}`));
+    const reference = newNoteReference.trim();
+    const nextNote: NoteItem = {
+      id: nextId,
+      title,
+      desc: newNoteMemo.trim() || "새로운 아이디어와 작업 메모를 정리하세요.",
+      tags: tags.length > 0 ? Array.from(new Set(tags)) : ["#새노트"],
+      images: reference ? [reference] : [],
+      date: `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`,
+      starred: false,
+      authorImage: `https://api.dicebear.com/7.x/avataaars/svg?seed=note-${nextId}`,
+    };
+    setNotes((prev) => [nextNote, ...prev]);
+    setActiveNote(nextId);
+    setSelectedNotes(new Set());
+    setFilter("all");
+    setIsCreateNoteOpen(false);
+    setToast("새 노트를 추가했습니다.");
+  };
   const addTag = () => {
     if (!activeNoteData) return;
     const value = window.prompt("추가할 태그를 입력하세요.");
@@ -327,7 +377,7 @@ export default function NotesPage({
         />
       )}
 
-      <main className="relative flex-1 overflow-y-auto bg-bg-dark px-6 py-6">
+      <main className="relative flex-1 overflow-y-auto bg-bg-dark px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10">
         <div className="mx-auto flex h-full w-full max-w-[2400px] flex-col gap-6">
           <div className="flex items-center gap-4">
             <div className="relative flex-1">
@@ -340,6 +390,13 @@ export default function NotesPage({
                 className="h-12 w-full rounded-lg border border-[#1C1E24] bg-[#121417] pl-11 pr-4 text-[15px] text-white shadow-inner outline-none transition placeholder:text-[#6E737B] focus:border-brand-primary/50"
               />
             </div>
+            <button
+              onClick={openCreateNote}
+              className="flex h-12 shrink-0 items-center gap-2 rounded-lg border border-[#E0A12E]/35 bg-[#E0A12E]/10 px-4 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-[#E0A12E]/15"
+            >
+              <Plus className="h-4 w-4" />
+              노트 추가
+            </button>
             <button
               onClick={() => setSortMode((mode) => (mode === "recent" ? "starred" : "recent"))}
               className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[#1C1E24] bg-[#121417] text-neutral-400 transition hover:bg-[#1A1C20] hover:text-white"
@@ -384,11 +441,7 @@ export default function NotesPage({
           <div
             className={
               viewMode === "grid"
-                ? `grid gap-5 transition ${
-                    activeNote
-                      ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
-                      : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
-                  }`
+                ? "grid grid-cols-1 gap-5 transition md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
                 : "flex flex-col gap-3"
             }
           >
@@ -664,7 +717,94 @@ export default function NotesPage({
       </AnimatePresence>
 
       <AnimatePresence>
-        {selectedCount > 0 && (
+        {isCreateNoteOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
+            onClick={() => setIsCreateNoteOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 18, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              transition={{ duration: 0.18 }}
+              className="w-full max-w-[620px] rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.75)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-[#1C1E24] px-5 py-4">
+                <div>
+                  <p className="text-[14px] font-medium text-brand-primary">Board Note</p>
+                  <h3 className="mt-1 text-[20px] font-medium text-white">새 노트 작성</h3>
+                </div>
+                <button
+                  onClick={() => setIsCreateNoteOpen(false)}
+                  className="rounded-lg p-2 text-neutral-400 transition hover:bg-[#15161A] hover:text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="space-y-5 p-5">
+                <input
+                  value={newNoteTitle}
+                  onChange={(e) => setNewNoteTitle(e.target.value)}
+                  placeholder="제목을 입력하세요"
+                  className="w-full border-0 border-b border-[#2A2E36] bg-transparent px-0 pb-3 text-[28px] font-medium tracking-tight text-white outline-none placeholder:text-[#3A404F] focus:border-brand-primary/60"
+                  autoFocus
+                />
+                <textarea
+                  value={newNoteMemo}
+                  onChange={(e) => setNewNoteMemo(e.target.value)}
+                  placeholder="메모를 입력하세요..."
+                  className="min-h-[150px] w-full resize-none rounded-xl border border-[#1C1E24] bg-[#111215] p-4 text-[15px] leading-relaxed text-white outline-none placeholder:text-neutral-500 focus:border-brand-primary/50"
+                />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block rounded-xl border border-dashed border-[#2A2E36] bg-[#0C0C0E] p-4 transition focus-within:border-brand-primary/50">
+                    <span className="mb-2 flex items-center gap-2 text-[14px] font-medium text-neutral-300">
+                      <LayoutGrid className="h-4 w-4 text-brand-primary" /> 레퍼런스 추가
+                    </span>
+                    <input
+                      value={newNoteReference}
+                      onChange={(e) => setNewNoteReference(e.target.value)}
+                      placeholder="이미지 URL 또는 경로"
+                      className="w-full bg-transparent text-[14px] text-white outline-none placeholder:text-neutral-500"
+                    />
+                  </label>
+                  <label className="block rounded-xl border border-[#1C1E24] bg-[#111215] p-4 transition focus-within:border-brand-primary/50">
+                    <span className="mb-2 block text-[14px] font-medium text-neutral-300">태그</span>
+                    <input
+                      value={newNoteTags}
+                      onChange={(e) => setNewNoteTags(e.target.value)}
+                      placeholder="예: 오크, 장비, 턴어라운드"
+                      className="w-full bg-transparent text-[14px] text-white outline-none placeholder:text-neutral-500"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-[#1C1E24] px-5 py-4">
+                <button
+                  onClick={() => setIsCreateNoteOpen(false)}
+                  className="rounded-lg border border-[#2A2E36] px-4 py-2 text-[14px] font-medium text-neutral-300 transition hover:bg-[#15161A] hover:text-white"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={createNote}
+                  disabled={!newNoteTitle.trim()}
+                  className="rounded-lg bg-brand-primary px-5 py-2 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  노트 저장
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {selectedCount > 0 && !hideSelectionActionBar && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

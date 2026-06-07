@@ -154,35 +154,35 @@ export default function ContentManagementPage() {
       {/* Left Sidebar Menu */}
       <aside className="hidden lg:flex w-[300px] shrink-0 border-r border-[#1C1E24] bg-[#050505] flex-col h-full z-10 custom-scrollbar overflow-y-auto">
         <div className="p-6">
-          <h2 className="text-[18px] font-bold text-white tracking-tight">콘텐츠 관리</h2>
-          <p className="text-[12px] text-text-secondary mt-2 mb-6">마켓과 아트에 업로드한 작업물을 확인합니다.</p>
-          <button className="flex items-center justify-center gap-1.5 w-full py-3 rounded-xl border border-[#3A404F]/60 bg-[#15161A] hover:bg-[#22252B] hover:border-[#E0A12E]/50 text-[#E0A12E] shadow-sm transition-all font-bold text-[15px] tracking-wide">
+          <h2 className="text-[18px] font-semibold text-white tracking-tight">콘텐츠 관리</h2>
+          <p className="text-[14px] text-text-secondary mt-2 mb-6">마켓과 아트에 업로드한 작업물을 확인합니다.</p>
+          <button className="flex items-center justify-center gap-1.5 w-full py-3 rounded-xl border border-[#3A404F]/60 bg-[#15161A] hover:bg-[#22252B] hover:border-[#E0A12E]/50 text-[#E0A12E] shadow-sm transition-all font-medium text-[15px] tracking-wide">
             <Plus className="w-[18px] h-[18px]" />
             <span>새 콘텐츠 업로드</span>
           </button>
         </div>
 
         <nav className="px-3 space-y-1 mb-6">
-          <button className="flex items-center justify-between gap-3 w-full px-3 py-2.5 rounded-lg bg-[#15161A] text-white font-semibold text-[16px] transition-colors">
+          <button className="flex items-center justify-between gap-3 w-full px-3 py-2.5 rounded-lg bg-[#15161A] text-white font-medium text-[15px] transition-colors">
             <div className="flex items-center gap-3">
               <LayoutGrid className="w-[18px] h-[18px] text-[#E0A12E]" />
               <span className="tracking-tight">전체 콘텐츠</span>
             </div>
-            <span className="text-[13px] font-sans text-text-secondary">42</span>
+            <span className="text-[14px] font-sans text-text-secondary">42</span>
           </button>
-          <button className="flex items-center justify-between gap-3 w-full px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-[#111215] font-semibold text-[16px] transition-colors text-left border border-transparent">
+          <button className="flex items-center justify-between gap-3 w-full px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-[#111215] font-medium text-[15px] transition-colors text-left border border-transparent">
             <div className="flex items-center gap-3">
               <ShoppingCart className="w-[18px] h-[18px] text-neutral-400" />
               <span className="tracking-tight">마켓 상품</span>
             </div>
-            <span className="text-[13px] font-sans text-text-secondary">18</span>
+            <span className="text-[14px] font-sans text-text-secondary">18</span>
           </button>
-          <button className="flex items-center justify-between gap-3 w-full px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-[#111215] font-semibold text-[16px] transition-colors text-left border border-transparent">
+          <button className="flex items-center justify-between gap-3 w-full px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-[#111215] font-medium text-[15px] transition-colors text-left border border-transparent">
             <div className="flex items-center gap-3">
               <ImageIcon className="w-[18px] h-[18px] text-neutral-400" />
               <span className="tracking-tight">아트 게시물</span>
             </div>
-            <span className="text-[13px] font-sans text-text-secondary">16</span>
+            <span className="text-[14px] font-sans text-text-secondary">16</span>
           </button>
         </nav>
 
@@ -199,12 +199,12 @@ export default function ContentManagementPage() {
               { label: '삭제됨', count: 0, active: false, icon: Trash2 },
             ].map((item, idx) => (
               <li key={idx}>
-                <button className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[16px] font-semibold tracking-tight transition-colors border border-transparent ${item.active ? 'bg-[#15161A] text-white' : 'text-text-secondary hover:text-white hover:bg-[#111215]'}`}>
+                <button className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight transition-colors border border-transparent ${item.active ? 'bg-[#15161A] text-white' : 'text-text-secondary hover:text-white hover:bg-[#111215]'}`}>
                   <div className="flex items-center gap-3">
                     <item.icon className={`w-[18px] h-[18px] ${item.active ? 'text-[#E0A12E]' : 'text-neutral-400'}`} />
                     {item.label}
                   </div>
-                  <span className="text-[13px] font-sans text-neutral-500">{item.count}</span>
+                  <span className="text-[14px] font-sans text-neutral-500">{item.count}</span>
                 </button>
               </li>
             ))}
@@ -214,19 +214,19 @@ export default function ContentManagementPage() {
         <div className="px-4 mt-auto mb-6">
           <div className="h-px bg-[#1C1E24] w-full mb-3"></div>
           <nav className="space-y-1 mb-6">
-            <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[16px] font-semibold tracking-tight text-text-secondary hover:text-white hover:bg-[#111215] transition-colors border border-transparent">
+            <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight text-text-secondary hover:text-white hover:bg-[#111215] transition-colors border border-transparent">
               <div className="flex items-center gap-3">
                 <CreditCard className="w-[18px] h-[18px] text-neutral-400" /> 
                 정산 관리
               </div>
             </button>
-            <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[16px] font-semibold tracking-tight text-text-secondary hover:text-white hover:bg-[#111215] transition-colors border border-transparent">
+            <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight text-text-secondary hover:text-white hover:bg-[#111215] transition-colors border border-transparent">
               <div className="flex items-center gap-3">
                 <Settings className="w-[18px] h-[18px] text-neutral-400" /> 
                 판매자 설정
               </div>
             </button>
-            <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[16px] font-semibold tracking-tight text-text-secondary hover:text-white hover:bg-[#111215] transition-colors border border-transparent">
+            <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight text-text-secondary hover:text-white hover:bg-[#111215] transition-colors border border-transparent">
               <div className="flex items-center gap-3">
                 <HelpCircle className="w-[18px] h-[18px] text-neutral-400" /> 
                 업로드 가이드
@@ -239,7 +239,7 @@ export default function ContentManagementPage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto custom-scrollbar bg-[#0A0B0D] relative flex flex-col">
-        <div className="px-6 py-6 w-full flex-1">
+        <div className="px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 w-full flex-1">
           {/* Header Row Removed */}
 
           {/* Quick Stats Row */}
@@ -260,7 +260,7 @@ export default function ContentManagementPage() {
                 <input 
                   type="text" 
                   placeholder="콘텐츠 제목, 태그 검색" 
-                  className="bg-[#111215] border border-[#2A2E36] rounded-lg pl-9 pr-4 py-2 text-[13px] text-white focus:outline-none focus:border-brand-primary/50 transition-colors w-full sm:w-[220px]"
+                  className="bg-[#111215] border border-[#2A2E36] rounded-lg pl-9 pr-4 py-2 text-[14px] text-white focus:outline-none focus:border-brand-primary/50 transition-colors w-full sm:w-[220px]"
                 />
               </div>
               
@@ -317,16 +317,16 @@ export default function ContentManagementPage() {
           
           {/* Pagination Area */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-20 border-t border-[#1C1E24] pt-6">
-            <span className="text-[13px] text-text-secondary font-medium shrink-0">총 42개 항목</span>
+            <span className="text-[14px] text-text-secondary font-medium shrink-0">총 42개 항목</span>
             <div className="flex items-center gap-1.5 sm:gap-2">
               <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#111215] border border-[#2A2E36] text-text-secondary hover:text-white transition-colors">&lt;</button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#E0A12E] border border-[#E0A12E] text-black font-bold text-[13px]">1</button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[13px]">2</button>
-              <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[13px]">3</button>
-              <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[13px]">4</button>
-              <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[13px]">5</button>
+              <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#E0A12E] border border-[#E0A12E] text-black font-medium text-[14px]">1</button>
+              <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">2</button>
+              <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">3</button>
+              <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">4</button>
+              <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">5</button>
               <span className="text-text-secondary px-1 sm:px-2">...</span>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[13px]">9</button>
+              <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">9</button>
               <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#111215] border border-[#2A2E36] text-text-secondary hover:text-white transition-colors">&gt;</button>
             </div>
             <div className="w-full md:w-auto flex justify-center md:justify-end">
@@ -358,16 +358,16 @@ export default function ContentManagementPage() {
               <div className="relative aspect-auto px-5 pb-0">
                  <div className="relative rounded-lg overflow-hidden border border-[#1C1E24]">
                    {selectedItem.type === 'MARKET' ? (
-                     <span className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#E0A12E] text-[#E0A12E] text-[12px] font-bold rounded shadow-sm z-10">M</span>
+                     <span className="absolute top-3 right-3 h-7 min-w-7 px-1 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#E0A12E] text-[#E0A12E] text-[14px] font-medium rounded shadow-sm z-10">M</span>
                    ) : (
-                     <span className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#4A90E2] text-[#4A90E2] text-[12px] font-bold rounded shadow-sm z-10">A</span>
+                     <span className="absolute top-3 right-3 h-7 min-w-7 px-1 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#4A90E2] text-[#4A90E2] text-[14px] font-medium rounded shadow-sm z-10">A</span>
                    )}
                    {selectedItem.image ? (
                      <img referrerPolicy="no-referrer" src={selectedItem.image} alt={selectedItem.title} className="w-full aspect-[4/3] object-cover" />
                    ) : (
                      <div className="w-full aspect-[4/3] bg-[#111215] flex flex-col items-center justify-center text-neutral-400">
                        <ImageIcon className="w-12 h-12 mb-3 opacity-50" />
-                       <span className="text-[14px] font-bold">이미지 없음</span>
+                       <span className="text-[14px] font-medium">이미지 없음</span>
                      </div>
                    )}
                  </div>
@@ -376,7 +376,7 @@ export default function ContentManagementPage() {
               {/* Title & Status */}
               <div className="px-5 py-5 border-b border-[#1C1E24]">
                 <h2 className="text-[20px] font-bold text-white mb-2 tracking-tight">{selectedItem.title}</h2>
-                <div className="flex items-center gap-2 text-[13px]">
+                <div className="flex items-center gap-2 text-[14px]">
                   <span className="text-neutral-400">{selectedItem.type === 'MARKET' ? 'Market 상품' : 'Art 게시물'}</span>
                   <span className="text-neutral-400">·</span>
                   <span className={selectedItem.status === '판매 중' || selectedItem.status === '공개 중' ? 'text-[#4ADE80]' : selectedItem.status === '수정 필요' ? 'text-[#E46B6B]' : 'text-[#F97316]'}>
@@ -388,8 +388,8 @@ export default function ContentManagementPage() {
               {/* Performance */}
               <div className="p-5 border-b border-[#1C1E24]">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-[14px] font-bold text-text-primary tracking-tight">성과 요약</h3>
-                  <span className="text-[11px] text-neutral-500">최근 30일 기준</span>
+                  <h3 className="text-[14px] font-medium text-text-primary tracking-tight">성과 요약</h3>
+                  <span className="text-[14px] text-neutral-500">최근 30일 기준</span>
                 </div>
                 <div className="grid grid-cols-5 gap-2">
                   <StatMini icon={<Eye className="w-4 h-4" />} label="조회수" value={selectedItem.stats.views} />
@@ -402,14 +402,14 @@ export default function ContentManagementPage() {
 
               {/* Meta Info */}
               <div className="p-5 border-b border-[#1C1E24]">
-                <h3 className="text-[14px] font-bold text-text-primary tracking-tight mb-4">등록 정보</h3>
+                <h3 className="text-[14px] font-medium text-text-primary tracking-tight mb-4">등록 정보</h3>
                 <div className="space-y-3">
                   <MetaRow label="카테고리" value={selectedItem.category.replace('·', '>')} />
                   <div className="flex items-start justify-between gap-4">
-                    <span className="text-[13px] text-neutral-400 font-medium shrink-0 pt-0.5 w-[80px]">태그</span>
+                    <span className="text-[14px] text-neutral-400 font-medium shrink-0 pt-0.5 w-[80px]">태그</span>
                     <div className="flex flex-wrap gap-1.5 justify-end">
                       {selectedItem.tags.map(tag => (
-                        <span key={tag} className="text-[11px] bg-[#1A1C20] border border-[#2A2E36] text-neutral-300 px-2 py-0.5 rounded font-medium">
+                        <span key={tag} className="text-[14px] bg-[#1A1C20] border border-[#2A2E36] text-neutral-300 px-2 py-0.5 rounded font-medium">
                           {tag}
                         </span>
                       ))}
@@ -425,7 +425,7 @@ export default function ContentManagementPage() {
               {/* Review Status */}
               {selectedItem.reviewStatus && (
                 <div className="p-5">
-                  <h3 className="text-[14px] font-bold text-text-primary tracking-tight mb-4">심사 상태</h3>
+                  <h3 className="text-[14px] font-medium text-text-primary tracking-tight mb-4">심사 상태</h3>
                   <div className={`p-4 rounded-lg border ${selectedItem.status === '수정 필요' ? 'bg-[#E46B6B]/10 border-[#E46B6B]/20' : 'bg-[#4ADE80]/10 border-[#4ADE80]/20'}`}>
                     <div className="flex items-center gap-2 mb-2">
                       {selectedItem.status === '수정 필요' ? (
@@ -433,11 +433,11 @@ export default function ContentManagementPage() {
                       ) : (
                         <CheckCircle2 className="w-4 h-4 text-[#4ADE80]" />
                       )}
-                      <span className={`text-[13px] font-bold ${selectedItem.status === '수정 필요' ? 'text-[#E46B6B]' : 'text-[#4ADE80]'}`}>
+                      <span className={`text-[14px] font-medium ${selectedItem.status === '수정 필요' ? 'text-[#E46B6B]' : 'text-[#4ADE80]'}`}>
                         {selectedItem.status === '수정 필요' ? '수정 요청됨' : '승인됨'} {selectedItem.reviewDate && <span className="font-sans font-medium ml-1.5 opacity-80">{selectedItem.reviewDate} {selectedItem.status === '수정 필요' ? '요청' : '승인'}</span>}
                       </span>
                     </div>
-                    <p className={`text-[12px] leading-relaxed ${selectedItem.status === '수정 필요' ? 'text-white/80' : 'text-white/70'}`}>
+                    <p className={`text-[14px] leading-relaxed ${selectedItem.status === '수정 필요' ? 'text-white/80' : 'text-white/70'}`}>
                       {selectedItem.reviewStatus}
                     </p>
                   </div>
@@ -448,22 +448,22 @@ export default function ContentManagementPage() {
             {/* Actions Footer */}
             <div className="absolute bottom-0 left-0 right-0 p-4 bg-[#0A0B0D]/95 backdrop-blur border-t border-[#1C1E24] flex flex-col gap-2 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
                <div className="grid grid-cols-2 gap-2">
-                 <button className="py-2.5 flex items-center justify-center gap-2 text-[13px] font-bold text-[#E0A12E] bg-transparent border border-[#E0A12E] hover:bg-[#E0A12E]/10 rounded-lg transition-colors">
+                 <button className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-[#E0A12E] bg-transparent border border-[#E0A12E] hover:bg-[#E0A12E]/10 rounded-lg transition-colors">
                    상세 보기 <ArrowUpRight className="w-3.5 h-3.5" />
                  </button>
-                 <button className="py-2.5 flex items-center justify-center gap-2 text-[13px] font-bold text-[#0A0B0D] bg-[#E0A12E] hover:bg-[#F0B43A] rounded-lg transition-colors shadow-md">
+                 <button className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-[#0A0B0D] bg-[#E0A12E] hover:bg-[#F0B43A] rounded-lg transition-colors shadow-md">
                    <Edit className="w-3.5 h-3.5" /> 수정하기
                  </button>
                </div>
                <div className="grid grid-cols-2 gap-2">
-                 <button className="py-2.5 flex items-center justify-center gap-2 text-[13px] font-medium text-neutral-300 bg-transparent border border-[#2A2E36] hover:bg-[#15161A] hover:text-white rounded-lg transition-colors">
+                 <button className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-neutral-300 bg-transparent border border-[#2A2E36] hover:bg-[#15161A] hover:text-white rounded-lg transition-colors">
                    가격 수정
                  </button>
-                 <button className="py-2.5 flex items-center justify-center gap-2 text-[13px] font-medium text-neutral-300 bg-transparent border border-[#2A2E36] hover:bg-[#15161A] hover:text-white rounded-lg transition-colors">
+                 <button className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-neutral-300 bg-transparent border border-[#2A2E36] hover:bg-[#15161A] hover:text-white rounded-lg transition-colors">
                    <Lock className="w-3.5 h-3.5" /> 비공개 전환
                  </button>
                </div>
-               <button className="w-full mt-1 py-2.5 flex items-center justify-center gap-2 text-[13px] font-bold text-[#E46B6B] bg-transparent border border-[#E46B6B]/30 hover:bg-[#E46B6B]/10 hover:border-[#E46B6B] rounded-lg transition-colors">
+               <button className="w-full mt-1 py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-[#E46B6B] bg-transparent border border-[#E46B6B]/30 hover:bg-[#E46B6B]/10 hover:border-[#E46B6B] rounded-lg transition-colors">
                  <Trash2 className="w-3.5 h-3.5" /> 삭제
                </button>
             </div>
@@ -481,11 +481,11 @@ function StatCard({ icon, title, value, desc, highlight = false }: { icon: React
     <div className={`p-5 rounded-xl border ${highlight ? 'bg-[#E0A12E]/5 border-[#E0A12E]/20' : 'bg-[#111215] border-[#1C1E24]'} flex flex-col justify-between min-h-[120px]`}>
       <div className="flex items-center gap-2.5 mb-3">
         {icon}
-        <span className="text-[14px] font-bold text-text-secondary tracking-tight">{title}</span>
+        <span className="text-[14px] font-medium text-text-secondary tracking-tight">{title}</span>
       </div>
       <div>
         <div className={`text-[24px] font-bold font-sans tracking-tight leading-none mb-1.5 ${highlight ? 'text-[#E0A12E]' : 'text-white'}`}>{value}</div>
-        <div className={`text-[12px] ${highlight ? 'text-[#E0A12E]/80' : 'text-neutral-400'}`}>{desc}</div>
+        <div className={`text-[14px] ${highlight ? 'text-[#E0A12E]/80' : 'text-neutral-400'}`}>{desc}</div>
       </div>
     </div>
   )
@@ -493,7 +493,7 @@ function StatCard({ icon, title, value, desc, highlight = false }: { icon: React
 
 function FilterSelect({ label, width = 'w-[140px]' }: { label: string, width?: string }) {
   return (
-    <button className={`flex items-center justify-between px-3 py-2 bg-[#111215] border border-[#2A2E36] hover:bg-[#15161A] rounded-lg text-[13px] text-neutral-300 transition-colors ${width}`}>
+    <button className={`flex items-center justify-between px-3 py-2 bg-[#111215] border border-[#2A2E36] hover:bg-[#15161A] rounded-lg text-[14px] text-neutral-300 transition-colors ${width}`}>
       <span>{label}</span>
       <ChevronDown className="w-4 h-4 text-neutral-400" />
     </button>
@@ -509,12 +509,12 @@ const ContentCard: React.FC<{ item: ContentItem, isSelected: boolean, onClick: (
       {/* Image Container */}
       <div className="relative aspect-[4/3] w-full bg-[#111215] overflow-hidden">
         {item.type === 'MARKET' ? (
-          <span className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#E0A12E] text-[#E0A12E] text-[12px] font-bold rounded shadow-sm z-10">M</span>
+          <span className="absolute top-3 right-3 h-7 min-w-7 px-1 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#E0A12E] text-[#E0A12E] text-[14px] font-medium rounded shadow-sm z-10">M</span>
         ) : (
-          <span className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#4A90E2] text-[#4A90E2] text-[12px] font-bold rounded shadow-sm z-10">A</span>
+          <span className="absolute top-3 right-3 h-7 min-w-7 px-1 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#4A90E2] text-[#4A90E2] text-[14px] font-medium rounded shadow-sm z-10">A</span>
         )}
         
-        <span className={`absolute top-3 left-3 px-2 py-1 text-[11px] font-bold rounded shadow-sm backdrop-blur z-10 ${item.status === '판매 중' || item.status === '공개 중' ? 'bg-[#0A0B0D]/80 text-[#4ADE80] border border-[#14532D]' : item.status === '수정 필요' ? 'bg-[#0A0B0D]/80 text-[#E46B6B] border border-[#7F1D1D]' : 'bg-[#0A0B0D]/80 text-[#F97316] border border-[#C2410C]'}`}>
+        <span className={`absolute top-3 left-3 px-2 py-1 text-[14px] font-medium rounded shadow-sm backdrop-blur z-10 ${item.status === '판매 중' || item.status === '공개 중' ? 'bg-[#0A0B0D]/80 text-[#4ADE80] border border-[#14532D]' : item.status === '수정 필요' ? 'bg-[#0A0B0D]/80 text-[#E46B6B] border border-[#7F1D1D]' : 'bg-[#0A0B0D]/80 text-[#F97316] border border-[#C2410C]'}`}>
           {item.status}
         </span>
 
@@ -527,7 +527,7 @@ const ContentCard: React.FC<{ item: ContentItem, isSelected: boolean, onClick: (
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-neutral-400 group-hover:text-neutral-500 transition-colors">
             <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
-            <span className="text-[12px] font-bold">이미지 없음</span>
+            <span className="text-[14px] font-medium">이미지 없음</span>
           </div>
         )}
       </div>
@@ -535,20 +535,20 @@ const ContentCard: React.FC<{ item: ContentItem, isSelected: boolean, onClick: (
       {/* Content Container */}
       <div className="p-4 flex flex-col flex-1">
         <div className="flex items-start justify-between mb-1.5 gap-2">
-          <h3 className="text-[16px] font-bold text-white tracking-tight line-clamp-1 group-hover:text-[#E0A12E] transition-colors">{item.title}</h3>
+          <h3 className="text-[15px] font-medium text-white tracking-tight line-clamp-1 group-hover:text-[#E0A12E] transition-colors">{item.title}</h3>
           <button className="text-neutral-500 hover:text-white transition-colors shrink-0 pt-0.5">
             <MoreHorizontal className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-[12px] text-neutral-400 font-medium tracking-tight mb-2.5">{item.category}</p>
+        <p className="text-[14px] text-neutral-400 font-medium tracking-tight mb-2.5">{item.category}</p>
         
         <div className="mt-auto">
-          <div className={`text-[15px] font-bold tracking-tight mb-4 ${item.isFree ? 'text-neutral-400' : 'text-[#E0A12E]'}`}>
+          <div className={`text-[15px] font-medium tracking-tight mb-4 ${item.isFree ? 'text-neutral-400' : 'text-[#E0A12E]'}`}>
             {item.isFree ? '무료 공개' : `₩${item.price?.toLocaleString()}`}
           </div>
 
           {/* Stats Bar */}
-          <div className="flex items-center gap-3.5 text-[11px] font-sans text-neutral-500">
+          <div className="flex items-center gap-3.5 text-[14px] font-sans text-neutral-500">
             <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> {item.stats.views}</span>
             <span className="flex items-center gap-1.5"><Heart className="w-3.5 h-3.5" /> {item.stats.likes}</span>
             <span className="flex items-center gap-1.5">
@@ -556,7 +556,7 @@ const ContentCard: React.FC<{ item: ContentItem, isSelected: boolean, onClick: (
               {item.type === 'MARKET' ? item.stats.sales : item.stats.saves}
             </span>
             <span className="flex items-center gap-1.5 ml-auto text-neutral-400">
-              {item.stats.revenue ? <span className="font-bold font-sans flex items-center gap-1"><span className="text-[#E0A12E] text-[10px]">₩</span> {item.stats.revenue.replace('₩', '')}</span> : '-'}
+              {item.stats.revenue ? <span className="font-medium font-sans flex items-center gap-1"><span className="text-[#E0A12E] text-[14px]">₩</span> {item.stats.revenue.replace('₩', '')}</span> : '-'}
             </span>
           </div>
         </div>
@@ -574,9 +574,9 @@ const ContentListRow: React.FC<{ item: ContentItem, isSelected: boolean, onClick
       {/* Image Container */}
       <div className="relative w-24 h-16 shrink-0 rounded-lg overflow-hidden bg-[#111215]">
         {item.type === 'MARKET' ? (
-          <span className="absolute top-1.5 right-1.5 w-4 h-4 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#E0A12E] text-[#E0A12E] text-[9px] font-bold rounded shadow-sm z-10">M</span>
+          <span className="absolute top-1.5 right-1.5 h-7 min-w-7 px-2 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#E0A12E] text-[#E0A12E] text-[14px] font-medium rounded shadow-sm z-10">M</span>
         ) : (
-          <span className="absolute top-1.5 right-1.5 w-4 h-4 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#4A90E2] text-[#4A90E2] text-[9px] font-bold rounded shadow-sm z-10">A</span>
+          <span className="absolute top-1.5 right-1.5 h-7 min-w-7 px-2 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#4A90E2] text-[#4A90E2] text-[14px] font-medium rounded shadow-sm z-10">A</span>
         )}
         
         {item.image ? (
@@ -596,21 +596,21 @@ const ContentListRow: React.FC<{ item: ContentItem, isSelected: boolean, onClick
       <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
         <div className="flex-1 min-w-0 flex flex-col justify-center">
           <div className="flex items-center gap-2 mb-1">
-            <span className={`px-2 py-0.5 text-[10px] font-bold rounded flex-shrink-0 ${item.status === '판매 중' || item.status === '공개 중' ? 'bg-[#0A0B0D] text-[#4ADE80] border border-[#14532D]' : item.status === '수정 필요' ? 'bg-[#0A0B0D] text-[#E46B6B] border border-[#7F1D1D]' : 'bg-[#0A0B0D] text-[#F97316] border border-[#C2410C]'}`}>
+            <span className={`px-2 py-0.5 text-[14px] font-medium rounded flex-shrink-0 ${item.status === '판매 중' || item.status === '공개 중' ? 'bg-[#0A0B0D] text-[#4ADE80] border border-[#14532D]' : item.status === '수정 필요' ? 'bg-[#0A0B0D] text-[#E46B6B] border border-[#7F1D1D]' : 'bg-[#0A0B0D] text-[#F97316] border border-[#C2410C]'}`}>
               {item.status}
             </span>
-            <h3 className="text-[15px] font-bold text-white tracking-tight truncate group-hover:text-[#E0A12E] transition-colors">{item.title}</h3>
+            <h3 className="text-[15px] font-medium text-white tracking-tight truncate group-hover:text-[#E0A12E] transition-colors">{item.title}</h3>
           </div>
-          <p className="text-[12px] text-neutral-400 font-medium tracking-tight truncate">{item.category}</p>
+          <p className="text-[14px] text-neutral-400 font-medium tracking-tight truncate">{item.category}</p>
         </div>
 
         <div className="hidden lg:flex w-32 shrink-0">
-          <div className={`text-[14px] font-bold tracking-tight ${item.isFree ? 'text-neutral-400' : 'text-[#E0A12E]'}`}>
+          <div className={`text-[14px] font-medium tracking-tight ${item.isFree ? 'text-neutral-400' : 'text-[#E0A12E]'}`}>
             {item.isFree ? '무료 공개' : `₩${item.price?.toLocaleString()}`}
           </div>
         </div>
 
-        <div className="flex lg:w-48 xl:w-64 items-center gap-4 text-[12px] font-sans text-neutral-500 shrink-0">
+        <div className="flex lg:w-48 xl:w-64 items-center gap-4 text-[14px] font-sans text-neutral-500 shrink-0">
           <span className="flex items-center gap-1.5 whitespace-nowrap"><Eye className="w-[14px] h-[14px]" /> <span className="w-6">{item.stats.views}</span></span>
           <span className="flex items-center gap-1.5 whitespace-nowrap"><Heart className="w-[14px] h-[14px]" /> <span className="w-6">{item.stats.likes}</span></span>
           <span className="flex items-center gap-1.5 whitespace-nowrap">
@@ -632,9 +632,9 @@ function StatMini({ icon, label, value, isRevenue = false }: { icon: React.React
     <div className="flex flex-col items-center justify-center gap-1.5 py-4 bg-[#111215] border border-[#1C1E24] rounded-lg">
       <div className="text-neutral-400 flex flex-col items-center gap-1">
         {icon}
-        <span className="text-[11px] font-medium tracking-tight">{label}</span>
+        <span className="text-[14px] font-medium tracking-tight">{label}</span>
       </div>
-      <div className={`text-[13px] font-bold font-sans tracking-tight mt-0.5 ${isRevenue ? 'text-[#E0A12E]' : 'text-neutral-300'}`}>
+      <div className={`text-[14px] font-medium font-sans tracking-tight mt-0.5 ${isRevenue ? 'text-[#E0A12E]' : 'text-neutral-300'}`}>
         {value}
       </div>
     </div>
@@ -644,9 +644,9 @@ function StatMini({ icon, label, value, isRevenue = false }: { icon: React.React
 function MetaRow({ label, value, hasInfo = false }: { label: string, value: string, hasInfo?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className="text-[13px] text-neutral-400 font-medium shrink-0">{label}</span>
+      <span className="text-[14px] text-neutral-400 font-medium shrink-0">{label}</span>
       <div className="flex items-center gap-1.5 text-right w-full justify-end">
-        <span className="text-[13.5px] font-sans font-medium text-neutral-300 truncate tracking-tight">{value}</span>
+        <span className="text-[14px] font-sans font-medium text-neutral-300 truncate tracking-tight">{value}</span>
         {hasInfo && <HelpCircle className="w-3.5 h-3.5 text-neutral-500 shrink-0" />}
       </div>
     </div>
