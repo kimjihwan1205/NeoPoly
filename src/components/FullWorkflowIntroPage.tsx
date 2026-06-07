@@ -35,7 +35,7 @@ export default function FullWorkflowIntroPage({ onNavigate, onClose }: { onNavig
       {/* Background Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[radial-gradient(ellipse_at_center,rgba(224,161,46,0.1),transparent_60%)] pointer-events-none" />
 
-      <div className="max-w-6xl w-full px-5 sm:px-8 flex flex-col items-center relative z-10">
+      <div className="max-w-7xl w-full px-5 sm:px-8 flex flex-col items-center relative z-10">
         
         <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#E0A12E]/30 bg-[#E0A12E]/10 text-[#E0A12E] text-[14px] font-medium tracking-wide shadow-[0_0_15px_rgba(224,161,46,0.15)]">
           <Sparkles className="w-4 h-4" /> NeoPoly AI Studio
@@ -60,7 +60,7 @@ export default function FullWorkflowIntroPage({ onNavigate, onClose }: { onNavig
               <MessageSquare className="w-6 h-6" />
             </div>
             <h3 className="text-[20px] font-semibold mb-4 relative z-10 text-[#F5F5F5]">프롬프트 구체화</h3>
-            <p className="text-neutral-300 text-[15px] leading-[1.65] relative z-10">
+            <p className="text-neutral-300 text-[16px] leading-[1.7] relative z-10">
               막연한 아이디어만 있어도 괜찮습니다. 대화형 AI가 원하는 느낌을 파악하여 완벽한 프롬프트로 다듬어 드립니다.
             </p>
           </div>
@@ -74,7 +74,7 @@ export default function FullWorkflowIntroPage({ onNavigate, onClose }: { onNavig
               <ImageIcon className="w-6 h-6" />
             </div>
             <h3 className="text-[20px] font-semibold mb-4 relative z-10 text-[#F5F5F5]">2D 레퍼런스 생성</h3>
-            <p className="text-neutral-300 text-[15px] leading-[1.65] relative z-10">
+            <p className="text-neutral-300 text-[16px] leading-[1.7] relative z-10">
               작성된 프롬프트를 바탕으로 다각도의 컨셉 아트와 텍스쳐 레퍼런스를 실시간으로 시각화합니다.
             </p>
           </div>
@@ -88,7 +88,7 @@ export default function FullWorkflowIntroPage({ onNavigate, onClose }: { onNavig
               <Box className="w-6 h-6" />
             </div>
             <h3 className="text-[20px] font-semibold mb-4 relative z-10 text-[#F5F5F5]">3D 모델 변환</h3>
-            <p className="text-neutral-300 text-[15px] leading-[1.65] relative z-10">
+            <p className="text-neutral-300 text-[16px] leading-[1.7] relative z-10">
               가장 마음에 드는 이미지를 선택하여 게임 엔진과 호환되는 최적화된 고품질 3D 메쉬로 즉시 변환합니다.
             </p>
           </div>

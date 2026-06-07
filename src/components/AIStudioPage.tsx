@@ -211,7 +211,7 @@ export default function AIStudioPage({
                           </span>
                         )}
                       </h2>
-                      <p className="max-w-[260px] text-[14px] leading-relaxed text-neutral-400">
+                      <p className="max-w-[260px] text-[16px] leading-relaxed text-neutral-300">
                         {card.subtitle}
                       </p>
                     </div>

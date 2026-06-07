@@ -13,11 +13,11 @@ import {
   ChevronRight,
   Clock,
   Download,
-  Filter,
   Folder,
   LayoutGrid,
   Link as LinkIcon,
   List,
+  Maximize2,
   MoreHorizontal,
   Plus,
   Search,
@@ -115,6 +115,7 @@ export const REFERENCE_BOARDS = [
 ];
 
 const BADGES = ["전체", "M", "A"];
+const BADGE_LABELS: Record<string, string> = { 전체: "전체", M: "Market", A: "Art" };
 
 const MASONRY_PROFILES = [
   { rows: 10, position: "center" },
@@ -244,7 +245,9 @@ export default function ReferencePage({
 }: ReferencePageProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [activeBadge, setActiveBadge] = useState("전체");
+  const [isBadgeMenuOpen, setIsBadgeMenuOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [isBoardMenuOpen, setIsBoardMenuOpen] = useState(false);
   const [refFavorites, setRefFavorites] = useState<number[]>(() =>
     favorites.length ? favorites : [1, 4, 7],
   );
@@ -255,6 +258,9 @@ export default function ReferencePage({
   const [extraAssets, setExtraAssets] = useState<ReferenceAsset[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [favoritesFirst, setFavoritesFirst] = useState(false);
+  const [sortMode, setSortMode] = useState<"recent" | "name">("recent");
+  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const [boards, setBoards] = useState<ReferenceBoard[]>(REFERENCE_BOARDS);
   const [toast, setToast] = useState("");
   const [isCreateBoardOpen, setIsCreateBoardOpen] = useState(false);
@@ -321,6 +327,16 @@ export default function ReferencePage({
       });
     }
 
+    result = [...result].sort((a, b) => {
+      const aFavorite = refFavorites.includes(a.id);
+      const bFavorite = refFavorites.includes(b.id);
+      if (favoritesFirst && aFavorite !== bFavorite) {
+        return Number(bFavorite) - Number(aFavorite);
+      }
+      if (sortMode === "name") return a.title.localeCompare(b.title);
+      return a.id - b.id;
+    });
+
     return result;
   }, [
     activeBadge,
@@ -328,8 +344,10 @@ export default function ReferencePage({
     allAssets,
     boards,
     displayLimit,
+    favoritesFirst,
     refFavorites,
     searchQuery,
+    sortMode,
     trashIds,
   ]);
 
@@ -431,6 +449,10 @@ export default function ReferencePage({
     setToast("선택한 항목을 휴지통으로 보냈습니다.");
   };
 
+  const activeBoardLabel = activeCategory === "all"
+    ? "전체 보드"
+    : boards.find((board) => board.id === activeCategory)?.label ?? "전체 보드";
+
   return (
     <div
       className={`relative flex bg-bg-dark font-sans text-text-primary ${
@@ -516,111 +538,188 @@ export default function ReferencePage({
       )}
 
       <main
-        className={`min-w-0 flex-1 px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 ${
-          isPopup ? "h-full overflow-y-auto" : "overscroll-y-auto"
+        className={`min-w-0 flex-1 ${
+          isPopup
+            ? "flex h-full min-h-0 flex-col overflow-hidden px-6 pt-4 pb-6"
+            : "px-4 py-6 overscroll-y-auto sm:px-6 2xl:px-8 min-[2200px]:px-10"
         }`}
       >
         {!["favorites", "recent", "trash"].includes(activeCategory) && (
           <>
             <div className="mb-6 flex items-center gap-4">
-              <div className="relative max-w-[480px] flex-1">
-                <Search className="absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-text-tertiary" />
+              <div className="relative">
+                <button
+                  onClick={() => setIsBoardMenuOpen((open) => !open)}
+                  className="flex h-12 min-w-[148px] max-w-[190px] items-center justify-between gap-3 rounded-lg border border-[#1C1E24] bg-[#121417] px-3 text-[14px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
+                >
+                  <span className="truncate">{activeBoardLabel}</span>
+                  <ChevronDown className="h-4 w-4 shrink-0" />
+                </button>
+                {isBoardMenuOpen && (
+                  <div className="absolute left-0 top-[calc(100%+8px)] z-50 max-h-[280px] w-[220px] overflow-y-auto rounded-lg border border-[#2A2E36] bg-[#111317] p-1 shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
+                    <button
+                      onClick={() => {
+                        setActiveCategory("all");
+                        setIsBoardMenuOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[14px] font-medium transition ${
+                        activeCategory === "all" ? "bg-[#E0A12E]/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
+                      }`}
+                    >
+                      전체 보드
+                    </button>
+                    {boards.map((board) => (
+                      <button
+                        key={board.id}
+                        onClick={() => {
+                          setActiveCategory(board.id);
+                          setIsBoardMenuOpen(false);
+                        }}
+                        className={`flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-[14px] font-medium transition ${
+                          activeCategory === board.id ? "bg-[#E0A12E]/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
+                        }`}
+                      >
+                        <span className="truncate">{board.label}</span>
+                        <span className="shrink-0 text-[12px] text-neutral-500">{boardCounts.get(board.id) ?? 0}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="relative">
+                <button
+                  onClick={() => setIsBadgeMenuOpen((open) => !open)}
+                  className="flex h-12 min-w-[112px] items-center justify-between gap-3 rounded-lg border border-[#1C1E24] bg-[#121417] px-3 text-[14px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
+                >
+                  {BADGE_LABELS[activeBadge] ?? activeBadge}
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+                {isBadgeMenuOpen && (
+                  <div className="absolute left-0 top-[calc(100%+8px)] z-40 w-[132px] rounded-lg border border-[#2A2E36] bg-[#111317] p-1 shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
+                    {BADGES.map((badge) => (
+                      <button
+                        key={badge}
+                        onClick={() => {
+                          setActiveBadge(badge);
+                          setIsBadgeMenuOpen(false);
+                        }}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[14px] font-medium transition ${
+                          activeBadge === badge ? "bg-[#E0A12E]/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
+                        }`}
+                      >
+                        {BADGE_LABELS[badge] ?? badge}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className={`relative w-full ${isPopup ? "max-w-[400px] flex-[0_1_400px]" : "max-w-[560px] flex-[0_1_560px]"}`}>
+                <Search className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-400" />
                 <input
                   type="text"
                   placeholder="레퍼런스 검색"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-lg border border-[#2A2E36] bg-[#111215] py-2.5 pl-10 pr-10 text-[14px] text-white outline-none transition placeholder:text-neutral-500 focus:border-brand-primary/50"
+                  className="h-12 w-full rounded-lg border border-[#1C1E24] bg-[#121417] pl-11 pr-4 text-[15px] text-white shadow-inner outline-none transition placeholder:text-[#6E737B] focus:border-brand-primary/50"
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 rounded border border-[#2A2E36] bg-[#1A1C20] px-1.5 py-0.5 font-sans text-[10px] text-text-tertiary">
-                  /
-                </div>
               </div>
 
               <div className="flex-1" />
 
               <button
                 onClick={openCreateBoard}
-                className="flex items-center gap-2 rounded-lg border border-[#E0A12E]/35 bg-[#E0A12E]/10 px-4 py-2 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-[#E0A12E]/15"
+                className="flex h-12 items-center gap-2 rounded-lg border border-[#E0A12E]/35 bg-[#E0A12E]/10 px-4 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-[#E0A12E]/15"
               >
                 <Plus className="h-4 w-4" />
                 새 보드 추가
               </button>
               <button
-                onClick={() => setActiveCategory("favorites")}
-                className="flex items-center gap-2 rounded-lg border border-[#2A2E36] bg-[#111215] px-4 py-2 text-[13px] font-bold text-text-secondary transition hover:bg-surface-primary hover:text-white"
+                onClick={() => setFavoritesFirst((value) => !value)}
+                className={`flex h-12 items-center gap-2 rounded-lg border px-4 text-[14px] font-medium transition ${
+                  favoritesFirst
+                    ? "border-[#E0A12E]/45 bg-[#E0A12E]/10 text-brand-primary"
+                    : "border-[#1C1E24] bg-[#121417] text-text-secondary hover:bg-surface-primary hover:text-white"
+                }`}
               >
-                <Filter className="h-4 w-4" />
+                <Bookmark className={`h-4 w-4 ${favoritesFirst ? "fill-brand-primary" : ""}`} />
                 즐겨찾기
               </button>
 
-              <div className="flex cursor-pointer items-center rounded-lg border border-[#2A2E36] bg-[#111215] px-3 py-2 text-[13px] font-bold text-text-secondary transition hover:bg-surface-primary">
-                최신순
-                <ChevronDown className="ml-6 h-4 w-4" />
+              <div className="relative">
+                <button
+                  onClick={() => setIsSortMenuOpen((open) => !open)}
+                  className="flex h-12 cursor-pointer items-center rounded-lg border border-[#1C1E24] bg-[#121417] px-3 text-[14px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
+                >
+                  {sortMode === "recent" ? "최신순" : "이름순"}
+                  <ChevronDown className="ml-6 h-4 w-4" />
+                </button>
+                {isSortMenuOpen && (
+                  <div className="absolute right-0 top-[calc(100%+8px)] z-40 w-[132px] rounded-lg border border-[#2A2E36] bg-[#111317] p-1 shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
+                    {[
+                      ["recent", "최신순"],
+                      ["name", "이름순"],
+                    ].map(([value, label]) => (
+                      <button
+                        key={value}
+                        onClick={() => {
+                          setSortMode(value as "recent" | "name");
+                          setIsSortMenuOpen(false);
+                        }}
+                        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[14px] font-medium transition ${
+                          sortMode === value ? "bg-[#E0A12E]/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center gap-1 rounded-lg border border-[#2A2E36] bg-[#111215] p-1">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`rounded p-1 ${
-                    viewMode === "grid" ? "bg-[#2A2E36] text-white" : "text-text-tertiary hover:text-white"
-                  }`}
-                >
-                  <LayoutGrid className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`rounded p-1 ${
-                    viewMode === "list" ? "bg-[#2A2E36] text-white" : "text-text-tertiary hover:text-white"
-                  }`}
-                >
-                  <List className="h-4 w-4" />
-                </button>
+              <div className="flex h-12 items-center rounded-lg border border-[#1C1E24] bg-[#121417] px-2">
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`rounded-md p-1.5 ${
+                      viewMode === "grid" ? "bg-[#252830] text-white" : "text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`rounded-md p-1.5 ${
+                      viewMode === "list" ? "bg-[#252830] text-white" : "text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="-mx-2 mb-8 flex items-center gap-2 overflow-x-auto px-2 pb-2">
-              {BADGES.map((badge) => (
-                <button
-                  key={badge}
-                  onClick={() => setActiveBadge(badge)}
-                  className={`whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-bold transition ${
-                    activeBadge === badge
-                      ? "border-[#E0A12E]/30 bg-[#E0A12E]/10 text-brand-primary"
-                      : "border-[#2A2E36] bg-transparent text-text-secondary hover:border-[#4B505A] hover:text-white"
-                  }`}
-                >
-                  {badge}
-                </button>
-              ))}
-              <button
-                onClick={openCreateBoard}
-                className="rounded-full border border-transparent px-3 py-2 text-text-tertiary transition hover:bg-[#1A1C20] hover:text-white"
-              >
-                <Plus className="h-[18px] w-[18px]" />
-              </button>
-            </div>
           </>
         )}
 
-        {activeCategory === "favorites" && (
-          <SectionHeader
+        <div className={isPopup ? "min-h-0 flex-1 overflow-y-auto pr-1 pb-28" : ""}>
+          {activeCategory === "favorites" && (
+            <SectionHeader
             icon={<Bookmark className="h-5 w-5 fill-red-500 text-red-500" />}
             title="즐겨찾기"
             desc="북마크한 레퍼런스 이미지입니다."
           />
         )}
 
-        {activeCategory === "recent" && (
-          <SectionHeader
+          {activeCategory === "recent" && (
+            <SectionHeader
             icon={<Clock className="h-5 w-5 text-brand-primary" />}
             title="최근 추가"
             desc="최근 추가된 레퍼런스 항목입니다."
           />
         )}
 
-        {activeCategory === "trash" && (
-          <div className="mb-8 mt-2 flex items-center justify-between border-b border-border-soft pb-6">
+          {activeCategory === "trash" && (
+            <div className="mb-8 mt-2 flex items-center justify-between border-b border-border-soft pb-6">
             <div>
               <h1 className="mb-2 flex items-center gap-3 text-[28px] font-bold text-white">
                 <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-500/20 bg-gray-500/10">
@@ -642,12 +741,12 @@ export default function ReferencePage({
           </div>
         )}
 
-        <div className="mb-4 flex items-center gap-2 px-1 text-[13px] text-neutral-400">
-          <CheckSquare className="h-4 w-4 text-neutral-400" />
-          이미지를 클릭해서 여러 항목을 선택할 수 있습니다. 선택 후 아래 작업바에서 보드로 묶거나 연결하세요.
-        </div>
+          <div className="mb-4 flex items-center gap-2 px-1 text-[13px] text-neutral-400">
+            <CheckSquare className="h-4 w-4 text-neutral-400" />
+            이미지를 클릭해서 여러 항목을 선택할 수 있습니다. 선택 후 아래 작업바에서 보드로 묶거나 연결하세요.
+          </div>
 
-        {viewMode === "grid" ? (
+          {viewMode === "grid" ? (
           <div className="grid grid-cols-2 gap-4 [grid-auto-flow:dense] [grid-auto-rows:8px] md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {displayedAssets.map((asset, index) => {
               const profile = MASONRY_PROFILES[(asset.id * 3 + index * 7) % MASONRY_PROFILES.length];
@@ -659,7 +758,13 @@ export default function ReferencePage({
                   objectPosition={profile.position}
                   isSelected={selectedIds.has(asset.id)}
                   isFavorite={refFavorites.includes(asset.id)}
+                  isPopup={isPopup}
+                  isBoardDepth={isPopup && !onAcceptSelection}
                   onClick={(e) => handleCardClick(e, asset)}
+                  onPreview={(e) => {
+                    e.stopPropagation();
+                    setPreviewImage(asset);
+                  }}
                   onFavorite={(e) => {
                     e.stopPropagation();
                     toggleRefFavorite(asset.id);
@@ -675,7 +780,7 @@ export default function ReferencePage({
                   onAdd={(e) => {
                     e.stopPropagation();
                     toggleAssetSelection(asset.id);
-                    setToast("선택 상태를 변경했습니다.");
+                    setToast("보드로 묶을 항목을 선택했습니다.");
                   }}
                 />
               );
@@ -718,14 +823,14 @@ export default function ReferencePage({
           </div>
         )}
 
-        {displayedAssets.length === 0 && (
-          <div className="flex h-[260px] items-center justify-center rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-[14px] text-neutral-400">
-            조건에 맞는 레퍼런스가 없습니다.
-          </div>
-        )}
+          {displayedAssets.length === 0 && (
+            <div className="flex h-[260px] items-center justify-center rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-[14px] text-neutral-400">
+              조건에 맞는 레퍼런스가 없습니다.
+            </div>
+          )}
 
-        {!["favorites", "recent", "trash"].includes(activeCategory) && (
-          <div className="mt-8 flex justify-center py-6 pb-20">
+          {!["favorites", "recent", "trash"].includes(activeCategory) && (
+            <div className="mt-8 flex justify-center py-6 pb-20">
             <button
               onClick={handleLoadMore}
               disabled={isLoadingMore}
@@ -744,7 +849,8 @@ export default function ReferencePage({
               )}
             </button>
           </div>
-        )}
+          )}
+        </div>
       </main>
 
       <AnimatePresence>
@@ -935,23 +1041,25 @@ export default function ReferencePage({
                   <h3 className="text-[20px] font-bold text-white">{previewImage.title}</h3>
                   <p className="mt-1 text-[14px] text-neutral-400">{previewImage.author}</p>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => toggleRefFavorite(previewImage.id)}
-                    className={`rounded-lg border border-[#1F2329] bg-surface-primary p-2.5 transition hover:bg-[#111215] hover:text-white ${
-                      refFavorites.includes(previewImage.id) ? "text-red-400" : "text-neutral-400"
-                    }`}
-                  >
-                    <Bookmark className={`h-5 w-5 ${refFavorites.includes(previewImage.id) ? "fill-red-400" : ""}`} />
-                  </button>
-                  <button
-                    onClick={() => downloadAsset(previewImage)}
-                    className="flex items-center gap-2 rounded-lg border border-[#1F2329] bg-surface-primary px-4 py-2.5 text-white transition hover:bg-[#111215]"
-                  >
-                    <Download className="h-4 w-4" />
-                    다운로드
-                  </button>
-                </div>
+                {!isPopup && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => toggleRefFavorite(previewImage.id)}
+                      className={`rounded-lg border border-[#1F2329] bg-surface-primary p-2.5 transition hover:bg-[#111215] hover:text-white ${
+                        refFavorites.includes(previewImage.id) ? "text-red-400" : "text-neutral-400"
+                      }`}
+                    >
+                      <Bookmark className={`h-5 w-5 ${refFavorites.includes(previewImage.id) ? "fill-red-400" : ""}`} />
+                    </button>
+                    <button
+                      onClick={() => downloadAsset(previewImage)}
+                      className="flex items-center gap-2 rounded-lg border border-[#1F2329] bg-surface-primary px-4 py-2.5 text-white transition hover:bg-[#111215]"
+                    >
+                      <Download className="h-4 w-4" />
+                      다운로드
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
@@ -1063,7 +1171,10 @@ function ReferenceCard({
   objectPosition,
   isSelected,
   isFavorite,
+  isPopup,
+  isBoardDepth,
   onClick,
+  onPreview,
   onFavorite,
   onDownload,
   onLink,
@@ -1074,7 +1185,10 @@ function ReferenceCard({
   objectPosition: string;
   isSelected: boolean;
   isFavorite: boolean;
+  isPopup?: boolean;
+  isBoardDepth?: boolean;
   onClick: (e: React.MouseEvent) => void;
+  onPreview: (e: React.MouseEvent) => void;
   onFavorite: (e: React.MouseEvent) => void;
   onDownload: (e: React.MouseEvent) => void;
   onLink: (e: React.MouseEvent) => void;
@@ -1109,26 +1223,92 @@ function ReferenceCard({
         </div>
       )}
 
-      {isFavorite && !isSelected && (
-        <div className="absolute right-3 top-3 z-20 text-red-500">
-          <Bookmark className="h-[22px] w-[22px] fill-red-500" />
+      {isBoardDepth ? (
+        <>
+          <button
+            type="button"
+            title="\uD06C\uAC8C\uBCF4\uAE30"
+            onClick={onPreview}
+            className={`absolute top-3 z-20 flex h-9 items-center gap-1.5 rounded-full border border-white/10 bg-[#0A0B0D]/75 px-3 text-[14px] font-medium text-white opacity-0 shadow-lg backdrop-blur-md transition hover:bg-[#171A20] group-hover:opacity-100 ${
+              isSelected ? "left-10" : "left-3"
+            }`}
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+            <span>\uD06C\uAC8C\uBCF4\uAE30</span>
+          </button>
+          <button
+            type="button"
+            title="\uC990\uACA8\uCC3E\uAE30"
+            onClick={onFavorite}
+            className={`absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur-md transition hover:bg-[#171A20] ${
+              isFavorite
+                ? "border-[#E0A12E]/35 bg-[#0A0B0D]/85 text-brand-primary opacity-100"
+                : "border-white/10 bg-[#0A0B0D]/70 text-white opacity-0 group-hover:opacity-100"
+            }`}
+          >
+            <Bookmark className={`h-4 w-4 ${isFavorite ? "fill-brand-primary" : ""}`} />
+          </button>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-[#050608]/95 via-[#050608]/65 to-transparent p-3 pt-14 opacity-0 transition duration-200 group-hover:opacity-100">
+            <div className="pointer-events-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onLink}
+                className="flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border border-white/10 bg-[#15171C]/90 px-3 text-[14px] font-medium text-text-secondary transition hover:border-[#E0A12E]/40 hover:bg-[#1D2027] hover:text-white"
+              >
+                <LinkIcon className="h-4 w-4" />
+                <span>\uD504\uB85C\uC81D\uD2B8</span>
+              </button>
+              <button
+                type="button"
+                onClick={onAdd}
+                className={`flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border px-3 text-[14px] font-medium transition ${
+                  isSelected
+                    ? "border-brand-primary/45 bg-brand-primary/15 text-brand-primary"
+                    : "border-white/10 bg-[#15171C]/90 text-text-secondary hover:border-[#E0A12E]/40 hover:bg-[#1D2027] hover:text-white"
+                }`}
+              >
+                <Folder className="h-4 w-4" />
+                <span>{isSelected ? "\uC120\uD0DD \uD574\uC81C" : "\uBCF4\uB4DC\uC5D0 \uCD94\uAC00"}</span>
+              </button>
+              <button
+                type="button"
+                title="\uB354\uBCF4\uAE30"
+                onClick={(e) => e.stopPropagation()}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#15171C]/90 text-text-secondary transition hover:bg-[#1D2027] hover:text-white"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </>
+      ) : isFavorite && !isSelected ? (
+        <div className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[#E0A12E]/30 bg-[#0A0B0D]/85 text-brand-primary backdrop-blur-sm">
+          <Bookmark className="h-4 w-4 fill-brand-primary" />
+        </div>
+      ) : null}
+
+      {!isBoardDepth && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex translate-y-2 justify-center opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100">
+          <div className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-[#2A2E36]/80 bg-[#1A1C20]/90 p-1.5 shadow-xl backdrop-blur-md">
+            {isPopup ? (
+              <ActionButton icon={<Maximize2 className="h-3.5 w-3.5" />} title="\uD06C\uAC8C\uBCF4\uAE30" onClick={onPreview} />
+            ) : (
+              <>
+                <ActionButton icon={<LinkIcon className="h-3.5 w-3.5" />} title="\uD504\uB85C\uC81D\uD2B8 \uC5F0\uACB0" onClick={onLink} />
+                <ActionButton icon={<Folder className="h-3.5 w-3.5" />} title={isSelected ? "\uBCF4\uB4DC \uC120\uD0DD \uD574\uC81C" : "\uBCF4\uB4DC\uC5D0 \uCD94\uAC00"} onClick={onAdd} />
+                <ActionButton
+                  icon={<Bookmark className={`h-3.5 w-3.5 ${isFavorite ? "fill-brand-primary text-brand-primary" : ""}`} />}
+                  title="\uC990\uACA8\uCC3E\uAE30"
+                  onClick={onFavorite}
+                />
+                <ActionButton icon={<Maximize2 className="h-3.5 w-3.5" />} title="\uD06C\uAC8C\uBCF4\uAE30" onClick={onPreview} />
+                <span className="mx-1 h-4 w-px bg-[#2A2E36]" />
+                <ActionButton icon={<MoreHorizontal className="h-3.5 w-3.5" />} title="\uB354\uBCF4\uAE30" />
+              </>
+            )}
+          </div>
         </div>
       )}
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex translate-y-2 justify-center opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100">
-        <div className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-[#2A2E36]/80 bg-[#1A1C20]/90 p-1.5 shadow-xl backdrop-blur-md">
-          <ActionButton icon={<CheckSquare className="h-3.5 w-3.5" />} title={isSelected ? "선택 해제" : "선택"} onClick={onAdd} />
-          <ActionButton icon={<LinkIcon className="h-3.5 w-3.5" />} title="프로젝트 연결" onClick={onLink} />
-          <ActionButton
-            icon={<Bookmark className={`h-3.5 w-3.5 ${isFavorite ? "fill-red-400 text-red-400" : ""}`} />}
-            title="즐겨찾기"
-            onClick={onFavorite}
-          />
-          <ActionButton icon={<Download className="h-3.5 w-3.5" />} title="다운로드" onClick={onDownload} />
-          <span className="mx-1 h-4 w-px bg-[#2A2E36]" />
-          <ActionButton icon={<MoreHorizontal className="h-3.5 w-3.5" />} title="더보기" />
-        </div>
-      </div>
     </motion.button>
   );
 }

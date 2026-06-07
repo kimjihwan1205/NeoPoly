@@ -20,7 +20,6 @@ import {
   Search,
   FileText,
   X,
-  LayoutGrid,
   Maximize2,
   List,
   Download,
@@ -287,6 +286,19 @@ export default function FullWorkflowPage({
   const [stagedNotes, setStagedNotes] = useState<number[]>([]);
   const [stagedReferences, setStagedReferences] = useState<number[]>([]);
 
+  const openBoardImportPopup = () => {
+    setBoardPopupView("notes");
+    setBoardSelectedNotes([]);
+    setBoardSelectedReferences([]);
+    setIsBoardPopupOpen(true);
+  };
+
+  const handleBoardImportCardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    openBoardImportPopup();
+  };
+
   const [workflowStep, setWorkflowStep] = useState<"prompt" | "image-generation">("prompt");
   const [selectedGridImage, setSelectedGridImage] = useState<number | null>(null);
   const [rightPanelMode, setRightPanelMode] = useState<"prompt" | "expert">("prompt");
@@ -539,7 +551,14 @@ export default function FullWorkflowPage({
                 </button>
 
                 {/* 자료 가져와서 시작 */}
-                <div className="flex flex-col items-center justify-start h-full pt-10 pb-9 px-7 bg-[#0A0B0D] border border-[#1F2329] rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.2)] text-center relative overflow-hidden transition-all">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={openBoardImportPopup}
+                  onKeyDown={handleBoardImportCardKeyDown}
+                  className="group flex flex-col items-center justify-start h-full pt-10 pb-9 px-7 bg-[#0A0B0D] hover:bg-[#141518] border border-[#1F2329] hover:border-[#E0A12E]/50 rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.2)] text-center relative overflow-hidden transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E0A12E]/70"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#E0A12E]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -548,7 +567,7 @@ export default function FullWorkflowPage({
                     <div className="h-12 mb-6 flex items-center justify-center shrink-0">
                       {stagedNotes.length === 0 &&
                       stagedReferences.length === 0 ? (
-                        <Inbox className="w-12 h-12 text-neutral-400" />
+                        <Inbox className="w-12 h-12 text-[#E0A12E] group-hover:scale-110 transition-transform duration-500" />
                       ) : (
                         <div className="flex items-center gap-2">
                           {stagedNotes.length > 0 && (
@@ -576,15 +595,6 @@ export default function FullWorkflowPage({
                         : "보드에 정리한 노트와 레퍼런스를\n작업 공간에 한 번에 세팅합니다."}
                     </p>
 
-                    <div className="flex items-center justify-center gap-2 mt-6 shrink-0 w-full flex-wrap">
-                      <button
-                        onClick={() => { setBoardPopupView("notes"); setBoardSelectedNotes([]); setBoardSelectedReferences([]); setIsBoardPopupOpen(true); }}
-                        className={`flex items-center gap-2 px-5 py-3 bg-[#141518] hover:bg-[#1C1E23] border ${stagedNotes.length > 0 || stagedReferences.length > 0 ? "border-[#E0A12E]/50 text-[#E0A12E]" : "border-[#2A2E36] hover:border-[#E0A12E]/50 text-neutral-300 hover:text-[#E0A12E]"} rounded-xl text-[14px] font-medium transition-all`}
-                      >
-                        <LayoutGrid className="w-4 h-4" />
-                        보드에서 가져오기
-                      </button>
-                    </div>
 
                     <AnimatePresence>
                       {(stagedNotes.length > 0 ||
@@ -600,7 +610,8 @@ export default function FullWorkflowPage({
                           className="w-full flex gap-3 overflow-hidden"
                         >
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setStagedNotes([]);
                               setStagedReferences([]);
                             }}
@@ -609,7 +620,10 @@ export default function FullWorkflowPage({
                             초기화
                           </button>
                           <button
-                            onClick={handleStartProjectWithAssets}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartProjectWithAssets();
+                            }}
                             className="flex-[2] py-3 bg-[#E0A12E] hover:bg-[#F0B43A] text-[#050505] rounded-xl text-[14px] font-medium transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(224,161,46,0.2)]"
                           >
                             작업 시작 <ChevronRight className="w-4 h-4" />
@@ -1375,127 +1389,125 @@ export default function FullWorkflowPage({
         <div className="absolute inset-0 z-[100] flex bg-[#050505]/80 backdrop-blur-[2px] text-white font-sans antialiased items-center justify-center p-6">
           <div className="bg-[#050505] border border-[#2A2E36] rounded-xl flex flex-col w-[95vw] h-[90vh] shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#1F2329] shrink-0 bg-[#0A0B0D]">
-              <div className="flex items-center gap-4">
-                <div>
-                  <p className="text-[14px] font-medium text-[#E0A12E]">Board</p>
-                  <h3 className="text-[18px] font-medium text-white tracking-tight">보드에서 가져오기</h3>
-                </div>
-                <div className="h-5 w-[1px] bg-[#2A2E36]"></div>
-                <div className="flex items-center gap-1 rounded-lg border border-[#2A2E36] bg-[#111215] p-1">
+              <div>
+                <p className="text-[14px] font-medium text-[#E0A12E]">Board</p>
+                <h3 className="text-[18px] font-medium text-white tracking-tight">보드에서 가져오기</h3>
+              </div>
+
+              <button
+                onClick={() => setIsBoardPopupOpen(false)}
+                className="p-1.5 text-neutral-400 hover:text-white hover:bg-[#1A1C23] rounded transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-hidden relative custom-scrollbar bg-bg-dark flex flex-col">
+              <div className="shrink-0 bg-bg-dark px-6 pt-6 pb-0">
+                <div className="flex w-fit items-center gap-1 rounded-lg border border-[#2A2E36] bg-[#111215] p-1">
                   <button
                     onClick={() => setBoardPopupView("notes")}
-                    className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-[14px] font-medium transition ${boardPopupView === "notes" ? "bg-[#E0A12E] text-[#050505]" : "text-neutral-400 hover:bg-[#1A1C23] hover:text-white"}`}
+                    className={`flex items-center gap-2 rounded-md px-4 py-2 text-[14px] font-medium transition ${boardPopupView === "notes" ? "bg-[#E0A12E] text-[#050505]" : "text-neutral-400 hover:bg-[#1A1C23] hover:text-white"}`}
                   >
                     <FileText className="w-4 h-4" />
-                    노트 {stagedNotes.length > 0 ? stagedNotes.length : ""}
+                    노트 {boardSelectedNotes.length > 0 ? boardSelectedNotes.length : ""}
                   </button>
                   <button
                     onClick={() => setBoardPopupView("references")}
-                    className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-[14px] font-medium transition ${boardPopupView === "references" ? "bg-[#E0A12E] text-[#050505]" : "text-neutral-400 hover:bg-[#1A1C23] hover:text-white"}`}
+                    className={`flex items-center gap-2 rounded-md px-4 py-2 text-[14px] font-medium transition ${boardPopupView === "references" ? "bg-[#E0A12E] text-[#050505]" : "text-neutral-400 hover:bg-[#1A1C23] hover:text-white"}`}
                   >
                     <ImageIcon className="w-4 h-4" />
-                    레퍼런스 {stagedReferences.length > 0 ? stagedReferences.length : ""}
+                    레퍼런스 {boardSelectedReferences.length > 0 ? boardSelectedReferences.length : ""}
                   </button>
                 </div>
               </div>
-
-              <div className="flex items-center gap-3">
-                <button className="text-neutral-400 hover:text-white transition-colors">
-                  <HelpCircle className="w-4 h-4" />
-                </button>
-                <button className="p-1.5 text-neutral-400 hover:bg-[#1A1C23] hover:text-white rounded transition-colors">
-                  <Maximize2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setIsBoardPopupOpen(false)}
-                  className="p-1.5 text-neutral-400 hover:text-white hover:bg-[#1A1C23] rounded transition-colors ml-1"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+              <div className="min-h-0 flex-1 overflow-hidden">
+                {boardPopupView === "notes" ? (
+                  <NotesPage
+                    onNavigate={() => {}}
+                    isPopup={true}
+                    hideSidebar
+                    hideSelectionActionBar
+                    onSelectionChange={setBoardSelectedNotes}
+                    onAcceptSelection={(noteIds) => {
+                      setStagedNotes(Array.from(new Set([...stagedNotes, ...noteIds])));
+                      setIsBoardPopupOpen(false);
+                    }}
+                  />
+                ) : (
+                  <ReferencePage
+                    favorites={[]}
+                    toggleFavorite={() => {}}
+                    onNavigate={() => {}}
+                    isPopup={true}
+                    hideSidebar
+                    hideSelectionActionBar
+                    onSelectionChange={setBoardSelectedReferences}
+                    onAcceptSelection={(selectedIds) => {
+                      if (activeProject !== null) {
+                        setSelectedReferences(Array.from(new Set([...selectedReferences, ...selectedIds])));
+                        setHasUnsavedChanges(true);
+                      } else {
+                        setStagedReferences(Array.from(new Set([...stagedReferences, ...selectedIds])));
+                      }
+                      setIsBoardPopupOpen(false);
+                    }}
+                  />
+                )}
               </div>
             </div>
-
-            <div className="flex-1 overflow-hidden relative custom-scrollbar bg-bg-dark">
-              {boardPopupView === "notes" ? (
-                <NotesPage
-                  onNavigate={() => {}}
-                  isPopup={true}
-                  hideSidebar
-                  hideSelectionActionBar
-                  onSelectionChange={setBoardSelectedNotes}
-                  onAcceptSelection={(noteIds) => {
-                    setStagedNotes(Array.from(new Set([...stagedNotes, ...noteIds])));
-                    setIsBoardPopupOpen(false);
-                  }}
-                />
-              ) : (
-                <ReferencePage
-                  favorites={[]}
-                  toggleFavorite={() => {}}
-                  onNavigate={() => {}}
-                  isPopup={true}
-                  hideSidebar
-                  hideSelectionActionBar
-                  onSelectionChange={setBoardSelectedReferences}
-                  onAcceptSelection={(selectedIds) => {
-                    if (activeProject !== null) {
-                      setSelectedReferences(Array.from(new Set([...selectedReferences, ...selectedIds])));
-                      setHasUnsavedChanges(true);
-                    } else {
-                      setStagedReferences(Array.from(new Set([...stagedReferences, ...selectedIds])));
-                    }
-                    setIsBoardPopupOpen(false);
-                  }}
-                />
-              )}
-            </div>
-            <div className="absolute bottom-5 left-1/2 z-[120] flex w-[calc(100%-40px)] max-w-[920px] -translate-x-1/2 items-center justify-between gap-4 rounded-xl border border-[#2A2E36] bg-[#111317]/95 px-4 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.75)] backdrop-blur-xl">
+            <div
+              className={`absolute bottom-5 left-1/2 z-[120] flex w-fit max-w-[calc(100%-40px)] -translate-x-1/2 items-center justify-between gap-4 rounded-xl border border-[#2A2E36] bg-[#111317]/95 px-3 py-2.5 shadow-[0_20px_60px_rgba(0,0,0,0.75)] backdrop-blur-xl transition-all duration-200 ${
+                boardSelectedNotes.length + boardSelectedReferences.length > 0
+                  ? "max-w-[520px]"
+                  : "max-w-[360px]"
+              }`}
+            >
               <button
                 onClick={() => setIsBoardPopupOpen(false)}
-                className="rounded-lg border border-[#2A2E36] bg-[#0A0B0D] px-4 py-2 text-[14px] font-medium text-neutral-300 transition hover:bg-[#1A1C23] hover:text-white"
+                className="rounded-lg bg-transparent px-3 py-2 text-[14px] font-medium text-neutral-400 transition hover:text-white"
               >
                 작업으로 돌아가기
               </button>
-              <div className="flex min-w-0 flex-1 items-center justify-center gap-2 text-[14px] font-medium text-neutral-300">
-                {boardSelectedNotes.length === 0 && boardSelectedReferences.length === 0 ? (
-                  <span className="text-neutral-500">가져올 항목을 선택하세요.</span>
-                ) : (
-                  <>
+              {boardSelectedNotes.length + boardSelectedReferences.length === 0 ? (
+                <span className="text-[14px] font-medium text-neutral-500">항목 선택 전</span>
+              ) : (
+                <>
+                  <div className="flex min-w-0 items-center justify-center gap-3 text-[14px] font-medium text-neutral-300">
                     {boardSelectedNotes.length > 0 && (
-                      <span className="rounded-full border border-[#60A5FA]/30 bg-[#60A5FA]/10 px-3 py-1 text-[#60A5FA]">
+                      <span className="rounded-full border border-[#60A5FA]/30 bg-[#60A5FA]/10 px-2.5 py-1 text-[#60A5FA]">
                         노트 {boardSelectedNotes.length}개
                       </span>
                     )}
                     {boardSelectedReferences.length > 0 && (
-                      <span className="rounded-full border border-[#4ADE80]/30 bg-[#4ADE80]/10 px-3 py-1 text-[#4ADE80]">
+                      <span className="rounded-full border border-[#4ADE80]/30 bg-[#4ADE80]/10 px-2.5 py-1 text-[#4ADE80]">
                         레퍼런스 {boardSelectedReferences.length}개
                       </span>
                     )}
-                  </>
-                )}
-              </div>
-              <button
-                disabled={boardSelectedNotes.length + boardSelectedReferences.length === 0}
-                onClick={() => {
-                  if (boardSelectedNotes.length > 0) {
-                    setStagedNotes(Array.from(new Set([...stagedNotes, ...boardSelectedNotes])));
-                  }
-                  if (boardSelectedReferences.length > 0) {
-                    if (activeProject !== null) {
-                      setSelectedReferences(Array.from(new Set([...selectedReferences, ...boardSelectedReferences])));
-                      setHasUnsavedChanges(true);
-                    } else {
-                      setStagedReferences(Array.from(new Set([...stagedReferences, ...boardSelectedReferences])));
-                    }
-                  }
-                  setBoardSelectedNotes([]);
-                  setBoardSelectedReferences([]);
-                  setIsBoardPopupOpen(false);
-                }}
-                className="rounded-lg bg-[#E0A12E] px-5 py-2 text-[14px] font-medium text-[#050505] transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                선택 항목 가져오기
-              </button>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (boardSelectedNotes.length > 0) {
+                        setStagedNotes(Array.from(new Set([...stagedNotes, ...boardSelectedNotes])));
+                      }
+                      if (boardSelectedReferences.length > 0) {
+                        if (activeProject !== null) {
+                          setSelectedReferences(Array.from(new Set([...selectedReferences, ...boardSelectedReferences])));
+                          setHasUnsavedChanges(true);
+                        } else {
+                          setStagedReferences(Array.from(new Set([...stagedReferences, ...boardSelectedReferences])));
+                        }
+                      }
+                      setBoardSelectedNotes([]);
+                      setBoardSelectedReferences([]);
+                      setIsBoardPopupOpen(false);
+                    }}
+                    className="rounded-lg bg-[#E0A12E] px-4 py-2 text-[14px] font-medium text-[#050505] transition hover:bg-[#F0B43A]"
+                  >
+                    가져오기
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

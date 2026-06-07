@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import {
   Check,
   CheckSquare,
+  ChevronDown,
   ChevronRight,
   Folder,
   LayoutGrid,
@@ -12,7 +13,6 @@ import {
   PenLine,
   Plus,
   Search,
-  SlidersHorizontal,
   Square,
   Star,
   Trash2,
@@ -183,12 +183,14 @@ export default function NotesPage({
   hideSelectionActionBar = false,
 }: NotesPageProps) {
   const [notes, setNotes] = useState<NoteItem[]>(loadNotes);
-  const [activeNote, setActiveNote] = useState<number | null>(() => hideDetailPanel ? null : notes[0]?.id ?? null);
+  const [activeNote, setActiveNote] = useState<number | null>(() => hideDetailPanel || isPopup ? null : notes[0]?.id ?? null);
   const [selectedNotes, setSelectedNotes] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filter, setFilter] = useState("all");
-  const [sortMode, setSortMode] = useState<"recent" | "starred">("recent");
+  const [sortMode, setSortMode] = useState<"recent" | "name">("recent");
+  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+  const [favoritesFirst, setFavoritesFirst] = useState(false);
   const [trashIds, setTrashIds] = useState<Set<number>>(new Set());
   const [checklists, setChecklists] = useState<Record<string, boolean[]>>(
     loadChecklist,
@@ -240,13 +242,15 @@ export default function NotesPage({
       return true;
     });
 
-    if (sortMode === "starred") {
-      result = [...result].sort((a, b) => Number(b.starred) - Number(a.starred));
-    } else {
-      result = [...result].sort((a, b) => b.date.localeCompare(a.date));
-    }
+    result = [...result].sort((a, b) => {
+      if (favoritesFirst && a.starred !== b.starred) {
+        return Number(b.starred) - Number(a.starred);
+      }
+      if (sortMode === "name") return a.title.localeCompare(b.title);
+      return b.date.localeCompare(a.date);
+    });
     return result;
-  }, [filter, notes, searchQuery, sortMode, trashIds]);
+  }, [favoritesFirst, filter, notes, searchQuery, sortMode, trashIds]);
 
   const handleNoteClick = (e: React.MouseEvent, id: number) => {
     if (e.ctrlKey || e.metaKey) {
@@ -377,10 +381,16 @@ export default function NotesPage({
         />
       )}
 
-      <main className="relative flex-1 overflow-y-auto bg-bg-dark px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10">
+      <main
+        className={`relative flex-1 bg-bg-dark ${
+          isPopup
+            ? "flex min-h-0 flex-col overflow-hidden px-6 pt-4 pb-6"
+            : "overflow-y-auto px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10"
+        }`}
+      >
         <div className="mx-auto flex h-full w-full max-w-[2400px] flex-col gap-6">
           <div className="flex items-center gap-4">
-            <div className="relative flex-1">
+            <div className={`relative w-full ${isPopup ? "max-w-[400px] flex-[0_1_400px]" : "max-w-[560px] flex-[0_1_560px]"}`}>
               <Search className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-400" />
               <input
                 type="text"
@@ -390,6 +400,9 @@ export default function NotesPage({
                 className="h-12 w-full rounded-lg border border-[#1C1E24] bg-[#121417] pl-11 pr-4 text-[15px] text-white shadow-inner outline-none transition placeholder:text-[#6E737B] focus:border-brand-primary/50"
               />
             </div>
+
+            <div className="flex-1" />
+
             <button
               onClick={openCreateNote}
               className="flex h-12 shrink-0 items-center gap-2 rounded-lg border border-[#E0A12E]/35 bg-[#E0A12E]/10 px-4 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-[#E0A12E]/15"
@@ -398,20 +411,49 @@ export default function NotesPage({
               노트 추가
             </button>
             <button
-              onClick={() => setSortMode((mode) => (mode === "recent" ? "starred" : "recent"))}
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[#1C1E24] bg-[#121417] text-neutral-400 transition hover:bg-[#1A1C20] hover:text-white"
-              title="정렬 전환"
+              onClick={() => setFavoritesFirst((value) => !value)}
+              className={`flex h-12 items-center gap-2 rounded-lg border px-4 text-[14px] font-medium transition ${
+                favoritesFirst
+                  ? "border-[#E0A12E]/45 bg-[#E0A12E]/10 text-brand-primary"
+                  : "border-[#1C1E24] bg-[#121417] text-text-secondary hover:bg-surface-primary hover:text-white"
+              }`}
             >
-              <SlidersHorizontal className="h-[18px] w-[18px]" />
+              <Star className={`h-4 w-4 ${favoritesFirst ? "fill-brand-primary" : ""}`} />
+              즐겨찾기
             </button>
+
+            <div className="relative">
+              <button
+                onClick={() => setIsSortMenuOpen((open) => !open)}
+                className="flex h-12 cursor-pointer items-center rounded-lg border border-[#1C1E24] bg-[#121417] px-3 text-[14px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
+              >
+                {sortMode === "recent" ? "최신순" : "이름순"}
+                <ChevronDown className="ml-6 h-4 w-4" />
+              </button>
+              {isSortMenuOpen && (
+                <div className="absolute right-0 top-[calc(100%+8px)] z-40 w-[132px] rounded-lg border border-[#2A2E36] bg-[#111317] p-1 shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
+                  {[
+                    ["recent", "최신순"],
+                    ["name", "이름순"],
+                  ].map(([value, label]) => (
+                    <button
+                      key={value}
+                      onClick={() => {
+                        setSortMode(value as "recent" | "name");
+                        setIsSortMenuOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[14px] font-medium transition ${
+                        sortMode === value ? "bg-[#E0A12E]/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="flex h-12 items-center rounded-lg border border-[#1C1E24] bg-[#121417] px-2">
-              <div className="mr-1 flex items-center gap-2 border-r border-[#2A2E36] px-3 text-[14px] text-text-secondary">
-                정렬: {sortMode === "recent" ? "최근 수정" : "즐겨찾기"}
-                <ChevronRight className="h-3.5 w-3.5 rotate-90" />
-              </div>
-              <span className="mr-1 px-3 text-[13px] text-text-tertiary">
-                보기
-              </span>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setViewMode("grid")}
@@ -438,13 +480,14 @@ export default function NotesPage({
             Ctrl 또는 Cmd를 누른 채 클릭하면 여러 노트를 선택할 수 있습니다.
           </div>
 
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 gap-5 transition md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
-                : "flex flex-col gap-3"
-            }
-          >
+          <div className={isPopup ? "min-h-0 flex-1 overflow-y-auto pr-1 pb-28" : ""}>
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid grid-cols-1 gap-5 transition md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+                  : "flex flex-col gap-3"
+              }
+            >
             {filteredNotes.map((note) => {
               const isSelected = selectedNotes.has(note.id);
               return (
@@ -459,6 +502,13 @@ export default function NotesPage({
                       : "border-border-primary/20 bg-surface-primary/80 hover:border-brand-primary/40 hover:bg-surface-primary"
                   }`}
                 >
+                  {note.starred && (
+                    <span className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-2.5 py-1 text-[13px] font-medium text-brand-primary">
+                      <Star className="h-3.5 w-3.5 fill-brand-primary" />
+                      즐겨찾기
+                    </span>
+                  )}
+
                   <div className="mb-2 flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2">
                       <h3
@@ -539,11 +589,12 @@ export default function NotesPage({
             })}
           </div>
 
-          {filteredNotes.length === 0 && (
-            <div className="flex h-[280px] items-center justify-center rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-[14px] text-neutral-400">
-              조건에 맞는 노트가 없습니다.
-            </div>
-          )}
+            {filteredNotes.length === 0 && (
+              <div className="flex h-[280px] items-center justify-center rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-[14px] text-neutral-400">
+                조건에 맞는 노트가 없습니다.
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
