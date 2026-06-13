@@ -644,15 +644,6 @@ function ThreeModelPreview({
       <div className="pointer-events-none absolute left-24 top-4 rounded-lg border border-[#1F2329] bg-[#080A0D]/75 px-3 py-2 text-[14px] text-neutral-400 backdrop-blur">
         {toolHint}
       </div>
-      <div className="pointer-events-none absolute right-4 top-4 rounded-lg border border-[#1F2329] bg-[#080A0D]/75 px-3 py-2 text-[14px] text-neutral-400 backdrop-blur">
-        {loadState === "textured"
-          ? `${ORC_MODEL_FILE} PBR 적용됨`
-          : loadState === "loaded"
-            ? `${ORC_MODEL_FILE} 로드됨`
-            : loadState === "fallback"
-              ? "FBX 대체 미리보기"
-              : `${ORC_MODEL_FILE} 불러오는 중`}
-      </div>
     </div>
   );
 }
@@ -1047,11 +1038,8 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
           <div>
             <h1 className="flex items-center gap-2 text-[18px] font-semibold text-white">
               <Box className="h-5 w-5 text-[#E0A12E]" />
-              오크 3D 모델링 생성
+              3D모델링 생성
             </h1>
-            <p className="mt-0.5 text-[14px] text-neutral-500">
-              {ORC_MODEL_FILE} 모델을 웹에서 직접 돌려보며 단계별 후작업을 진행합니다.
-            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">

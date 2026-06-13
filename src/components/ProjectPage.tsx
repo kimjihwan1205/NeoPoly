@@ -40,9 +40,11 @@ type Project = {
   statusColor: string;
   date: string;
   image?: string;
+  listImage?: string;
   tags: string[];
   linkedNoteIds?: number[];
   linkedReferenceIds?: number[];
+  viewerImages?: string[];
 };
 
 const COLORS = {
@@ -54,58 +56,98 @@ const COLORS = {
   dim: "#8A8F98",
 };
 
-const STORAGE_KEY = "neopoly_projects_v2";
+const STORAGE_KEY = "neopoly_projects_v3";
 
 const DEFAULT_PROJECTS: Project[] = [
   {
     id: 1,
-    name: "하프 궁수",
-    description: "숲과 금속 장비를 기반으로 한 캐릭터 제작 프로젝트",
-    status: "Image Gen",
-    statusColor: COLORS.blue,
+    name: "\uc5d8\ud504 \uad81\uc218",
+    description: "\uc232 \ubc30\uacbd\uc758 \ud310\ud0c0\uc9c0 \uc5d8\ud504 \uad81\uc218 \uce90\ub9ad\ud130 \uc791\uc5c5\uc785\ub2c8\ub2e4. \ud3ec\uc988 \uc774\ubbf8\uc9c0, \ud134\uc5b4\ub77c\uc6b4\ub4dc, \uc640\uc774\uc5b4 \ucc38\uace0 \uc774\ubbf8\uc9c0\ub97c \uae30\ubc18\uc73c\ub85c \ubaa8\ub378\ub9c1 \ub2e8\uacc4\ub97c \uc815\ub9ac\ud569\ub2c8\ub2e4.",
+    status: "Modeling",
+    statusColor: COLORS.green,
     date: "2024.05.20",
-    image: "/images/work_%201.png",
-    tags: ["#캐릭터", "#궁수", "#컨셉"],
+    image: "/images/Discover_in_elf01.png",
+    viewerImages: ["/images/Discover_in_elf01.png", "/images/Discover_in_elf02.png", "/images/Discover_in_elf03.png", "/images/Discover_in_elf04.png"],
+    tags: ["#\uc5d8\ud504", "#\uad81\uc218", "#\uce90\ub9ad\ud130", "#\ud310\ud0c0\uc9c0"],
   },
   {
     id: 2,
-    name: "오크 전사",
-    description: "턴어라운드, 장비 모듈화, 3D 모델 확인까지 진행 중",
+    name: "\uc624\ud06c",
+    description: "\uac15\ud55c \uccb4\ud615\uacfc \uc7a5\ube44 \ubaa8\ub4c8\uc744 \uac00\uc9c4 \uc624\ud06c \uc804\uc0ac \ud504\ub85c\uc81d\ud2b8\uc785\ub2c8\ub2e4. \uc774\ubbf8\uc9c0 \uc0dd\uc131, \ud134\uc5b4\ub77c\uc6b4\ub4dc, \ubaa8\ub4c8\ud654, 3D \ubaa8\ub378\ub9c1 \ud6c4\uc791\uc5c5\uae4c\uc9c0 \uc5f0\uacb0\ud569\ub2c8\ub2e4.",
     status: "Modeling",
     statusColor: COLORS.green,
     date: "2024.05.19",
-    image: "/images/orc/orc_render_reference.png",
-    tags: ["#오크", "#전사", "#모델링"],
+    image: "/images/Discover_in_orc01.png",
+    viewerImages: ["/images/Discover_in_orc01.png", "/images/Discover_in_orc02.png", "/images/Discover_in_orc03.png", "/images/Discover_in_orc04.png", "/images/Discover_in_orc05.png"],
+    tags: ["#\uc624\ud06c", "#\uc804\uc0ac", "#\ubaa8\ub4c8\ud654", "#3D\ubaa8\ub378\ub9c1"],
   },
   {
     id: 3,
-    name: "기사 갑옷",
-    description: "금속 재질과 장식 구조를 정리하는 프롭 프로젝트",
+    name: "\uc640\uc774\ubc88",
+    description: "\uac70\ub300\ud55c \ub0a0\uac1c\uc640 \uae34 \uaf2c\ub9ac \uc2e4\ub8e8\uc5e3\uc744 \uac00\uc9c4 \uc640\uc774\ubc88 \ud06c\ub9ac\ucc98 \ubaa8\ub378\ub9c1 \ud504\ub85c\uc81d\ud2b8\uc785\ub2c8\ub2e4. \ube44\ud589 \ud3ec\uc988\uc640 \uad6c\uc870 \ucc38\uace0 \uc774\ubbf8\uc9c0\ub97c \ud568\uaed8 \ud655\uc778\ud569\ub2c8\ub2e4.",
     status: "Turnaround",
     statusColor: COLORS.purple,
     date: "2024.05.18",
-    image: "/images/work_%204.png",
-    tags: ["#갑옷", "#프롭", "#레퍼런스"],
+    image: "/images/Discover_in_Wyvern01.png",
+    viewerImages: ["/images/Discover_in_Wyvern01.png", "/images/Discover_in_Wyvern02.png", "/images/Discover_in_Wyvern03.png", "/images/Discover_in_Wyvern04.png"],
+    tags: ["#\uc640\uc774\ubc88", "#\ud06c\ub9ac\ucc98", "#\ub0a0\uac1c", "#PBR"],
   },
   {
     id: 4,
-    name: "고대 유적",
-    description: "배경 구조와 조명 무드를 정리하는 환경 프로젝트",
+    name: "\uacf5\ub8e1",
+    description: "\ud0d1\uc2b9 \uc7a5\ube44\uc640 \uc9d0\uc744 \uc5b9\uc740 \ud310\ud0c0\uc9c0 \uacf5\ub8e1 \ud504\ub85c\uc81d\ud2b8\uc785\ub2c8\ub2e4. \uc0dd\ubb3c \ud615\ud0dc\uc640 \uc7a5\ube44 \uad6c\uc870\ub97c \ud568\uaed8 \uac80\ud1a0\ud558\ub294 \uc791\uc5c5\uc785\ub2c8\ub2e4.",
     status: "Concept",
     statusColor: COLORS.teal,
-    date: "2024.05.15",
-    image: "/images/work_%2013.png",
-    tags: ["#배경", "#유적", "#환경"],
+    date: "2024.05.17",
+    image: "/images/Discover_in_Dinosaur01.png",
+    viewerImages: ["/images/Discover_in_Dinosaur01.png", "/images/Discover_in_Dinosaur02.png", "/images/Discover_in_Dinosaur03.png", "/images/Discover_in_Dinosaur04.png"],
+    tags: ["#\uacf5\ub8e1", "#\ud0c8\uac83", "#\uc7a5\ube44", "#\ud310\ud0c0\uc9c0"],
   },
   {
     id: 5,
-    name: "사이버 무기 세트",
-    description: "모듈형 장비와 무기 파츠를 정리하는 제작 보드",
-    status: "Modular",
-    statusColor: COLORS.gold,
-    date: "2024.05.11",
-    image: "/images/work_%2016.png",
-    tags: ["#무기", "#모듈", "#프롭"],
+    name: "\uc2a4\ud2b8\ub9bf \ud328\uc158",
+    description: "\uc2a4\ud2b8\ub9bf \uc2a4\ud3ec\uce20\uc6e8\uc5b4\uc640 \ub18d\uad6c \ubb34\ub4dc\ub97c \uae30\ubc18\uc73c\ub85c \ud55c \uce90\ub9ad\ud130 \ud504\ub85c\uc81d\ud2b8\uc785\ub2c8\ub2e4. \uc758\uc0c1 \uc2e4\ub8e8\uc5e3\uacfc \ud3ec\uc988 \ub808\ud37c\ub7f0\uc2a4\ub97c \uc911\uc2ec\uc73c\ub85c \uc815\ub9ac\ud569\ub2c8\ub2e4.",
+    status: "Modeling",
+    statusColor: COLORS.blue,
+    date: "2024.05.16",
+    image: "/images/Discover_in_Street01.png",
+    viewerImages: ["/images/Discover_in_Street01.png", "/images/Discover_in_Street02.png", "/images/Discover_in_Street03.png", "/images/Discover_in_Street04.png"],
+    tags: ["#\uc2a4\ud2b8\ub9bf", "#\ud328\uc158", "#\uc2a4\ud3ec\uce20", "#\uce90\ub9ad\ud130"],
+  },
+  {
+    id: 6,
+    name: "\ucf54\ubfd4\uc18c",
+    description: "\ubb34\uac70\uc6b4 \uac11\uc637\uacfc \uc804\ud22c \ub3c4\ub07c\ub97c \ub4e0 \ucf54\ubfd4\uc18c \uc804\uc0ac \ud504\ub85c\uc81d\ud2b8\uc785\ub2c8\ub2e4. \uce90\ub9ad\ud130 \ud615\ud0dc\uc640 \uc7a5\ube44 \ud30c\uce20\ub97c \ub2e8\uacc4\ubcc4\ub85c \ud655\uc778\ud569\ub2c8\ub2e4.",
+    status: "Turnaround",
+    statusColor: COLORS.purple,
+    date: "2024.05.15",
+    image: "/images/Discover_in_Rhino01.png",
+    viewerImages: ["/images/Discover_in_Rhino01.png", "/images/Discover_in_Rhino02.png", "/images/Discover_in_Rhino03.png", "/images/Discover_in_Rhino04.png", "/images/Discover_in_Rhino05.png"],
+    tags: ["#\ucf54\ubfd4\uc18c", "#\uc804\uc0ac", "#\uac11\uc637", "#\ud06c\ub9ac\ucc98"],
+  },
+  {
+    id: 7,
+    name: "\ud3ec\uc2a4\ucf54 \ud654\uc774\ud2b8",
+    description: "\ud654\uc774\ud2b8 \ud1a4\uc758 \uc0b0\uc5c5 \uc124\ube44\uc640 \uae30\uc5c5\ud615 3D \uc5d0\uc14b\uc744 \uc815\ub9ac\ud55c \ud3ec\uc2a4\ucf54 \ud504\ub85c\uc81d\ud2b8\uc785\ub2c8\ub2e4. \uc870\uc120, \uc124\ube44, \uac74\ucd95 \ubaa8\ub4c8 \uc774\ubbf8\uc9c0\ub97c \ud568\uaed8 \ud655\uc778\ud569\ub2c8\ub2e4.",
+    status: "Art",
+    statusColor: COLORS.dim,
+    date: "2024.05.14",
+    image: "/images/work_%207.png",
+    listImage: "/images/work_%207.png",
+    viewerImages: ["/images/Discover_in_Posco101.png", "/images/Discover_in_Posco102.png", "/images/Discover_in_Posco103.png", "/images/Discover_in_Posco104.png", "/images/Discover_in_Posco105.png", "/images/Discover_in_Posco106.png", "/images/Discover_in_Posco107.png", "/images/Discover_in_Posco108.png", "/images/Discover_in_Posco109.png", "/images/Discover_in_Posco110.png", "/images/Discover_in_Posco111.png"],
+    tags: ["#\ud3ec\uc2a4\ucf54", "#\ud654\uc774\ud2b8", "#\uc0b0\uc5c5", "#3D\uc5d0\uc14b"],
+  },
+  {
+    id: 8,
+    name: "\ud3ec\uc2a4\ucf54 \ube14\ub8e8",
+    description: "\ube14\ub8e8 \ud1a4\uc758 \ucca0\uace8 \uad6c\uc870\ubb3c\uacfc \uac74\ucd95 \ubaa8\ub4c8\uc744 \uc911\uc2ec\uc73c\ub85c \uad6c\uc131\ud55c \ud3ec\uc2a4\ucf54 \ud504\ub85c\uc81d\ud2b8\uc785\ub2c8\ub2e4. \uc0b0\uc5c5 \uc2dc\ubbac\ub808\uc774\uc158\uc6a9 \uc5d0\uc14b \uad6c\uc131\uc744 \ud655\uc778\ud569\ub2c8\ub2e4.",
+    status: "Art",
+    statusColor: COLORS.dim,
+    date: "2024.05.13",
+    image: "/images/work_%208.png",
+    listImage: "/images/work_%208.png",
+    viewerImages: ["/images/Discover_in_Posco201.png", "/images/Discover_in_Posco202.png", "/images/Discover_in_Posco203.png", "/images/Discover_in_Posco204.png", "/images/Discover_in_Posco205.png", "/images/Discover_in_Posco206.png", "/images/Discover_in_Posco207.png", "/images/Discover_in_Posco208.png", "/images/Discover_in_Posco209.png", "/images/Discover_in_Posco210.png", "/images/Discover_in_Posco211.png"],
+    tags: ["#\ud3ec\uc2a4\ucf54", "#\ube14\ub8e8", "#\ucca0\uace8", "#\uac74\ucd95\ubaa8\ub4c8"],
   },
 ];
 
@@ -120,25 +162,6 @@ const WORKFLOW_STEPS = [
   { title: "Texture", label: "텍스처", icon: Paintbrush, page: "modeling_generation" },
   { title: "Material", label: "재질", icon: Palette, page: "modeling_generation" },
   { title: "Finish", label: "완료", icon: CheckCircle2, page: "modeling_generation" },
-];
-
-const DEFAULT_THUMBS = [
-  "/images/work_%201.png",
-  "/images/work_%204.png",
-  "/images/work_%2013.png",
-  "/images/work_%2016.png",
-  "/images/work_%2022.png",
-  "/images/work_48.png",
-];
-
-const ORC_THUMBS = [
-  "/images/orc/orc_render_reference.png",
-  "/images/orc/orc_2D_front.png",
-  "/images/orc/orc_2D_45.png",
-  "/images/orc/orc_2D_side.png",
-  "/images/orc/orc_2D_back.png",
-  "/images/orc/orc_default_item01.png",
-  "/images/orc/orc_default_item02.png",
 ];
 
 const NOTE_PREVIEWS: Record<number, string> = {
@@ -167,12 +190,18 @@ function loadProjects() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) return DEFAULT_PROJECTS;
     const parsed = JSON.parse(saved) as Project[];
-    if (!Array.isArray(parsed) || !parsed.length) return DEFAULT_PROJECTS;
-    return parsed.map((project) =>
-      project.id === 2
-        ? { ...project, image: "/images/orc/orc_render_reference.png" }
-        : project,
-    );
+    if (!Array.isArray(parsed) || parsed.length !== DEFAULT_PROJECTS.length) return DEFAULT_PROJECTS;
+
+    return DEFAULT_PROJECTS.map((defaultProject) => {
+      const savedProject = parsed.find((project) => project.id === defaultProject.id);
+      return savedProject
+        ? {
+            ...defaultProject,
+            linkedNoteIds: savedProject.linkedNoteIds,
+            linkedReferenceIds: savedProject.linkedReferenceIds,
+          }
+        : defaultProject;
+    });
   } catch {
     return DEFAULT_PROJECTS;
   }
@@ -250,8 +279,7 @@ export default function ProjectPage({
   const hasProjectImage = Boolean(activeProjData?.image);
   const thumbs = useMemo(() => {
     if (!activeProjData?.image) return [];
-    const base = activeProjData.name.includes("오크") ? ORC_THUMBS : DEFAULT_THUMBS;
-    return Array.from(new Set([activeProjData.image, ...base].filter(Boolean)));
+    return Array.from(new Set([activeProjData.image, ...(activeProjData.viewerImages || [])].filter(Boolean)));
   }, [activeProjData]);
 
   const boardImages = linkedImages.length > 0 ? linkedImages : thumbs;
@@ -349,6 +377,7 @@ export default function ProjectPage({
         <div className="flex flex-col gap-3 pb-2">
           {projects.map((project) => {
             const active = project.id === activeProject;
+            const sidebarImage = project.listImage || project.image;
             return (
               <button
                 key={project.id}
@@ -389,10 +418,10 @@ export default function ProjectPage({
                       "linear-gradient(to right, transparent 0%, black 45%)",
                   }}
                 >
-                  {project.image ? (
+                  {sidebarImage ? (
                     <img
                       referrerPolicy="no-referrer"
-                      src={project.image}
+                      src={sidebarImage}
                       alt={project.name}
                       className={`h-full w-full object-cover transition ${
                         active

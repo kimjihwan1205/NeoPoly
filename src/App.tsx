@@ -49,11 +49,32 @@ const CATEGORIES = [
   { id: 'concept', label: '컨셉 아트', icon: FileText },
 ];
 
+const ASSET_CATEGORY_FILTERS: Record<string, number[]> = {
+  all: [],
+  character: [1, 2, 5, 6, 11, 16, 17, 19, 22, 25, 26, 27, 34, 39, 40, 41, 42, 44, 46, 47, 48, 49, 50, 53, 54, 58, 59, 60],
+  environment: [9, 12, 15, 25, 28, 29, 51, 52, 53, 54],
+  architecture: [7, 8, 9, 10, 12, 13, 28, 29, 32, 35, 51, 52],
+  vehicle: [4, 21, 28],
+  weapon: [18, 23, 31, 34, 36, 45, 48],
+  prop: [7, 8, 10, 13, 14, 18, 20, 24, 30, 31, 33, 35, 36, 56, 57],
+  nature: [4, 15, 25, 32, 43, 51, 55, 57],
+  animation: [1, 2, 3, 4, 5, 6, 11, 16, 17, 19, 22, 25, 26, 27, 34, 39, 40, 41, 42, 44, 46, 47, 48, 49, 50, 53, 54, 55, 58, 59, 60],
+  ai: [1, 2, 3, 4, 5, 6, 7, 8, 16, 19, 21, 25, 26, 27, 34, 39, 40, 41, 42, 48, 49, 50, 53, 54, 55, 59, 60],
+  material: [56, 57],
+  creature: [2, 3, 4, 6, 37, 38, 42, 43, 53, 55],
+  concept: [1, 2, 3, 4, 5, 6, 7, 8, 15, 16, 25, 26, 27, 34, 39, 41, 42, 48, 49, 50, 51, 53, 54, 55],
+};
+
+const assetMatchesCategory = (assetId: number, categoryId?: string) => {
+  if (!categoryId || categoryId === 'all') return true;
+  return ASSET_CATEGORY_FILTERS[categoryId]?.includes(assetId) ?? true;
+};
+
 export const ASSETS = [
   {
     id: 1,
     title: '엘프궁수',
-    author: 'Vitality',
+    author: 'Kim ji hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
@@ -63,7 +84,7 @@ export const ASSETS = [
   {
     id: 2,
     title: '오크',
-    author: 'Alexey',
+    author: 'Kim ji hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=v1',
     likes: '754',
     views: '52',
@@ -73,7 +94,7 @@ export const ASSETS = [
   {
     id: 3,
     title: '와이번',
-    author: 'Dofresh',
+    author: 'Kim ji hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
     likes: '1.1K',
     views: '87',
@@ -83,7 +104,7 @@ export const ASSETS = [
   {
     id: 4,
     title: '공룡',
-    author: 'Northro',
+    author: 'Kim ji hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
     likes: '982',
     views: '76',
@@ -93,7 +114,7 @@ export const ASSETS = [
   {
     id: 5,
     title: '스트릿 패션',
-    author: 'Alexey',
+    author: 'Kim ji hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=v2',
     likes: '1.1K',
     views: '89',
@@ -103,7 +124,7 @@ export const ASSETS = [
   {
     id: 6,
     title: '코뿔소 전사',
-    author: 'Johan',
+    author: 'Kim ji hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=6',
     likes: '2.3K',
     views: '189',
@@ -113,7 +134,7 @@ export const ASSETS = [
   {
     id: 7,
     title: 'MY POSCO 01',
-    author: 'PolygonLab',
+    author: 'Kim ji hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=7',
     likes: '633',
     views: '33',
@@ -123,7 +144,7 @@ export const ASSETS = [
   {
     id: 8,
     title: 'MY POSCO 02',
-    author: 'Materialist',
+    author: 'Kim ji hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=8',
     likes: '872',
     views: '56',
@@ -1446,24 +1467,28 @@ function Hero({ onNavigate }: { onNavigate?: (page: any) => void }) {
   );
 }
 
-function CategoryNav() {
-  const [active, setActive] = useState('all');
-  
+function CategoryNav({
+  activeCategory,
+  onCategoryChange,
+}: {
+  activeCategory: string;
+  onCategoryChange: (categoryId: string) => void;
+}) {
   return (
     <section className="relative">
       <div className="flex items-center gap-0 h-[100px] overflow-x-auto scrollbar-hide">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.id}
-            onClick={() => setActive(cat.id)}
+            onClick={() => onCategoryChange(cat.id)}
             className={`flex flex-col items-center justify-center min-w-[110px] w-[110px] h-full transition-all group shrink-0 ${
-              active === cat.id 
+              activeCategory === cat.id 
                 ? 'text-brand-primary' 
                 : 'text-text-tertiary hover:text-brand-primary/60'
             }`}
           >
             <div className={`flex items-center justify-center transition-all mb-1`}>
-              <cat.icon className={active === cat.id ? "w-[30px] h-[30px]" : "w-[30px] h-[30px] opacity-60 group-hover:opacity-100 transition-opacity"} />
+              <cat.icon className={activeCategory === cat.id ? "w-[30px] h-[30px]" : "w-[30px] h-[30px] opacity-60 group-hover:opacity-100 transition-opacity"} />
             </div>
             <span className={`text-[15px] font-medium tracking-tight`}>{cat.label}</span>
           </button>
@@ -1863,7 +1888,7 @@ function AssetCard({
 
         {/* Hover Information Overlay (Desktop) */}
         <div className="absolute inset-x-0 bottom-0 h-[75%] bg-gradient-to-t from-black/95 via-black/60 to-transparent hidden md:flex flex-col justify-end p-4 pb-5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-[300ms] ease-out z-10">
-          <h3 className="text-[17px] font-normal text-text-primary line-clamp-2 leading-[1.3] mb-0.5">
+          <h3 className="text-[18px] font-medium text-text-primary line-clamp-2 leading-[1.32] mb-0.5">
             {asset.title}
           </h3>
           <p className="text-[15px] text-text-secondary font-medium">
@@ -2695,6 +2720,7 @@ function DiscoverSection({
   favorites,
   toggleFavorite,
   activeNav,
+  activeCategory = 'all',
   onOpenProduct,
   onQuickCollect,
   onAssetDragStart,
@@ -2703,6 +2729,7 @@ function DiscoverSection({
   favorites: number[],
   toggleFavorite: (id: number) => void,
   activeNav?: 'market' | 'art' | 'studio' | 'support' | null,
+  activeCategory?: string,
   onOpenProduct?: (assetId: number) => void,
   onQuickCollect?: (target: QuickDropTarget, asset: any) => void,
   onAssetDragStart?: (asset: any, e: React.DragEvent) => void,
@@ -2717,28 +2744,90 @@ function DiscoverSection({
   const [polyCount, setPolyCount] = useState<string[]>([]);
   const [polyRange, setPolyRange] = useState({ min: '0', max: '1,000,000' });
   const [license, setLicense] = useState<string[]>([]);
+  const [appliedPriceType, setAppliedPriceType] = useState<'all' | 'free' | 'paid'>('all');
+  const [appliedPriceRange, setAppliedPriceRange] = useState({ min: '0', max: '1,000,000+' });
+  const [appliedFormats, setAppliedFormats] = useState<string[]>([]);
+  const [appliedPolyCount, setAppliedPolyCount] = useState<string[]>([]);
+  const [appliedPolyRange, setAppliedPolyRange] = useState({ min: '0', max: '1,000,000' });
+  const [appliedLicense, setAppliedLicense] = useState<string[]>([]);
+
 
   const tabs: Array<typeof activeTab> = ['전체', '마켓', '아트', '최신', '팔로잉'];
   const followingAssetIds = new Set([1, 2, 3, 4, 5, 6, 7, 8]);
-  const discoverAssets = (() => {
-    if (activeTab === '전체') {
+  const formats = ['.FBX', '.OBJ', '.ABC', '.BLEND', '.MAX', '.GLB'];
+  const polyOptions = ['Low Poly', 'Mid Poly', 'High Poly'];
+  const licenseOptions = ['\uD45C\uC900', '\uD655\uC7A5', '\uC0C1\uC5C5\uC801'];
+
+  const parseFilterNumber = (value: string, fallback: number) => {
+    const parsed = Number(value.replace(/[^0-9]/g, ''));
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  const getAssetFilterMeta = (asset: typeof ASSETS[number]) => {
+    const id = asset.id;
+    const isFree = id % 7 === 0 || asset.badge === 'A';
+    const price = isFree ? 0 : 30000 + (id % 12) * 10000;
+    const assetFormats = formats.filter((_, index) => (id + index) % 3 !== 1);
+    const polyLabel = polyOptions[id % polyOptions.length];
+    const polyValue = 5000 + (id % 24) * 4200;
+    const assetLicenses = licenseOptions.filter((_, index) => (id + index) % 2 === 0);
+
+    return {
+      isFree,
+      price,
+      formats: assetFormats.length ? assetFormats : [formats[id % formats.length]],
+      polyLabel,
+      polyValue,
+      licenses: assetLicenses.length ? assetLicenses : [licenseOptions[id % licenseOptions.length]],
+    };
+  };
+
+  const assetMatchesAdvancedFilters = (asset: typeof ASSETS[number]) => {
+    const meta = getAssetFilterMeta(asset);
+
+    if (appliedPriceType === 'free' && !meta.isFree) return false;
+    if (appliedPriceType === 'paid') {
+      const minPrice = parseFilterNumber(appliedPriceRange.min, 0);
+      const maxPrice = parseFilterNumber(appliedPriceRange.max, Number.POSITIVE_INFINITY);
+      if (meta.isFree || meta.price < minPrice || meta.price > maxPrice) return false;
+    }
+
+    if (appliedFormats.length > 0 && appliedFormats.length < formats.length) {
+      if (!appliedFormats.some((format) => meta.formats.includes(format))) return false;
+    }
+
+    if (appliedPolyCount.includes('\uC9C1\uC811 \uC124\uC815')) {
+      const minPoly = parseFilterNumber(appliedPolyRange.min, 0);
+      const maxPoly = parseFilterNumber(appliedPolyRange.max, Number.POSITIVE_INFINITY);
+      if (meta.polyValue < minPoly || meta.polyValue > maxPoly) return false;
+    } else if (appliedPolyCount.length > 0 && !appliedPolyCount.includes(meta.polyLabel)) {
+      return false;
+    }
+
+    if (appliedLicense.length > 0 && !appliedLicense.some((item) => meta.licenses.includes(item))) return false;
+
+    return true;
+  };
+
+  const activeTabIndex = tabs.indexOf(activeTab);
+  const tabAssets = (() => {
+    if (activeTabIndex === 0) {
       return ASSETS;
     }
-    if (activeTab === '마켓') {
+    if (activeTabIndex === 1) {
       return ASSETS.filter((asset) => asset.badge === 'M');
     }
-    if (activeTab === '아트') {
+    if (activeTabIndex === 2) {
       return ASSETS.filter((asset) => asset.badge === 'A');
     }
-    if (activeTab === '최신') {
+    if (activeTabIndex === 3) {
       return [...ASSETS].sort((a, b) => b.id - a.id);
     }
     return ASSETS.filter((asset) => followingAssetIds.has(asset.id));
   })();
-  
-  const formats = ['.FBX', '.OBJ', '.ABC', '.BLEND', '.MAX', '.GLB'];
-  const polyOptions = ['Low Poly', 'Mid Poly', 'High Poly'];
-  const licenseOptions = ['표준', '확장', '상업적'];
+  const discoverAssets = tabAssets
+    .filter((asset) => assetMatchesCategory(asset.id, activeCategory))
+    .filter(assetMatchesAdvancedFilters);
 
   const toggleFilter = (list: string[], setList: (v: string[]) => void, item: string) => {
     if (list.includes(item)) {
@@ -2777,27 +2866,63 @@ function DiscoverSection({
 
   // Active filters for display
   const activeFilters = [
-    ...(priceType !== 'all' 
-      ? [`가격: ${priceType === 'free' ? '무료' : `₩${priceRange.min}~${priceRange.max}`}`] 
+    ...(appliedPriceType !== 'all' 
+      ? [`\uAC00\uACA9: ${appliedPriceType === 'free' ? '\uBB34\uB8CC' : `\u20A9${appliedPriceRange.min}~${appliedPriceRange.max}`}`] 
       : []),
-    ...((selectedFormats.length > 0 && selectedFormats.length < formats.length)
-      ? [`파일형식: ${selectedFormats.length > 3 ? `${selectedFormats.slice(0, 3).join(', ')}...` : selectedFormats.join(', ')}`]
+    ...((appliedFormats.length > 0 && appliedFormats.length < formats.length)
+      ? [`\uD30C\uC77C\uD615\uC2DD: ${appliedFormats.length > 3 ? `${appliedFormats.slice(0, 3).join(', ')}...` : appliedFormats.join(', ')}`]
       : []),
-    ...(polyCount.length > 0
-      ? [`${polyCount.map(p => p === '직접 설정' ? `${polyRange.min}~${polyRange.max} Poly` : p).join(', ')}`]
+    ...(appliedPolyCount.length > 0
+      ? [`${appliedPolyCount.map(p => p === '\uC9C1\uC811 \uC124\uC815' ? `${appliedPolyRange.min}~${appliedPolyRange.max} Poly` : p).join(', ')}`]
       : []),
-    ...(license.length > 0
-      ? [`${license.join(', ')}`]
+    ...(appliedLicense.length > 0
+      ? [`${appliedLicense.join(', ')}`]
       : [])
   ];
 
+
+  const resetDraftFilters = () => {
+    setPriceType('all');
+    setPriceRange({ min: '0', max: '1,000,000+' });
+    setSelectedFormats([]);
+    setPolyCount([]);
+    setPolyRange({ min: '0', max: '1,000,000' });
+    setLicense([]);
+  };
+
+  const syncDraftFilters = () => {
+    setPriceType(appliedPriceType);
+    setPriceRange({ ...appliedPriceRange });
+    setSelectedFormats([...appliedFormats]);
+    setPolyCount([...appliedPolyCount]);
+    setPolyRange({ ...appliedPolyRange });
+    setLicense([...appliedLicense]);
+  };
+
+  const openFilterPanel = () => {
+    if (!showFilters) syncDraftFilters();
+    setShowFilters(!showFilters);
+  };
+
+  const applyFilters = () => {
+    setAppliedPriceType(priceType);
+    setAppliedPriceRange({ ...priceRange });
+    setAppliedFormats([...selectedFormats]);
+    setAppliedPolyCount([...polyCount]);
+    setAppliedPolyRange({ ...polyRange });
+    setAppliedLicense([...license]);
+    setShowFilters(false);
+  };
+
   const removeFilter = (filterText: string) => {
-    if (filterText.startsWith('가격:')) {
+    if (filterText.startsWith('\uAC00\uACA9:')) {
       setPriceType('all');
+      setAppliedPriceType('all');
       return;
     }
-    if (filterText.startsWith('파일형식:')) {
+    if (filterText.startsWith('\uD30C\uC77C\uD615\uC2DD:')) {
       setSelectedFormats([]);
+      setAppliedFormats([]);
       return;
     }
     if (
@@ -2805,13 +2930,16 @@ function DiscoverSection({
       polyOptions.some(opt => filterText.includes(opt))
     ) {
       setPolyCount([]);
+      setAppliedPolyCount([]);
       return;
     }
     if (licenseOptions.some(opt => filterText.includes(opt))) {
       setLicense([]);
+      setAppliedLicense([]);
       return;
     }
   };
+
 
   return (
     <div className="flex-1 min-w-0 relative">
@@ -2854,7 +2982,7 @@ function DiscoverSection({
           </div>
 
           <button 
-            onClick={() => setShowFilters(!showFilters)}
+            onClick={openFilterPanel}
             className={`flex items-center gap-2 text-[17px] font-semibold transition-all h-8 ${
               showFilters ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
             }`}
@@ -3054,18 +3182,13 @@ function DiscoverSection({
               </div>
               <div className="flex gap-4 w-full sm:w-auto justify-end">
                 <button 
-                  onClick={() => {
-                    setPriceType('all');
-                    setSelectedFormats([]);
-                    setPolyCount([]);
-                    setLicense([]);
-                  }}
+                  onClick={resetDraftFilters}
                   className="text-[15px] font-medium text-text-tertiary hover:text-text-primary px-4 py-2 transition-colors uppercase tracking-wider"
                 >
                   초기화
                 </button>
                 <button 
-                  onClick={() => setShowFilters(false)}
+                  onClick={applyFilters}
                   className="bg-brand-primary text-bg-dark text-[15px] font-medium px-6 py-2 rounded-sm hover:bg-brand-hover transition-all uppercase tracking-wider shadow-none"
                 >
                   필터 적용
@@ -3258,12 +3381,15 @@ export default function App() {
     return validPages.includes(hashPage) ? hashPage : 'home';
   });
   const [activeNav, setActiveNav] = useState<'market' | 'art' | 'studio' | 'support' | null>(null);
+  const [activeCategory, setActiveCategory] = useState('all');
   const [selectedProductId, setSelectedProductId] = useState<number>(() => {
     const hashProductId = Number(window.location.hash.replace('#', '').split('/')[1]);
     if (hashProductId >= 1 && hashProductId <= 8) return hashProductId;
     const saved = Number(localStorage.getItem('neopoly_selected_product_id'));
     return saved >= 1 && saved <= 8 ? saved : 1;
   });
+  const homeScrollYRef = useRef(0);
+  const shouldRestoreHomeScrollRef = useRef(false);
 
   useEffect(() => {
     const nextHash = currentPage === 'home' ? '' : currentPage === 'product_detail' ? `#product_detail/${selectedProductId}` : `#${currentPage}`;
@@ -3271,6 +3397,18 @@ export default function App() {
       history.replaceState(null, '', `${window.location.pathname}${nextHash}`);
     }
   }, [currentPage, selectedProductId]);
+
+  useEffect(() => {
+    if (currentPage !== 'home' || !shouldRestoreHomeScrollRef.current) return;
+
+    shouldRestoreHomeScrollRef.current = false;
+    const restoreY = homeScrollYRef.current;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: restoreY, behavior: 'auto' });
+      });
+    });
+  }, [currentPage]);
 
   // Initialize dummy UserProfile (usually fetched from an API or local storage in reality)
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
@@ -3367,15 +3505,31 @@ export default function App() {
   };
 
   const openProductDetail = (assetId: number) => {
+    if (currentPage === 'home') {
+      homeScrollYRef.current = window.scrollY;
+    }
     setSelectedProductId(assetId);
     localStorage.setItem('neopoly_selected_product_id', String(assetId));
     setCurrentPage('product_detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const returnToDiscover = () => {
+    shouldRestoreHomeScrollRef.current = true;
+    setCurrentPage('home');
+  };
+
+  const handleHeaderNavigate = (page: PageType) => {
+    if (page === 'home' && currentPage === 'product_detail') {
+      returnToDiscover();
+      return;
+    }
+    setCurrentPage(page);
+  };
+
   return (
     <div className="min-h-screen bg-bg-dark flex flex-col font-sans selection:bg-brand-primary/30 scroll-smooth">
-      <Header onNavigate={(page) => setCurrentPage(page as PageType)} currentPage={currentPage} activeNav={activeNav} setActiveNav={setActiveNav} />
+      <Header onNavigate={(page) => handleHeaderNavigate(page as PageType)} currentPage={currentPage} activeNav={activeNav} setActiveNav={setActiveNav} />
       
       {currentPage === 'uploads' ? (
         <ContentManagementPage />
@@ -3404,7 +3558,7 @@ export default function App() {
       ) : currentPage === 'product_detail' ? (
         <ProductDetailPage
           assetId={selectedProductId}
-          onNavigateHome={() => setCurrentPage('home')}
+          onNavigateHome={returnToDiscover}
           onOpenProduct={openProductDetail}
           onQuickCollect={handleQuickCollect}
           onAssetDragStart={handleAssetDragStart}
@@ -3422,12 +3576,13 @@ export default function App() {
           <div className="mx-auto w-full max-w-[2560px] px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10">
             <div className="flex flex-col gap-8 xl:gap-12">
               <div className="flex-1 min-w-0 space-y-6">
-                <CategoryNav />
+                <CategoryNav activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
                 <DiscoverSection
                   isSidebarOpen={false}
                   favorites={favorites}
                   toggleFavorite={toggleFavorite}
                   activeNav={activeNav}
+                  activeCategory={activeCategory}
                   onOpenProduct={openProductDetail}
                   onQuickCollect={handleQuickCollect}
                   onAssetDragStart={handleAssetDragStart}

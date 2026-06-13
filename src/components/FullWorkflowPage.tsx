@@ -50,6 +50,17 @@ const COLORS = {
   muted: "#8B909A",
 };
 
+const ORC_WORKFLOW_REFERENCES = [
+  { id: -401, title: "오크 정면 레퍼런스", image: "/images/orc/orc_2D_front.png" },
+  { id: -402, title: "오크 45도 레퍼런스", image: "/images/orc/orc_2D_45.png" },
+  { id: -403, title: "오크 측면 레퍼런스", image: "/images/orc/orc_2D_side.png" },
+  { id: -404, title: "오크 후면 레퍼런스", image: "/images/orc/orc_2D_back.png" },
+  { id: -405, title: "오크 팔 보호대", image: "/images/orc/orc_default_item01.png" },
+  { id: -406, title: "오크 허리 장식", image: "/images/orc/orc_default_item04.png" },
+];
+
+const ORC_WORKFLOW_REFERENCE_IDS = ORC_WORKFLOW_REFERENCES.map((asset) => asset.id);
+
 const PROJECTS = [
   {
     id: 1,
@@ -256,6 +267,7 @@ export default function FullWorkflowPage({
   const [activeProject, setActiveProject] = useState<number | null>(null);
   const [messages, setMessages] = useState<MessageInfo[]>(INITIAL_MESSAGES);
   const [inputValue, setInputValue] = useState("");
+  const [promptDraft, setPromptDraft] = useState("");
   const [isBoardPopupOpen, setIsBoardPopupOpen] = useState(false);
   const [boardPopupView, setBoardPopupView] = useState<"notes" | "references">("notes");
   const [boardSelectedNotes, setBoardSelectedNotes] = useState<number[]>([]);
@@ -309,7 +321,63 @@ export default function FullWorkflowPage({
   const [hasGeneratedImages, setHasGeneratedImages] = useState<boolean>(false);
   const [hasReturnedFromGeneratedStep, setHasReturnedFromGeneratedStep] = useState<boolean>(false);
   const [isOrcWorkflow, setIsOrcWorkflow] = useState<boolean>(false);
+  const getWorkflowReferenceAsset = (id: number) =>
+    ASSETS.find((asset) => asset.id === id) || ORC_WORKFLOW_REFERENCES.find((asset) => asset.id === id);
   const hasSelectedGeneratedImage = selectedGridImage !== null;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const rawReturnState = window.sessionStorage.getItem("neopoly:return-to-generated-images");
+    if (!rawReturnState) return;
+
+    window.sessionStorage.removeItem("neopoly:return-to-generated-images");
+
+    let returnState: {
+      isOrcWorkflow?: boolean;
+      selectedGridImage?: number;
+      isTurnaroundSelected?: boolean;
+      isModularSelected?: boolean;
+    } = {};
+
+    try {
+      returnState = JSON.parse(rawReturnState);
+    } catch {
+      returnState = {};
+    }
+
+    const restoredProjectId = Date.now();
+    const shouldUseOrcWorkflow = returnState.isOrcWorkflow ?? true;
+
+    setProjects((prev) => [
+      {
+        id: restoredProjectId,
+        name: shouldUseOrcWorkflow ? "오크 전사 모델링" : "이전 작업",
+        status: "In Progress",
+        statusColor: COLORS.gold,
+        date: new Date().toLocaleDateString("ko-KR").replace(/\./g, "."),
+        image: shouldUseOrcWorkflow ? "/images/orc/orc_2D_front.png" : "",
+      },
+      ...prev,
+    ]);
+    setActiveProject(restoredProjectId);
+    setMessages(shouldUseOrcWorkflow ? ORC_MESSAGES : INITIAL_MESSAGES);
+    setPromptDraft(
+      shouldUseOrcWorkflow
+        ? "강인한 오크 전사 캐릭터. 초록 피부, 무거운 가죽과 금속 장비, 나무 몽둥이, 게임용 3D 모델링에 적합한 선명한 실루엣."
+        : "",
+    );
+    setSelectedReferences(shouldUseOrcWorkflow ? ORC_WORKFLOW_REFERENCE_IDS : []);
+    setIsOrcWorkflow(shouldUseOrcWorkflow);
+    setWorkflowStep("image-generation");
+    setRightPanelMode("prompt");
+    setHasGeneratedImages(true);
+    setHasReturnedFromGeneratedStep(true);
+    setHasUnsavedChanges(false);
+    setSelectedGridImage(returnState.selectedGridImage ?? 0);
+    setIsTurnaroundSelected(returnState.isTurnaroundSelected ?? true);
+    setIsModularSelected(returnState.isModularSelected ?? false);
+  }, []);
 
   const handleGeneratedImageSelect = (imageIndex: number) => {
     if (selectedGridImage === imageIndex) {
@@ -339,6 +407,16 @@ export default function FullWorkflowPage({
   const handleRefineSelectedSettings = () => {
     if (!hasSelectedGeneratedImage) return;
     if (isTurnaroundSelected && onNavigate) {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(
+          "neopoly:turnaround-flow",
+          JSON.stringify({
+            isModularSelected,
+            selectedGridImage,
+            isOrcWorkflow,
+          }),
+        );
+      }
       onNavigate("turnaround");
       return;
     }
@@ -348,10 +426,10 @@ export default function FullWorkflowPage({
   };
 
   const DUMMY_GENERATED_IMAGES = isOrcWorkflow ? [
-    "/images/orc/orc_2D_front.png",
-    "/images/orc/orc_2D_45.png",
-    "/images/orc/orc_2D_side.png",
-    "/images/orc/orc_2D_back.png",
+    "/images/orc/orc_create01.png",
+    "/images/orc/orc_create02.png",
+    "/images/orc/orc_create03.png",
+    "/images/orc/orc_create04.png",
   ] : [
     "/images/work_%2010.png",
     "/images/work_%2011.png",
@@ -363,13 +441,39 @@ export default function FullWorkflowPage({
     ? ["#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"]
     : ["#8C7F75", "#8C8C9F", "#9C9687", "#8C8985"];
 
-  const handleStartProjectWithAssets = () => {
+  const buildPromptFromNotes = (noteIds: number[]) => {
+    const selectedNotes = noteIds
+      .map((noteId) => NOTES.find((note) => note.id === noteId))
+      .filter(Boolean);
+
+    if (selectedNotes.length === 0) return "";
+
+    return selectedNotes
+      .map((note) => {
+        const tags = note!.tags.join(" ");
+        return [`[${note!.title}]`, note!.desc, tags].filter(Boolean).join("\n");
+      })
+      .join("\n\n");
+  };
+
+  const appendPromptFromNotes = (noteIds: number[]) => {
+    const notePrompt = buildPromptFromNotes(noteIds);
+    if (!notePrompt) return;
+    setPromptDraft((prev) => [prev.trim(), notePrompt].filter(Boolean).join("\n\n"));
+    setHasUnsavedChanges(true);
+  };
+
+  const handleStartProjectWithAssets = (
+    noteIds = stagedNotes,
+    referenceIds = stagedReferences,
+  ) => {
     // Collect all image URLs from staged Notes
-    const noteImages = stagedNotes
+    const noteImages = noteIds
       .map((noteId) => NOTES.find((n) => n.id === noteId))
       .filter(Boolean)
       .flatMap((n) => n!.images || []);
-    const hasOrcNote = stagedNotes.includes(4);
+    const hasOrcNote = noteIds.includes(4);
+    const notePrompt = buildPromptFromNotes(noteIds);
 
     // Also include ASSETS that match these URLs
     const noteAssetIds = ASSETS.filter((a) => noteImages.includes(a.image)).map(
@@ -378,7 +482,11 @@ export default function FullWorkflowPage({
 
     // Merge staged references and found ASSET ids
     const mergedRefIds = Array.from(
-      new Set([...stagedReferences, ...noteAssetIds]),
+      new Set([
+        ...referenceIds,
+        ...noteAssetIds,
+        ...(hasOrcNote ? ORC_WORKFLOW_REFERENCE_IDS : []),
+      ]),
     );
     setSelectedReferences(mergedRefIds);
 
@@ -394,17 +502,22 @@ export default function FullWorkflowPage({
         hasOrcNote
           ? "/images/orc/orc_2D_front.png"
           : mergedRefIds.length > 0
-          ? ASSETS.find((a) => a.id === mergedRefIds[0])?.image || ""
+          ? getWorkflowReferenceAsset(mergedRefIds[0])?.image || ""
           : "",
     };
 
     setProjects((prev) => [newProject, ...prev]);
     setActiveProject(newProjectId);
     setMessages(hasOrcNote ? ORC_MESSAGES : []);
+    setPromptDraft(notePrompt);
     setIsOrcWorkflow(hasOrcNote);
+    setWorkflowStep("prompt");
+    setRightPanelMode("prompt");
     setHasGeneratedImages(false);
     setHasReturnedFromGeneratedStep(false);
     setHasUnsavedChanges(false);
+    setStagedNotes([]);
+    setStagedReferences([]);
   };
 
   const handleStartEmptyProject = () => {
@@ -412,6 +525,7 @@ export default function FullWorkflowPage({
     setStagedNotes([]);
     setStagedReferences([]);
     setIsOrcWorkflow(false);
+    setPromptDraft("");
 
     const newProjectId = Date.now();
     const newProject = {
@@ -644,20 +758,8 @@ export default function FullWorkflowPage({
               {workflowStep === "prompt" ? (
                 <>
                   {/* Main Top Header */}
-                  <div className="px-8 pt-5 pb-3 shrink-0 flex items-center justify-between z-10">
-                    <div>
-                      <h1 className="text-[20px] font-bold text-neutral-100 flex items-center gap-2">
-                        AI 프롬프트 도우미
-                      </h1>
-                      <p className="text-[14px] text-neutral-400 mt-0.5 flex items-center gap-1.5">
-                        아이디어를 자유롭게 설명하면, AI가 프롬프트 작성을
-                        도와드려요.
-                        <HelpCircle className="w-4 h-4" />
-                      </p>
-                    </div>
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#2A2E36] bg-[#0A0B0D] hover:bg-[#141518] transition-colors text-[14px] text-neutral-300">
-                      <Sparkles className="w-4 h-4 text-[#E0A12E]" /> 가이드 보기
-                    </button>
+                  <div className="flex shrink-0 items-center justify-between border-b border-[#1F2329] bg-[#050505] px-6 py-3">
+                    <h1 className="text-[22px] font-medium tracking-tight text-white">프롬프트 작성</h1>
                   </div>
 
                   {/* Chat Area */}
@@ -810,7 +912,7 @@ export default function FullWorkflowPage({
               <div className="flex-1 p-4 lg:p-6 2xl:p-8 custom-scrollbar relative flex flex-col min-h-0 bg-[#050505]">
                 <div className="max-w-[2200px] w-full h-full flex flex-col min-h-0 mx-auto">
                   <div className="mb-4 lg:mb-5 shrink-0 flex items-center gap-3">
-                    <h2 className="text-[20px] font-bold text-white tracking-tight">생성된 이미지</h2>
+                    <h2 className="text-[22px] font-medium tracking-tight text-white">이미지 시안 선택</h2>
                     <span className="bg-[#141518] border border-[#2A2E36] px-2.5 py-0.5 rounded-full text-[14px] text-white font-medium">4</span>
                   </div>
                   
@@ -870,7 +972,7 @@ export default function FullWorkflowPage({
                       <div className="overflow-y-auto scrollbar-hide flex-1 pb-1 pr-1">
                         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                           {selectedReferences.map((id, i) => {
-                            const asset = ASSETS.find((a) => a.id === id);
+                            const asset = getWorkflowReferenceAsset(id);
                             if (!asset) return null;
                             const tags =
                               refTags[id] ||
@@ -984,17 +1086,18 @@ export default function FullWorkflowPage({
                         className="flex-1 overflow-y-auto custom-scrollbar text-[15px] text-neutral-100 font-medium leading-[1.65] bg-[#141518] p-3 rounded-lg border border-[#1F2329] focus:outline-none"
                         contentEditable
                         suppressContentEditableWarning
-                        onInput={() => setHasUnsavedChanges(true)}
+                        onInput={(e) => {
+                          setPromptDraft(e.currentTarget.innerText);
+                          setHasUnsavedChanges(true);
+                        }}
                       >
-                        {messages.length === 0
-                          ? ""
-                          : "숲 속에 있는 통나무 오두막, 따뜻하고 아늑한 분위기, 난로에서 연기가 피어오름, 등불이 켜져 있음, 작은 텃밭과 나무 울타리가 주변에 있음, 해질녘의 부드러운 자연광, 판타지 스타일, 고품질 3D 렌더링"}
+                        {promptDraft}
                       </div>
 
                       <div className="mt-2 text-right text-[14px] text-neutral-400 shrink-0">
-                        {messages.length === 0 ? "0" : "152"} / 1500
+                        {promptDraft.length} / 1500
                       </div>
-                    </div>
+                      </div>
                   </div>
 
                   <div className="shrink-0 p-6 pt-0 bg-[#050505]">
@@ -1430,7 +1533,12 @@ export default function FullWorkflowPage({
                     hideSelectionActionBar
                     onSelectionChange={setBoardSelectedNotes}
                     onAcceptSelection={(noteIds) => {
-                      setStagedNotes(Array.from(new Set([...stagedNotes, ...noteIds])));
+                      const nextNotes = Array.from(new Set([...stagedNotes, ...noteIds]));
+                      if (activeProject === null) {
+                        setStagedNotes(nextNotes);
+                      } else {
+                        appendPromptFromNotes(noteIds);
+                      }
                       setIsBoardPopupOpen(false);
                     }}
                   />
@@ -1487,16 +1595,23 @@ export default function FullWorkflowPage({
                   </div>
                   <button
                     onClick={() => {
+                      const nextNotes = Array.from(new Set([...stagedNotes, ...boardSelectedNotes]));
+                      const nextReferences = Array.from(new Set([...stagedReferences, ...boardSelectedReferences]));
+
+                      if (activeProject === null) {
+                        setBoardSelectedNotes([]);
+                        setBoardSelectedReferences([]);
+                        setIsBoardPopupOpen(false);
+                        handleStartProjectWithAssets(nextNotes, nextReferences);
+                        return;
+                      }
+
                       if (boardSelectedNotes.length > 0) {
-                        setStagedNotes(Array.from(new Set([...stagedNotes, ...boardSelectedNotes])));
+                        appendPromptFromNotes(boardSelectedNotes);
                       }
                       if (boardSelectedReferences.length > 0) {
-                        if (activeProject !== null) {
-                          setSelectedReferences(Array.from(new Set([...selectedReferences, ...boardSelectedReferences])));
-                          setHasUnsavedChanges(true);
-                        } else {
-                          setStagedReferences(Array.from(new Set([...stagedReferences, ...boardSelectedReferences])));
-                        }
+                        setSelectedReferences(Array.from(new Set([...selectedReferences, ...boardSelectedReferences])));
+                        setHasUnsavedChanges(true);
                       }
                       setBoardSelectedNotes([]);
                       setBoardSelectedReferences([]);
