@@ -2,11 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   CheckCircle2,
-  ChevronLeft,
   ChevronRight,
   Download,
   Grid3X3,
-  Hand,
   Image as ImageIcon,
   Info,
   Layers,
@@ -21,7 +19,6 @@ import {
   RotateCcw,
   Share2,
   Sparkles,
-  ZoomIn,
 } from "lucide-react";
 import { motion } from "motion/react";
 import NewProjectModal from "./NewProjectModal";
@@ -30,6 +27,7 @@ interface ProjectPageProps {
   onNavigate?: (page: string) => void;
   isPopup?: boolean;
   onSelectProject?: (projectId: number) => void;
+  selectedProjectId?: number;
 }
 
 type Project = {
@@ -45,6 +43,7 @@ type Project = {
   linkedNoteIds?: number[];
   linkedReferenceIds?: number[];
   viewerImages?: string[];
+  referenceImages?: string[];
 };
 
 const COLORS = {
@@ -58,7 +57,7 @@ const COLORS = {
 
 const STORAGE_KEY = "neopoly_projects_v3";
 
-const DEFAULT_PROJECTS: Project[] = [
+export const DEFAULT_PROJECTS: Project[] = [
   {
     id: 1,
     name: "\uc5d8\ud504 \uad81\uc218",
@@ -68,6 +67,7 @@ const DEFAULT_PROJECTS: Project[] = [
     date: "2024.05.20",
     image: "/images/Discover_in_elf01.png",
     viewerImages: ["/images/Discover_in_elf01.png", "/images/Discover_in_elf02.png", "/images/Discover_in_elf03.png", "/images/Discover_in_elf04.png"],
+    referenceImages: ["/images/elf_re/elf_re01.jpg", "/images/elf_re/elf_re02.jpeg", "/images/elf_re/elf_re03.jpeg", "/images/elf_re/elf_re04.jpg", "/images/elf_re/elf_re05.jpg"],
     tags: ["#\uc5d8\ud504", "#\uad81\uc218", "#\uce90\ub9ad\ud130", "#\ud310\ud0c0\uc9c0"],
   },
   {
@@ -79,6 +79,7 @@ const DEFAULT_PROJECTS: Project[] = [
     date: "2024.05.19",
     image: "/images/Discover_in_orc01.png",
     viewerImages: ["/images/Discover_in_orc01.png", "/images/Discover_in_orc02.png", "/images/Discover_in_orc03.png", "/images/Discover_in_orc04.png", "/images/Discover_in_orc05.png"],
+    referenceImages: ["/images/orc_re/orc_re01.png", "/images/orc_re/orc_re02.jpg", "/images/orc_re/orc_re03.jpg", "/images/orc_re/orc_re04.jpg"],
     tags: ["#\uc624\ud06c", "#\uc804\uc0ac", "#\ubaa8\ub4c8\ud654", "#3D\ubaa8\ub378\ub9c1"],
   },
   {
@@ -90,6 +91,7 @@ const DEFAULT_PROJECTS: Project[] = [
     date: "2024.05.18",
     image: "/images/Discover_in_Wyvern01.png",
     viewerImages: ["/images/Discover_in_Wyvern01.png", "/images/Discover_in_Wyvern02.png", "/images/Discover_in_Wyvern03.png", "/images/Discover_in_Wyvern04.png"],
+    referenceImages: ["/images/wyvern_re/wyvern_re01.jpg", "/images/wyvern_re/wyvern_re02.jpg", "/images/wyvern_re/wyvern_re023.png"],
     tags: ["#\uc640\uc774\ubc88", "#\ud06c\ub9ac\ucc98", "#\ub0a0\uac1c", "#PBR"],
   },
   {
@@ -101,6 +103,7 @@ const DEFAULT_PROJECTS: Project[] = [
     date: "2024.05.17",
     image: "/images/Discover_in_Dinosaur01.png",
     viewerImages: ["/images/Discover_in_Dinosaur01.png", "/images/Discover_in_Dinosaur02.png", "/images/Discover_in_Dinosaur03.png", "/images/Discover_in_Dinosaur04.png"],
+    referenceImages: ["/images/Dino_re/Dino_re01.jpg", "/images/Dino_re/Dino_re02.jpg", "/images/Dino_re/Dino_re03.jpg", "/images/Dino_re/Dino_re04.jpg"],
     tags: ["#\uacf5\ub8e1", "#\ud0c8\uac83", "#\uc7a5\ube44", "#\ud310\ud0c0\uc9c0"],
   },
   {
@@ -112,6 +115,7 @@ const DEFAULT_PROJECTS: Project[] = [
     date: "2024.05.16",
     image: "/images/Discover_in_Street01.png",
     viewerImages: ["/images/Discover_in_Street01.png", "/images/Discover_in_Street02.png", "/images/Discover_in_Street03.png", "/images/Discover_in_Street04.png"],
+    referenceImages: ["/images/street_re/Street_re01.jpg", "/images/street_re/Street_re02.jpg", "/images/street_re/Street_re03.jpg"],
     tags: ["#\uc2a4\ud2b8\ub9bf", "#\ud328\uc158", "#\uc2a4\ud3ec\uce20", "#\uce90\ub9ad\ud130"],
   },
   {
@@ -123,6 +127,7 @@ const DEFAULT_PROJECTS: Project[] = [
     date: "2024.05.15",
     image: "/images/Discover_in_Rhino01.png",
     viewerImages: ["/images/Discover_in_Rhino01.png", "/images/Discover_in_Rhino02.png", "/images/Discover_in_Rhino03.png", "/images/Discover_in_Rhino04.png", "/images/Discover_in_Rhino05.png"],
+    referenceImages: ["/images/Rhino_re/Rhino_re01.jpg", "/images/Rhino_re/Rhino_re02.jpg", "/images/Rhino_re/Rhino_re03.jpg", "/images/Rhino_re/Rhino_re04.jpg"],
     tags: ["#\ucf54\ubfd4\uc18c", "#\uc804\uc0ac", "#\uac11\uc637", "#\ud06c\ub9ac\ucc98"],
   },
   {
@@ -135,6 +140,7 @@ const DEFAULT_PROJECTS: Project[] = [
     image: "/images/work_%207.png",
     listImage: "/images/work_%207.png",
     viewerImages: ["/images/Discover_in_Posco101.png", "/images/Discover_in_Posco102.png", "/images/Discover_in_Posco103.png", "/images/Discover_in_Posco104.png", "/images/Discover_in_Posco105.png", "/images/Discover_in_Posco106.png", "/images/Discover_in_Posco107.png", "/images/Discover_in_Posco108.png", "/images/Discover_in_Posco109.png", "/images/Discover_in_Posco110.png", "/images/Discover_in_Posco111.png"],
+    referenceImages: ["/images/posco01_re/posco01_re01.png", "/images/posco01_re/posco01_re02.png", "/images/posco01_re/posco01_re03.png", "/images/posco01_re/posco01_re04.png", "/images/posco01_re/posco01_re05.png", "/images/posco01_re/posco01_re06.png", "/images/posco01_re/posco01_re07.png"],
     tags: ["#\ud3ec\uc2a4\ucf54", "#\ud654\uc774\ud2b8", "#\uc0b0\uc5c5", "#3D\uc5d0\uc14b"],
   },
   {
@@ -147,6 +153,7 @@ const DEFAULT_PROJECTS: Project[] = [
     image: "/images/work_%208.png",
     listImage: "/images/work_%208.png",
     viewerImages: ["/images/Discover_in_Posco201.png", "/images/Discover_in_Posco202.png", "/images/Discover_in_Posco203.png", "/images/Discover_in_Posco204.png", "/images/Discover_in_Posco205.png", "/images/Discover_in_Posco206.png", "/images/Discover_in_Posco207.png", "/images/Discover_in_Posco208.png", "/images/Discover_in_Posco209.png", "/images/Discover_in_Posco210.png", "/images/Discover_in_Posco211.png"],
+    referenceImages: ["/images/posco02_re/posco02_re01.png", "/images/posco02_re/posco02_re02.png", "/images/posco02_re/posco02_re03.png", "/images/posco02_re/posco02_re04.png", "/images/posco02_re/posco02_re05.png", "/images/posco02_re/posco02_re06.png", "/images/posco02_re/posco02_re07.png"],
     tags: ["#\ud3ec\uc2a4\ucf54", "#\ube14\ub8e8", "#\ucca0\uace8", "#\uac74\ucd95\ubaa8\ub4c8"],
   },
 ];
@@ -235,6 +242,7 @@ export default function ProjectPage({
   onNavigate,
   isPopup,
   onSelectProject,
+  selectedProjectId,
 }: ProjectPageProps) {
   const [projects, setProjects] = useState<Project[]>(loadProjects);
   const [activeProject, setActiveProject] = useState(() => loadProjects()[0].id);
@@ -243,6 +251,8 @@ export default function ProjectPage({
     "modeling",
   );
   const [selectedThumb, setSelectedThumb] = useState(0);
+  const [isViewerPreviewOpen, setIsViewerPreviewOpen] = useState(false);
+  const [referencePreviewImage, setReferencePreviewImage] = useState<string | null>(null);
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [draftName, setDraftName] = useState("");
@@ -255,7 +265,15 @@ export default function ProjectPage({
 
   useEffect(() => {
     setSelectedThumb(0);
+    setReferencePreviewImage(null);
   }, [activeProject]);
+
+  useEffect(() => {
+    if (!selectedProjectId) return;
+    if (projects.some((project) => project.id === selectedProjectId)) {
+      setActiveProject(selectedProjectId);
+    }
+  }, [projects, selectedProjectId]);
 
   useEffect(() => {
     if (!toast) return;
@@ -282,15 +300,9 @@ export default function ProjectPage({
     return Array.from(new Set([activeProjData.image, ...(activeProjData.viewerImages || [])].filter(Boolean)));
   }, [activeProjData]);
 
-  const boardImages = linkedImages.length > 0 ? linkedImages : thumbs;
+  const projectReferenceImages = activeProjData.referenceImages || [];
+  const boardImages = projectReferenceImages.length > 0 ? projectReferenceImages : linkedImages.length > 0 ? linkedImages : thumbs;
   const viewerImage = hasProjectImage ? thumbs[selectedThumb] || activeProjData.image : "";
-
-  const scrollBoard = (direction: "left" | "right") => {
-    boardScrollRef.current?.scrollBy({
-      left: direction === "left" ? -220 : 220,
-      behavior: "smooth",
-    });
-  };
 
   const handleCreateProject = (
     name: string,
@@ -603,36 +615,19 @@ export default function ProjectPage({
                     모델링 뷰어
                     <Info className="h-4 w-4 text-neutral-400" />
                   </div>
-                  <button
-                    onClick={() => setToast("셰이딩 모드를 전환했습니다.")}
-                    className="rounded-md border border-[#22252B] bg-[#15181D] px-3 py-1.5 text-[14px] text-neutral-300 transition hover:bg-[#1A1D23]"
-                  >
-                    Shaded
-                  </button>
                 </div>
 
                 <div className="relative flex h-[500px] items-center justify-center overflow-hidden rounded-lg border border-[#181A1F] bg-[#050505]">
-                  <div className="absolute left-4 top-4 z-10 flex flex-col gap-2">
-                    {[
-                      { icon: RotateCcw, label: "초기화" },
-                      { icon: Hand, label: "이동" },
-                      { icon: ZoomIn, label: "확대" },
-                      { icon: Grid3X3, label: "그리드" },
-                      { icon: Maximize2, label: "크게 보기" },
-                    ].map((tool) => {
-                      const Icon = tool.icon;
-                      return (
-                        <button
-                          key={tool.label}
-                          onClick={() => setToast(`${tool.label} 도구를 선택했습니다.`)}
-                          title={tool.label}
-                          className="flex h-9 w-9 items-center justify-center rounded-md border border-white/5 bg-white/[0.04] text-neutral-300 transition hover:bg-white/[0.08] hover:text-white"
-                        >
-                          <Icon className="h-4 w-4" />
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {viewerImage && (
+                    <button
+                      type="button"
+                      onClick={() => setIsViewerPreviewOpen(true)}
+                      title="크게 보기"
+                      className="absolute left-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-md border border-white/10 bg-white/[0.06] text-neutral-200 transition hover:bg-white/[0.12] hover:text-white"
+                    >
+                      <Maximize2 className="h-4 w-4" />
+                    </button>
+                  )}
 
                   {viewerImage ? (
                     <img
@@ -680,24 +675,12 @@ export default function ProjectPage({
               <section className="relative flex h-[260px] flex-col rounded-lg border border-[#181A1F] bg-[#151618] p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-[15px] font-medium text-[#F5F5F5]">
-                    보드 레퍼런스
+                    레퍼런스
                   </h3>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => scrollBoard("left")}
-                      className="rounded-md border border-transparent p-1 text-neutral-400 transition hover:border-[#22252B] hover:bg-[#1A1D23] hover:text-neutral-300"
-                    >
-                      <ChevronLeft className="h-[14px] w-[14px]" />
-                    </button>
-                    <button
-                      onClick={() => scrollBoard("right")}
-                      className="rounded-md border border-transparent p-1 text-neutral-400 transition hover:border-[#22252B] hover:bg-[#1A1D23] hover:text-neutral-300"
-                    >
-                      <ChevronRight className="h-[14px] w-[14px]" />
-                    </button>
-                    <button
                       onClick={() => onNavigate?.("board")}
-                      className="text-[14px] font-medium text-[#4C88D9] transition hover:text-[#5B9FE6]"
+                      className="text-[14px] font-medium text-neutral-500 transition hover:text-neutral-300"
                     >
                       모두 보기
                     </button>
@@ -711,7 +694,8 @@ export default function ProjectPage({
                     boardImages.map((thumb) => (
                       <button
                         key={thumb}
-                        onClick={() => onNavigate?.("board")}
+                        type="button"
+                        onClick={() => setReferencePreviewImage(thumb)}
                         className="h-full min-w-[150px] shrink-0 overflow-hidden rounded-lg border border-[#181A1F] bg-[#050505]"
                       >
                         <img
@@ -831,6 +815,60 @@ export default function ProjectPage({
           </div>
         </div>
       </main>
+
+      {isViewerPreviewOpen && viewerImage && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 px-4 py-5 backdrop-blur-sm"
+          onClick={() => setIsViewerPreviewOpen(false)}
+        >
+          <div
+            className="relative flex max-h-[92vh] w-full max-w-[1280px] items-center justify-center overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] p-4 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setIsViewerPreviewOpen(false)}
+              className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-black/45 text-neutral-300 transition hover:text-white"
+              title="닫기"
+            >
+              X
+            </button>
+            <img
+              src={viewerImage}
+              alt={`${activeProjData.name} 작업 뷰 크게 보기`}
+              className="max-h-[86vh] max-w-full object-contain"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+        </div>
+      )}
+
+      {referencePreviewImage && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 px-4 py-5 backdrop-blur-sm"
+          onClick={() => setReferencePreviewImage(null)}
+        >
+          <div
+            className="relative flex max-h-[92vh] w-full max-w-[1280px] items-center justify-center overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] p-4 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setReferencePreviewImage(null)}
+              className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-black/45 text-neutral-300 transition hover:text-white"
+              title="Close"
+            >
+              X
+            </button>
+            <img
+              src={referencePreviewImage}
+              alt={`${activeProjData.name} reference preview`}
+              className="max-h-[86vh] max-w-full object-contain"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+        </div>
+      )}
 
       <NewProjectModal
         isOpen={isNewProjectModalOpen}

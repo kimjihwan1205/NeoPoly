@@ -8,7 +8,7 @@ import {
   Search, ShoppingCart, Bell, LayoutGrid, User, Mountain, Building2, 
   Car, Sword, Box, Leaf, Wand2, Heart, Eye, Sliders, Plus, Folder, ChevronRight,
   Sparkles, Video, BrainCircuit, GripVertical, FileText, Skull,
-  PanelRightClose, PanelRightOpen, X, ChevronDown, Check, Instagram, Youtube, ShoppingBag,
+  PanelRightClose, X, ChevronDown, Check, Instagram, Youtube, ShoppingBag,
   Upload, Trash2, Clock, LogOut, Settings, Star, ImageIcon, ArrowUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -17,8 +17,8 @@ import PurchasedAssetsPage from './components/PurchasedAssetsPage';
 import FavoritesPage from './components/FavoritesPage';
 import AccountSettingsPage from './components/AccountSettingsPage';
 import ReferencePage, { REFERENCE_BOARDS, boardMatchesAsset } from './components/ReferencePage';
-import ProjectPage from './components/ProjectPage';
-import NotesPage, { NOTES } from './components/NotesPage';
+import ProjectPage, { DEFAULT_PROJECTS } from './components/ProjectPage';
+import NotesPage, { NOTES, type NoteItem } from './components/NotesPage';
 import NoteEditorPage from './components/NoteEditorPage';
 import UserProfilePage from './components/UserProfilePage';
 import AIStudioPage from './components/AIStudioPage';
@@ -69,6 +69,25 @@ const assetMatchesCategory = (assetId: number, categoryId?: string) => {
   if (!categoryId || categoryId === 'all') return true;
   return ASSET_CATEGORY_FILTERS[categoryId]?.includes(assetId) ?? true;
 };
+
+const MAIN_PANEL_PROJECT_PROGRESS: Record<number, number> = {
+  1: 82,
+  2: 86,
+  3: 64,
+  4: 38,
+  5: 78,
+  6: 68,
+  7: 100,
+  8: 100,
+};
+
+const MAIN_PANEL_PROJECTS = DEFAULT_PROJECTS.map((project) => ({
+  id: project.id,
+  title: project.name,
+  image: project.listImage || project.image || "",
+  status: project.status,
+  progress: MAIN_PANEL_PROJECT_PROGRESS[project.id] ?? 0,
+}));
 
 export const ASSETS = [
   {
@@ -673,7 +692,7 @@ export const ASSETS = [
   }
 ];
 
-function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNavigate?: (page: any) => void, currentPage?: string, activeNav?: 'market' | 'art' | 'studio' | 'support' | null, setActiveNav?: (nav: 'market' | 'art' | 'studio' | 'support' | null) => void }) {
+function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNavigate?: (page: any) => void, currentPage?: string, activeNav?: 'market' | 'art' | 'studio' | 'projects' | 'support' | null, setActiveNav?: (nav: 'market' | 'art' | 'studio' | 'projects' | 'support' | null) => void }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -868,7 +887,13 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
               AI Studio
             </li>
             <li 
-              className={`${currentPage === 'board' || currentPage === 'notes' || currentPage === 'references' || currentPage === 'note-editor' || currentPage === 'projects' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
+              className={`${activeNav === 'projects' || currentPage === 'projects' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
+              onClick={() => { if(setActiveNav) setActiveNav('projects'); if(onNavigate) onNavigate('projects'); }}
+            >
+              Projects
+            </li>
+            <li 
+              className={`${currentPage === 'board' || currentPage === 'notes' || currentPage === 'references' || currentPage === 'note-editor' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav(null); if(onNavigate) onNavigate('board'); }}
             >
               Board
@@ -1365,7 +1390,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
         <div className="mx-4 mt-4 p-3.5 bg-surface-primary/60 border border-border-soft/60 rounded-[8px]">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[14px] text-text-secondary flex items-center gap-1.5 font-medium tracking-tight">
-              <Sparkles className="w-4 h-4 text-brand-primary" /> AI 스튜디오 크레딧
+              <Sparkles className="w-4 h-4 text-brand-primary" /> AI Studio 크레딧
             </span>
             <span className="text-[14px] text-brand-primary font-sans font-medium tracking-tight">320 / 500 CC</span>
           </div>
@@ -1374,26 +1399,22 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
           </div>
         </div>
 
-        {/* Primary Action Button */}
-        <div className="mx-4 mt-3">
-          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('uploads'); }} className="w-full flex items-center justify-center gap-2 py-3 bg-[#1A1814] text-brand-primary text-[14px] font-medium rounded-[8px] border border-brand-primary/20 hover:bg-[#1F1A12] hover:border-brand-primary/40 transition-colors cursor-pointer tracking-tight shadow-sm">
-            <Upload className="w-[18px] h-[18px]" /> 내가 업로드한 작업물 관리
-          </button>
-        </div>
-
         {/* Menu Items */}
-        <div className="flex flex-col mt-4 px-2">
+        <div className="flex flex-col mt-3 px-2">
+          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('uploads'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
+            <Upload className="w-[20px] h-[20px]" /> 업로드한 작업물 관리
+          </button>
           <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('projects'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
-            <Folder className="w-[20px] h-[20px]" /> 내 프로젝트 라이브러리
+            <Folder className="w-[20px] h-[20px]" /> 내 프로젝트
           </button>
           <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('board'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
-            <LayoutGrid className="w-[20px] h-[20px]" /> Board
+            <LayoutGrid className="w-[20px] h-[20px]" /> 보드
           </button>
           <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('favorites'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
-            <Heart className="w-[20px] h-[20px]" /> 관심 목록
+            <Heart className="w-[20px] h-[20px]" /> 찜한 작품
           </button>
           <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('purchases'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
-            <LayoutGrid className="w-[20px] h-[20px]" /> 구매한 에셋
+            <ShoppingBag className="w-[20px] h-[20px]" /> 구매한 에셋
           </button>
           <button 
             onClick={() => {
@@ -1402,10 +1423,9 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
             }}
             className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight"
           >
-            <Settings className="w-[20px] h-[20px]" /> 계정 및 프로필 설정
+            <Settings className="w-[20px] h-[20px]" /> 계정 설정
           </button>
         </div>
-
         {/* Footer */}
         <div className="border-t border-[#2A2E36]/50 mt-2 p-1.5 px-2">
           <button className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-[#9A9DA3] hover:bg-red-500/10 hover:text-[#E46B6B] transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
@@ -1631,7 +1651,7 @@ function QuickCollectDialog({
     if (!request) return;
     setMode("existing");
     setMemo("");
-    setNewName(request.target === "notes" ? `${request.asset.title} 메모` : `${request.asset.title} 보드`);
+    setNewName(request.target === "notes" ? `${request.asset.title} 메모` : `${request.asset.title} 레퍼런스`);
   }, [request]);
 
   if (!request) return null;
@@ -1664,7 +1684,7 @@ function QuickCollectDialog({
       <div className="w-full max-w-[600px] rounded-xl border border-[#2A2E36] bg-[#0E1011] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.65)]">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <p className="text-[14px] font-medium text-brand-primary">{isNote ? "노트에 추가" : "보드 레퍼런스에 추가"}</p>
+            <p className="text-[14px] font-medium text-brand-primary">{isNote ? "노트에 추가" : "레퍼런스에 추가"}</p>
             <h3 className="mt-1 text-[20px] font-bold text-white">{request.asset.title}</h3>
           </div>
           <button onClick={onClose} className="rounded-md p-1.5 text-text-tertiary transition hover:bg-[#1A1C20] hover:text-white">
@@ -1675,7 +1695,7 @@ function QuickCollectDialog({
         <div className="mb-4 flex gap-2 rounded-lg bg-[#08090B] p-1">
           {[
             ["existing", "기존에 추가"],
-            ["new", isNote ? "새 노트" : "새 보드"],
+            ["new", isNote ? "새 노트" : "새 레퍼런스"],
           ].map(([id, label]) => (
             <button
               key={id}
@@ -1717,16 +1737,16 @@ function QuickCollectDialog({
               value={newName}
               onChange={(event) => setNewName(event.target.value)}
               className="w-full rounded-lg border border-[#2A2E36] bg-[#08090B] px-4 py-3 text-[14px] font-medium text-white outline-none focus:border-brand-primary"
-              placeholder={isNote ? "새 노트 이름" : "새 보드 이름"}
+              placeholder={isNote ? "새 노트 이름" : "새 레퍼런스 이름"}
             />
             <textarea
               value={memo}
               onChange={(event) => setMemo(event.target.value)}
               className="h-28 w-full resize-none rounded-lg border border-[#2A2E36] bg-[#08090B] px-4 py-3 text-[14px] text-white outline-none focus:border-brand-primary"
-              placeholder={isNote ? "옆에 남길 메모를 입력하세요." : "보드 설명이나 참고 메모를 입력하세요."}
+              placeholder={isNote ? "옆에 남길 메모를 입력하세요." : "레퍼런스 설명이나 참고 메모를 입력하세요."}
             />
             <button
-              onClick={() => onSave("new", newName.trim() || (isNote ? "새 노트" : "새 보드"), memo)}
+              onClick={() => onSave("new", newName.trim() || (isNote ? "새 노트" : "새 레퍼런스"), memo)}
               className="w-full rounded-lg bg-brand-primary py-3 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover"
             >
               저장하기
@@ -1778,7 +1798,7 @@ function QuickCollectPanel({
               }}
               className="flex items-center gap-2 rounded-[8px] border border-border-primary/80 bg-bg-secondary/95 px-8 py-3 text-[15px] font-medium tracking-wide text-text-primary shadow-[0_15px_40px_rgba(0,0,0,0.9)] backdrop-blur-md transition-all hover:border-brand-primary hover:text-brand-primary"
             >
-              <PanelRightOpen className="h-4 w-4" />
+              <Plus className="h-4 w-4" />
               패널 열기
             </button>
           </motion.div>
@@ -1825,8 +1845,8 @@ function QuickCollectPanel({
               </div>
               <div className="xl:col-span-4">
                 <QuickDropCard
-                  title="보드 레퍼런스"
-                  description="새 보드 저장 또는 기존 보드 추가"
+                  title="레퍼런스"
+                  description="새 레퍼런스 저장 또는 기존 목록 추가"
                   icon={LayoutGrid}
                   items={collections.references}
                   onNavigate={() => onNavigate("board")}
@@ -2136,6 +2156,7 @@ function ProductDetailPage({
 }) {
   const asset = ASSETS.find((item) => item.id === assetId) ?? ASSETS[0];
   const product = PRODUCT_DETAIL_DATA[asset.id] ?? PRODUCT_DETAIL_DATA[1];
+  const displayTitle = asset.title || product.title;
   const recommended = [5, 2, 1, 6]
     .map((id) => ASSETS.find((item) => item.id === id))
     .filter(Boolean) as typeof ASSETS;
@@ -2162,7 +2183,7 @@ function ProductDetailPage({
           <SmartProductImage
             candidates={detailImageCandidates(product, asset.id, heroOrder)}
             fallback={productFallbackImage(asset.id, heroOrder, asset.image)}
-            alt={product.title}
+            alt={displayTitle}
             className="h-auto w-full object-contain"
           />
           <div className="absolute right-4 top-4 flex gap-2 opacity-0 transition group-hover:opacity-100">
@@ -2199,7 +2220,7 @@ function ProductDetailPage({
                 <SmartProductImage
                   candidates={detailImageCandidates(product, asset.id, order)}
                   fallback={productFallbackImage(asset.id, order, asset.image)}
-                  alt={`${product.title} detail ${order}`}
+                  alt={`${displayTitle} detail ${order}`}
                   className="h-auto w-full object-contain"
                 />
                 <div className="absolute right-4 top-4 flex gap-2 opacity-0 transition group-hover:opacity-100">
@@ -2228,7 +2249,7 @@ function ProductDetailPage({
 
           <aside className="xl:sticky xl:top-[92px] xl:self-start">
             <div className="flex flex-col gap-5">
-              <ProductPurchasePanel asset={asset} product={product} />
+              <ProductPurchasePanel asset={asset} product={product} displayTitle={displayTitle} />
               <ProductLicensePanel />
               <ProductStatsPanel stats={product.stats} />
               <ProductInfoPanel product={product} />
@@ -2277,14 +2298,29 @@ function BoardPage({
   onNavigate,
   favorites,
   toggleFavorite,
+  initialView = "all",
+  onEditNote,
 }: {
   onNavigate: (page: PageType) => void;
   favorites: number[];
   toggleFavorite: (id: number) => void;
+  initialView?: "all" | "notes" | "references";
+  onEditNote: (note: NoteItem | null) => void;
 }) {
-  const [boardView, setBoardView] = useState<"all" | "notes" | "references">("all");
+  const [boardView, setBoardView] = useState<"all" | "notes" | "references">(initialView);
   const [boardNoteFilter, setBoardNoteFilter] = useState("all");
   const [boardReferenceCategory, setBoardReferenceCategory] = useState("all");
+  const [activeBoardNoteId, setActiveBoardNoteId] = useState<number | null>(null);
+
+  useEffect(() => {
+    setBoardView(initialView);
+  }, [initialView]);
+
+  useEffect(() => {
+    if (boardView !== "notes") {
+      setActiveBoardNoteId(null);
+    }
+  }, [boardView]);
 
   const boardItems = [
     { id: "all" as const, label: "전체", desc: "노트와 레퍼런스 함께 보기", icon: LayoutGrid },
@@ -2296,6 +2332,9 @@ function BoardPage({
   const liveReferences = ASSETS.filter((asset) =>
     REFERENCE_BOARDS.some((board) => boardMatchesAsset(board, asset as any)),
   );
+  const activeBoardNote = activeBoardNoteId
+    ? liveNotes.find((note) => note.id === activeBoardNoteId) || null
+    : null;
   const noteTags = liveNotes.flatMap((note) => note.tags);
   const noteFilterFor = (noteIndex: number, tagIndex: number) => liveNotes[noteIndex]?.tags[tagIndex] ?? "all";
   const noteCountFor = (filter: string) =>
@@ -2429,9 +2468,15 @@ function BoardPage({
     );
   };
 
+  const openBoardNoteDetail = (noteId: number) => {
+    setActiveBoardNoteId(noteId);
+  };
+
   const renderOverviewNote = (note: (typeof NOTES)[number]) => (
-    <div
+    <button
       key={note.id}
+      type="button"
+      onClick={() => openBoardNoteDetail(note.id)}
       className="group flex min-h-[240px] flex-col rounded-lg border border-[#242832] bg-[#121419] p-4 text-left transition hover:border-brand-primary/50 hover:bg-[#171A20]"
     >
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -2454,8 +2499,115 @@ function BoardPage({
           <img key={image} src={image} alt="" className="aspect-square rounded object-cover" referrerPolicy="no-referrer" />
         ))}
       </div>
-    </div>
+    </button>
   );
+
+  const renderBoardNoteDetail = (note: (typeof NOTES)[number]) => (
+    <article className="flex h-full min-h-0 flex-col bg-[#0A0B0D]">
+      <header className="shrink-0 border-b border-[#1C1E24] px-6 py-5 sm:px-7">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[14px] font-medium text-brand-primary">노트 보기</p>
+            <h2 className="mt-2 text-[30px] font-medium leading-tight text-white sm:text-[34px]">{note.title}</h2>
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[14px] font-medium text-text-tertiary">
+              <span>{note.date}</span>
+              <span className="h-1 w-1 rounded-full bg-[#4A4F5A]" />
+              <span>이미지 {note.images.length}개</span>
+              <span className="h-1 w-1 rounded-full bg-[#4A4F5A]" />
+              <span>{note.starred ? "즐겨찾기 설정됨" : "즐겨찾기 미설정"}</span>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onEditNote(note)}
+              className="rounded-lg border border-brand-primary/35 bg-brand-primary/10 px-4 py-2 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-brand-primary/15"
+            >
+              노트 편집
+            </button>
+            <button
+              type="button"
+              title="닫기"
+              onClick={() => setActiveBoardNoteId(null)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#2A2E36] text-text-secondary transition hover:border-brand-primary/45 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+        <div className="space-y-5">
+          <section className="space-y-3">
+            <label className="block text-[16px] font-medium text-white" htmlFor={`board-note-memo-${note.id}`}>
+              메모
+            </label>
+            <textarea
+              id={`board-note-memo-${note.id}`}
+              key={note.id}
+              defaultValue={note.desc}
+              placeholder="아이디어나 참고할 내용을 메모하세요."
+              className="min-h-[260px] w-full resize-y rounded-xl border border-[#252A33] bg-[#101216] px-5 py-4 text-[17px] leading-[1.75] text-text-primary outline-none transition placeholder:text-text-tertiary focus:border-brand-primary/55 focus:bg-[#12161D]"
+            />
+          </section>
+
+          <section className="flex flex-wrap items-center gap-2">
+            <span className="mr-1 text-[14px] font-medium text-text-tertiary">태그</span>
+            {note.tags.map((tag) => (
+              <span key={tag} className="rounded-full border border-[#2A2E36] bg-[#151820] px-3 py-1.5 text-[14px] font-medium text-text-secondary">
+                {tag}
+              </span>
+            ))}
+          </section>
+
+          <section className="space-y-4 pt-1">
+            <h3 className="text-[20px] font-medium text-white">저장 이미지</h3>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {note.images.map((image, index) => (
+                <figure key={`${image}-${index}`} className="overflow-hidden rounded-xl border border-[#1C1E24] bg-[#08090B]">
+                  <div className="flex aspect-[4/3] items-center justify-center bg-[#0E1014]">
+                    <img src={image} alt={`${note.title} 저장 이미지 ${index + 1}`} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+                  </div>
+                  <figcaption className="border-t border-[#1C1E24] px-4 py-3 text-[14px] text-text-tertiary">
+                    저장 이미지 {index + 1}
+                  </figcaption>
+                </figure>
+              ))}
+              <button
+                type="button"
+                className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#2A2E36] bg-[#101216] text-[15px] font-medium text-text-tertiary transition hover:border-brand-primary/45 hover:bg-[#131820] hover:text-white"
+              >
+                <Plus className="h-6 w-6" />
+                이미지 추가
+              </button>
+            </div>
+            {note.images.length === 0 && (
+              <p className="text-[14px] text-text-tertiary">이 노트에 저장된 이미지가 없습니다.</p>
+            )}
+          </section>
+        </div>
+      </div>
+    </article>
+  );
+
+  const renderBoardNoteModal = () => {
+    if (!activeBoardNote) return null;
+
+    return (
+      <div
+        className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 px-4 py-5 backdrop-blur-sm"
+        onClick={() => setActiveBoardNoteId(null)}
+      >
+        <div
+          className="h-[min(780px,calc(100vh-48px))] w-full max-w-[960px] overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] shadow-2xl"
+          onClick={(event) => event.stopPropagation()}
+        >
+          {renderBoardNoteDetail(activeBoardNote)}
+        </div>
+      </div>
+    );
+  };
 
   const renderOverviewReference = (asset: (typeof ASSETS)[number]) => (
     <div
@@ -2472,7 +2624,8 @@ function BoardPage({
   );
 
   return (
-    <main className="flex h-[calc(100vh-76px)] overflow-hidden bg-bg-dark text-text-primary">
+    <>
+      <main className="flex h-[calc(100vh-76px)] overflow-hidden bg-bg-dark text-text-primary">
       <aside className="hidden w-[300px] shrink-0 border-r border-[#1C1E24] bg-[#0B0D10] p-5 lg:flex lg:flex-col">
         <div className="mb-6">
           <p className="text-[14px] font-medium uppercase tracking-[0.18em] text-brand-primary">Board</p>
@@ -2541,6 +2694,9 @@ function BoardPage({
             isPopup
             hideSidebar
             hideDetailPanel
+            hideSelectionActionBar
+            onOpenNote={openBoardNoteDetail}
+            onCreateNote={() => onEditNote(null)}
             boardFilter={boardNoteFilter}
           />
         ) : (
@@ -2554,16 +2710,18 @@ function BoardPage({
           />
         )}
       </section>
-    </main>
+      </main>
+      {renderBoardNoteModal()}
+    </>
   );
 }
 
-function ProductPurchasePanel({ asset, product }: { asset: any; product: typeof PRODUCT_DETAIL_DATA[number] }) {
+function ProductPurchasePanel({ asset, product, displayTitle }: { asset: any; product: typeof PRODUCT_DETAIL_DATA[number]; displayTitle: string }) {
   return (
     <>
       <div className="px-1">
         <span className="mb-1 block text-[14px] font-medium text-brand-primary">{product.category}</span>
-        <h1 className="text-[24px] font-bold text-white">{product.title}</h1>
+        <h1 className="text-[24px] font-bold text-white">{displayTitle}</h1>
       </div>
 
       <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-4">
@@ -2728,7 +2886,7 @@ function DiscoverSection({
   isSidebarOpen: boolean,
   favorites: number[],
   toggleFavorite: (id: number) => void,
-  activeNav?: 'market' | 'art' | 'studio' | 'support' | null,
+  activeNav?: 'market' | 'art' | 'studio' | 'projects' | 'support' | null,
   activeCategory?: string,
   onOpenProduct?: (assetId: number) => void,
   onQuickCollect?: (target: QuickDropTarget, asset: any) => void,
@@ -3275,7 +3433,7 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
 
       <section className="bg-surface-primary rounded-[8px] border border-border-soft/40 p-5 shadow-2xl">
         <div className="flex items-center justify-between mb-5 px-1">
-          <h3 className="text-[18px] font-semibold text-text-primary tracking-tight">보드 노트</h3>
+          <h3 className="text-[18px] font-semibold text-text-primary tracking-tight">노트</h3>
           <button className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
         </div>
         <div className="divide-y divide-[#161618]">
@@ -3296,7 +3454,7 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
 
       <section className="bg-surface-primary rounded-[8px] border border-border-soft/40 p-5 shadow-2xl">
         <div className="flex items-center justify-between mb-5 px-1">
-          <h3 className="text-[18px] font-semibold text-text-primary tracking-tight">보드 레퍼런스</h3>
+          <h3 className="text-[18px] font-semibold text-text-primary tracking-tight">레퍼런스</h3>
           <button className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
         </div>
         <div className="divide-y divide-[#161618]">
@@ -3380,7 +3538,7 @@ export default function App() {
     const validPages: PageType[] = ['home', 'uploads', 'purchases', 'favorites', 'settings', 'board', 'projects', 'note-editor', 'studio', 'support', 'full_workflow', 'full_workflow_chat', 'turnaround', 'modeling_generation', 'product_detail'];
     return validPages.includes(hashPage) ? hashPage : 'home';
   });
-  const [activeNav, setActiveNav] = useState<'market' | 'art' | 'studio' | 'support' | null>(null);
+  const [activeNav, setActiveNav] = useState<'market' | 'art' | 'studio' | 'projects' | 'support' | null>(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedProductId, setSelectedProductId] = useState<number>(() => {
     const hashProductId = Number(window.location.hash.replace('#', '').split('/')[1]);
@@ -3388,6 +3546,10 @@ export default function App() {
     const saved = Number(localStorage.getItem('neopoly_selected_product_id'));
     return saved >= 1 && saved <= 8 ? saved : 1;
   });
+  const [focusedProjectId, setFocusedProjectId] = useState<number | null>(null);
+  const [focusedBoardView, setFocusedBoardView] = useState<"all" | "notes" | "references">("all");
+  const mainPanelRef = useRef<HTMLDivElement>(null);
+  const quickDropAcceptedRef = useRef(false);
   const homeScrollYRef = useRef(0);
   const shouldRestoreHomeScrollRef = useRef(false);
 
@@ -3433,22 +3595,38 @@ export default function App() {
   const [favorites, setFavorites] = useState<number[]>([]);
   const [isAssetDragging, setIsAssetDragging] = useState(false);
   const [isPanelDropMode, setIsPanelDropMode] = useState(false);
-  const [quickCollections, setQuickCollections] = useState<QuickCollections>(() => {
-    try {
-      const saved = localStorage.getItem(QUICK_COLLECTIONS_KEY);
-      return saved ? { ...emptyQuickCollections(), ...JSON.parse(saved) } : emptyQuickCollections();
-    } catch {
-      return emptyQuickCollections();
-    }
-  });
+  const [quickCollections, setQuickCollections] = useState<QuickCollections>(() => emptyQuickCollections());
   const [quickDialog, setQuickDialog] = useState<{ target: "notes" | "references"; asset: QuickCollectAsset } | null>(null);
+  const [editingNote, setEditingNote] = useState<NoteItem | null>(null);
+
+  const panelNotes = (() => {
+    try {
+      const saved = localStorage.getItem("neopoly_notes_v2");
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) && parsed.length ? parsed : NOTES;
+    } catch {
+      return NOTES;
+    }
+  })().slice(0, 2);
+
+  const panelReferenceBoards = REFERENCE_BOARDS.slice(0, 2).map((board) => ({
+    ...board,
+    count: ASSETS.filter((asset) => boardMatchesAsset(board, asset as any)).length,
+  }));
 
   useEffect(() => {
-    localStorage.setItem(QUICK_COLLECTIONS_KEY, JSON.stringify(quickCollections));
-  }, [quickCollections]);
+    localStorage.removeItem(QUICK_COLLECTIONS_KEY);
+  }, []);
 
   useEffect(() => {
-    const stopDragging = () => setIsAssetDragging(false);
+    const stopDragging = () => {
+      setIsAssetDragging(false);
+      if (!quickDropAcceptedRef.current) {
+        setIsPanelOpen(false);
+        setIsPanelDropMode(false);
+      }
+      quickDropAcceptedRef.current = false;
+    };
     window.addEventListener("dragend", stopDragging);
     window.addEventListener("drop", stopDragging);
     return () => {
@@ -3456,6 +3634,20 @@ export default function App() {
       window.removeEventListener("drop", stopDragging);
     };
   }, []);
+
+  useEffect(() => {
+    if (currentPage !== 'home' || !isPanelOpen || isAssetDragging || isPanelDropMode) return;
+
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (mainPanelRef.current?.contains(target)) return;
+      setIsPanelOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    return () => document.removeEventListener("pointerdown", closeOnOutsideClick);
+  }, [currentPage, isPanelOpen, isAssetDragging, isPanelDropMode]);
 
   const toggleFavorite = (id: number) => {
     setFavorites(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
@@ -3486,6 +3678,7 @@ export default function App() {
   };
 
   const handleDropTarget = (target: QuickDropTarget, asset: QuickCollectAsset) => {
+    quickDropAcceptedRef.current = true;
     setIsPanelDropMode(true);
     setIsPanelOpen(true);
     if (target === "projects") {
@@ -3497,6 +3690,7 @@ export default function App() {
 
   const handleAssetDragStart = (asset: any, event: React.DragEvent) => {
     const quickAsset = toQuickCollectAsset(asset);
+    quickDropAcceptedRef.current = false;
     setIsAssetDragging(true);
     event.dataTransfer.effectAllowed = "copy";
     event.dataTransfer.setData(QUICK_ASSET_MIME, JSON.stringify(quickAsset));
@@ -3519,7 +3713,25 @@ export default function App() {
     setCurrentPage('home');
   };
 
+  const openProjectsPage = (projectId?: number) => {
+    setFocusedProjectId(typeof projectId === 'number' ? projectId : null);
+    setCurrentPage('projects');
+  };
+
+  const openBoardPage = (view: "all" | "notes" | "references" = "all") => {
+    setFocusedBoardView(view);
+    setCurrentPage('board');
+  };
+
+  const openNoteEditor = (note: NoteItem | null = null) => {
+    setEditingNote(note);
+    setCurrentPage('note-editor');
+  };
+
   const handleHeaderNavigate = (page: PageType) => {
+    if (page === 'board') {
+      setFocusedBoardView('all');
+    }
     if (page === 'home' && currentPage === 'product_detail') {
       returnToDiscover();
       return;
@@ -3542,11 +3754,13 @@ export default function App() {
           onNavigate={(page) => setCurrentPage(page as PageType)}
           favorites={favorites}
           toggleFavorite={toggleFavorite}
+          initialView={focusedBoardView}
+          onEditNote={openNoteEditor}
         />
       ) : currentPage === 'projects' ? (
-        <ProjectPage onNavigate={(page) => setCurrentPage(page as PageType)} />
+        <ProjectPage onNavigate={(page) => setCurrentPage(page as PageType)} selectedProjectId={focusedProjectId ?? undefined} />
       ) : currentPage === 'note-editor' ? (
-        <NoteEditorPage onNavigate={(page) => setCurrentPage(page as PageType)} />
+        <NoteEditorPage onNavigate={(page) => setCurrentPage(page as PageType)} initialNote={editingNote} />
       ) : currentPage === 'settings' ? (
         <AccountSettingsPage userProfile={userProfile} setUserProfile={setUserProfile} />
       ) : currentPage === 'studio' ? (
@@ -3618,11 +3832,12 @@ export default function App() {
         <AnimatePresence>
           {!isAssetDragging && !isPanelDropMode && isPanelOpen && (
             <motion.div
+              ref={mainPanelRef}
               initial={{ opacity: 0, y: 150, x: "-50%" }}
               animate={{ opacity: 1, y: 0, x: "-50%" }}
               exit={{ opacity: 0, y: 150, x: "-50%" }}
               transition={{ type: "spring", damping: 25, stiffness: 180 }}
-              className="fixed bottom-6 left-1/2 z-50 w-[1536px] max-w-[95%] h-auto bg-[#0E1011]/95 md:bg-[#0E1011]/93 backdrop-blur-xl border border-border-primary/50 rounded-[12px] pt-[46px] pl-[24px] pr-[24px] pb-[20px] ml-0 shadow-[0_30px_60px_rgba(0,0,0,0.95)]"
+              className="fixed bottom-6 left-1/2 z-50 max-h-[82vh] w-[1536px] max-w-[95%] overflow-y-auto bg-[#0E1011]/95 md:bg-[#0E1011]/93 backdrop-blur-xl border border-border-primary/50 rounded-[12px] pt-[46px] pl-[24px] pr-[24px] pb-[20px] ml-0 shadow-[0_30px_60px_rgba(0,0,0,0.95)]"
             >
               {/* Close Button - Inside but safe from overlap */}
               <button
@@ -3638,63 +3853,35 @@ export default function App() {
                 {/* 내 프로젝트 Section */}
                 <div className="xl:col-span-6 space-y-4">
                   <div className="flex items-center justify-between px-1">
-                    <h3 onClick={() => { setIsPanelOpen(false); setCurrentPage('projects'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">내 프로젝트</h3>
-                    <button onClick={() => { setIsPanelOpen(false); setCurrentPage('projects'); }} className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">
+                    <h3 onClick={() => { setIsPanelOpen(false); openProjectsPage(); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">내 프로젝트</h3>
+                    <button onClick={() => { setIsPanelOpen(false); openProjectsPage(); }} className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">
                       모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" />
                     </button>
                   </div>
                   
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {/* Project 1 */}
-                    <div className="bg-surface-primary/80 hover:bg-surface-primary border border-border-primary/20 rounded-[10px] p-2.5 transition-all hover:scale-[1.005] flex flex-col gap-3 group cursor-pointer hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
-                      <div className="w-full aspect-[16/10] rounded-[6px] overflow-hidden bg-bg-secondary relative border border-border-primary/10">
-                        <img src="/images/work_%2045.png" alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
-                      </div>
-                      <div className="space-y-1.5 min-w-0">
-                        <p className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">판타지 성 전체 씬</p>
-                        <div className="flex items-center justify-between text-[14px] font-sans mt-1">
-                          <span className="text-[14px] text-text-secondary font-medium uppercase tracking-wider">Modeling</span>
-                          <span className="text-[14px] font-medium text-[#8B909A]">75%</span>
+                    {MAIN_PANEL_PROJECTS.slice(0, 3).map((project) => (
+                      <button
+                        key={project.id}
+                        type="button"
+                        onClick={() => { setIsPanelOpen(false); openProjectsPage(project.id); }}
+                        className="bg-surface-primary/80 hover:bg-surface-primary border border-border-primary/20 rounded-[10px] p-2.5 transition-all hover:scale-[1.005] flex flex-col gap-3 group cursor-pointer hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)] text-left"
+                      >
+                        <div className="w-full aspect-[16/10] rounded-[6px] overflow-hidden bg-bg-secondary relative border border-border-primary/10">
+                          <img src={project.image} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
                         </div>
-                        <div className="h-[3px] bg-white/5 rounded-full overflow-hidden mt-1">
-                          <div className="h-full bg-brand-primary shadow-[0_0_8px_rgba(224,161,46,0.5)]" style={{ width: `75%` }}></div>
+                        <div className="space-y-1.5 min-w-0">
+                          <p className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">{project.title}</p>
+                          <div className="flex items-center justify-between text-[14px] font-sans mt-1">
+                            <span className="text-[14px] text-text-secondary font-medium uppercase tracking-wider">{project.status}</span>
+                            <span className="text-[14px] font-medium text-[#8B909A]">{project.progress}%</span>
+                          </div>
+                          <div className="h-[3px] bg-white/5 rounded-full overflow-hidden mt-1">
+                            <div className="h-full bg-brand-primary shadow-[0_0_8px_rgba(224,161,46,0.5)]" style={{ width: `${project.progress}%` }} />
+                          </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Project 2 */}
-                    <div className="bg-surface-primary/80 hover:bg-surface-primary border border-border-primary/20 rounded-[10px] p-2.5 transition-all hover:scale-[1.005] flex flex-col gap-3 group cursor-pointer hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
-                      <div className="w-full aspect-[16/10] rounded-[6px] overflow-hidden bg-bg-secondary relative border border-border-primary/10">
-                        <img src="/images/work_46.png" alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
-                      </div>
-                      <div className="space-y-1.5 min-w-0">
-                        <p className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">사이버펑크 시티</p>
-                        <div className="flex items-center justify-between text-[14px] font-sans mt-1">
-                          <span className="text-[14px] text-text-secondary font-medium uppercase tracking-wider">Image Gen</span>
-                          <span className="text-[14px] font-medium text-[#8B909A]">45%</span>
-                        </div>
-                        <div className="h-[3px] bg-white/5 rounded-full overflow-hidden mt-1">
-                          <div className="h-full bg-brand-primary shadow-[0_0_8px_rgba(224,161,46,0.5)]" style={{ width: `45%` }}></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Project 3 */}
-                    <div className="bg-surface-primary/80 hover:bg-surface-primary border border-border-primary/20 rounded-[10px] p-2.5 transition-all hover:scale-[1.005] flex flex-col gap-3 group cursor-pointer hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)]">
-                      <div className="w-full aspect-[16/10] rounded-[6px] overflow-hidden bg-bg-secondary relative border border-border-primary/10">
-                        <img src="/images/work_47.png" alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
-                      </div>
-                      <div className="space-y-1.5 min-w-0">
-                        <p className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">우주 전함 컨셉</p>
-                        <div className="flex items-center justify-between text-[14px] font-sans mt-1">
-                          <span className="text-[14px] text-text-secondary font-medium uppercase tracking-wider">Concept</span>
-                          <span className="text-[14px] font-medium text-[#8B909A]">90%</span>
-                        </div>
-                        <div className="h-[3px] bg-white/5 rounded-full overflow-hidden mt-1">
-                          <div className="h-full bg-brand-primary shadow-[0_0_8px_rgba(224,161,46,0.5)]" style={{ width: `90%` }}></div>
-                        </div>
-                      </div>
-                    </div>
+                      </button>
+                    ))}
 
 
 
@@ -3704,43 +3891,39 @@ export default function App() {
                 {/* 최근 노트 Section */}
                 <div className="xl:col-span-3 space-y-4">
                   <div className="flex items-center justify-between px-1">
-                    <h3 onClick={() => { setIsPanelOpen(false); setCurrentPage('board'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">보드 노트</h3>
-                    <button onClick={() => { setIsPanelOpen(false); setCurrentPage('board'); }} className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">
+                    <h3 onClick={() => { setIsPanelOpen(false); openBoardPage('notes'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">노트</h3>
+                    <button onClick={() => { setIsPanelOpen(false); openBoardPage('notes'); }} className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">
                       모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" />
                     </button>
                   </div>
                   
                   <div className="grid grid-cols-1 gap-3">
-                    {/* Note 1 */}
-                    <div className="h-[82px] flex flex-col justify-center bg-surface-primary/85 hover:bg-surface-primary px-3.5 rounded-[10px] border border-border-primary/20 transition-all hover:scale-[1.005] hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)] cursor-pointer group">
-                      <div className="flex flex-col gap-2 w-full">
-                        <h4 className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">판타지 성 컨셉 방향</h4>
-                        <div className="flex gap-1.5">
-                          <span className="text-[14px] px-2 py-0.5 bg-surface-primary text-text-secondary rounded font-medium border border-border-primary/35 uppercase tracking-tighter">아이디어</span>
-                          <span className="text-[14px] px-2 py-0.5 bg-surface-primary text-text-secondary rounded font-medium border border-border-primary/35 uppercase tracking-tighter">레퍼런스</span>
+                    {panelNotes.map((note) => (
+                      <button
+                        key={note.id}
+                        type="button"
+                        onClick={() => { setIsPanelOpen(false); openBoardPage('notes'); }}
+                        className="h-[82px] flex flex-col justify-center bg-surface-primary/85 hover:bg-surface-primary px-3.5 rounded-[10px] border border-border-primary/20 transition-all hover:scale-[1.005] hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)] cursor-pointer group text-left"
+                      >
+                        <div className="flex flex-col gap-2 w-full">
+                          <h4 className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">{note.title}</h4>
+                          <div className="flex gap-1.5 overflow-hidden">
+                            {(note.tags || []).slice(0, 2).map((tag: string) => (
+                              <span key={tag} className="text-[14px] px-2 py-0.5 bg-surface-primary text-text-secondary rounded font-medium border border-border-primary/35 uppercase tracking-tighter truncate">{tag.replace('#', '')}</span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Note 2 */}
-                    <div className="h-[82px] flex flex-col justify-center bg-surface-primary/85 hover:bg-surface-primary px-3.5 rounded-[10px] border border-border-primary/20 transition-all hover:scale-[1.005] hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)] cursor-pointer group">
-                      <div className="flex flex-col gap-2 w-full">
-                        <h4 className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">메카 워커 디자인 노트</h4>
-                        <div className="flex gap-1.5">
-                          <span className="text-[14px] px-2 py-0.5 bg-surface-primary text-text-secondary rounded font-medium border border-border-primary/35 uppercase tracking-tighter">구조</span>
-                          <span className="text-[14px] px-2 py-0.5 bg-surface-primary text-text-secondary rounded font-medium border border-border-primary/35 uppercase tracking-tighter">무장</span>
-                        </div>
-                      </div>
-                    </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {/* 보드 레퍼런스 Section */}
+                {/* 레퍼런스 Section */}
                 <div className="xl:col-span-3 space-y-4 xl:pr-6">
                   <div className="flex items-center justify-between px-1">
-                    <h3 onClick={() => { setIsPanelOpen(false); setCurrentPage('board'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">보드 레퍼런스</h3>
+                    <h3 onClick={() => { setIsPanelOpen(false); openBoardPage('references'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">레퍼런스</h3>
                     <button 
-                      onClick={() => { setIsPanelOpen(false); setCurrentPage('board'); }}
+                      onClick={() => { setIsPanelOpen(false); openBoardPage('references'); }}
                       className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors"
                     >
                       모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" />
@@ -3748,18 +3931,16 @@ export default function App() {
                   </div>
                   
                   <div className="grid grid-cols-1 gap-3">
-                    {[
-                      { name: '판타지 성', count: '128 items', tag: '3D Assets', img: '/images/work_%2043.png' },
-                      { name: '다크 판타지', count: '318 items', tag: 'Concept', img: '/images/work_%2044.png' },
-                    ].map((item) => (
-                      <div 
-                        key={item.name} 
-                        className="relative h-[82px] rounded-[10px] border border-border-primary/20 overflow-hidden transition-all hover:scale-[1.005] hover:border-brand-primary/45 shadow-[0_4px_15px_rgba(0,0,0,0.3)] cursor-pointer group"
+                    {panelReferenceBoards.map((board) => (
+                      <button
+                        key={board.id}
+                        type="button"
+                        onClick={() => { setIsPanelOpen(false); openBoardPage('references'); }}
+                        className="relative h-[82px] rounded-[10px] border border-border-primary/20 overflow-hidden transition-all hover:scale-[1.005] hover:border-brand-primary/45 shadow-[0_4px_15px_rgba(0,0,0,0.3)] cursor-pointer group text-left"
                       >
-                        {/* Background Image with elegant ambient dark gradient overlay */}
                         <div className="absolute inset-0 z-0">
                           <img 
-                            src={item.img} 
+                            src={board.image} 
                             alt="" 
                             className="w-full h-full object-cover opacity-[0.32] transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" 
                             referrerPolicy="no-referrer" 
@@ -3768,15 +3949,14 @@ export default function App() {
                           <div className="absolute inset-0 bg-gradient-to-r from-[#0e1011] via-[#0e1011]/60 to-[#0e1011]/20" />
                         </div>
                         
-                        {/* Foreground content safely situated on top of backdrop */}
                         <div className="relative z-10 flex flex-col justify-end h-full p-3.5">
-                          <h4 className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">{item.name}</h4>
+                          <h4 className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">{board.label}</h4>
                           <div className="flex gap-1.5 mt-2">
-                            <span className="text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter">{item.count}</span>
-                            <span className="text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter">{item.tag}</span>
+                            <span className="text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter">{board.count}개</span>
+                            <span className="text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter truncate">{board.keyword}</span>
                           </div>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -3797,7 +3977,10 @@ export default function App() {
             setIsPanelOpen(false);
             setIsPanelDropMode(false);
           }}
-          onOpenDrop={() => {
+          onOpenDrop={(asset) => {
+            if (asset) {
+              quickDropAcceptedRef.current = true;
+            }
             setIsPanelDropMode(true);
             setIsPanelOpen(true);
           }}

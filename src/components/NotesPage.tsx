@@ -30,7 +30,9 @@ interface NotesPageProps {
   onSelectNote?: (noteId: number) => void;
   onAcceptSelection?: (noteIds: number[]) => void;
   onSelectionChange?: (noteIds: number[]) => void;
+  onOpenNote?: (noteId: number) => void;
   hideSelectionActionBar?: boolean;
+  onCreateNote?: () => void;
 }
 
 export type NoteItem = {
@@ -180,7 +182,9 @@ export default function NotesPage({
   onSelectNote,
   onAcceptSelection,
   onSelectionChange,
+  onOpenNote,
   hideSelectionActionBar = false,
+  onCreateNote,
 }: NotesPageProps) {
   const [notes, setNotes] = useState<NoteItem[]>(loadNotes);
   const [activeNote, setActiveNote] = useState<number | null>(() => hideDetailPanel || isPopup ? null : notes[0]?.id ?? null);
@@ -261,7 +265,18 @@ export default function NotesPage({
         else next.add(id);
         return next;
       });
-    } else if (isPopup) {
+      setActiveNote(id);
+      return;
+    }
+
+    if (onOpenNote) {
+      setSelectedNotes(new Set());
+      setActiveNote(id);
+      onOpenNote(id);
+      return;
+    }
+
+    if (isPopup) {
       setSelectedNotes(new Set([id]));
     } else {
       setSelectedNotes(new Set());
@@ -287,6 +302,11 @@ export default function NotesPage({
   };
 
   const openCreateNote = () => {
+    if (onCreateNote) {
+      onCreateNote();
+      return;
+    }
+
     setNewNoteTitle("");
     setNewNoteMemo("");
     setNewNoteReference("");
@@ -502,13 +522,6 @@ export default function NotesPage({
                       : "border-border-primary/20 bg-surface-primary/80 hover:border-brand-primary/40 hover:bg-surface-primary"
                   }`}
                 >
-                  {note.starred && (
-                    <span className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-2.5 py-1 text-[13px] font-medium text-brand-primary">
-                      <Star className="h-3.5 w-3.5 fill-brand-primary" />
-                      즐겨찾기
-                    </span>
-                  )}
-
                   <div className="mb-2 flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2">
                       <h3

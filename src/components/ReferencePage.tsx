@@ -6,7 +6,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
-  Bookmark,
+  Star,
   Check,
   CheckSquare,
   ChevronDown,
@@ -492,7 +492,7 @@ export default function ReferencePage({
             onClick={() => setActiveCategory("all")}
           />
           <MenuBtn
-            icon={<Bookmark className="h-[18px] w-[18px]" />}
+            icon={<Star className="h-[18px] w-[18px]" />}
             label="즐겨찾기"
             count={refFavorites.length}
             active={activeCategory === "favorites"}
@@ -641,7 +641,7 @@ export default function ReferencePage({
                     : "border-[#1C1E24] bg-[#121417] text-text-secondary hover:bg-surface-primary hover:text-white"
                 }`}
               >
-                <Bookmark className={`h-4 w-4 ${favoritesFirst ? "fill-brand-primary" : ""}`} />
+                <Star className={`h-4 w-4 ${favoritesFirst ? "fill-brand-primary" : ""}`} />
                 즐겨찾기
               </button>
 
@@ -704,7 +704,7 @@ export default function ReferencePage({
         <div className={isPopup ? "min-h-0 flex-1 overflow-y-auto pr-1 pb-28" : ""}>
           {activeCategory === "favorites" && (
             <SectionHeader
-            icon={<Bookmark className="h-5 w-5 fill-red-500 text-red-500" />}
+            icon={<Star className="h-5 w-5 fill-brand-primary text-brand-primary" />}
             title="즐겨찾기"
             desc="북마크한 레퍼런스 이미지입니다."
           />
@@ -734,7 +734,7 @@ export default function ReferencePage({
                 setTrashIds(new Set());
                 setToast("휴지통을 비웠습니다.");
               }}
-              className="rounded-lg border border-red-500/30 px-4 py-2 text-[13px] font-bold text-red-400 transition hover:bg-red-500/10"
+              className="rounded-lg border border-red-500/30 px-4 py-2 text-[13px] font-bold text-brand-primary transition hover:bg-red-500/10"
             >
               휴지통 비우기
             </button>
@@ -809,13 +809,13 @@ export default function ReferencePage({
                   <p className="mt-1 text-[13px] text-neutral-400">{asset.author}</p>
                   <p className="mt-2 text-[12px] text-neutral-500">{asset.type ?? asset.badge}</p>
                 </div>
-                <Bookmark
+                <Star
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleRefFavorite(asset.id);
                   }}
                   className={`h-5 w-5 ${
-                    refFavorites.includes(asset.id) ? "fill-red-500 text-red-500" : "text-neutral-400"
+                    refFavorites.includes(asset.id) ? "fill-brand-primary text-brand-primary" : "text-neutral-400"
                   }`}
                 />
               </button>
@@ -1046,10 +1046,10 @@ export default function ReferencePage({
                     <button
                       onClick={() => toggleRefFavorite(previewImage.id)}
                       className={`rounded-lg border border-[#1F2329] bg-surface-primary p-2.5 transition hover:bg-[#111215] hover:text-white ${
-                        refFavorites.includes(previewImage.id) ? "text-red-400" : "text-neutral-400"
+                        refFavorites.includes(previewImage.id) ? "text-brand-primary" : "text-neutral-400"
                       }`}
                     >
-                      <Bookmark className={`h-5 w-5 ${refFavorites.includes(previewImage.id) ? "fill-red-400" : ""}`} />
+                      <Star className={`h-5 w-5 ${refFavorites.includes(previewImage.id) ? "fill-brand-primary" : ""}`} />
                     </button>
                     <button
                       onClick={() => downloadAsset(previewImage)}
@@ -1227,18 +1227,18 @@ function ReferenceCard({
         <>
           <button
             type="button"
-            title="\uD06C\uAC8C\uBCF4\uAE30"
+            title="크게보기"
             onClick={onPreview}
             className={`absolute top-3 z-20 flex h-9 items-center gap-1.5 rounded-full border border-white/10 bg-[#0A0B0D]/75 px-3 text-[14px] font-medium text-white opacity-0 shadow-lg backdrop-blur-md transition hover:bg-[#171A20] group-hover:opacity-100 ${
               isSelected ? "left-10" : "left-3"
             }`}
           >
             <Maximize2 className="h-3.5 w-3.5" />
-            <span>\uD06C\uAC8C\uBCF4\uAE30</span>
+            <span>크게보기</span>
           </button>
           <button
             type="button"
-            title="\uC990\uACA8\uCC3E\uAE30"
+            title="즐겨찾기"
             onClick={onFavorite}
             className={`absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur-md transition hover:bg-[#171A20] ${
               isFavorite
@@ -1246,44 +1246,12 @@ function ReferenceCard({
                 : "border-white/10 bg-[#0A0B0D]/70 text-white opacity-0 group-hover:opacity-100"
             }`}
           >
-            <Bookmark className={`h-4 w-4 ${isFavorite ? "fill-brand-primary" : ""}`} />
+            <Star className={`h-4 w-4 ${isFavorite ? "fill-brand-primary" : ""}`} />
           </button>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-[#050608]/95 via-[#050608]/65 to-transparent p-3 pt-14 opacity-0 transition duration-200 group-hover:opacity-100">
-            <div className="pointer-events-auto flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onLink}
-                className="flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border border-white/10 bg-[#15171C]/90 px-3 text-[14px] font-medium text-text-secondary transition hover:border-[#E0A12E]/40 hover:bg-[#1D2027] hover:text-white"
-              >
-                <LinkIcon className="h-4 w-4" />
-                <span>\uD504\uB85C\uC81D\uD2B8</span>
-              </button>
-              <button
-                type="button"
-                onClick={onAdd}
-                className={`flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border px-3 text-[14px] font-medium transition ${
-                  isSelected
-                    ? "border-brand-primary/45 bg-brand-primary/15 text-brand-primary"
-                    : "border-white/10 bg-[#15171C]/90 text-text-secondary hover:border-[#E0A12E]/40 hover:bg-[#1D2027] hover:text-white"
-                }`}
-              >
-                <Folder className="h-4 w-4" />
-                <span>{isSelected ? "\uC120\uD0DD \uD574\uC81C" : "\uBCF4\uB4DC\uC5D0 \uCD94\uAC00"}</span>
-              </button>
-              <button
-                type="button"
-                title="\uB354\uBCF4\uAE30"
-                onClick={(e) => e.stopPropagation()}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#15171C]/90 text-text-secondary transition hover:bg-[#1D2027] hover:text-white"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
         </>
       ) : isFavorite && !isSelected ? (
         <div className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[#E0A12E]/30 bg-[#0A0B0D]/85 text-brand-primary backdrop-blur-sm">
-          <Bookmark className="h-4 w-4 fill-brand-primary" />
+          <Star className="h-4 w-4 fill-brand-primary" />
         </div>
       ) : null}
 
@@ -1297,7 +1265,7 @@ function ReferenceCard({
                 <ActionButton icon={<LinkIcon className="h-3.5 w-3.5" />} title="\uD504\uB85C\uC81D\uD2B8 \uC5F0\uACB0" onClick={onLink} />
                 <ActionButton icon={<Folder className="h-3.5 w-3.5" />} title={isSelected ? "\uBCF4\uB4DC \uC120\uD0DD \uD574\uC81C" : "\uBCF4\uB4DC\uC5D0 \uCD94\uAC00"} onClick={onAdd} />
                 <ActionButton
-                  icon={<Bookmark className={`h-3.5 w-3.5 ${isFavorite ? "fill-brand-primary text-brand-primary" : ""}`} />}
+                  icon={<Star className={`h-3.5 w-3.5 ${isFavorite ? "fill-brand-primary text-brand-primary" : ""}`} />}
                   title="\uC990\uACA8\uCC3E\uAE30"
                   onClick={onFavorite}
                 />

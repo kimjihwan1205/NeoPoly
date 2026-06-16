@@ -8,12 +8,14 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import NoteSidebar from './NoteSidebar';
+import type { NoteItem } from './NotesPage';
 
 interface NoteEditorPageProps {
   onNavigate: (page: string) => void;
+  initialNote?: NoteItem | null;
 }
 
-export default function NoteEditorPage({ onNavigate }: NoteEditorPageProps) {
+export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteEditorPageProps) {
   const [activeTab, setActiveTab] = useState('전체 노트');
 
   const FOLDERS = [
@@ -59,7 +61,7 @@ export default function NoteEditorPage({ onNavigate }: NoteEditorPageProps) {
   return (
     <div className="flex h-[calc(100vh-76px)] overflow-hidden bg-bg-dark font-sans text-text-primary">
       {/* Left Sidebar */}
-      <NoteSidebar onNavigate={onNavigate} />
+      <NoteSidebar onNavigate={onNavigate} mode="editor" editorTitle={initialNote?.title} isNewNote={!initialNote} />
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto custom-scrollbar bg-bg-dark flex flex-col relative w-full">
@@ -104,23 +106,59 @@ export default function NoteEditorPage({ onNavigate }: NoteEditorPageProps) {
             <div className="flex items-center justify-between absolute right-0 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
                <span className="text-[13px] text-neutral-400 flex items-center gap-1.5"><RefreshCcw className="w-3.5 h-3.5" /> 자동 저장 중...</span>
             </div>
-            <input 
-              type="text" 
-              placeholder="제목을 입력하세요" 
+            <input
+              key={`title-${initialNote?.id ?? "new"}`}
+              type="text"
+              defaultValue={initialNote?.title ?? ""}
+              placeholder="제목을 입력하세요"
               className="w-full bg-transparent border-none outline-none text-[36px] font-bold text-white placeholder-[#3A404F] tracking-tight"
             />
-            <p className="text-[16px] text-neutral-400 mt-4 font-medium tracking-tight">아이디어, 컨셉, 참고 자료 등을 자유롭게 기록하세요.</p>
+            <p className="text-[16px] text-neutral-400 mt-4 font-medium tracking-tight">
+              {initialNote
+                ? `${initialNote.date} ? 이미지 ${initialNote.images.length}개 ? 태그 ${initialNote.tags.length}개`
+                : "아이디어, 메모, 저장할 이미지를 자유롭게 정리하세요."}
+            </p>
           </div>
 
           <div className="h-px w-full border-b border-[#1C1E24] mt-2 mb-4"></div>
 
           {/* Active Editor Block */}
-          <div className="bg-[#111215] border border-[#1C1E24] rounded-xl p-6 flex-1 flex flex-col items-start relative group cursor-text shadow-sm relative min-h-[300px]">
-            <p className="text-[16px] text-neutral-500 w-full h-full">메모를 입력하세요...</p>
+          <div className="bg-[#111215] border border-[#1C1E24] rounded-xl p-6 flex-1 flex flex-col items-start relative group shadow-sm min-h-[340px]">
+            <textarea
+              key={`memo-${initialNote?.id ?? "new"}`}
+              defaultValue={initialNote?.desc ?? ""}
+              placeholder="메모를 입력하세요."
+              className="min-h-[260px] w-full flex-1 resize-y bg-transparent border-none outline-none text-[16px] leading-[1.75] text-white placeholder:text-neutral-500"
+            />
             <button className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-[#1A1C20] border border-[#2A2E36] hover:bg-[#22252A] hover:border-[#3A404F] text-neutral-300 px-4 py-2 rounded-lg text-[14px] font-semibold transition-all opacity-0 group-hover:opacity-100 shadow-md">
               <Plus className="w-4 h-4" /> 블록 추가
             </button>
           </div>
+
+          {initialNote && (
+            <div className="flex flex-wrap gap-2">
+              {initialNote.tags.map((tag) => (
+                <span key={tag} className="rounded-full border border-[#2A2E36] bg-[#151820] px-3 py-1.5 text-[14px] font-medium text-neutral-300">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {initialNote && initialNote.images.length > 0 && (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {initialNote.images.map((image, index) => (
+                <figure key={`${image}-${index}`} className="overflow-hidden rounded-xl border border-[#1C1E24] bg-[#0A0B0D]">
+                  <div className="flex aspect-[4/3] items-center justify-center bg-[#0E1014]">
+                    <img src={image} alt={`${initialNote.title} 저장 이미지 ${index + 1}`} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
+                  </div>
+                  <figcaption className="border-t border-[#1C1E24] px-3 py-2 text-[13px] text-neutral-400">
+                    저장 이미지 {index + 1}
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
 
           {/* Drag and Drop Zone */}
           <div className="mt-2 border border-dashed border-[#2A2E36] rounded-xl p-6 flex flex-col items-center justify-center text-center bg-[#0C0C0E] hover:bg-[#111215] cursor-pointer hover:border-[#4A4E58] transition-all min-h-[120px]">

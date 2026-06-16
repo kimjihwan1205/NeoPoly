@@ -1,18 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
   ChevronRight,
   Clock,
-  Image as ImageIcon,
   LayoutGrid,
-  List,
-  MoreHorizontal,
   Paintbrush,
   Puzzle,
   Rotate3D,
   Star,
   Wand2,
 } from "lucide-react";
+import { DEFAULT_PROJECTS } from "./ProjectPage";
 
 type StudioProject = {
   id: number;
@@ -21,86 +19,29 @@ type StudioProject = {
   timeAgo: string;
   type: string;
   image: string;
-  images: number;
-  meshes: number;
-  notes: number;
   color: string;
 };
 
-const RECENT_PROJECTS: StudioProject[] = [
-  {
-    id: 1,
-    title: "하프 궁수",
-    status: "In Progress",
-    timeAgo: "10분 전 수정",
-    type: "Image Generate",
-    image: "/images/work_%201.png",
-    images: 128,
-    meshes: 24,
-    notes: 8,
-    color: "#facc15",
-  },
-  {
-    id: 2,
-    title: "오크 전사",
-    status: "Modeling",
-    timeAgo: "1시간 전 수정",
-    type: "Modeling",
-    image: "/images/work_%202.png",
-    images: 96,
-    meshes: 12,
-    notes: 4,
-    color: "#4ade80",
-  },
-  {
-    id: 3,
-    title: "기사 갑옷",
-    status: "Turnaround",
-    timeAgo: "3시간 전 수정",
-    type: "Turnaround",
-    image: "/images/work_%204.png",
-    images: 64,
-    meshes: 18,
-    notes: 7,
-    color: "#60a5fa",
-  },
-  {
-    id: 4,
-    title: "사이버 무기 세트",
-    status: "Modular",
-    timeAgo: "5시간 전 수정",
-    type: "Modular Extract",
-    image: "/images/work_%2016.png",
-    images: 48,
-    meshes: 32,
-    notes: 6,
-    color: "#facc15",
-  },
-  {
-    id: 5,
-    title: "고대 유적",
-    status: "Concept",
-    timeAgo: "6시간 전 수정",
-    type: "Concept",
-    image: "/images/work_%2013.png",
-    images: 72,
-    meshes: 15,
-    notes: 9,
-    color: "#60a5fa",
-  },
-  {
-    id: 6,
-    title: "로봇 빌런",
-    status: "Image Gen",
-    timeAgo: "1일 전 수정",
-    type: "Image Generate",
-    image: "/images/work_%2019.png",
-    images: 36,
-    meshes: 9,
-    notes: 3,
-    color: "#60a5fa",
-  },
+const PROJECT_TIME_AGOS = [
+  "10분 전",
+  "1시간 전",
+  "3시간 전",
+  "5시간 전",
+  "6시간 전",
+  "1일 전",
+  "2일 전",
+  "3일 전",
 ];
+
+const RECENT_PROJECTS: StudioProject[] = DEFAULT_PROJECTS.map((project, index) => ({
+  id: project.id,
+  title: project.name,
+  status: project.status,
+  timeAgo: PROJECT_TIME_AGOS[index] ?? "최근 수정",
+  type: project.status,
+  image: project.listImage || project.image || "",
+  color: project.statusColor,
+}));
 
 const WORKFLOW_CARDS = [
   {
@@ -148,8 +89,16 @@ export default function AIStudioPage({
   onNavigate?: (page: string) => void;
 }) {
   const [starred, setStarred] = useState<Set<number>>(new Set([2]));
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [toast, setToast] = useState("");
+  const continueScrollRef = useRef<HTMLDivElement | null>(null);
+  const continueDragRef = useRef({
+    active: false,
+    pointerId: -1,
+    startX: 0,
+    scrollLeft: 0,
+    moved: false,
+  });
+  const suppressProjectClickRef = useRef(false);
 
   useEffect(() => {
     if (!toast) return;
@@ -164,6 +113,55 @@ export default function AIStudioPage({
       else next.add(id);
       return next;
     });
+  };
+
+  const handleContinueDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    const scroller = continueScrollRef.current;
+    if (!scroller) return;
+
+    continueDragRef.current = {
+      active: true,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      scrollLeft: scroller.scrollLeft,
+      moved: false,
+    };
+    scroller.setPointerCapture?.(event.pointerId);
+  };
+
+  const handleContinueDragMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = continueDragRef.current;
+    const scroller = continueScrollRef.current;
+    if (!drag.active || !scroller) return;
+
+    const deltaX = event.clientX - drag.startX;
+    if (Math.abs(deltaX) > 4) {
+      drag.moved = true;
+      event.preventDefault();
+    }
+    scroller.scrollLeft = drag.scrollLeft - deltaX;
+  };
+
+  const finishContinueDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = continueDragRef.current;
+    const scroller = continueScrollRef.current;
+    if (!drag.active) return;
+
+    if (drag.moved) {
+      suppressProjectClickRef.current = true;
+      window.setTimeout(() => {
+        suppressProjectClickRef.current = false;
+      }, 0);
+    }
+
+    scroller?.releasePointerCapture?.(event.pointerId);
+    continueDragRef.current = { ...drag, active: false };
+  };
+
+  const openProjectFromCard = (project: StudioProject) => {
+    if (suppressProjectClickRef.current) return;
+    onNavigate?.(routeForProject(project));
   };
 
   return (
@@ -256,49 +254,28 @@ export default function AIStudioPage({
                   이어서 작업하기
                 </span>
               </div>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => onNavigate?.("projects")}
-                  className="flex items-center gap-1 text-[14px] text-neutral-400 transition hover:text-white"
-                >
-                  모든 프로젝트
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-                <div className="flex items-center gap-1 rounded-lg border border-[#1F2329] bg-[#141518] p-1">
-                  <button
-                    onClick={() => setViewMode("grid")}
-                    className={`rounded p-1 ${
-                      viewMode === "grid" ? "bg-[#2A2E36] text-white" : "text-neutral-400 hover:text-white"
-                    }`}
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode("list")}
-                    className={`rounded p-1 ${
-                      viewMode === "list" ? "bg-[#2A2E36] text-white" : "text-neutral-400 hover:text-white"
-                    }`}
-                  >
-                    <List className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+              <button
+                onClick={() => onNavigate?.("projects")}
+                className="flex items-center gap-1 text-[14px] text-neutral-400 transition hover:text-white"
+              >
+                모든 프로젝트
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
 
             <div
-              className={
-                viewMode === "grid"
-                  ? "grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
-                  : "grid grid-cols-1 gap-3"
-              }
+              ref={continueScrollRef}
+              onPointerDown={handleContinueDragStart}
+              onPointerMove={handleContinueDragMove}
+              onPointerUp={finishContinueDrag}
+              onPointerCancel={finishContinueDrag}
+              className="custom-scrollbar flex cursor-grab select-none gap-5 overflow-x-auto pb-3 active:cursor-grabbing"
             >
               {RECENT_PROJECTS.map((project) => (
                 <button
                   key={project.id}
-                  onClick={() => onNavigate?.(routeForProject(project))}
-                  className={`group overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-left transition hover:border-[#3A404F] ${
-                    viewMode === "list" ? "grid grid-cols-[160px_1fr] items-stretch" : "flex h-full flex-col"
-                  }`}
+                  onClick={() => openProjectFromCard(project)}
+                  className="group flex min-h-[260px] w-[260px] shrink-0 flex-col overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-left transition hover:border-[#3A404F]"
                 >
                   <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden">
                     <img
@@ -311,6 +288,7 @@ export default function AIStudioPage({
                     <span
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (suppressProjectClickRef.current) return;
                         toggleStar(project.id);
                       }}
                       className="absolute right-3 top-3 z-10 p-1 text-neutral-300 transition hover:text-[#E0A12E]"
@@ -338,7 +316,7 @@ export default function AIStudioPage({
                   </div>
 
                   <div className="flex flex-1 flex-col bg-[#0A0B0D] p-4">
-                    <div className="mb-4 flex-1">
+                    <div className="flex-1">
                       <h3 className="text-[16px] font-bold text-white">
                         {project.title}
                       </h3>
@@ -364,31 +342,7 @@ export default function AIStudioPage({
                       </div>
                     </div>
 
-                    <div className="mt-auto flex shrink-0 items-center justify-between border-t border-[#1F2329] pt-4 text-[12px] text-neutral-400">
-                      <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1.5">
-                          <ImageIcon className="h-[14px] w-[14px]" />
-                          {project.images}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <Box className="h-[14px] w-[14px]" />
-                          {project.meshes}
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                          <LayoutGrid className="h-[14px] w-[14px]" />
-                          {project.notes}
-                        </span>
-                      </div>
-                      <span
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setToast("프로젝트 메뉴를 열 준비가 되었습니다.");
-                        }}
-                        className="text-neutral-500 transition hover:text-white"
-                      >
-                        <MoreHorizontal className="h-[16px] w-[16px]" />
-                      </span>
-                    </div>
+
                   </div>
                 </button>
               ))}
