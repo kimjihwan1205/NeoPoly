@@ -42,115 +42,217 @@ export type NoteItem = {
   tags: string[];
   images: string[];
   date: string;
+  status?: string;
+  statusColor?: string;
   starred: boolean;
   authorImage: string;
 };
 
-const STORAGE_KEY = "neopoly_notes_v2";
-const CHECKLIST_KEY = "neopoly_note_checklist_v2";
+const STORAGE_KEY = "neopoly_notes_v3";
+const CHECKLIST_KEY = "neopoly_note_checklist_v3";
 
 export const NOTES: NoteItem[] = [
   {
-    id: 1,
-    title: "하프 궁수",
-    desc: "숲 배경의 하프 궁수 캐릭터. 얇은 금속 장식과 가죽 장비를 중심으로 정리.",
-    tags: ["#하프", "#궁수", "#캐릭터"],
-    images: ["/images/work_%201.png", "/images/work_%202.png", "/images/work_%203.png"],
-    date: "2024.05.20",
-    starred: true,
-    authorImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=1",
-  },
-  {
-    id: 2,
-    title: "기사 갑옷",
-    desc: "중세 판타지 갑옷의 실루엣과 금속 재질 참고 이미지 모음.",
-    tags: ["#갑옷", "#프롭", "#금속"],
-    images: ["/images/work_%204.png", "/images/work_%205.png", "/images/work_%206.png"],
-    date: "2024.05.19",
-    starred: false,
-    authorImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=2",
-  },
-  {
-    id: 3,
-    title: "마을 배경",
-    desc: "판타지 마을의 레이아웃, 조명, 건물 구조를 정리한 배경 노트.",
-    tags: ["#배경", "#마을", "#컨셉"],
-    images: ["/images/work_%207.png", "/images/work_%208.png", "/images/work_%209.png"],
-    date: "2024.05.18",
-    starred: false,
-    authorImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=3",
-  },
-  {
-    id: 4,
-    title: "오크 전사 장비 컨셉",
-    desc: "오크 캐릭터의 정면, 45도, 측면, 후면 턴어라운드와 장비 모듈 레퍼런스.",
-    tags: ["#오크", "#전사", "#장비", "#턴어라운드"],
-    images: [
-      "/images/orc/orc_2D_front.png",
-      "/images/orc/orc_2D_45.png",
-      "/images/orc/orc_default_item01.png",
+    "id": 1,
+    "title": "\uc5d8\ud504 \uad81\uc218 \ucf58\uc149\ud2b8 \uc815\ub9ac",
+    "desc": "\uc232 \ubc30\uacbd\uc758 \uc5d8\ud504 \uad81\uc218 \uc2e4\ub8e8\uc5e3, \ud65c \ud3ec\uc988, \uae08\uc18d \uc7a5\uc2dd\uacfc \uc758\uc0c1 \ub808\ud37c\ub7f0\uc2a4\ub97c \uc815\ub9ac\ud55c \ub178\ud2b8\uc785\ub2c8\ub2e4.",
+    "tags": [
+      "#\uc5d8\ud504",
+      "#\uad81\uc218",
+      "#\uc232",
+      "#\uc758\uc0c1"
     ],
-    date: "2024.05.17",
-    starred: true,
-    authorImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=4",
+    "images": [
+      "/images/elf_re/elf_re01.jpg",
+      "/images/elf_re/elf_re02.jpeg",
+      "/images/elf_re/elf_re03.jpeg",
+      "/images/elf_re/elf_re04.jpg",
+      "/images/elf_re/elf_re05.jpg"
+    ],
+    "date": "2026.06.14",
+    "status": "Modeling",
+    "statusColor": "#6FAF52",
+    "starred": true,
+    "authorImage": "https://api.dicebear.com/7.x/avataaars/svg?seed=elf-note"
   },
   {
-    id: 5,
-    title: "유적 배경 구조",
-    desc: "고대 유적의 기둥, 계단, 내부 공간을 제작하기 위한 레퍼런스.",
-    tags: ["#배경", "#유적", "#구조"],
-    images: ["/images/work_%2013.png", "/images/work_%2014.png", "/images/work_%2015.png"],
-    date: "2024.05.17",
-    starred: false,
-    authorImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=5",
+    "id": 2,
+    "title": "\uc624\ud06c \uc804\uc0ac \uc7a5\ube44 \ub178\ud2b8",
+    "desc": "\uc624\ud06c \uc804\uc0ac\uc758 \ubab8\ud615, \ubabd\ub465\uc774, \uc5b4\uae68 \uac11\uc637, \ubca8\ud2b8 \uc7a5\uc2dd\uacfc \ubcf4\ud638\ub300 \uad6c\uc870\ub97c \ubb36\uc5b4 \uc815\ub9ac\ud55c \uc791\uc5c5 \ub178\ud2b8\uc785\ub2c8\ub2e4.",
+    "tags": [
+      "#\uc624\ud06c",
+      "#\uc804\uc0ac",
+      "#\uc7a5\ube44",
+      "#\ubaa8\ub4c8"
+    ],
+    "images": [
+      "/images/orc_re/orc_re01.png",
+      "/images/orc_re/orc_re02.jpg",
+      "/images/orc_re/orc_re03.jpg",
+      "/images/orc_re/orc_re04.jpg"
+    ],
+    "date": "2026.06.13",
+    "status": "Modeling",
+    "statusColor": "#6FAF52",
+    "starred": true,
+    "authorImage": "https://api.dicebear.com/7.x/avataaars/svg?seed=orc-note"
   },
   {
-    id: 6,
-    title: "사이버 무기",
-    desc: "날카로운 실루엣과 금속, 발광 파츠를 가진 무기 디자인 정리.",
-    tags: ["#무기", "#사이버", "#프롭"],
-    images: ["/images/work_%2016.png", "/images/work_%2017.png", "/images/work_%2018.png"],
-    date: "2024.05.16",
-    starred: false,
-    authorImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=6",
+    "id": 3,
+    "title": "\uc640\uc774\ubc88 \ud06c\ub9ac\ucc98 \uad6c\uc870",
+    "desc": "\uac70\ub300\ud55c \ub0a0\uac1c\uc640 \uae34 \uaf2c\ub9ac, \ube44\ud589 \ud3ec\uc988, \uac11\ud53c \uc7ac\uc9c8\uc744 \ud568\uaed8 \ubcfc \uc218 \uc788\ub294 \uc640\uc774\ubc88 \ucc38\uace0 \ub178\ud2b8\uc785\ub2c8\ub2e4.",
+    "tags": [
+      "#\uc640\uc774\ubc88",
+      "#\ud06c\ub9ac\ucc98",
+      "#\ub0a0\uac1c",
+      "#PBR"
+    ],
+    "images": [
+      "/images/wyvern_re/wyvern_re01.jpg",
+      "/images/wyvern_re/wyvern_re02.jpg",
+      "/images/wyvern_re/wyvern_re023.png"
+    ],
+    "date": "2026.06.12",
+    "status": "Turnaround",
+    "statusColor": "#A36BFF",
+    "starred": false,
+    "authorImage": "https://api.dicebear.com/7.x/avataaars/svg?seed=wyvern-note"
   },
   {
-    id: 7,
-    title: "미래형 로봇 빌런",
-    desc: "기계 관절, 큰 실루엣, 차가운 색감의 적 캐릭터 레퍼런스.",
-    tags: ["#로봇", "#빌런", "#캐릭터"],
-    images: ["/images/work_%2019.png", "/images/work_%2020.png", "/images/work_%2021.png"],
-    date: "2024.05.15",
-    starred: false,
-    authorImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=7",
+    "id": 4,
+    "title": "\uacf5\ub8e1 \ud0c8\uac83 \uc7a5\ube44 \uad6c\uc870",
+    "desc": "\ud0d1\uc2b9 \uc7a5\ube44\uc640 \uc9d0, \uc548\uc7a5 \uc2e4\ub8e8\uc5e3, \uacf5\ub8e1\uc758 \uce21\uba74 \ube44\ub840\ub97c \ube44\uad50\ud558\uae30 \uc704\ud55c \ub178\ud2b8\uc785\ub2c8\ub2e4.",
+    "tags": [
+      "#\uacf5\ub8e1",
+      "#\ud0c8\uac83",
+      "#\uc548\uc7a5",
+      "#\ud310\ud0c0\uc9c0"
+    ],
+    "images": [
+      "/images/Dino_re/Dino_re01.jpg",
+      "/images/Dino_re/Dino_re02.jpg",
+      "/images/Dino_re/Dino_re03.jpg",
+      "/images/Dino_re/Dino_re04.jpg"
+    ],
+    "date": "2026.06.11",
+    "status": "Concept",
+    "statusColor": "#2DD4BF",
+    "starred": false,
+    "authorImage": "https://api.dicebear.com/7.x/avataaars/svg?seed=dino-note"
   },
   {
-    id: 8,
-    title: "드래곤 캐릭터",
-    desc: "비늘, 날개, 뿔 구조와 재질 표현을 위한 이미지 묶음.",
-    tags: ["#드래곤", "#생물", "#레퍼런스"],
-    images: ["/images/work_%2022.png", "/images/work_%2023.png", "/images/work_%2024.png"],
-    date: "2024.05.14",
-    starred: false,
-    authorImage: "https://api.dicebear.com/7.x/avataaars/svg?seed=8",
+    "id": 5,
+    "title": "\uc2a4\ud2b8\ub9bf \ud328\uc158 \uc758\uc0c1 \ub178\ud2b8",
+    "desc": "\uc2a4\ud3ec\uce20\uc6e8\uc5b4, \ub18d\uad6c \ud3ec\uc988, \uc131\ub2a5\ud615 \uc758\uc0c1 \ube44\ub840\ub97c \uce90\ub9ad\ud130 \uc791\uc5c5\uc5d0 \uc4f0\uae30 \uc88b\uac8c \uc815\ub9ac\ud588\uc2b5\ub2c8\ub2e4.",
+    "tags": [
+      "#\uc2a4\ud2b8\ub9bf",
+      "#\ud328\uc158",
+      "#\uc2a4\ud3ec\uce20",
+      "#\uce90\ub9ad\ud130"
+    ],
+    "images": [
+      "/images/street_re/Street_re01.jpg",
+      "/images/street_re/Street_re02.jpg",
+      "/images/street_re/Street_re03.jpg"
+    ],
+    "date": "2026.06.10",
+    "status": "Modeling",
+    "statusColor": "#4C88D9",
+    "starred": false,
+    "authorImage": "https://api.dicebear.com/7.x/avataaars/svg?seed=street-note"
   },
+  {
+    "id": 6,
+    "title": "\ucf54\ubfd4\uc18c \uc804\uc0ac \uac11\uc637 \ucc38\uace0",
+    "desc": "\ubb34\uac70\uc6b4 \uac11\uc637, \ub3c4\ub07c, \ub098\ubb34\uc640 \uae08\uc18d \ud30c\uce20\uac00 \uc5b4\ub5bb\uac8c \ubd99\ub294\uc9c0 \ube44\uad50\ud558\ub294 \ucf54\ubfd4\uc18c \uc804\uc0ac \ub178\ud2b8\uc785\ub2c8\ub2e4.",
+    "tags": [
+      "#\ucf54\ubfd4\uc18c",
+      "#\uc804\uc0ac",
+      "#\uac11\uc637",
+      "#\ub3c4\ub07c"
+    ],
+    "images": [
+      "/images/Rhino_re/Rhino_re01.jpg",
+      "/images/Rhino_re/Rhino_re02.jpg",
+      "/images/Rhino_re/Rhino_re03.jpg",
+      "/images/Rhino_re/Rhino_re04.jpg"
+    ],
+    "date": "2026.06.09",
+    "status": "Turnaround",
+    "statusColor": "#A36BFF",
+    "starred": false,
+    "authorImage": "https://api.dicebear.com/7.x/avataaars/svg?seed=rhino-note"
+  },
+  {
+    "id": 7,
+    "title": "\ud3ec\uc2a4\ucf54 \ud654\uc774\ud2b8 \uc0b0\uc5c5 \uc5d0\uc14b",
+    "desc": "\uc120\ubc15, \uc124\ube44, \uac74\ucd95 \ubaa8\ub4c8\uc744 \ud654\uc774\ud2b8 \ud1a4 \uc0b0\uc5c5 \uc5d0\uc14b\uc73c\ub85c \ubb36\uc5b4 \ud45c\ud604\ud558\uae30 \uc704\ud55c \ub808\ud37c\ub7f0\uc2a4 \ub178\ud2b8\uc785\ub2c8\ub2e4.",
+    "tags": [
+      "#\ud3ec\uc2a4\ucf54",
+      "#\ud654\uc774\ud2b8",
+      "#\uc0b0\uc5c5",
+      "#3D\uc5d0\uc14b"
+    ],
+    "images": [
+      "/images/posco01_re/posco01_re01.png",
+      "/images/posco01_re/posco01_re02.png",
+      "/images/posco01_re/posco01_re03.png",
+      "/images/posco01_re/posco01_re04.png",
+      "/images/posco01_re/posco01_re05.png",
+      "/images/posco01_re/posco01_re06.png",
+      "/images/posco01_re/posco01_re07.png"
+    ],
+    "date": "2026.06.08",
+    "status": "Art",
+    "statusColor": "#8A8F98",
+    "starred": false,
+    "authorImage": "https://api.dicebear.com/7.x/avataaars/svg?seed=posco-white-note"
+  },
+  {
+    "id": 8,
+    "title": "\ud3ec\uc2a4\ucf54 \ube14\ub8e8 \uad6c\uc870 \ubaa8\ub4c8",
+    "desc": "\ube14\ub8e8 \ud1a4 \ucca0\uace8 \uad6c\uc870, \uc8fc\ud0dd \ud504\ub808\uc784, \uc0b0\uc5c5 \ubd80\ud488\uc744 \ubaa8\ub4c8\ud615 \uc5d0\uc14b\uc73c\ub85c \ud655\uc778\ud558\ub294 \ub178\ud2b8\uc785\ub2c8\ub2e4.",
+    "tags": [
+      "#\ud3ec\uc2a4\ucf54",
+      "#\ube14\ub8e8",
+      "#\ucca0\uace8",
+      "#\uac74\ucd95\ubaa8\ub4c8"
+    ],
+    "images": [
+      "/images/posco02_re/posco02_re01.png",
+      "/images/posco02_re/posco02_re02.png",
+      "/images/posco02_re/posco02_re03.png",
+      "/images/posco02_re/posco02_re04.png",
+      "/images/posco02_re/posco02_re05.png",
+      "/images/posco02_re/posco02_re06.png",
+      "/images/posco02_re/posco02_re07.png"
+    ],
+    "date": "2026.06.07",
+    "status": "Art",
+    "statusColor": "#8A8F98",
+    "starred": false,
+    "authorImage": "https://api.dicebear.com/7.x/avataaars/svg?seed=posco-blue-note"
+  }
 ];
 
 const DEFAULT_CHECKLIST = [
-  "레퍼런스 이미지 수집",
-  "전체 실루엣 정리",
-  "색상 팔레트 결정",
-  "3면도 스케치",
-  "장비 파츠 분리",
-  "최종 컨셉 확정",
+  "\ub808\ud37c\ub7f0\uc2a4 \uc774\ubbf8\uc9c0 \uc218\uc9d1",
+  "\ud575\uc2ec \uc2e4\ub8e8\uc5e3 \uc815\ub9ac",
+  "\uc0c9\uc0c1\uacfc \uc7ac\uc9c8 \ud0a4\uc6cc\ub4dc \uc120\ud0dd",
+  "\uc791\uc5c5\uc6a9 \uba54\ubaa8 \ubcf4\uc644",
+  "\uc5f0\uacb0\ud560 \ud504\ub85c\uc81d\ud2b8 \ud655\uc778",
+  "\ucd5c\uc885 \uc791\uc5c5 \ubc29\ud5a5 \uc815\ub9ac"
 ];
 
 const EXTRA_REFERENCES = [
-  "/images/work_48.png",
-  "/images/work_49.png",
-  "/images/work_50.png",
-  "/images/orc/orc_default_item02.png",
-  "/images/orc/orc_default_item03.png",
+  "/images/elf_re/elf_re01.jpg",
+  "/images/orc_re/orc_re01.png",
+  "/images/wyvern_re/wyvern_re01.jpg",
+  "/images/Dino_re/Dino_re01.jpg",
+  "/images/street_re/Street_re01.jpg",
+  "/images/Rhino_re/Rhino_re01.jpg",
+  "/images/posco01_re/posco01_re01.png",
+  "/images/posco02_re/posco02_re01.png"
 ];
 
 function loadNotes() {
@@ -558,7 +660,7 @@ export default function NotesPage({
                     {note.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded border border-[#252830] bg-[#1A1C20] px-2 py-0.5 text-[12px] font-medium text-neutral-400"
+                        className="rounded border border-[#252830] bg-[#1A1C20] px-2 py-0.5 text-[14px] font-medium text-neutral-400"
                       >
                         {tag}
                       </span>
@@ -586,7 +688,7 @@ export default function NotesPage({
                   </div>
 
                   <div className="mt-auto flex items-center justify-between border-t border-[#1C1E24] pt-4">
-                    <span className="font-sans text-[13px] text-neutral-400">
+                    <span className="font-sans text-[14px] text-neutral-400">
                       {note.date}
                     </span>
                     <span className="text-neutral-400 transition hover:text-white">
@@ -670,38 +772,16 @@ export default function NotesPage({
               </section>
 
               <section>
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-[18px] font-bold text-white">
-                    참고 레퍼런스
-                  </h3>
-                  <button
-                    onClick={() => onNavigate("references")}
-                    className="text-[13px] font-medium text-neutral-400 hover:text-white"
-                  >
-                    모두 보기
-                  </button>
-                </div>
-                <div className="flex h-[140px] gap-2">
-                  {activeNoteData.images.slice(0, 4).map((img) => (
-                    <button
-                      key={img}
-                      onClick={() => onNavigate("references")}
-                      className="group relative flex-1 overflow-hidden rounded-lg border border-[#22252A] bg-black"
-                    >
-                      <img
-                        referrerPolicy="no-referrer"
-                        src={img}
-                        alt="reference"
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                      />
-                    </button>
+                <div className="grid grid-cols-2 gap-2">
+                  {activeNoteData.images.slice(0, 4).map((img, index) => (
+                    <img
+                      key={`${img}-${index}`}
+                      referrerPolicy="no-referrer"
+                      src={img}
+                      alt={`${activeNoteData.title} image ${index + 1}`}
+                      className="aspect-[4/3] w-full rounded-lg object-cover"
+                    />
                   ))}
-                  <button
-                    onClick={addReference}
-                    className="flex w-[45px] shrink-0 items-center justify-center rounded-lg border border-dashed border-[#2A2E36] transition hover:border-[#4A4E58] hover:bg-[#15161A]"
-                  >
-                    <Plus className="h-4 w-4 text-neutral-400" />
-                  </button>
                 </div>
               </section>
 

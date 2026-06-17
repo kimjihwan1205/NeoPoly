@@ -8,8 +8,8 @@ interface AccountSettingsPageProps {
 }
 
 export default function AccountSettingsPage({ userProfile, setUserProfile }: AccountSettingsPageProps) {
-  const [nickname, setNickname] = useState('Jisu');
-  const [name, setName] = useState('지수');
+  const [nickname, setNickname] = useState('Hwan');
+  const [name, setName] = useState('김지환');
   const [bio, setBio] = useState('3D 캐릭터와 판타지 세계관을 중심으로 작업하고 있습니다.\n게임과 영화 스타일의 퀄리티 높은 에셋을 제작합니다.');
   const [location, setLocation] = useState('Seoul, Korea');
   const [role, setRole] = useState('3D Character Artist');
@@ -90,7 +90,7 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
             <div className="flex flex-col gap-4 min-w-0">
               <span className="text-[15px] font-medium text-neutral-100">배너 이미지</span>
               <div className="relative h-[150px] w-full rounded-[14px] border border-[#1F2329] bg-[#141518] overflow-hidden group">
-                <img referrerPolicy="no-referrer" src="/images/work_%2016.png" alt="Banner" className="w-full h-full object-cover opacity-70" />
+                <img referrerPolicy="no-referrer" src="/images/profile/profile_banner.png" alt="Banner" className="w-full h-full object-cover opacity-70" />
                 <button className="absolute bottom-3 right-3 w-[34px] h-[34px] rounded-full border border-[#1F2329] bg-[#0A0B0D]/80 backdrop-blur flex items-center justify-center text-neutral-300 hover:text-white hover:bg-[#141518] transition-all">
                   <Camera className="w-[16px] h-[16px]" strokeWidth={2} />
                 </button>
@@ -242,7 +242,7 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
 
           <div className="rounded-2xl border border-[#1F2329] bg-[#0A0B0D] overflow-hidden flex flex-col shadow-xl">
             <div className="h-[140px] bg-[#141518] relative">
-              <img referrerPolicy="no-referrer" src="/images/work_%2016.png" alt="Banner" className="w-full h-full object-cover opacity-80" />
+              <img referrerPolicy="no-referrer" src="/images/profile/profile_banner.png" alt="Banner" className="w-full h-full object-cover opacity-80" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0A0B0D] via-[#0A0B0D]/20 flex"></div>
             </div>
             

@@ -11,6 +11,8 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { UserProfile, CompletedProject, Asset } from '../types';
 
+const PROFILE_BANNER_IMAGE = '/images/profile/profile_banner.png';
+
 interface UserProfilePageProps {
   assets: Asset[];
   setAssets: React.Dispatch<React.SetStateAction<Asset[]>>;
@@ -47,9 +49,7 @@ export default function UserProfilePage({
   const [editedBio, setEditedBio] = useState(userProfile.bio);
   const [editedInsta, setEditedInsta] = useState(userProfile.instagramUrl || '');
   const [editedYoutube, setEditedYoutube] = useState(userProfile.youtubeUrl || '');
-  const [selectedBanner, setSelectedBanner] = useState<string>(() => {
-    return localStorage.getItem('neopoly_user_banner') || 'grad1';
-  });
+  const [selectedBanner, setSelectedBanner] = useState<string>(() => `url(${PROFILE_BANNER_IMAGE})`);
 
   // Project Dialog State
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);

@@ -31,6 +31,7 @@ import { UserProfile } from './types';
 
 // --- Constants & Updated Asset Data ---
 
+const PROFILE_IMAGE = '/images/profile/UserProfile.png';
 const HERO_IMAGE = "/images/hero.png";
 
 const CATEGORIES = [
@@ -93,7 +94,7 @@ export const ASSETS = [
   {
     id: 1,
     title: '엘프궁수',
-    author: 'Kim ji hwan',
+    author: 'Hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
     likes: '1.2K',
     views: '98',
@@ -103,7 +104,7 @@ export const ASSETS = [
   {
     id: 2,
     title: '오크',
-    author: 'Kim ji hwan',
+    author: 'Hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=v1',
     likes: '754',
     views: '52',
@@ -113,7 +114,7 @@ export const ASSETS = [
   {
     id: 3,
     title: '와이번',
-    author: 'Kim ji hwan',
+    author: 'Hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
     likes: '1.1K',
     views: '87',
@@ -123,7 +124,7 @@ export const ASSETS = [
   {
     id: 4,
     title: '공룡',
-    author: 'Kim ji hwan',
+    author: 'Hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
     likes: '982',
     views: '76',
@@ -133,7 +134,7 @@ export const ASSETS = [
   {
     id: 5,
     title: '스트릿 패션',
-    author: 'Kim ji hwan',
+    author: 'Hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=v2',
     likes: '1.1K',
     views: '89',
@@ -143,7 +144,7 @@ export const ASSETS = [
   {
     id: 6,
     title: '코뿔소 전사',
-    author: 'Kim ji hwan',
+    author: 'Hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=6',
     likes: '2.3K',
     views: '189',
@@ -153,7 +154,7 @@ export const ASSETS = [
   {
     id: 7,
     title: 'MY POSCO 01',
-    author: 'Kim ji hwan',
+    author: 'Hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=7',
     likes: '633',
     views: '33',
@@ -163,7 +164,7 @@ export const ASSETS = [
   {
     id: 8,
     title: 'MY POSCO 02',
-    author: 'Kim ji hwan',
+    author: 'Hwan',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=8',
     likes: '872',
     views: '56',
@@ -692,6 +693,205 @@ export const ASSETS = [
   }
 ];
 
+type PrototypePurchaseItem = {
+  id: number;
+  title: string;
+  author: string;
+  price: string;
+  rawPrice: number;
+  image: string;
+  category: string;
+  badge: 'M' | 'A';
+  license: string;
+  fileFormat: string;
+  purchasedAt?: number;
+};
+
+const PURCHASE_CART_KEY = 'neopoly_cart_items_v1';
+const PURCHASED_ASSETS_KEY = 'neopoly_purchased_assets_v1';
+const PROTOTYPE_CART_ADD_EVENT = 'neopoly:add-to-cart';
+const PROTOTYPE_CART_REMOVE_EVENT = 'neopoly:remove-from-cart';
+const PROTOTYPE_PURCHASE_EVENT = 'neopoly:purchased';
+
+const safeReadPurchaseItems = (key: string): PrototypePurchaseItem[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const safeWritePurchaseItems = (key: string, items: PrototypePurchaseItem[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, JSON.stringify(items));
+  } catch {
+    // Storage can be blocked in preview browsers.
+  }
+};
+
+const parseWonAmount = (value: string) => {
+  const parsed = Number(String(value).replace(/[^0-9]/g, ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const formatWonAmount = (value: number) => `\u20A9${value.toLocaleString('ko-KR')}`;
+
+const getPurchaseTotalText = (items: PrototypePurchaseItem[]) => {
+  const total = items.reduce((acc, item) => acc + item.rawPrice, 0);
+  if (total === 0 && items.some((item) => item.price.includes('\uBB38\uC758'))) return '\uBB38\uC758';
+  return formatWonAmount(total);
+};
+
+const addPurchasedItemsToStorage = (items: PrototypePurchaseItem[]) => {
+  const now = Date.now();
+  const nextItems = items.map((item) => ({ ...item, purchasedAt: now }));
+  const existing = safeReadPurchaseItems(PURCHASED_ASSETS_KEY);
+  const nextIds = new Set(nextItems.map((item) => item.id));
+  const merged = [...nextItems, ...existing.filter((item) => !nextIds.has(item.id))];
+  safeWritePurchaseItems(PURCHASED_ASSETS_KEY, merged);
+  window.dispatchEvent(new CustomEvent(PROTOTYPE_PURCHASE_EVENT, { detail: nextItems }));
+  return nextItems;
+};
+
+function CheckoutDialog({
+  items,
+  onClose,
+  onConfirm,
+}: {
+  items: PrototypePurchaseItem[] | null;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  if (!items || items.length === 0) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[220] flex items-center justify-center bg-black/58 px-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 18, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 18, scale: 0.98 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
+        className="w-full max-w-[560px] rounded-[12px] border border-border-primary bg-[#0E1011] p-5 shadow-[0_30px_80px_rgba(0,0,0,0.85)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="mb-5 flex items-start justify-between gap-4 border-b border-border-primary pb-4">
+          <div>
+            <p className="text-[14px] font-medium uppercase tracking-[0.12em] text-brand-primary">Prototype Checkout</p>
+            <h2 className="mt-1 text-[24px] font-bold text-white">{'\uAD6C\uB9E4 \uD655\uC778'}</h2>
+            <p className="mt-2 text-[15px] leading-[1.55] text-text-secondary">
+              {'\uC2E4\uC81C \uACB0\uC81C\uB294 \uC9C4\uD589\uB418\uC9C0 \uC54A\uB294 \uD504\uB85C\uD1A0\uD0C0\uC785 \uACB0\uC81C \uD750\uB984\uC785\uB2C8\uB2E4.'}
+            </p>
+          </div>
+          <button onClick={onClose} className="rounded-md p-1.5 text-text-tertiary transition hover:bg-white/5 hover:text-white">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {items.map((item) => (
+            <div key={item.id} className="flex gap-3 rounded-lg border border-border-soft bg-surface-primary/55 p-3">
+              <img src={item.image} alt="" className="h-16 w-20 rounded-md object-cover" referrerPolicy="no-referrer" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-[16px] font-medium text-white">{item.title}</p>
+                    <p className="mt-1 text-[14px] text-text-tertiary">by {item.author}</p>
+                  </div>
+                  <p className="shrink-0 text-[16px] font-semibold text-brand-primary">{item.price}</p>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-[14px] text-text-tertiary">
+                  <span>{'\uB77C\uC774\uC120\uC2A4'}</span>
+                  <span className="text-right text-text-secondary">{item.license}</span>
+                  <span>{'\uD30C\uC77C \uD615\uC2DD'}</span>
+                  <span className="text-right text-text-secondary">{item.fileFormat}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 rounded-lg border border-brand-primary/20 bg-brand-primary/5 p-4">
+          <div className="flex items-center justify-between text-[16px]">
+            <span className="font-medium text-text-secondary">{'\uCD1D \uACB0\uC81C \uAE08\uC561'}</span>
+            <span className="text-[24px] font-bold text-brand-primary">{getPurchaseTotalText(items)}</span>
+          </div>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <button onClick={onClose} className="rounded-md border border-border-primary bg-transparent py-3 text-[15px] font-medium text-text-secondary transition hover:bg-white/5 hover:text-white">
+            {'\uCDE8\uC18C'}
+          </button>
+          <button onClick={onConfirm} className="rounded-md bg-brand-primary py-3 text-[15px] font-medium text-bg-dark transition hover:bg-brand-hover">
+            {'\uACB0\uC81C\uD558\uAE30'}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function PurchaseCompleteDialog({
+  items,
+  onClose,
+  onViewPurchases,
+}: {
+  items: PrototypePurchaseItem[] | null;
+  onClose: () => void;
+  onViewPurchases?: () => void;
+}) {
+  if (!items || items.length === 0) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[230] flex items-center justify-center bg-black/58 px-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 18, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 18, scale: 0.98 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
+        className="w-full max-w-[460px] rounded-[12px] border border-border-primary bg-[#0E1011] p-6 text-center shadow-[0_30px_80px_rgba(0,0,0,0.85)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-green-500/30 bg-green-500/12 text-green-400">
+          <Check className="h-7 w-7" />
+        </div>
+        <h2 className="text-[24px] font-bold text-white">{'\uAD6C\uB9E4 \uC644\uB8CC'}</h2>
+        <p className="mt-2 text-[15px] leading-[1.6] text-text-secondary">
+          {items.length === 1 ? items[0].title : `${items.length}\uAC1C \uC791\uD488`}{'\uC774 \uAD6C\uB9E4\uD55C \uC791\uC5C5\uBB3C\uC5D0 \uCD94\uAC00\uB418\uC5C8\uC2B5\uB2C8\uB2E4.'}
+        </p>
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <button onClick={onClose} className="rounded-md border border-border-primary bg-transparent py-3 text-[15px] font-medium text-text-secondary transition hover:bg-white/5 hover:text-white">
+            {'\uACC4\uC18D \uB458\uB7EC\uBCF4\uAE30'}
+          </button>
+          <button
+            onClick={() => {
+              onClose();
+              onViewPurchases?.();
+            }}
+            className="rounded-md bg-brand-primary py-3 text-[15px] font-medium text-bg-dark transition hover:bg-brand-hover"
+          >
+            {'\uAD6C\uB9E4\uD55C \uC791\uC5C5\uBB3C'}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNavigate?: (page: any) => void, currentPage?: string, activeNav?: 'market' | 'art' | 'studio' | 'projects' | 'support' | null, setActiveNav?: (nav: 'market' | 'art' | 'studio' | 'projects' | 'support' | null) => void }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -705,24 +905,9 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      title: '엘프궁수 (익스텐션 라이선스)',
-      price: '85,000₩',
-      rawPrice: 85000,
-      image: '/images/work_48.png',
-      category: '3D 캐릭터'
-    },
-    {
-      id: 2,
-      title: '오크 (상업용 라이선스)',
-      price: '120,000₩',
-      rawPrice: 120000,
-      image: '/images/work_49.png',
-      category: '3D 캐릭터'
-    }
-  ]);
+  const [cartItems, setCartItems] = useState<PrototypePurchaseItem[]>(() => safeReadPurchaseItems(PURCHASE_CART_KEY));
+  const [checkoutItems, setCheckoutItems] = useState<PrototypePurchaseItem[] | null>(null);
+  const [completeItems, setCompleteItems] = useState<PrototypePurchaseItem[] | null>(null);
 
   const [notifications, setNotifications] = useState([
     {
@@ -778,6 +963,41 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
   }, [recentSearches]);
 
   useEffect(() => {
+    safeWritePurchaseItems(PURCHASE_CART_KEY, cartItems);
+  }, [cartItems]);
+
+  useEffect(() => {
+    const handleAddToCart = (event: Event) => {
+      const item = (event as CustomEvent<PrototypePurchaseItem>).detail;
+      if (!item) return;
+      setCartItems((prev) => (prev.some((cartItem) => cartItem.id === item.id) ? prev : [item, ...prev]));
+      setIsCartOpen(true);
+      setIsNotifOpen(false);
+      setIsProfileMenuOpen(false);
+    };
+
+    const handleRemoveFromCart = (event: Event) => {
+      const itemId = (event as CustomEvent<number>).detail;
+      setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+    };
+
+    const handlePurchased = (event: Event) => {
+      const items = (event as CustomEvent<PrototypePurchaseItem[]>).detail || [];
+      const purchasedIds = new Set(items.map((item) => item.id));
+      setCartItems((prev) => prev.filter((item) => !purchasedIds.has(item.id)));
+    };
+
+    window.addEventListener(PROTOTYPE_CART_ADD_EVENT, handleAddToCart as EventListener);
+    window.addEventListener(PROTOTYPE_CART_REMOVE_EVENT, handleRemoveFromCart as EventListener);
+    window.addEventListener(PROTOTYPE_PURCHASE_EVENT, handlePurchased as EventListener);
+    return () => {
+      window.removeEventListener(PROTOTYPE_CART_ADD_EVENT, handleAddToCart as EventListener);
+      window.removeEventListener(PROTOTYPE_CART_REMOVE_EVENT, handleRemoveFromCart as EventListener);
+      window.removeEventListener(PROTOTYPE_PURCHASE_EVENT, handlePurchased as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
         setIsFocused(false);
@@ -817,6 +1037,20 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
   const handleRemoveCartItem = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setCartItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleCartCheckout = () => {
+    if (cartItems.length === 0) return;
+    setIsCartOpen(false);
+    setCheckoutItems(cartItems);
+  };
+
+  const handleConfirmCartCheckout = () => {
+    if (!checkoutItems || checkoutItems.length === 0) return;
+    const purchased = addPurchasedItemsToStorage(checkoutItems);
+    setCartItems((prev) => prev.filter((item) => !purchased.some((purchasedItem) => purchasedItem.id === item.id)));
+    setCheckoutItems(null);
+    setCompleteItems(purchased);
   };
 
   const handleMarkAllRead = () => {
@@ -1251,7 +1485,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                           <span className="text-text-secondary font-sans font-medium">총 주문 금액:</span>
                           <span className="text-[18px] font-semibold text-brand-primary font-sans">{formattedTotalPrice}</span>
                         </div>
-                        <button className="w-full py-2.5 bg-brand-primary hover:bg-[#F2B038] text-bg-dark text-[15px] font-medium rounded-[6px] tracking-wide transition-colors cursor-pointer text-center font-sans shadow-lg shadow-brand-primary/10 border-0">
+                        <button onClick={handleCartCheckout} className="w-full py-2.5 bg-brand-primary hover:bg-[#F2B038] text-bg-dark text-[15px] font-medium rounded-[6px] tracking-wide transition-colors cursor-pointer text-center font-sans shadow-lg shadow-brand-primary/10 border-0">
                           결제 진행하기
                         </button>
                       </div>
@@ -1362,7 +1596,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
     onClick={toggleProfileMenu}
     className="w-8 h-8 rounded-full bg-surface-secondary border border-border-soft cursor-pointer overflow-hidden hover:border-brand-primary transition-colors"
   >
-    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=mainuser" alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+    <img src={PROFILE_IMAGE} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
   </div>
 
   <AnimatePresence>
@@ -1376,10 +1610,10 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
       >
         {/* Header: User Info */}
         <div className="flex items-center gap-3 p-4 border-b border-[#2A2E36]/50">
-          <img referrerPolicy="no-referrer" src="https://api.dicebear.com/7.x/avataaars/svg?seed=mainuser" alt="Profile" className="w-[42px] h-[42px] rounded-full border border-border-soft object-cover" />
+          <img referrerPolicy="no-referrer" src={PROFILE_IMAGE} alt="Profile" className="w-[42px] h-[42px] rounded-full border border-border-soft object-cover" />
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="text-[15px] font-medium text-text-primary tracking-tight">NeoCreator</span>
+              <span className="text-[15px] font-medium text-text-primary tracking-tight">Hwan</span>
               <span className="text-[14px] bg-brand-primary/20 text-brand-primary border border-brand-primary/30 px-1.5 py-[1px] rounded uppercase font-medium tracking-wider">PRO</span>
             </div>
             <span className="text-[14px] text-text-secondary">rlawlghks898@gmail.com</span>
@@ -1438,6 +1672,27 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 </div>
         </div>
       </div>
+      <AnimatePresence>
+        {checkoutItems && (
+          <CheckoutDialog
+            items={checkoutItems}
+            onClose={() => setCheckoutItems(null)}
+            onConfirm={handleConfirmCartCheckout}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {completeItems && (
+          <PurchaseCompleteDialog
+            items={completeItems}
+            onClose={() => setCompleteItems(null)}
+            onViewPurchases={() => {
+              setCompleteItems(null);
+              onNavigate?.('purchases');
+            }}
+          />
+        )}
+      </AnimatePresence>
     </header>
   );
 }
@@ -1659,7 +1914,7 @@ function QuickCollectDialog({
   const isNote = request.target === "notes";
   const availableNotes = (() => {
     try {
-      const saved = localStorage.getItem("neopoly_notes_v2");
+      const saved = localStorage.getItem("neopoly_notes_v3");
       const parsed = saved ? JSON.parse(saved) : null;
       return Array.isArray(parsed) && parsed.length ? parsed : NOTES;
     } catch {
@@ -2072,6 +2327,23 @@ const PRODUCT_DETAIL_DATA: Record<number, {
   },
 };
 
+function createPurchaseItem(asset: any, product: typeof PRODUCT_DETAIL_DATA[number], displayTitle: string): PrototypePurchaseItem {
+  const fileFormat = product.fileInfo[0]?.[1] ?? 'FBX, OBJ, Blend';
+  const rawPrice = parseWonAmount(product.price);
+  return {
+    id: asset.id,
+    title: displayTitle,
+    author: asset.author,
+    price: product.price,
+    rawPrice,
+    image: asset.image,
+    category: product.category === 'Market' ? '3D Market Asset' : 'Art Asset',
+    badge: asset.badge,
+    license: product.category === 'Market' ? '\uD45C\uC900 \uC0C1\uC5C5 \uB77C\uC774\uC120\uC2A4' : '\uD504\uB85C\uD1A0\uD0C0\uC785 \uC0C1\uB2F4\uD615 \uB77C\uC774\uC120\uC2A4',
+    fileFormat,
+  };
+}
+
 const PRODUCT_FALLBACK_IMAGE_IDS: Record<number, number[]> = {
   1: [1, 16, 17, 25],
   2: [2, 42, 6, 41],
@@ -2147,12 +2419,14 @@ function ProductDetailPage({
   onOpenProduct,
   onQuickCollect,
   onAssetDragStart,
+  onViewPurchases,
 }: {
   assetId: number;
   onNavigateHome: () => void;
   onOpenProduct: (assetId: number) => void;
   onQuickCollect?: (target: QuickDropTarget, asset: any) => void;
   onAssetDragStart?: (asset: any, e: React.DragEvent) => void;
+  onViewPurchases?: () => void;
 }) {
   const asset = ASSETS.find((item) => item.id === assetId) ?? ASSETS[0];
   const product = PRODUCT_DETAIL_DATA[asset.id] ?? PRODUCT_DETAIL_DATA[1];
@@ -2249,7 +2523,7 @@ function ProductDetailPage({
 
           <aside className="xl:sticky xl:top-[92px] xl:self-start">
             <div className="flex flex-col gap-5">
-              <ProductPurchasePanel asset={asset} product={product} displayTitle={displayTitle} />
+              <ProductPurchasePanel asset={asset} product={product} displayTitle={displayTitle} onViewPurchases={onViewPurchases} />
               <ProductLicensePanel />
               <ProductStatsPanel stats={product.stats} />
               <ProductInfoPanel product={product} />
@@ -2561,29 +2835,21 @@ function BoardPage({
             ))}
           </section>
 
-          <section className="space-y-4 pt-1">
-            <h3 className="text-[20px] font-medium text-white">저장 이미지</h3>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {note.images.map((image, index) => (
-                <figure key={`${image}-${index}`} className="overflow-hidden rounded-xl border border-[#1C1E24] bg-[#08090B]">
-                  <div className="flex aspect-[4/3] items-center justify-center bg-[#0E1014]">
-                    <img src={image} alt={`${note.title} 저장 이미지 ${index + 1}`} className="h-full w-full object-contain" referrerPolicy="no-referrer" />
-                  </div>
-                  <figcaption className="border-t border-[#1C1E24] px-4 py-3 text-[14px] text-text-tertiary">
-                    저장 이미지 {index + 1}
-                  </figcaption>
-                </figure>
-              ))}
-              <button
-                type="button"
-                className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#2A2E36] bg-[#101216] text-[15px] font-medium text-text-tertiary transition hover:border-brand-primary/45 hover:bg-[#131820] hover:text-white"
-              >
-                <Plus className="h-6 w-6" />
-                이미지 추가
-              </button>
-            </div>
-            {note.images.length === 0 && (
-              <p className="text-[14px] text-text-tertiary">이 노트에 저장된 이미지가 없습니다.</p>
+          <section className="pt-1">
+            {note.images.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {note.images.map((image, index) => (
+                  <img
+                    key={`${image}-${index}`}
+                    src={image}
+                    alt={`${note.title} image ${index + 1}`}
+                    className="aspect-[4/3] w-full rounded-lg object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-[14px] text-text-tertiary">저장된 이미지가 없습니다.</p>
             )}
           </section>
         </div>
@@ -2716,7 +2982,72 @@ function BoardPage({
   );
 }
 
-function ProductPurchasePanel({ asset, product, displayTitle }: { asset: any; product: typeof PRODUCT_DETAIL_DATA[number]; displayTitle: string }) {
+function ProductPurchasePanel({
+  asset,
+  product,
+  displayTitle,
+  onViewPurchases,
+}: {
+  asset: any;
+  product: typeof PRODUCT_DETAIL_DATA[number];
+  displayTitle: string;
+  onViewPurchases?: () => void;
+}) {
+  const purchaseItem = createPurchaseItem(asset, product, displayTitle);
+  const [checkoutItems, setCheckoutItems] = useState<PrototypePurchaseItem[] | null>(null);
+  const [completeItems, setCompleteItems] = useState<PrototypePurchaseItem[] | null>(null);
+  const [isInCart, setIsInCart] = useState(() => safeReadPurchaseItems(PURCHASE_CART_KEY).some((item) => item.id === asset.id));
+  const [isPurchased, setIsPurchased] = useState(() => safeReadPurchaseItems(PURCHASED_ASSETS_KEY).some((item) => item.id === asset.id));
+
+  useEffect(() => {
+    const syncState = () => {
+      setIsInCart(safeReadPurchaseItems(PURCHASE_CART_KEY).some((item) => item.id === asset.id));
+      setIsPurchased(safeReadPurchaseItems(PURCHASED_ASSETS_KEY).some((item) => item.id === asset.id));
+    };
+
+    const handleCartAdd = (event: Event) => {
+      const item = (event as CustomEvent<PrototypePurchaseItem>).detail;
+      if (item?.id === asset.id) syncState();
+    };
+
+    const handleCartRemove = (event: Event) => {
+      const itemId = (event as CustomEvent<number>).detail;
+      if (itemId === asset.id) syncState();
+    };
+
+    const handlePurchased = (event: Event) => {
+      const items = (event as CustomEvent<PrototypePurchaseItem[]>).detail || [];
+      if (items.some((item) => item.id === asset.id)) syncState();
+    };
+
+    window.addEventListener(PROTOTYPE_CART_ADD_EVENT, handleCartAdd as EventListener);
+    window.addEventListener(PROTOTYPE_CART_REMOVE_EVENT, handleCartRemove as EventListener);
+    window.addEventListener(PROTOTYPE_PURCHASE_EVENT, handlePurchased as EventListener);
+    window.addEventListener('storage', syncState);
+    syncState();
+    return () => {
+      window.removeEventListener(PROTOTYPE_CART_ADD_EVENT, handleCartAdd as EventListener);
+      window.removeEventListener(PROTOTYPE_CART_REMOVE_EVENT, handleCartRemove as EventListener);
+      window.removeEventListener(PROTOTYPE_PURCHASE_EVENT, handlePurchased as EventListener);
+      window.removeEventListener('storage', syncState);
+    };
+  }, [asset.id]);
+
+  const handleAddToCart = () => {
+    if (isInCart) return;
+    window.dispatchEvent(new CustomEvent(PROTOTYPE_CART_ADD_EVENT, { detail: purchaseItem }));
+    setIsInCart(true);
+  };
+
+  const handleConfirmDirectCheckout = () => {
+    const purchased = addPurchasedItemsToStorage([purchaseItem]);
+    window.dispatchEvent(new CustomEvent(PROTOTYPE_CART_REMOVE_EVENT, { detail: purchaseItem.id }));
+    setCheckoutItems(null);
+    setCompleteItems(purchased);
+    setIsPurchased(true);
+    setIsInCart(false);
+  };
+
   return (
     <>
       <div className="px-1">
@@ -2727,20 +3058,20 @@ function ProductPurchasePanel({ asset, product, displayTitle }: { asset: any; pr
       <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-4">
         <p className="mb-4 text-[14px] font-medium text-white">Artist</p>
         <div className="flex items-center gap-3">
-          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=kimjihwan" alt="" className="h-10 w-10 rounded-full bg-white" />
+          <img src={PROFILE_IMAGE} alt="" className="h-10 w-10 rounded-full bg-white object-cover" />
           <div>
             <p className="text-[14px] font-medium text-white">Kim ji hwan</p>
             <p className="text-[14px] text-text-tertiary">3D Character Artist</p>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-2 text-[14px] text-text-tertiary">
-          <span>작품 수</span>
-          <span className="text-right text-text-secondary">8개</span>
-          <span>팔로워</span>
+          <span>{'\uC791\uD488 \uC218'}</span>
+          <span className="text-right text-text-secondary">8{'\uAC1C'}</span>
+          <span>{'\uD314\uB85C\uC6CC'}</span>
           <span className="text-right text-text-secondary">0.3K</span>
         </div>
         <button className="mt-4 w-full rounded-md bg-[#3A3A3A] py-2.5 text-[14px] font-medium text-white transition hover:bg-[#4A4A4A]">
-          팔로우
+          {'\uD314\uB85C\uC6B0'}
         </button>
       </div>
 
@@ -2749,11 +3080,32 @@ function ProductPurchasePanel({ asset, product, displayTitle }: { asset: any; pr
           <span className="text-[24px] font-bold text-brand-primary">{product.price}</span>
           {product.originalPrice && <span className="pb-1 text-[14px] text-text-tertiary line-through">{product.originalPrice}</span>}
         </div>
-        <button className="mb-2 w-full rounded-md bg-brand-primary py-3 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover">
-          구매하기
+        <button
+          onClick={() => {
+            if (isPurchased) {
+              onViewPurchases?.();
+              return;
+            }
+            setCheckoutItems([purchaseItem]);
+          }}
+          className={`mb-2 w-full rounded-md py-3 text-[14px] font-medium transition ${
+            isPurchased
+              ? 'bg-[#2D3138] text-white hover:bg-[#383D46]'
+              : 'bg-brand-primary text-bg-dark hover:bg-brand-hover'
+          }`}
+        >
+          {isPurchased ? '\uAD6C\uB9E4\uD55C \uC791\uC5C5\uBB3C \uBCF4\uAE30' : '\uAD6C\uB9E4\uD558\uAE30'}
         </button>
-        <button className="mb-3 w-full rounded-md bg-[#333] py-3 text-[14px] font-medium text-white transition hover:bg-[#444]">
-          장바구니에 추가
+        <button
+          onClick={handleAddToCart}
+          disabled={isInCart}
+          className={`mb-3 w-full rounded-md py-3 text-[14px] font-medium transition ${
+            isInCart
+              ? 'cursor-default bg-[#262A31] text-brand-primary'
+              : 'bg-[#333] text-white hover:bg-[#444]'
+          }`}
+        >
+          {isInCart ? '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uB2F4\uAE40' : '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uCD94\uAC00'}
         </button>
         <div className="grid grid-cols-2 gap-2">
           <button className="flex items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
@@ -2762,10 +3114,32 @@ function ProductPurchasePanel({ asset, product, displayTitle }: { asset: any; pr
           </button>
           <button className="flex items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
             <ShoppingBag className="h-4 w-4" />
-            공유
+            {'\uACF5\uC720'}
           </button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {checkoutItems && (
+          <CheckoutDialog
+            items={checkoutItems}
+            onClose={() => setCheckoutItems(null)}
+            onConfirm={handleConfirmDirectCheckout}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {completeItems && (
+          <PurchaseCompleteDialog
+            items={completeItems}
+            onClose={() => setCompleteItems(null)}
+            onViewPurchases={() => {
+              setCompleteItems(null);
+              onViewPurchases?.();
+            }}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
@@ -3576,12 +3950,20 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
     const saved = localStorage.getItem('neopoly_user_profile');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          avatar: PROFILE_IMAGE,
+          username: 'kimjihwan',
+          nickname: 'Hwan',
+        };
+      } catch (e) {}
     }
     return {
-      username: 'mainuser',
-      nickname: 'NeoCreator',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator9',
+      username: 'kimjihwan',
+      nickname: 'Hwan',
+      avatar: PROFILE_IMAGE,
       email: 'neo.creator@example.com',
       bio: '3D Artist specializing in Dark Fantasy & Sci-Fi environments.',
       role: 'Diamond Member',
@@ -3601,7 +3983,7 @@ export default function App() {
 
   const panelNotes = (() => {
     try {
-      const saved = localStorage.getItem("neopoly_notes_v2");
+      const saved = localStorage.getItem("neopoly_notes_v3");
       const parsed = saved ? JSON.parse(saved) : null;
       return Array.isArray(parsed) && parsed.length ? parsed : NOTES;
     } catch {
@@ -3776,6 +4158,7 @@ export default function App() {
           onOpenProduct={openProductDetail}
           onQuickCollect={handleQuickCollect}
           onAssetDragStart={handleAssetDragStart}
+          onViewPurchases={() => setCurrentPage('purchases')}
         />
       ) : currentPage === 'support' ? (
         <SupportPage />

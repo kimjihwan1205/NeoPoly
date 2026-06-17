@@ -3,56 +3,102 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Download, Check, Sparkles, Filter, LayoutGrid } from 'lucide-react';
-import { Asset } from '../types';
-import { ASSETS } from '../App';
+import { Download, Check, Filter, LayoutGrid, ShoppingBag } from 'lucide-react';
+
+type PurchasedAssetItem = {
+  id: number;
+  title: string;
+  author: string;
+  price: string;
+  rawPrice: number;
+  image: string;
+  category: string;
+  badge: 'M' | 'A';
+  license: string;
+  fileFormat: string;
+  purchasedAt?: number;
+};
+
+const PURCHASED_ASSETS_KEY = 'neopoly_purchased_assets_v1';
+const PROTOTYPE_PURCHASE_EVENT = 'neopoly:purchased';
+const FILTER_ALL = '\uC804\uCCB4';
+const FILTER_MARKET = '\uB9C8\uCF13 \uC5D0\uC14B';
+const FILTER_ART = '\uC544\uD2B8 \uC791\uD488';
+
+const readPurchasedItems = (): PurchasedAssetItem[] => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PURCHASED_ASSETS_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const formatPurchasedDate = (value?: number) => {
+  if (!value) return '\uBC29\uAE08 \uC804';
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(value));
+};
 
 export default function PurchasedAssetsPage() {
-  const [filter, setFilter] = useState('전체');
+  const [filter, setFilter] = useState(FILTER_ALL);
+  const [purchasedAssets, setPurchasedAssets] = useState<PurchasedAssetItem[]>(() => readPurchasedItems());
 
-  // For demonstration, let's just pick some random items from ASSETS to act as "Purchased".
-  // Let's use indices 0, 3, 5, 10
-  const purchasedIndices = [0, 3, 5, 10];
-  const purchasedAssets = ASSETS.filter((_, i) => purchasedIndices.includes(i));
-  const filteredAssets = filter === '전체' 
-    ? purchasedAssets 
-    : purchasedAssets.filter(asset => asset.badge === (filter === '마켓 에셋' ? 'M' : 'A'));
+  useEffect(() => {
+    const syncPurchasedItems = () => setPurchasedAssets(readPurchasedItems());
+    window.addEventListener(PROTOTYPE_PURCHASE_EVENT, syncPurchasedItems as EventListener);
+    window.addEventListener('storage', syncPurchasedItems);
+    return () => {
+      window.removeEventListener(PROTOTYPE_PURCHASE_EVENT, syncPurchasedItems as EventListener);
+      window.removeEventListener('storage', syncPurchasedItems);
+    };
+  }, []);
+
+  const filteredAssets = filter === FILTER_ALL
+    ? purchasedAssets
+    : purchasedAssets.filter((asset) => asset.badge === (filter === FILTER_MARKET ? 'M' : 'A'));
 
   return (
-    <main className="flex-1 bg-bg-dark font-sans text-text-primary px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 max-w-[2560px] mx-auto w-full">
-      <div className="flex flex-col mb-10">
-        <h1 className="text-[32px] md:text-[32px] font-bold tracking-tight text-white mb-2 flex items-center gap-3">
-          <LayoutGrid className="w-8 h-8 md:w-10 md:h-10 text-brand-primary" />
-          구매한 에셋
+    <main className="mx-auto w-full max-w-[2560px] flex-1 bg-bg-dark px-4 py-6 font-sans text-text-primary sm:px-6 2xl:px-8 min-[2200px]:px-10">
+      <div className="mb-10 flex flex-col">
+        <h1 className="mb-2 flex items-center gap-3 text-[32px] font-bold tracking-tight text-white md:text-[32px]">
+          <LayoutGrid className="h-8 w-8 text-brand-primary md:h-10 md:w-10" />
+          {'\uAD6C\uB9E4\uD55C \uC5D0\uC14B'}
         </h1>
-        <p className="text-text-secondary text-[15px] font-medium max-w-xl">
-          에셋 마켓에서 구매한 프로젝트와 소스들을 확인하고 다운로드할 수 있습니다. 상업적 이용 및 라이선스 범위를 지켜주세요.
+        <p className="max-w-xl text-[15px] font-medium leading-[1.65] text-text-secondary">
+          {'\uD504\uB85C\uD1A0\uD0C0\uC785 \uACB0\uC81C\uB85C \uAD6C\uB9E4\uD55C \uC791\uD488\uC744 \uD655\uC778\uD558\uACE0, \uB2E4\uC6B4\uB85C\uB4DC\uC640 \uB77C\uC774\uC120\uC2A4 \uC815\uBCF4\uB97C \uD55C\uACF3\uC5D0\uC11C \uBCF4\uC5EC\uC90D\uB2C8\uB2E4.'}
         </p>
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div className="flex gap-2">
-          {['전체', '마켓 에셋', '무료 에셋'].map((f) => (
+          {[FILTER_ALL, FILTER_MARKET, FILTER_ART].map((item) => (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-[6px] text-[14px] font-medium transition-all border ${
-                filter === f 
-                  ? 'bg-brand-primary border-brand-primary text-bg-dark' 
-                  : 'bg-surface-primary border-border-soft text-text-secondary hover:text-text-primary hover:border-border-primary'
+              key={item}
+              onClick={() => setFilter(item)}
+              className={`rounded-[6px] border px-4 py-2 text-[14px] font-medium transition-all ${
+                filter === item
+                  ? 'border-brand-primary bg-brand-primary text-bg-dark'
+                  : 'border-border-soft bg-surface-primary text-text-secondary hover:border-border-primary hover:text-text-primary'
               }`}
             >
-              {f}
+              {item}
             </button>
           ))}
         </div>
+        <p className="text-[14px] font-medium text-text-tertiary">
+          {purchasedAssets.length}{'\uAC1C \uAD6C\uB9E4\uB428'}
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         <AnimatePresence>
-          {filteredAssets.map(asset => (
+          {filteredAssets.map((asset) => (
             <motion.div
               layout
               initial={{ opacity: 0, scale: 0.95 }}
@@ -60,25 +106,46 @@ export default function PurchasedAssetsPage() {
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
               key={asset.id}
-              className="bg-surface-primary border border-border-soft rounded-[8px] overflow-hidden group flex flex-col shadow-xl"
+              className="group flex flex-col overflow-hidden rounded-[8px] border border-border-soft bg-surface-primary shadow-xl"
             >
               <div className="relative aspect-video overflow-hidden">
-                <img 
-                  src={asset.image} 
-                  alt={asset.title} 
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.007] group-hover:brightness-90"
+                <img
+                  src={asset.image}
+                  alt={asset.title}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.007] group-hover:brightness-90"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute top-3 left-3 bg-green-500/20 text-green-400 border border-green-500/40 px-2 py-0.5 rounded text-[14px] font-medium tracking-wider uppercase flex items-center gap-1 backdrop-blur-md">
-                  <Check className="w-3 h-3" /> Purchased
+                <div className="absolute left-3 top-3 flex items-center gap-1 rounded border border-green-500/40 bg-green-500/20 px-2 py-0.5 text-[14px] font-medium uppercase tracking-wider text-green-400 backdrop-blur-md">
+                  <Check className="h-3 w-3" /> Purchased
                 </div>
               </div>
-              <div className="p-5 flex flex-col flex-1">
-                <h3 className="text-[15px] font-medium mb-1 leading-tight text-white group-hover:text-brand-primary transition-colors">{asset.title}</h3>
-                <p className="text-[14px] text-text-secondary mb-5">By <span className="text-white font-medium">{asset.author}</span></p>
+              <div className="flex flex-1 flex-col p-5">
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="mb-1 text-[16px] font-medium leading-tight text-white transition-colors group-hover:text-brand-primary">{asset.title}</h3>
+                    <p className="text-[14px] text-text-secondary">By <span className="font-medium text-white">{asset.author}</span></p>
+                  </div>
+                  <span className="shrink-0 rounded bg-brand-primary/15 px-2 py-1 text-[14px] font-medium text-brand-primary">{asset.price}</span>
+                </div>
+
+                <div className="mb-5 space-y-2 rounded-md border border-border-soft/70 bg-bg-dark/40 p-3 text-[14px]">
+                  <div className="flex justify-between gap-3">
+                    <span className="text-text-tertiary">{'\uB77C\uC774\uC120\uC2A4'}</span>
+                    <span className="text-right text-text-secondary">{asset.license}</span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-text-tertiary">{'\uD30C\uC77C \uD615\uC2DD'}</span>
+                    <span className="text-right text-text-secondary">{asset.fileFormat}</span>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-text-tertiary">{'\uAD6C\uB9E4\uC77C'}</span>
+                    <span className="text-right text-text-secondary">{formatPurchasedDate(asset.purchasedAt)}</span>
+                  </div>
+                </div>
+
                 <div className="mt-auto">
-                  <button className="w-full py-2.5 bg-surface-secondary hover:bg-[#1A1814] text-text-primary hover:text-brand-primary border border-border-soft hover:border-brand-primary/50 text-[14px] font-medium rounded-[6px] transition-all flex items-center justify-center gap-2">
-                    <Download className="w-4 h-4" /> 다운로드 받기
+                  <button className="flex w-full items-center justify-center gap-2 rounded-[6px] border border-border-soft bg-surface-secondary py-2.5 text-[14px] font-medium text-text-primary transition-all hover:border-brand-primary/50 hover:bg-[#1A1814] hover:text-brand-primary">
+                    <Download className="h-4 w-4" /> {'\uB2E4\uC6B4\uB85C\uB4DC \uBC1B\uAE30'}
                   </button>
                 </div>
               </div>
@@ -86,9 +153,18 @@ export default function PurchasedAssetsPage() {
           ))}
         </AnimatePresence>
         {filteredAssets.length === 0 && (
-          <div className="col-span-full py-20 flex flex-col items-center justify-center text-text-tertiary">
-            <Filter className="w-12 h-12 mb-4 opacity-50" />
-            <p className="text-[15px] font-medium">해당하는 에셋이 없습니다.</p>
+          <div className="col-span-full flex flex-col items-center justify-center py-24 text-center text-text-tertiary">
+            {purchasedAssets.length === 0 ? (
+              <ShoppingBag className="mb-4 h-12 w-12 opacity-50" />
+            ) : (
+              <Filter className="mb-4 h-12 w-12 opacity-50" />
+            )}
+            <p className="text-[16px] font-medium text-text-secondary">
+              {purchasedAssets.length === 0 ? '\uC544\uC9C1 \uAD6C\uB9E4\uD55C \uC791\uD488\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.' : '\uD574\uB2F9\uD558\uB294 \uC5D0\uC14B\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.'}
+            </p>
+            <p className="mt-2 text-[14px] text-text-tertiary">
+              {purchasedAssets.length === 0 ? '\uC0C1\uC138 \uD398\uC774\uC9C0\uC5D0\uC11C \uAD6C\uB9E4\uD558\uAE30\uB97C \uB204\uB974\uBA74 \uC774\uACF3\uC5D0 \uCD94\uAC00\uB429\uB2C8\uB2E4.' : '\uB2E4\uB978 \uD544\uD130\uB97C \uC120\uD0DD\uD574 \uBCF4\uC138\uC694.'}
+            </p>
           </div>
         )}
       </div>
