@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
@@ -18,7 +19,6 @@ import {
   Eye,
   Gauge,
   Grid3X3,
-  History,
   Layers3,
   Maximize2,
   MousePointer2,
@@ -31,6 +31,7 @@ import {
   Sparkles,
   Wand2,
   Workflow,
+  X,
   Zap,
 } from "lucide-react";
 
@@ -45,14 +46,12 @@ type OrcPbrTextureSet = {
 
 const STEPS: Array<{
   id: ModelingStep;
-  number: string;
   title: string;
-  description: string;
 }> = [
-  { id: "generate", number: "06", title: "3D 생성", description: "오크 FBX 모델 확인" },
-  { id: "polish", number: "07", title: "폴리싱", description: "형태와 디테일 보정" },
-  { id: "remesh", number: "08", title: "리메시", description: "목표 폴리곤 최적화" },
-  { id: "texture", number: "09", title: "텍스처 / UV", description: "PBR 맵 점검" },
+  { id: "generate", title: "3D 생성" },
+  { id: "polish", title: "표면 정리" },
+  { id: "remesh", title: "리메시" },
+  { id: "texture", title: "텍스처 최적화" },
 ];
 
 const SOURCE_IMAGES = [
@@ -63,14 +62,41 @@ const SOURCE_IMAGES = [
   "/images/orc/orc_default_item01.png",
 ];
 
-const MODULES = [
-  { id: "bracer-l", label: "팔 보호구", image: "/images/orc/orc_default_item01.png" },
-  { id: "bracer-r", label: "가죽 장비", image: "/images/orc/orc_default_item02.png" },
-  { id: "shoulder", label: "어깨 갑옷", image: "/images/orc/orc_default_item03.png" },
-  { id: "belt", label: "해골 벨트", image: "/images/orc/orc_default_item04.png" },
-  { id: "strap", label: "가죽 스트랩", image: "/images/orc/orc_default_item05.png" },
-  { id: "front", label: "정면 전체", image: "/images/orc/orc_2D_front.png" },
+type ModuleCategory = {
+  id: string;
+  label: string;
+  itemNumber: string;
+  image: string;
+};
+
+type ModuleSetInfo = {
+  id: string;
+  title: string;
+};
+
+const MODULES: ModuleCategory[] = [
+  { id: "arm", label: "팔 보호대", itemNumber: "01", image: "/images/orc/orc_default_item01.png" },
+  { id: "leg", label: "다리 보호대", itemNumber: "02", image: "/images/orc/orc_default_item02.png" },
+  { id: "weapon", label: "무기", itemNumber: "03", image: "/images/orc/orc_default_item03.png" },
+  { id: "shoulder", label: "어깨 갑옷", itemNumber: "04", image: "/images/orc/orc_default_item04.png" },
+  { id: "belt", label: "벨트 장식", itemNumber: "05", image: "/images/orc/orc_default_item05.png" },
 ];
+
+const MODULE_SETS: ModuleSetInfo[] = [
+  { id: "01", title: "해골 전사 세트" },
+  { id: "02", title: "중갑 전투 세트" },
+  { id: "03", title: "습격 전투 세트" },
+  { id: "04", title: "부족 정찰 세트" },
+];
+
+const MODULE_PREVIEW_LABELS = ["정면", "45도", "측면", "후면"];
+
+const getModuleSetItemImage = (setId: string, itemNumber: string) =>
+  `/images/orc_3D/orc_${setId}_3d${itemNumber}.png`;
+
+const getModuleSetPreviewImage = (setId: string, viewIndex: number) =>
+  `/images/orc_3DF/orc_${setId}_3dF${String(viewIndex + 1).padStart(2, "0")}.png`;
+
 
 const TEXTURE_MAPS = [
   { id: "body-base", label: "Body BaseColor", color: "#6E8B47", file: "orc_orc_body_BaseColor.1001.tga" },
@@ -85,47 +111,36 @@ const ORC_MODEL_PATH = `/models/orc/${ORC_MODEL_FILE}`;
 const ORC_ASSET_VERSION = "orc-model-20260603";
 const versionedAsset = (path: string) => `${path}${path.includes("?") ? "&" : "?"}v=${ORC_ASSET_VERSION}`;
 
-function StepRail({
-  activeStep,
-}: {
-  activeStep: ModelingStep;
-}) {
-  return (
-    <div className="flex h-[58px] shrink-0 items-center gap-2 overflow-x-auto border-b border-[#1F2329] bg-[#08090B] px-4 custom-scrollbar">
-      {STEPS.map((step, index) => {
-        const active = activeStep === step.id;
-        const complete = STEPS.findIndex((item) => item.id === activeStep) > index;
+function StepRail({ activeStep }: { activeStep: ModelingStep }) {
+  const activeIndex = STEPS.findIndex((step) => step.id === activeStep);
 
-        return (
-          <div
-            key={step.id}
-            className={`flex min-w-max items-center gap-3 rounded-xl border px-4 py-2 transition-colors ${
-              active
-                ? "border-[#E0A12E] bg-[#E0A12E]/10 text-[#E0A12E]"
-                : complete
-                  ? "border-[#2A2E36] bg-[#101215] text-neutral-200"
-                  : "border-[#1F2329] bg-[#0A0B0D] text-neutral-500"
-            }`}
-          >
-            <span
-              className={`flex h-7 w-7 items-center justify-center rounded-full border text-[14px] font-medium ${
-                active
-                  ? "border-[#E0A12E] bg-[#E0A12E] text-black"
-                  : complete
-                    ? "border-[#4ADE80]/40 bg-[#4ADE80]/10 text-[#4ADE80]"
-                    : "border-[#2A2E36] text-neutral-500"
-              }`}
-            >
-              {complete ? <Check className="h-3.5 w-3.5" /> : step.number}
-            </span>
-            <span className="text-left">
-              <span className="block text-[14px] font-medium leading-tight">{step.title}</span>
-              <span className="mt-0.5 block text-[14px] leading-tight text-neutral-500">{step.description}</span>
-            </span>
-            {index < STEPS.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-neutral-600" />}
-          </div>
-        );
-      })}
+  return (
+    <div className="flex h-[48px] shrink-0 items-center overflow-x-auto border-b border-[#1F2329] bg-[#08090B] px-6 custom-scrollbar">
+      <div className="flex min-w-max items-center">
+        {STEPS.map((step, index) => {
+          const active = activeStep === step.id;
+          const complete = activeIndex > index;
+          return (
+            <React.Fragment key={step.id}>
+              <div className={`flex items-center gap-2 ${active ? "text-[#E0A12E]" : complete ? "text-neutral-200" : "text-neutral-500"}`}>
+                <span className={`flex h-6 w-6 items-center justify-center rounded-full border ${
+                  active
+                    ? "border-[#E0A12E] bg-[#E0A12E] text-black"
+                    : complete
+                      ? "border-[#4ADE80]/40 bg-[#4ADE80]/10 text-[#4ADE80]"
+                      : "border-[#343842] bg-[#111317]"
+                }`}>
+                  {complete ? <Check className="h-3.5 w-3.5" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
+                </span>
+                <span className="text-[14px] font-medium">{step.title}</span>
+              </div>
+              {index < STEPS.length - 1 && (
+                <span className={`mx-3 h-px w-10 ${complete ? "bg-[#4ADE80]/40" : "bg-[#2A2E36]"}`} />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -627,32 +642,191 @@ function ThreeModelPreview({
     };
   }, [activeStep, viewMode]);
 
-  const toolHint =
-    activeTool === "회전"
-      ? "좌클릭 드래그로 모델 회전"
-      : activeTool === "이동"
-        ? "좌클릭 드래그로 화면 이동"
-        : activeTool === "확대"
-          ? "좌클릭 드래그 또는 휠로 확대"
-          : activeTool === "그리드"
-            ? "그리드 표시 토글"
-            : "마우스로 직접 회전 / 확대 / 이동";
+
 
   return (
     <div className="relative h-full w-full">
       <div ref={mountRef} className="absolute inset-0 cursor-grab active:cursor-grabbing" />
-      <div className="pointer-events-none absolute left-24 top-4 rounded-lg border border-[#1F2329] bg-[#080A0D]/75 px-3 py-2 text-[14px] text-neutral-400 backdrop-blur">
-        {toolHint}
+      <div className="group absolute bottom-24 left-5 z-30">
+        <button
+          type="button"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#2A2E36] bg-[#080A0D]/90 text-neutral-400 shadow-lg backdrop-blur transition hover:border-[#E0A12E]/60 hover:text-[#E0A12E]"
+          aria-label="뷰포트 조작 안내"
+        >
+          <CircleHelp className="h-4 w-4" />
+        </button>
+        <div className="pointer-events-none absolute bottom-0 left-12 w-max max-w-[320px] translate-x-1 rounded-lg border border-[#2A2E36] bg-[#080A0D]/95 px-3 py-2 text-[14px] text-neutral-300 opacity-0 shadow-xl backdrop-blur transition group-hover:translate-x-0 group-hover:opacity-100">
+          회전: 드래그 · 확대: 휠 · 이동: 우클릭 드래그
+        </div>
       </div>
     </div>
   );
 }
 
-function ModelViewport({ activeStep }: { activeStep: ModelingStep }) {
+function ModuleSetBrowser({ onClose }: { onClose: () => void }) {
+  const [stage, setStage] = useState<"sets" | "detail">("sets");
+  const [selectedSetId, setSelectedSetId] = useState(MODULE_SETS[0].id);
+  const [selectedViewIndex, setSelectedViewIndex] = useState(0);
+  const [selectedEquipmentId, setSelectedEquipmentId] = useState(MODULES[0].id);
+
+  const selectedSet = MODULE_SETS.find((set) => set.id === selectedSetId) ?? MODULE_SETS[0];
+  const selectedEquipment = MODULES.find((module) => module.id === selectedEquipmentId) ?? MODULES[0];
+
+  const goToSets = () => {
+    setStage("sets");
+    setSelectedViewIndex(0);
+  };
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 16, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 16, scale: 0.98 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={`absolute right-5 top-[70px] z-40 flex max-h-[calc(100%-90px)] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#080A0D]/97 shadow-[0_24px_70px_rgba(0,0,0,0.75)] backdrop-blur-xl ${
+        stage === "sets" ? "w-[620px]" : "w-[900px]"
+      } max-w-[calc(100%-112px)]`}
+    >
+      <div className="flex min-h-[58px] shrink-0 items-center justify-between border-b border-[#1F2329] px-4">
+        <div className="flex min-w-0 items-center gap-2 text-[14px] font-medium">
+          <button onClick={goToSets} className={stage === "sets" ? "text-white" : "text-neutral-400 transition hover:text-white"}>
+            생성 모듈 세트
+          </button>
+          {stage === "detail" && (
+            <>
+              <ArrowRight className="h-3.5 w-3.5 shrink-0 text-neutral-600" />
+              <span className="truncate text-[#E0A12E]">{selectedSet.title}</span>
+            </>
+          )}
+        </div>
+        <button onClick={onClose} className="rounded-md p-1.5 text-neutral-500 transition hover:bg-white/5 hover:text-white" aria-label="모듈 패널 닫기">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {stage === "sets" && (
+        <div className="min-h-0 overflow-y-auto p-4 custom-scrollbar">
+          <div className="mb-4 flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-[18px] font-medium text-white">생성된 모듈 세트</h2>
+              <p className="mt-1 text-[14px] text-neutral-500">세트를 선택하면 3D 장비와 캐릭터 4방향을 확인할 수 있어요.</p>
+            </div>
+            <span className="shrink-0 rounded-full border border-[#2A2E36] bg-[#111317] px-2.5 py-1 text-[14px] text-neutral-400">
+              {MODULE_SETS.length}개
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {MODULE_SETS.map((set) => (
+              <button
+                key={set.id}
+                onClick={() => {
+                  setSelectedSetId(set.id);
+                  setSelectedViewIndex(0);
+                  setStage("detail");
+                }}
+                className="group overflow-hidden rounded-lg border border-[#1F2329] bg-[#111317] text-left transition hover:border-[#E0A12E]/60"
+              >
+                <div className="aspect-[4/3] bg-[#15171B] p-2">
+                  <img
+                    src={getModuleSetPreviewImage(set.id, 0)}
+                    alt={`${set.title} 정면`}
+                    className="h-full w-full object-contain transition duration-200 group-hover:scale-[1.03]"
+                  />
+                </div>
+                <div className="border-t border-[#1F2329] p-3">
+                  <p className="truncate text-[15px] font-medium text-white group-hover:text-[#E0A12E]">{set.title}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {stage === "detail" && (
+        <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)] overflow-hidden">
+          <section className="flex min-h-0 flex-col border-r border-[#1F2329] p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h2 className="text-[18px] font-medium text-white">{selectedSet.title}</h2>
+              </div>
+              <span className="rounded-md border border-[#E0A12E]/25 bg-[#E0A12E]/10 px-2.5 py-1 text-[14px] text-[#E0A12E]">장비 {MODULES.length}개</span>
+            </div>
+            <div className="min-h-0 flex-1 overflow-hidden rounded-lg border border-[#1F2329] bg-[#15171B]">
+              <img
+                src={getModuleSetPreviewImage(selectedSet.id, selectedViewIndex)}
+                alt={`${selectedSet.title} ${MODULE_PREVIEW_LABELS[selectedViewIndex]}`}
+                className="h-full w-full object-contain"
+              />
+            </div>
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              {MODULE_PREVIEW_LABELS.map((label, index) => (
+                <button
+                  key={label}
+                  onClick={() => setSelectedViewIndex(index)}
+                  className={`overflow-hidden rounded-lg border text-left transition ${
+                    selectedViewIndex === index ? "border-[#E0A12E] bg-[#E0A12E]/8" : "border-[#1F2329] bg-[#111317] hover:border-[#555A64]"
+                  }`}
+                >
+                  <div className="aspect-[4/3] overflow-hidden bg-[#15171B]">
+                    <img src={getModuleSetPreviewImage(selectedSet.id, index)} alt="" className="h-full w-full object-contain" />
+                  </div>
+                  <p className={`border-t border-[#1F2329] px-2 py-1.5 text-center text-[14px] ${selectedViewIndex === index ? "text-[#E0A12E]" : "text-neutral-400"}`}>{label}</p>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <aside className="min-h-0 overflow-y-auto p-4 custom-scrollbar">
+            <div className="mb-3">
+              <h3 className="text-[16px] font-medium text-white">3D 장비 모듈</h3>
+              <p className="mt-1 text-[14px] text-neutral-500">장비를 누르면 선택 상태를 확인할 수 있어요.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {MODULES.map((module) => {
+                const selected = selectedEquipment.id === module.id;
+                return (
+                  <button
+                    key={module.id}
+                    onClick={() => setSelectedEquipmentId(module.id)}
+                    className={`overflow-hidden rounded-lg border bg-[#111317] text-left transition ${selected ? "border-[#E0A12E]" : "border-[#1F2329] hover:border-[#555A64]"}`}
+                  >
+                    <div className="aspect-square bg-[#15171B] p-2">
+                      <img src={getModuleSetItemImage(selectedSet.id, module.itemNumber)} alt="" className="h-full w-full object-contain" />
+                    </div>
+                    <div className="flex items-center justify-between gap-2 border-t border-[#1F2329] px-2.5 py-2">
+                      <span className={`truncate text-[14px] font-medium ${selected ? "text-[#E0A12E]" : "text-neutral-300"}`}>{module.label}</span>
+                      {selected && <Check className="h-3.5 w-3.5 shrink-0 text-[#E0A12E]" />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-3 rounded-lg border border-[#1F2329] bg-[#111317] p-3">
+              <p className="text-[14px] text-neutral-500">선택한 장비</p>
+              <p className="mt-1 text-[15px] font-medium text-white">{selectedEquipment.label}</p>
+            </div>
+          </aside>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function ModelViewport({
+  activeStep,
+  polygonCount,
+  moduleSetCount,
+}: {
+  activeStep: ModelingStep;
+  polygonCount: number;
+  moduleSetCount: number;
+}) {
   const [viewMode, setViewMode] = useState("PBR");
   const [activeTool, setActiveTool] = useState(activeStep === "polish" ? "브러시" : "선택");
   const [cameraResetKey, setCameraResetKey] = useState(0);
   const [gridEnabled, setGridEnabled] = useState(false);
+  const [isModuleBrowserOpen, setIsModuleBrowserOpen] = useState(false);
   const modes = activeStep === "texture" ? ["PBR", "Textured", "Clay", "Wireframe", "UV", "AO", "Light"] : ["PBR", "Textured", "Clay", "Wireframe", "Normal", "AO", "UV"];
 
   useEffect(() => {
@@ -702,10 +876,27 @@ function ModelViewport({ activeStep }: { activeStep: ModelingStep }) {
           <button className="flex items-center gap-2 rounded-md border border-[#1F2329] bg-[#0A0B0D] px-3 py-2 hover:text-white">
             품질 High <ChevronDown className="h-3.5 w-3.5" />
           </button>
+          <button
+            type="button"
+            onClick={() => setIsModuleBrowserOpen((current) => !current)}
+            className={`flex items-center gap-2 rounded-md border px-3 py-2 font-medium transition ${
+              isModuleBrowserOpen
+                ? "border-[#E0A12E] bg-[#E0A12E]/10 text-[#E0A12E]"
+                : "border-[#1F2329] bg-[#0A0B0D] text-neutral-400 hover:border-[#E0A12E]/50 hover:text-white"
+            }`}
+          >
+            <Layers3 className="h-4 w-4" />
+            모듈 세트
+            <span className={isModuleBrowserOpen ? "text-[#E0A12E]" : "text-neutral-500"}>{moduleSetCount}</span>
+          </button>
         </div>
       </div>
 
       <ViewportTools activeStep={activeStep} activeTool={activeTool} onToolSelect={handleToolSelect} gridEnabled={gridEnabled} />
+
+      <AnimatePresence>
+        {isModuleBrowserOpen && <ModuleSetBrowser onClose={() => setIsModuleBrowserOpen(false)} />}
+      </AnimatePresence>
 
       <div className="relative z-10 flex flex-1 items-center justify-center overflow-hidden p-8">
         {(activeStep === "polish" || activeStep === "remesh") && (
@@ -727,18 +918,9 @@ function ModelViewport({ activeStep }: { activeStep: ModelingStep }) {
           />
         </div>
 
-        <div className="absolute bottom-5 left-5 right-5 z-20 grid grid-cols-4 gap-3">
-          {[
-            ["현재 메시", activeStep === "remesh" ? "500K Tris" : ORC_MODEL_FILE],
-            ["텍스처", activeStep === "texture" ? "TGA PBR" : "10 Maps"],
-            ["모듈", "5 Parts"],
-            ["상태", activeStep === "generate" ? "Ready" : "A-"],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-lg border border-[#1F2329] bg-[#080A0D]/80 px-4 py-3 backdrop-blur">
-              <p className="text-[14px] text-neutral-500">{label}</p>
-              <p className="mt-1 text-[15px] font-medium text-white">{value}</p>
-            </div>
-          ))}
+        <div className="absolute bottom-5 left-5 z-20">
+          <p className="text-[14px] text-neutral-500">폴리곤 수</p>
+          <p className="mt-1 text-[16px] font-medium text-white">{polygonCount.toLocaleString("ko-KR")}</p>
         </div>
       </div>
     </section>
@@ -760,13 +942,18 @@ function SectionTitle({ title, helper }: { title: string; helper?: string }) {
 function RightPanel({
   activeStep,
   setActiveStep,
+  appliedSteps,
+  onApplyStep,
 }: {
   activeStep: ModelingStep;
   setActiveStep: (step: ModelingStep) => void;
+  appliedSteps: Record<ModelingStep, boolean>;
+  onApplyStep: (step: ModelingStep, quality: string) => void;
 }) {
   const [scope, setScope] = useState("selection");
   const [quality, setQuality] = useState("500K");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [polishStrength, setPolishStrength] = useState(65);
   const [promptDrafts, setPromptDrafts] = useState<Record<"generate" | "polish", string>>({
     generate: "",
     polish: "갑옷 금속 부분에 거친 마모와 스크래치를 추가",
@@ -779,35 +966,39 @@ function RightPanel({
   const panelCopy = useMemo(() => {
     if (activeStep === "generate") {
       return {
-        title: "3D 생성 / 확인",
+        title: "3D 모델 확인",
         prompt: "오크 FBX 모델에서 수정하고 싶은 부분을 자연어로 입력하세요.",
         button: "AI 수정 적용",
       };
     }
     if (activeStep === "polish") {
       return {
-        title: "AI 폴리싱",
+        title: "표면 정리",
         prompt: "갑옷 금속감, 근육 실루엣, 장비 스크래치 등을 보정합니다.",
-        button: "AI 수정 적용",
+        button: "표면 정리 적용",
       };
     }
     if (activeStep === "remesh") {
       return {
-        title: "리메시 설정",
+        title: "리메시",
         prompt: "목표 폴리곤과 사용처에 맞춰 메시를 최적화합니다.",
         button: "미리보기 생성",
       };
     }
     return {
-      title: "텍스처 / UV",
+      title: "텍스처 최적화",
       prompt: "복사된 TGA 텍스처 맵을 기준으로 PBR 구성을 점검합니다.",
       button: "텍스처 적용",
     };
   }, [activeStep]);
 
   const runAction = () => {
+    if (isProcessing) return;
     setIsProcessing(true);
-    window.setTimeout(() => setIsProcessing(false), 900);
+    window.setTimeout(() => {
+      setIsProcessing(false);
+      onApplyStep(activeStep, quality);
+    }, 1100);
   };
 
   return (
@@ -820,9 +1011,14 @@ function RightPanel({
           </h2>
           <p className="mt-0.5 text-[14px] text-neutral-500">NeoPoly Orc Modeling Pipeline</p>
         </div>
-        <button className="rounded-md border border-[#1F2329] bg-[#0A0B0D] px-3 py-1.5 text-[14px] text-neutral-400 hover:text-white">
-          저장됨
-        </button>
+        <span className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-[14px] ${
+          appliedSteps[activeStep]
+            ? "border-[#4ADE80]/30 bg-[#4ADE80]/10 text-[#4ADE80]"
+            : "border-[#1F2329] bg-[#0A0B0D] text-neutral-500"
+        }`}>
+          {appliedSteps[activeStep] && <Check className="h-3.5 w-3.5" />}
+          {appliedSteps[activeStep] ? "적용됨" : "적용 전"}
+        </span>
       </div>
 
       <div className="max-h-[760px] flex-1 overflow-y-auto p-5 custom-scrollbar lg:max-h-none">
@@ -841,6 +1037,22 @@ function RightPanel({
                   }))
                 }
               />
+              {activeStep === "polish" && (
+                <div className="mt-4 rounded-lg border border-[#1F2329] bg-[#111419] p-3">
+                  <div className="mb-2 flex items-center justify-between text-[14px]">
+                    <span className="font-medium text-neutral-300">표면 정리 강도</span>
+                    <span className="font-mono text-[#E0A12E]">{polishStrength}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={polishStrength}
+                    onChange={(event) => setPolishStrength(Number(event.target.value))}
+                    className="w-full accent-[#E0A12E]"
+                  />
+                </div>
+              )}
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {["어깨 갑옷 더 날카롭게", "무기 스파이크 크게", "허리 벨트 정리", "피부 주름 강조"].map((item) => (
                   <button key={item} className="rounded-md border border-[#1F2329] bg-[#141518] px-2 py-2 text-[14px] text-neutral-400 hover:border-[#E0A12E] hover:text-white">
@@ -955,6 +1167,16 @@ function RightPanel({
           </div>
         )}
 
+        {activeStep === "remesh" && (
+          <button
+            onClick={runAction}
+            className="mb-5 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-3 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
+          >
+            {isProcessing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Workflow className="h-4 w-4" />}
+            {isProcessing ? "리메시 처리 중" : "리메시 적용"}
+          </button>
+        )}
+
         {activeStep === "texture" && (
           <div className="space-y-5">
             <div className="rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4">
@@ -974,8 +1196,9 @@ function RightPanel({
                   </div>
                 ))}
               </div>
-              <button className="mt-3 w-full rounded-lg bg-[#E0A12E] py-2.5 text-[14px] font-medium text-black hover:bg-[#F0B43A]">
-                모두 자동 점검
+              <button onClick={runAction} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-2.5 text-[14px] font-medium text-black hover:bg-[#F0B43A]">
+                {isProcessing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                {isProcessing ? "텍스처 최적화 중" : "텍스처 최적화"}
               </button>
             </div>
 
@@ -998,10 +1221,7 @@ function RightPanel({
       </div>
 
       <div className="shrink-0 border-t border-[#1F2329] bg-[#08090B] p-5">
-        <div className="mb-3 flex items-center gap-2 rounded-lg border border-[#1F2329] bg-[#0A0B0D] px-3 py-2 text-[14px] text-neutral-400">
-          <History className="h-4 w-4 text-[#4ADE80]" />
-          {activeStep === "generate" ? `내 컴퓨터의 ${ORC_MODEL_FILE} 모델을 웹 뷰어에 연결했습니다.` : "이전 단계 결과가 유지됩니다."}
-        </div>
+
         <div className="flex gap-2">
           <button
             disabled={!prevStep}
@@ -1030,18 +1250,32 @@ function RightPanel({
 
 export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (page: string) => void }) {
   const [activeStep, setActiveStep] = useState<ModelingStep>("generate");
+  const [polygonCount, setPolygonCount] = useState(500000);
+  const moduleSetCount = MODULE_SETS.length;
+  const [appliedSteps, setAppliedSteps] = useState<Record<ModelingStep, boolean>>({
+    generate: true,
+    polish: false,
+    remesh: false,
+    texture: false,
+  });
+
+  const handleApplyStep = (step: ModelingStep, quality: string) => {
+    setAppliedSteps((prev) => ({ ...prev, [step]: true }));
+    if (step === "remesh") {
+      const polygonTargets: Record<string, number> = {
+        "80K": 80000,
+        "150K": 150000,
+        "500K": 500000,
+        "700K": 700000,
+      };
+      setPolygonCount(polygonTargets[quality] ?? 500000);
+    }
+  };
 
   return (
     <div className="flex h-[calc(100vh-76px)] flex-col overflow-hidden bg-[#050505] text-white">
-      <div className="flex h-[58px] shrink-0 items-center justify-between border-b border-[#1F2329] bg-[#050505] px-5">
-        <div className="flex items-center gap-3">
-          <div>
-            <h1 className="flex items-center gap-2 text-[18px] font-semibold text-white">
-              <Box className="h-5 w-5 text-[#E0A12E]" />
-              3D모델링 생성
-            </h1>
-          </div>
-        </div>
+      <div className="flex h-[64px] shrink-0 items-center justify-between border-b border-[#1F2329] bg-[#050505] px-6">
+        <h1 className="text-[22px] font-medium tracking-tight text-white">3D 모델링 생성</h1>
         <div className="flex items-center gap-2">
           <button className="flex items-center gap-2 rounded-lg border border-[#1F2329] bg-[#0A0B0D] px-3 py-2 text-[14px] text-neutral-400 hover:text-white">
             <PanelRight className="h-4 w-4" />
@@ -1058,8 +1292,13 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
       <StepRail activeStep={activeStep} />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto custom-scrollbar lg:flex-row lg:overflow-hidden">
-        <ModelViewport activeStep={activeStep} />
-        <RightPanel activeStep={activeStep} setActiveStep={setActiveStep} />
+        <ModelViewport activeStep={activeStep} polygonCount={polygonCount} moduleSetCount={moduleSetCount} />
+        <RightPanel
+          activeStep={activeStep}
+          setActiveStep={setActiveStep}
+          appliedSteps={appliedSteps}
+          onApplyStep={handleApplyStep}
+        />
       </div>
     </div>
   );

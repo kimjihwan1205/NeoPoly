@@ -171,7 +171,7 @@ const MODULE_SET_ITEM_BY_PART_ID: Record<string, string> = {
   "arm-guard": "05",
 };
 const MODULE_SET_TAG_SUGGESTIONS = [
-  "\uae30\ubcf8 \uc7a5\ube44 \uc138\ud2b8",
+  "\ud574\uace8 \uc804\uc0ac \uc138\ud2b8",
   "\uc911\uac11 \uc804\ud22c \uc138\ud2b8",
   "\uc2b5\uaca9 \uc804\ud22c \uc138\ud2b8",
   "\ubd80\uc871 \uc815\ucc30 \uc138\ud2b8",
@@ -765,7 +765,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   return (
     <div className="flex h-[calc(100vh-76px)] bg-[#050505] font-sans text-[#F5F5F5] antialiased">
       <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="flex shrink-0 items-center justify-between border-b border-[#1F2329] bg-[#050505] px-5 py-3">
+        <div className="flex h-[64px] shrink-0 items-center justify-between border-b border-[#1F2329] bg-[#050505] px-6">
           <h1 className="text-[22px] font-medium tracking-tight text-white">
             {expertTab === "turnaround" ? "턴어라운드" : "이미지 모듈화"}
           </h1>

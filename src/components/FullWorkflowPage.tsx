@@ -36,7 +36,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import FullWorkflowIntroPage from "./FullWorkflowIntroPage";
 import ReferencePage from "./ReferencePage";
-import NotesPage, { NOTES } from "./NotesPage";
+import NotesPage, { NOTES, type NoteItem } from "./NotesPage";
 import ProjectPage from "./ProjectPage";
 import NewProjectModal from "./NewProjectModal";
 import { ASSETS } from "../App";
@@ -321,8 +321,50 @@ export default function FullWorkflowPage({
   const [hasGeneratedImages, setHasGeneratedImages] = useState<boolean>(false);
   const [hasReturnedFromGeneratedStep, setHasReturnedFromGeneratedStep] = useState<boolean>(false);
   const [isOrcWorkflow, setIsOrcWorkflow] = useState<boolean>(false);
+  const [importedNoteReferences, setImportedNoteReferences] = useState<Array<{ id: number; title: string; image: string }>>([]);
+
+  const getAvailableNotes = (): NoteItem[] => {
+    if (typeof window === "undefined") return NOTES;
+    try {
+      const saved = window.localStorage.getItem("neopoly_notes_v3");
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) && parsed.length ? (parsed as NoteItem[]) : NOTES;
+    } catch {
+      return NOTES;
+    }
+  };
+
+  const getSelectedNotes = (noteIds: number[]) => {
+    const notes = getAvailableNotes();
+    return noteIds
+      .map((noteId) => notes.find((note) => note.id === noteId))
+      .filter((note): note is NoteItem => Boolean(note));
+  };
+
+  const noteIsOrcRelated = (note: NoteItem) => {
+    const searchable = [note?.title, note?.desc, ...(note?.tags || [])].filter(Boolean).join(" ").toLowerCase();
+    return searchable.includes("오크") || searchable.includes("orc");
+  };
+
+  const buildNoteReferenceAssets = (notes: NoteItem[]) => {
+    const seenImages = new Set<string>();
+    return notes.flatMap((note) =>
+      (note.images || []).flatMap((image: string, imageIndex: number) => {
+        if (!image || seenImages.has(image)) return [];
+        seenImages.add(image);
+        return [{
+          id: -(10000 + Number(note.id) * 100 + imageIndex),
+          title: `${note.title} ${imageIndex + 1}`,
+          image,
+        }];
+      }),
+    );
+  };
+
   const getWorkflowReferenceAsset = (id: number) =>
-    ASSETS.find((asset) => asset.id === id) || ORC_WORKFLOW_REFERENCES.find((asset) => asset.id === id);
+    ASSETS.find((asset) => asset.id === id) ||
+    ORC_WORKFLOW_REFERENCES.find((asset) => asset.id === id) ||
+    importedNoteReferences.find((asset) => asset.id === id);
   const hasSelectedGeneratedImage = selectedGridImage !== null;
 
   useEffect(() => {
@@ -425,41 +467,46 @@ export default function FullWorkflowPage({
     setExpertTab(isTurnaroundSelected ? "turnaround" : "modular");
   };
 
-  const DUMMY_GENERATED_IMAGES = isOrcWorkflow ? [
+  const DUMMY_GENERATED_IMAGES = [
     "/images/orc/orc_create01.png",
     "/images/orc/orc_create02.png",
     "/images/orc/orc_create03.png",
     "/images/orc/orc_create04.png",
-  ] : [
-    "/images/work_%2010.png",
-    "/images/work_%2011.png",
-    "/images/work_%2012.png",
-    "/images/work_%2013.png",
   ];
 
-  const GENERATED_IMAGE_BACKGROUNDS = isOrcWorkflow
-    ? ["#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"]
-    : ["#8C7F75", "#8C8C9F", "#9C9687", "#8C8985"];
+  const GENERATED_IMAGE_BACKGROUNDS = ["#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"];
 
   const buildPromptFromNotes = (noteIds: number[]) => {
-    const selectedNotes = noteIds
-      .map((noteId) => NOTES.find((note) => note.id === noteId))
-      .filter(Boolean);
-
+    const selectedNotes = getSelectedNotes(noteIds);
     if (selectedNotes.length === 0) return "";
 
     return selectedNotes
       .map((note) => {
-        const tags = note!.tags.join(" ");
-        return [`[${note!.title}]`, note!.desc, tags].filter(Boolean).join("\n");
+        const tags = (note.tags || []).join(" ");
+        return [`[${note.title}]`, note.desc, tags].filter(Boolean).join("\n");
       })
       .join("\n\n");
   };
 
   const appendPromptFromNotes = (noteIds: number[]) => {
+    const selectedNotes = getSelectedNotes(noteIds);
     const notePrompt = buildPromptFromNotes(noteIds);
-    if (!notePrompt) return;
+    if (selectedNotes.length === 0 || !notePrompt) return;
+
+    const noteReferences = buildNoteReferenceAssets(selectedNotes);
+    const noteReferenceIds = noteReferences.map((asset) => asset.id);
+    const hasOrcNote = selectedNotes.some(noteIsOrcRelated);
+
     setPromptDraft((prev) => [prev.trim(), notePrompt].filter(Boolean).join("\n\n"));
+    setImportedNoteReferences((prev) => {
+      const nextByImage = new Map([...prev, ...noteReferences].map((asset) => [asset.image, asset]));
+      return Array.from(nextByImage.values());
+    });
+    setSelectedReferences((prev) => Array.from(new Set([...prev, ...noteReferenceIds])));
+    if (hasOrcNote) {
+      setIsOrcWorkflow(true);
+      setMessages(ORC_MESSAGES);
+    }
     setHasUnsavedChanges(true);
   };
 
@@ -467,27 +514,14 @@ export default function FullWorkflowPage({
     noteIds = stagedNotes,
     referenceIds = stagedReferences,
   ) => {
-    // Collect all image URLs from staged Notes
-    const noteImages = noteIds
-      .map((noteId) => NOTES.find((n) => n.id === noteId))
-      .filter(Boolean)
-      .flatMap((n) => n!.images || []);
-    const hasOrcNote = noteIds.includes(4);
+    const selectedNotes = getSelectedNotes(noteIds);
+    const hasOrcNote = selectedNotes.some(noteIsOrcRelated);
     const notePrompt = buildPromptFromNotes(noteIds);
+    const noteReferenceAssets = buildNoteReferenceAssets(selectedNotes);
+    const noteReferenceIds = noteReferenceAssets.map((asset) => asset.id);
 
-    // Also include ASSETS that match these URLs
-    const noteAssetIds = ASSETS.filter((a) => noteImages.includes(a.image)).map(
-      (a) => a.id,
-    );
-
-    // Merge staged references and found ASSET ids
-    const mergedRefIds = Array.from(
-      new Set([
-        ...referenceIds,
-        ...noteAssetIds,
-        ...(hasOrcNote ? ORC_WORKFLOW_REFERENCE_IDS : []),
-      ]),
-    );
+    setImportedNoteReferences(noteReferenceAssets);
+    const mergedRefIds = Array.from(new Set([...referenceIds, ...noteReferenceIds]));
     setSelectedReferences(mergedRefIds);
 
     // Create a new project instance
@@ -522,6 +556,7 @@ export default function FullWorkflowPage({
 
   const handleStartEmptyProject = () => {
     setSelectedReferences([]);
+    setImportedNoteReferences([]);
     setStagedNotes([]);
     setStagedReferences([]);
     setIsOrcWorkflow(false);
@@ -909,8 +944,12 @@ export default function FullWorkflowPage({
               </div>
             </>
             ) : (
-              <div className="flex-1 p-4 lg:p-6 2xl:p-8 custom-scrollbar relative flex flex-col min-h-0 bg-[#050505]">
-                <div className="max-w-[2200px] w-full h-full flex flex-col min-h-0 mx-auto">
+              <div className="flex min-h-0 flex-1 flex-col bg-[#050505]">
+                <div className="flex h-[64px] shrink-0 items-center justify-between border-b border-[#1F2329] bg-[#050505] px-6">
+                  <h1 className="text-[22px] font-medium tracking-tight text-white">이미지 생성</h1>
+                </div>
+                <div className="relative flex min-h-0 flex-1 flex-col p-4 custom-scrollbar lg:p-6 2xl:p-8">
+                  <div className="max-w-[2200px] w-full h-full flex flex-col min-h-0 mx-auto">
                   <div className="mb-4 lg:mb-5 shrink-0 flex items-center gap-3">
                     <h2 className="text-[22px] font-medium tracking-tight text-white">이미지 시안 선택</h2>
                     <span className="bg-[#141518] border border-[#2A2E36] px-2.5 py-0.5 rounded-full text-[14px] text-white font-medium">4</span>
@@ -950,6 +989,7 @@ export default function FullWorkflowPage({
                     ))}
                   </div>
                 </div>
+              </div>
               </div>
             )}
             </div>
