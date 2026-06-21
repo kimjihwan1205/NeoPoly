@@ -42,6 +42,9 @@ import ReferencePage from "./ReferencePage";
 import NotesPage, { NOTES, type NoteItem } from "./NotesPage";
 import ProjectPage from "./ProjectPage";
 import NewProjectModal from "./NewProjectModal";
+import WorkflowHeader from "./WorkflowHeader";
+import WorkflowSidebarHeader from "./WorkflowSidebarHeader";
+import { MODEL_GENERATION_REQUEST_KEY } from "../workflowState";
 import { ASSETS } from "../App";
 
 const COLORS = {
@@ -593,6 +596,9 @@ export default function FullWorkflowPage({
 
   const handleDirectModeling = () => {
     if (!hasSelectedGeneratedImage) return;
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(MODEL_GENERATION_REQUEST_KEY, "direct");
+    }
     onNavigate?.("modeling_generation");
   };
 
@@ -947,9 +953,11 @@ export default function FullWorkflowPage({
               {workflowStep === "prompt" ? (
                 <>
                   {/* Main Top Header */}
-                  <div className="flex shrink-0 items-center justify-between border-b border-[#1F2329] bg-[#050505] px-6 py-3">
-                    <h1 className="text-[22px] font-medium tracking-tight text-white">프롬프트 작성</h1>
-                  </div>
+                  <WorkflowHeader
+                    title="프롬프트 작성"
+                    section="image"
+                    currentStep="prompt"
+                  />
 
                   {/* Chat Area */}
                   <div className="flex-1 overflow-y-auto px-8 py-5 custom-scrollbar flex flex-col gap-8 pb-4">
@@ -1099,9 +1107,11 @@ export default function FullWorkflowPage({
             </>
             ) : (
               <div className="flex min-h-0 flex-1 flex-col bg-[#050505]">
-                <div className="flex h-[64px] shrink-0 items-center justify-between border-b border-[#1F2329] bg-[#050505] px-6">
-                  <h1 className="text-[22px] font-medium tracking-tight text-white">이미지 생성</h1>
-                </div>
+                <WorkflowHeader
+                  title="이미지 생성"
+                  section="image"
+                  currentStep="image-generation"
+                />
                 <div className="relative min-h-0 flex-1 overflow-y-auto p-4 custom-scrollbar lg:p-6 2xl:p-8">
                   <div className="mx-auto flex min-h-full w-full max-w-[2200px] flex-col">
                   <div
@@ -1197,6 +1207,14 @@ export default function FullWorkflowPage({
               <div className="w-[420px] xl:w-[480px] 2xl:w-[550px] flex-shrink-0 border-l border-[#1F2329] bg-[#050505] flex flex-col h-full overflow-hidden">
                 {rightPanelMode === "prompt" ? (
                 <>
+                  <WorkflowSidebarHeader
+                    title="프롬프트 설정"
+                    action={
+                      <span className="text-[14px] text-neutral-500">
+                        레퍼런스 {selectedReferences.length}개
+                      </span>
+                    }
+                  />
                   <div className="flex-1 flex flex-col overflow-hidden p-6 gap-6 pb-0">
                     {/* Selected Refs */}
                     <div className="rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4 flex flex-col max-h-[45vh] shrink-0">
@@ -1368,19 +1386,18 @@ export default function FullWorkflowPage({
                 </>
               ) : (
                 <div className="flex flex-col h-full bg-[#050505]">
-                  {/* Header */}
-                  <div className="px-6 py-5 border-b border-[#1F2329] flex items-center justify-between shrink-0 bg-[#0A0B0D]">
-                    <h3 className="text-[18px] font-semibold text-neutral-100 tracking-tight">
-                      전문가용 제어판
-                    </h3>
-                    <button
-                      onClick={() => setRightPanelMode("prompt")}
-                      className="text-neutral-400 hover:text-white transition-colors text-[14px] font-medium flex items-center gap-1"
-                    >
-                      <ChevronDown className="w-4 h-4 rotate-90" /> 프롬프트로
-                      돌아가기
-                    </button>
-                  </div>
+                  <WorkflowSidebarHeader
+                    title="전문가 설정"
+                    action={
+                      <button
+                        onClick={() => setRightPanelMode("prompt")}
+                        className="flex items-center gap-1 text-[14px] font-medium text-neutral-400 transition-colors hover:text-white"
+                      >
+                        <ChevronDown className="h-4 w-4 rotate-90" />
+                        돌아가기
+                      </button>
+                    }
+                  />
 
                   {/* Tabs */}
                   <div className="flex border-b border-[#1F2329] px-6 shrink-0 bg-[#050505]">
@@ -1547,6 +1564,16 @@ export default function FullWorkflowPage({
             </div>
             )) : (
               <div className="w-[420px] xl:w-[480px] 2xl:w-[550px] flex-shrink-0 border-l border-[#1F2329] bg-[#050505] flex flex-col h-full overflow-hidden">
+                <WorkflowSidebarHeader
+                  title="이미지 생성 설정"
+                  action={
+                    selectedGridImage !== null ? (
+                      <span className="rounded-md border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-2.5 py-1 text-[14px] text-[#E0A12E]">
+                        시안 {selectedGridImage + 1} 선택
+                      </span>
+                    ) : null
+                  }
+                />
                 <div className="flex-1 overflow-y-auto px-5 pt-5 pb-2 custom-scrollbar flex flex-col gap-5">
                   {/* Reference Settings Area */}
                   <div className="flex flex-col gap-3">

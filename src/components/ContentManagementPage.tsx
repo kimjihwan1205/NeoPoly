@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   Search, Filter, ChevronDown, LayoutGrid, List, Plus, 
   MoreHorizontal, Eye, Heart, ShoppingCart, Bookmark,
   CreditCard, Settings, HelpCircle, AlertCircle, Clock,
-  CheckCircle2, X, Edit, Lock, Trash2, ArrowUpRight, Check, Image as ImageIcon, Box
+  CheckCircle2, X, Edit, Lock, Trash2, ArrowUpRight, Check, Image as ImageIcon, Box,
+  BarChart3, TrendingUp, WalletCards
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import {
+  applyPricing,
+  calculateRevenueSummary,
+  formatCompactWon,
+  parseWon,
+} from '../contentManagement';
 
 // Types
 interface Stats {
@@ -24,6 +31,8 @@ interface ContentItem {
   category: string;
   tags: string[];
   price?: number;
+  originalPrice?: number;
+  saleEnabled?: boolean;
   isFree?: boolean;
   stats: Stats;
   image: string;
@@ -145,8 +154,59 @@ const ITEMS: ContentItem[] = [
 ];
 
 export default function ContentManagementPage() {
+  const [items, setItems] = useState<ContentItem[]>(ITEMS);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(ITEMS[0]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [activeSection, setActiveSection] = useState<'content' | 'revenue'>('content');
+  const [pricingItem, setPricingItem] = useState<ContentItem | null>(null);
+  const [originalPriceDraft, setOriginalPriceDraft] = useState(0);
+  const [discountPriceDraft, setDiscountPriceDraft] = useState(0);
+  const [saleEnabledDraft, setSaleEnabledDraft] = useState(false);
+
+  const revenueRows = useMemo(
+    () =>
+      items
+        .filter((item) => item.type === 'MARKET')
+        .map((item) => ({
+          item,
+          sales: Number(item.stats.sales) || 0,
+          revenue: parseWon(item.stats.revenue),
+        })),
+    [items],
+  );
+  const revenueSummary = useMemo(
+    () => calculateRevenueSummary(revenueRows),
+    [revenueRows],
+  );
+
+  const openPriceEditor = (item: ContentItem) => {
+    const originalPrice = item.originalPrice ?? item.price ?? 0;
+    setPricingItem(item);
+    setOriginalPriceDraft(originalPrice);
+    setDiscountPriceDraft(item.saleEnabled ? item.price ?? 0 : originalPrice);
+    setSaleEnabledDraft(Boolean(item.saleEnabled));
+  };
+
+  const savePricing = () => {
+    if (!pricingItem) return;
+    const pricing = applyPricing(
+      originalPriceDraft,
+      discountPriceDraft,
+      saleEnabledDraft,
+    );
+    const updatedItem = {
+      ...pricingItem,
+      ...pricing,
+      isFree: false,
+    };
+    setItems((current) =>
+      current.map((item) => item.id === updatedItem.id ? updatedItem : item),
+    );
+    setSelectedItem((current) =>
+      current?.id === updatedItem.id ? updatedItem : current,
+    );
+    setPricingItem(null);
+  };
 
   return (
     <div className="flex h-[calc(100vh-76px)] overflow-hidden bg-[#0A0B0D] font-sans text-text-primary w-full">
@@ -163,7 +223,12 @@ export default function ContentManagementPage() {
         </div>
 
         <nav className="px-3 space-y-1 mb-6">
-          <button className="flex items-center justify-between gap-3 w-full px-3 py-2.5 rounded-lg bg-[#15161A] text-white font-medium text-[15px] transition-colors">
+          <button
+            onClick={() => setActiveSection('content')}
+            className={`flex items-center justify-between gap-3 w-full px-3 py-2.5 rounded-lg font-medium text-[15px] transition-colors ${
+              activeSection === 'content' ? 'bg-[#15161A] text-white' : 'text-text-secondary hover:text-white hover:bg-[#111215]'
+            }`}
+          >
             <div className="flex items-center gap-3">
               <LayoutGrid className="w-[18px] h-[18px] text-[#E0A12E]" />
               <span className="tracking-tight">전체 콘텐츠</span>
@@ -214,10 +279,18 @@ export default function ContentManagementPage() {
         <div className="px-4 mt-auto mb-6">
           <div className="h-px bg-[#1C1E24] w-full mb-3"></div>
           <nav className="space-y-1 mb-6">
-            <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight text-text-secondary hover:text-white hover:bg-[#111215] transition-colors border border-transparent">
+            <button
+              onClick={() => {
+                setActiveSection('revenue');
+                setSelectedItem(null);
+              }}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight transition-colors border border-transparent ${
+                activeSection === 'revenue' ? 'bg-[#15161A] text-white' : 'text-text-secondary hover:text-white hover:bg-[#111215]'
+              }`}
+            >
               <div className="flex items-center gap-3">
-                <CreditCard className="w-[18px] h-[18px] text-neutral-400" /> 
-                정산 관리
+                <BarChart3 className={`w-[18px] h-[18px] ${activeSection === 'revenue' ? 'text-[#E0A12E]' : 'text-neutral-400'}`} />
+                수익 관리
               </div>
             </button>
             <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight text-text-secondary hover:text-white hover:bg-[#111215] transition-colors border border-transparent">
@@ -240,19 +313,80 @@ export default function ContentManagementPage() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto custom-scrollbar bg-[#0A0B0D] relative flex flex-col">
         <div className="px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 w-full flex-1">
-          {/* Header Row Removed */}
+          {activeSection === 'revenue' ? (
+            <div className="mx-auto w-full max-w-[1500px]">
+              <div className="mb-6 flex items-end justify-between gap-4">
+                <div>
+                  <h1 className="text-[28px] font-bold text-white">수익 관리</h1>
+                  <p className="mt-2 text-[14px] text-neutral-400">판매 중인 콘텐츠의 매출 흐름을 확인합니다.</p>
+                </div>
+                <FilterSelect label="2026년 6월" width="w-[150px]" />
+              </div>
 
-          {/* Quick Stats Row */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
+                <MonthlyRevenueCard
+                  value={revenueSummary.totalRevenue}
+                  sales={revenueSummary.totalSales}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <RevenueMetric
+                    icon={<ShoppingCart className="h-5 w-5" />}
+                    label="판매 건수"
+                    value={`${revenueSummary.totalSales}건`}
+                  />
+                  <RevenueMetric
+                    icon={<WalletCards className="h-5 w-5" />}
+                    label="평균 결제액"
+                    value={formatCompactWon(revenueSummary.averageOrderValue)}
+                  />
+                </div>
+              </div>
+
+              <section className="mt-6 overflow-hidden rounded-xl border border-[#1C1E24] bg-[#0A0B0D]">
+                <div className="flex items-center justify-between border-b border-[#1C1E24] px-5 py-4">
+                  <h2 className="text-[18px] font-medium text-white">작품별 수익</h2>
+                  <span className="text-[14px] text-neutral-500">최근 30일</span>
+                </div>
+                <div className="divide-y divide-[#1C1E24]">
+                  {revenueRows
+                    .slice()
+                    .sort((a, b) => b.revenue - a.revenue)
+                    .map(({ item, sales, revenue }) => (
+                      <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_90px_130px] items-center gap-4 px-5 py-4">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <img src={item.image} alt="" className="h-12 w-16 rounded-lg object-cover" />
+                          <div className="min-w-0">
+                            <p className="truncate text-[15px] font-medium text-white">{item.title}</p>
+                            <p className="mt-1 text-[14px] text-neutral-500">
+                              {item.saleEnabled && item.originalPrice
+                                ? `할인가 ₩${item.price?.toLocaleString()}`
+                                : `₩${item.price?.toLocaleString()}`}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-right text-[14px] text-neutral-400">{sales}건</span>
+                        <span className="text-right text-[16px] font-medium text-[#E0A12E]">{formatCompactWon(revenue)}</span>
+                      </div>
+                    ))}
+                </div>
+              </section>
+            </div>
+          ) : (
+          <>
+          <MonthlyRevenueCard
+            value={revenueSummary.totalRevenue}
+            sales={revenueSummary.totalSales}
+            compact
+          />
+
+          <div className="mb-8 mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
             <StatCard icon={<Box className="w-5 h-5 text-neutral-400" />} title="전체 업로드" value="42" desc="전체 작품 수" />
             <StatCard icon={<ShoppingCart className="w-5 h-5 text-neutral-400" />} title="판매 중" value="18" desc="마켓 판매 중" />
             <StatCard icon={<ImageIcon className="w-5 h-5 text-neutral-400" />} title="아트 공개" value="16" desc="아트 공개 중" />
             <StatCard icon={<Clock className="w-5 h-5 text-[#E0A12E]" />} title="심사 중" value="3" desc="검토 대기 중" />
             <StatCard icon={<AlertCircle className="w-5 h-5 text-[#E46B6B]" />} title="수정 필요" value="2" desc="수정 요청" />
-            <StatCard icon={<CreditCard className="w-5 h-5 text-[#E0A12E]" />} title="이번 달 수익" value="₩248,000" desc="전일 대비 +24%" highlight />
           </div>
 
-          {/* Filters Bar */}
           <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 mb-6">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
               <div className="relative">
@@ -293,7 +427,7 @@ export default function ContentManagementPage() {
           {/* Grid/List Area */}
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 pb-12">
-              {ITEMS.slice(0, 8).map((item) => (
+              {items.slice(0, 8).map((item) => (
                 <ContentCard 
                   key={item.id} 
                   item={item} 
@@ -304,7 +438,7 @@ export default function ContentManagementPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-3 pb-12">
-              {ITEMS.slice(0, 8).map((item) => (
+              {items.slice(0, 8).map((item) => (
                 <ContentListRow
                   key={item.id}
                   item={item}
@@ -333,12 +467,14 @@ export default function ContentManagementPage() {
               <FilterSelect label="8개씩 보기" width="w-[120px]" />
             </div>
           </div>
+          </>
+          )}
         </div>
       </main>
 
       {/* Detail Sidebar */}
       <AnimatePresence>
-        {selectedItem && (
+        {selectedItem && activeSection === 'content' && (
           <motion.aside
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
@@ -415,7 +551,10 @@ export default function ContentManagementPage() {
                       ))}
                     </div>
                   </div>
-                  <MetaRow label="가격" value={selectedItem.isFree ? '무료 공개' : `₩${selectedItem.price?.toLocaleString()}`} />
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-[14px] font-medium text-neutral-400">가격</span>
+                    <PriceDisplay item={selectedItem} align="right" />
+                  </div>
                   <MetaRow label="라이선스" value="Standard License" hasInfo />
                   <MetaRow label="등록일" value={selectedItem.createdAt} />
                   <MetaRow label="수정일" value={selectedItem.updatedAt} />
@@ -456,7 +595,11 @@ export default function ContentManagementPage() {
                  </button>
                </div>
                <div className="grid grid-cols-2 gap-2">
-                 <button className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-neutral-300 bg-transparent border border-[#2A2E36] hover:bg-[#15161A] hover:text-white rounded-lg transition-colors">
+                 <button
+                   disabled={selectedItem.type !== 'MARKET'}
+                   onClick={() => openPriceEditor(selectedItem)}
+                   className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-neutral-300 bg-transparent border border-[#2A2E36] hover:bg-[#15161A] hover:text-white rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+                 >
                    가격 수정
                  </button>
                  <button className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-neutral-300 bg-transparent border border-[#2A2E36] hover:bg-[#15161A] hover:text-white rounded-lg transition-colors">
@@ -472,6 +615,148 @@ export default function ContentManagementPage() {
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {pricingItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onMouseDown={() => setPricingItem(null)}
+            className="fixed inset-0 z-[180] flex items-center justify-center bg-black/60 p-5 backdrop-blur-[2px]"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              onMouseDown={(event) => event.stopPropagation()}
+              className="w-full max-w-[520px] overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.72)]"
+            >
+              <div className="flex h-16 items-center justify-between border-b border-[#1F2329] px-5">
+                <div>
+                  <h2 className="text-[18px] font-medium text-white">판매 가격 설정</h2>
+                  <p className="mt-0.5 text-[14px] text-neutral-500">{pricingItem.title}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPricingItem(null)}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-white/5 hover:text-white"
+                  aria-label="가격 설정 닫기"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="space-y-5 p-5">
+                <label className="block">
+                  <span className="text-[14px] font-medium text-neutral-300">판매 가격</span>
+                  <div className="relative mt-2">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-neutral-500">₩</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1000"
+                      value={originalPriceDraft}
+                      onChange={(event) => setOriginalPriceDraft(Number(event.target.value))}
+                      className="h-12 w-full rounded-lg border border-[#2A2E36] bg-[#111317] pl-9 pr-4 text-[15px] text-white outline-none transition focus:border-[#E0A12E]"
+                    />
+                  </div>
+                </label>
+
+                <div className="flex items-center justify-between rounded-lg border border-[#1F2329] bg-[#111317] p-4">
+                  <div>
+                    <p className="text-[15px] font-medium text-white">할인 가격 사용</p>
+                    <p className="mt-1 text-[14px] text-neutral-500">판매 가격보다 낮을 때 적용됩니다.</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={saleEnabledDraft}
+                    onClick={() => setSaleEnabledDraft((current) => !current)}
+                    className={`relative h-6 w-11 rounded-full transition ${saleEnabledDraft ? 'bg-[#E0A12E]' : 'bg-[#2A2E36]'}`}
+                  >
+                    <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${saleEnabledDraft ? 'left-6' : 'left-1'}`} />
+                  </button>
+                </div>
+
+                {saleEnabledDraft && (
+                  <label className="block">
+                    <span className="text-[14px] font-medium text-neutral-300">할인 가격</span>
+                    <div className="relative mt-2">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[15px] text-neutral-500">₩</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={discountPriceDraft}
+                        onChange={(event) => setDiscountPriceDraft(Number(event.target.value))}
+                        className="h-12 w-full rounded-lg border border-[#2A2E36] bg-[#111317] pl-9 pr-4 text-[15px] text-white outline-none transition focus:border-[#E0A12E]"
+                      />
+                    </div>
+                  </label>
+                )}
+
+                <div className="flex items-center justify-between border-t border-[#1F2329] pt-4">
+                  <span className="text-[14px] text-neutral-400">최종 표시 가격</span>
+                  <span className="text-[20px] font-medium text-[#E0A12E]">
+                    {formatCompactWon(
+                      applyPricing(originalPriceDraft, discountPriceDraft, saleEnabledDraft).price,
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 border-t border-[#1F2329] p-5">
+                <button
+                  type="button"
+                  onClick={() => setPricingItem(null)}
+                  className="h-11 rounded-lg border border-[#2A2E36] px-4 text-[14px] font-medium text-neutral-300 transition hover:bg-white/5"
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={savePricing}
+                  className="h-11 rounded-lg bg-[#E0A12E] px-5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
+                >
+                  가격 저장
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+    </div>
+  );
+}
+
+function MonthlyRevenueCard({ value, sales, compact = false }: { value: number, sales: number, compact?: boolean }) {
+  return (
+    <section className={`min-w-0 overflow-hidden rounded-xl border border-[#E0A12E]/25 bg-[#E0A12E]/[0.06] ${compact ? 'px-5 py-4' : 'p-6'}`}>
+      <div className={`flex ${compact ? 'items-center justify-between gap-5' : 'h-full flex-col justify-between'}`}>
+        <div className="flex items-center gap-2.5">
+          <TrendingUp className="h-5 w-5 shrink-0 text-[#E0A12E]" />
+          <span className="text-[14px] font-medium text-neutral-300">이번 달 수익</span>
+        </div>
+        <div className={compact ? 'min-w-0 text-right' : 'mt-8'}>
+          <p className={`max-w-full truncate font-medium tracking-tight text-[#E0A12E] ${compact ? 'text-[clamp(22px,2vw,30px)]' : 'text-[clamp(30px,4vw,48px)]'}`}>
+            {formatCompactWon(value)}
+          </p>
+          <p className="mt-1 text-[14px] text-neutral-400">{sales}건 판매 · 전월 대비 +24%</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RevenueMetric({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) {
+  return (
+    <div className="min-w-0 rounded-xl border border-[#1C1E24] bg-[#111215] p-5">
+      <div className="flex items-center gap-2 text-neutral-400">
+        {icon}
+        <span className="text-[14px] font-medium">{label}</span>
+      </div>
+      <p className="mt-5 truncate text-[clamp(20px,2vw,28px)] font-medium text-white">{value}</p>
     </div>
   );
 }
@@ -543,8 +828,8 @@ const ContentCard: React.FC<{ item: ContentItem, isSelected: boolean, onClick: (
         <p className="text-[14px] text-neutral-400 font-medium tracking-tight mb-2.5">{item.category}</p>
         
         <div className="mt-auto">
-          <div className={`text-[15px] font-medium tracking-tight mb-4 ${item.isFree ? 'text-neutral-400' : 'text-[#E0A12E]'}`}>
-            {item.isFree ? '무료 공개' : `₩${item.price?.toLocaleString()}`}
+          <div className="mb-4">
+            <PriceDisplay item={item} />
           </div>
 
           {/* Stats Bar */}
@@ -605,9 +890,7 @@ const ContentListRow: React.FC<{ item: ContentItem, isSelected: boolean, onClick
         </div>
 
         <div className="hidden lg:flex w-32 shrink-0">
-          <div className={`text-[14px] font-medium tracking-tight ${item.isFree ? 'text-neutral-400' : 'text-[#E0A12E]'}`}>
-            {item.isFree ? '무료 공개' : `₩${item.price?.toLocaleString()}`}
-          </div>
+          <PriceDisplay item={item} />
         </div>
 
         <div className="flex lg:w-48 xl:w-64 items-center gap-4 text-[14px] font-sans text-neutral-500 shrink-0">
@@ -639,6 +922,25 @@ function StatMini({ icon, label, value, isRevenue = false }: { icon: React.React
       </div>
     </div>
   )
+}
+
+function PriceDisplay({ item, align = 'left' }: { item: ContentItem, align?: 'left' | 'right' }) {
+  if (item.isFree) {
+    return <span className="text-[14px] font-medium text-neutral-400">무료 공개</span>;
+  }
+
+  return (
+    <div className={`flex flex-wrap items-center gap-2 ${align === 'right' ? 'justify-end' : ''}`}>
+      {item.saleEnabled && item.originalPrice && (
+        <span className="text-[14px] text-neutral-500 line-through">
+          ₩{item.originalPrice.toLocaleString()}
+        </span>
+      )}
+      <span className="text-[15px] font-medium text-[#E0A12E]">
+        ₩{item.price?.toLocaleString()}
+      </span>
+    </div>
+  );
 }
 
 function MetaRow({ label, value, hasInfo = false }: { label: string, value: string, hasInfo?: boolean }) {

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import NewProjectModal from "./NewProjectModal";
+import { PROJECT_STORAGE_KEY } from "../workflowState";
 
 interface ProjectPageProps {
   onNavigate?: (page: string) => void;
@@ -54,8 +55,6 @@ const COLORS = {
   teal: "#2DD4BF",
   dim: "#8A8F98",
 };
-
-const STORAGE_KEY = "neopoly_projects_v3";
 
 export const DEFAULT_PROJECTS: Project[] = [
   {
@@ -194,12 +193,12 @@ function today() {
 
 function loadProjects() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(PROJECT_STORAGE_KEY);
     if (!saved) return DEFAULT_PROJECTS;
     const parsed = JSON.parse(saved) as Project[];
-    if (!Array.isArray(parsed) || parsed.length !== DEFAULT_PROJECTS.length) return DEFAULT_PROJECTS;
+    if (!Array.isArray(parsed)) return DEFAULT_PROJECTS;
 
-    return DEFAULT_PROJECTS.map((defaultProject) => {
+    const mergedDefaults = DEFAULT_PROJECTS.map((defaultProject) => {
       const savedProject = parsed.find((project) => project.id === defaultProject.id);
       return savedProject
         ? {
@@ -209,6 +208,12 @@ function loadProjects() {
           }
         : defaultProject;
     });
+    const defaultIds = new Set(DEFAULT_PROJECTS.map((project) => project.id));
+    const generatedProjects = parsed.filter(
+      (project) => !defaultIds.has(project.id),
+    );
+
+    return [...generatedProjects, ...mergedDefaults];
   } catch {
     return DEFAULT_PROJECTS;
   }
@@ -245,7 +250,15 @@ export default function ProjectPage({
   selectedProjectId,
 }: ProjectPageProps) {
   const [projects, setProjects] = useState<Project[]>(loadProjects);
-  const [activeProject, setActiveProject] = useState(() => loadProjects()[0].id);
+  const [activeProject, setActiveProject] = useState(() => {
+    const loadedProjects = loadProjects();
+    const storedId = Number(
+      localStorage.getItem("neopoly_selected_project_id"),
+    );
+    return loadedProjects.some((project) => project.id === storedId)
+      ? storedId
+      : loadedProjects[0].id;
+  });
   const [activeStep, setActiveStep] = useState("Modeling");
   const [infoTab, setInfoTab] = useState<"modeling" | "texture" | "rigging">(
     "modeling",
@@ -260,7 +273,7 @@ export default function ProjectPage({
   const boardScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    localStorage.setItem(PROJECT_STORAGE_KEY, JSON.stringify(projects));
   }, [projects]);
 
   useEffect(() => {

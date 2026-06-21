@@ -5,16 +5,21 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { TGALoader } from "three/examples/jsm/loaders/TGALoader.js";
+import WorkflowHeader from "./WorkflowHeader";
+import WorkflowSidebarHeader from "./WorkflowSidebarHeader";
+import { WORKFLOW_SIDEBAR_WIDTH_CLASS } from "../workflowLayout";
+import {
+  createGeneratedProject,
+  MODEL_GENERATION_REQUEST_KEY,
+  PROJECT_STORAGE_KEY,
+} from "../workflowState";
 import {
   ArrowLeft,
   ArrowRight,
   Box,
-  Brush,
   Camera,
   Check,
-  ChevronDown,
   CircleHelp,
-  Cpu,
   Crosshair,
   Eye,
   Gauge,
@@ -22,20 +27,15 @@ import {
   Layers3,
   Maximize2,
   MousePointer2,
-  Orbit,
-  PanelRight,
   RefreshCw,
-  Scissors,
   Settings,
-  SlidersHorizontal,
   Sparkles,
-  Wand2,
   Workflow,
   X,
   Zap,
 } from "lucide-react";
 
-export type ModelingStep = "generate" | "polish" | "remesh" | "texture";
+export type ModelingStep = "generate" | "remesh" | "texture";
 
 type OrcPbrTextureSet = {
   map: THREE.Texture;
@@ -49,7 +49,6 @@ const STEPS: Array<{
   title: string;
 }> = [
   { id: "generate", title: "3D 생성" },
-  { id: "polish", title: "표면 정리" },
   { id: "remesh", title: "리메시" },
   { id: "texture", title: "텍스처 최적화" },
 ];
@@ -95,6 +94,7 @@ const MODULE_SETS: ModuleSetInfo[] = [
 ];
 
 const MODULE_PREVIEW_LABELS = ["정면", "45도", "측면", "후면"];
+export const VIEWPORT_MODES = ["PBR", "Textured", "Clay", "Wireframe"];
 
 const getModuleSetItemImage = (setId: string, itemNumber: string) =>
   `/images/orc_3D/orc_${setId}_3d${itemNumber}.png`;
@@ -116,71 +116,24 @@ const ORC_MODEL_PATH = `/models/orc/${ORC_MODEL_FILE}`;
 const ORC_ASSET_VERSION = "orc-model-20260603";
 const versionedAsset = (path: string) => `${path}${path.includes("?") ? "&" : "?"}v=${ORC_ASSET_VERSION}`;
 
-function StepRail({ activeStep }: { activeStep: ModelingStep }) {
-  const activeIndex = STEPS.findIndex((step) => step.id === activeStep);
-
-  return (
-    <div className="flex h-[48px] shrink-0 items-center overflow-x-auto border-b border-[#1F2329] bg-[#08090B] px-6 custom-scrollbar">
-      <div className="flex min-w-max items-center">
-        {STEPS.map((step, index) => {
-          const active = activeStep === step.id;
-          const complete = activeIndex > index;
-          return (
-            <React.Fragment key={step.id}>
-              <div className={`flex items-center gap-2 ${active ? "text-[#E0A12E]" : complete ? "text-neutral-200" : "text-neutral-500"}`}>
-                <span className={`flex h-6 w-6 items-center justify-center rounded-full border ${
-                  active
-                    ? "border-[#E0A12E] bg-[#E0A12E] text-black"
-                    : complete
-                      ? "border-[#4ADE80]/40 bg-[#4ADE80]/10 text-[#4ADE80]"
-                      : "border-[#343842] bg-[#111317]"
-                }`}>
-                  {complete ? <Check className="h-3.5 w-3.5" /> : <span className="h-1.5 w-1.5 rounded-full bg-current" />}
-                </span>
-                <span className="text-[14px] font-medium">{step.title}</span>
-              </div>
-              {index < STEPS.length - 1 && (
-                <span className={`mx-3 h-px w-10 ${complete ? "bg-[#4ADE80]/40" : "bg-[#2A2E36]"}`} />
-              )}
-            </React.Fragment>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 function ViewportTools({
-  activeStep,
   activeTool,
   onToolSelect,
   gridEnabled,
 }: {
-  activeStep: ModelingStep;
   activeTool: string;
   onToolSelect: (tool: string) => void;
   gridEnabled: boolean;
 }) {
-  const tools =
-    activeStep === "polish"
-      ? [
-          ["선택", MousePointer2],
-          ["브러시", Brush],
-          ["볼륨", Orbit],
-          ["스무스", Sparkles],
-          ["트림", Scissors],
-          ["페인트", Wand2],
-          ["설정", Settings],
-        ]
-      : [
-          ["선택", Crosshair],
-          ["회전", RefreshCw],
-          ["이동", MousePointer2],
-          ["확대", Maximize2],
-          ["카메라", Camera],
-          ["그리드", Grid3X3],
-          ["설정", Settings],
-        ];
+  const tools = [
+    ["선택", Crosshair],
+    ["회전", RefreshCw],
+    ["이동", MousePointer2],
+    ["확대", Maximize2],
+    ["카메라", Camera],
+    ["그리드", Grid3X3],
+    ["설정", Settings],
+  ];
 
   return (
     <div className="absolute left-4 top-20 z-20 flex w-[58px] flex-col overflow-hidden rounded-xl border border-[#1F2329] bg-[#080A0D]/90 shadow-2xl backdrop-blur">
@@ -822,20 +775,20 @@ function ModelViewport({
   activeStep,
   polygonCount,
   moduleSetCount,
+  isGeneratingModel,
 }: {
   activeStep: ModelingStep;
   polygonCount: number;
   moduleSetCount: number;
+  isGeneratingModel: boolean;
 }) {
   const [viewMode, setViewMode] = useState("PBR");
-  const [activeTool, setActiveTool] = useState(activeStep === "polish" ? "브러시" : "선택");
+  const [activeTool, setActiveTool] = useState("선택");
   const [cameraResetKey, setCameraResetKey] = useState(0);
   const [gridEnabled, setGridEnabled] = useState(false);
   const [isModuleBrowserOpen, setIsModuleBrowserOpen] = useState(false);
-  const modes = activeStep === "texture" ? ["PBR", "Textured", "Clay", "Wireframe", "UV", "AO", "Light"] : ["PBR", "Textured", "Clay", "Wireframe", "Normal", "AO", "UV"];
-
   useEffect(() => {
-    setActiveTool(activeStep === "polish" ? "브러시" : "선택");
+    setActiveTool("선택");
   }, [activeStep]);
 
   const handleToolSelect = (tool: string) => {
@@ -857,7 +810,7 @@ function ModelViewport({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,0.08),transparent_34%),linear-gradient(135deg,rgba(224,161,46,0.08),transparent_30%,rgba(96,165,250,0.04))]" />
       <div className="relative z-10 flex h-[58px] shrink-0 items-center justify-between border-b border-[#1F2329] px-5">
         <div className="flex items-center gap-2">
-          {modes.map((mode) => (
+          {VIEWPORT_MODES.map((mode) => (
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
@@ -871,23 +824,15 @@ function ModelViewport({
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2 text-[14px] text-neutral-400">
-          <button className="rounded-md border border-[#1F2329] bg-[#0A0B0D] p-2 hover:text-white" title="카메라 저장">
-            <Camera className="h-4 w-4" />
-          </button>
-          <button className="rounded-md border border-[#1F2329] bg-[#0A0B0D] p-2 hover:text-white" title="뷰 설정">
-            <Settings className="h-4 w-4" />
-          </button>
-          <button className="flex items-center gap-2 rounded-md border border-[#1F2329] bg-[#0A0B0D] px-3 py-2 hover:text-white">
-            품질 High <ChevronDown className="h-3.5 w-3.5" />
-          </button>
-        </div>
       </div>
 
-      <ViewportTools activeStep={activeStep} activeTool={activeTool} onToolSelect={handleToolSelect} gridEnabled={gridEnabled} />
+      {!isGeneratingModel && (
+        <ViewportTools activeTool={activeTool} onToolSelect={handleToolSelect} gridEnabled={gridEnabled} />
+      )}
       <button
         type="button"
         onClick={() => setIsModuleBrowserOpen((current) => !current)}
+        disabled={isGeneratingModel}
         className={`absolute right-5 top-20 z-30 flex items-center gap-2 rounded-lg border px-3.5 py-2.5 text-[14px] font-medium shadow-xl backdrop-blur transition ${
           isModuleBrowserOpen
             ? "border-[#E0A12E] bg-[#E0A12E]/15 text-[#E0A12E]"
@@ -904,29 +849,37 @@ function ModelViewport({
       </AnimatePresence>
 
       <div className="relative z-10 flex flex-1 items-center justify-center overflow-hidden p-8">
-        {(activeStep === "polish" || activeStep === "remesh") && (
-          <div className="absolute bottom-20 left-1/2 top-20 z-20 w-px bg-[#E0A12E] shadow-[0_0_18px_rgba(224,161,46,0.55)]">
-            <div className="absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#E0A12E] bg-white text-black shadow-xl">
-              <ArrowLeft className="h-3 w-3" />
-              <ArrowRight className="h-3 w-3" />
+        {isGeneratingModel ? (
+          <div className="flex h-full w-full flex-col items-center justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[#E0A12E]/30 bg-[#E0A12E]/10">
+              <RefreshCw className="h-7 w-7 animate-spin text-[#E0A12E]" />
             </div>
+            <h2 className="mt-5 text-[20px] font-medium text-white">3D 모델링 생성 중</h2>
+            <div className="mt-5 h-1.5 w-56 overflow-hidden rounded-full bg-[#1F2329]">
+              <motion.div
+                className="h-full rounded-full bg-[#E0A12E]"
+                initial={{ width: "8%" }}
+                animate={{ width: "92%" }}
+                transition={{ duration: 1.6, ease: "easeInOut" }}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="relative h-full w-full">
+            <ThreeModelPreview
+              activeStep={activeStep}
+              viewMode={viewMode}
+              activeTool={activeTool}
+              cameraResetKey={cameraResetKey}
+              gridEnabled={gridEnabled}
+            />
           </div>
         )}
 
-        <div className="relative h-full w-full">
-          <ThreeModelPreview
-            activeStep={activeStep}
-            viewMode={viewMode}
-            activeTool={activeTool}
-            cameraResetKey={cameraResetKey}
-            gridEnabled={gridEnabled}
-          />
-        </div>
-
-        <div className="absolute bottom-5 left-5 z-20">
+        {!isGeneratingModel && <div className="absolute bottom-5 left-5 z-20">
           <p className="text-[14px] text-neutral-500">폴리곤 수</p>
           <p className="mt-1 text-[16px] font-medium text-white">{polygonCount.toLocaleString("ko-KR")}</p>
-        </div>
+        </div>}
       </div>
     </section>
   );
@@ -950,20 +903,22 @@ function RightPanel({
   appliedSteps,
   onApplyStep,
   onBackToWorkflow,
+  onRequestSave,
+  isGeneratingModel,
 }: {
   activeStep: ModelingStep;
   setActiveStep: (step: ModelingStep) => void;
   appliedSteps: Record<ModelingStep, boolean>;
   onApplyStep: (step: ModelingStep, quality: string) => void;
   onBackToWorkflow: () => void;
+  onRequestSave: () => void;
+  isGeneratingModel: boolean;
 }) {
   const [scope, setScope] = useState("selection");
   const [quality, setQuality] = useState("500K");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [polishStrength, setPolishStrength] = useState(65);
-  const [promptDrafts, setPromptDrafts] = useState<Record<"generate" | "polish", string>>({
+  const [promptDrafts, setPromptDrafts] = useState<Record<"generate", string>>({
     generate: "",
-    polish: "갑옷 금속 부분에 거친 마모와 스크래치를 추가",
   });
 
   const activeIndex = STEPS.findIndex((step) => step.id === activeStep);
@@ -976,13 +931,6 @@ function RightPanel({
         title: "3D 모델 확인",
         prompt: "오크 FBX 모델에서 수정하고 싶은 부분을 자연어로 입력하세요.",
         button: "AI 수정 적용",
-      };
-    }
-    if (activeStep === "polish") {
-      return {
-        title: "표면 정리",
-        prompt: "갑옷 금속감, 근육 실루엣, 장비 스크래치 등을 보정합니다.",
-        button: "표면 정리 적용",
       };
     }
     if (activeStep === "remesh") {
@@ -999,67 +947,48 @@ function RightPanel({
     };
   }, [activeStep]);
 
-  const runAction = () => {
+  const runAction = (onComplete?: () => void) => {
     if (isProcessing) return;
     setIsProcessing(true);
     window.setTimeout(() => {
       setIsProcessing(false);
       onApplyStep(activeStep, quality);
+      onComplete?.();
     }, 1100);
   };
 
   return (
-    <aside className="flex w-full shrink-0 flex-col border-t border-[#1F2329] bg-[#050505] lg:h-full lg:w-[390px] lg:border-l lg:border-t-0">
-      <div className="flex h-[58px] shrink-0 items-center justify-between border-b border-[#1F2329] px-5">
-        <div>
-          <h2 className="flex items-center gap-2 text-[15px] font-medium text-white">
-            {panelCopy.title}
-            <CircleHelp className="h-4 w-4 text-neutral-500" />
-          </h2>
-          <p className="mt-0.5 text-[14px] text-neutral-500">NeoPoly Orc Modeling Pipeline</p>
-        </div>
-        <span className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-[14px] ${
-          appliedSteps[activeStep]
-            ? "border-[#4ADE80]/30 bg-[#4ADE80]/10 text-[#4ADE80]"
-            : "border-[#1F2329] bg-[#0A0B0D] text-neutral-500"
-        }`}>
-          {appliedSteps[activeStep] && <Check className="h-3.5 w-3.5" />}
-          {appliedSteps[activeStep] ? "적용됨" : "적용 전"}
-        </span>
-      </div>
+    <aside className={`flex shrink-0 flex-col border-t border-[#1F2329] bg-[#050505] lg:h-full lg:border-l lg:border-t-0 ${WORKFLOW_SIDEBAR_WIDTH_CLASS}`}>
+      <WorkflowSidebarHeader
+        title={panelCopy.title}
+        action={
+          <span className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-[14px] ${
+            appliedSteps[activeStep]
+              ? "border-[#4ADE80]/30 bg-[#4ADE80]/10 text-[#4ADE80]"
+              : "border-[#1F2329] bg-[#0A0B0D] text-neutral-500"
+          }`}>
+            {appliedSteps[activeStep] && <Check className="h-3.5 w-3.5" />}
+            {appliedSteps[activeStep] ? "적용됨" : "적용 전"}
+          </span>
+        }
+      />
 
       <div className="max-h-[760px] flex-1 overflow-y-auto p-5 custom-scrollbar lg:max-h-none">
-        {(activeStep === "generate" || activeStep === "polish") && (
+        {activeStep === "generate" && (
           <div className="space-y-5">
             <div className="rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4">
               <SectionTitle title="AI 프롬프트 수정" />
               <textarea
                 className="mt-3 h-24 w-full resize-none rounded-lg border border-[#2A2E36] bg-[#111419] p-3 text-[14px] text-neutral-200 outline-none placeholder:text-neutral-600 focus:border-[#E0A12E]"
                 placeholder={panelCopy.prompt}
-                value={promptDrafts[activeStep as "generate" | "polish"] ?? ""}
+                value={promptDrafts.generate}
                 onChange={(event) =>
                   setPromptDrafts((prev) => ({
                     ...prev,
-                    [activeStep as "generate" | "polish"]: event.target.value,
+                    generate: event.target.value,
                   }))
                 }
               />
-              {activeStep === "polish" && (
-                <div className="mt-4 rounded-lg border border-[#1F2329] bg-[#111419] p-3">
-                  <div className="mb-2 flex items-center justify-between text-[14px]">
-                    <span className="font-medium text-neutral-300">표면 정리 강도</span>
-                    <span className="font-mono text-[#E0A12E]">{polishStrength}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="10"
-                    max="100"
-                    value={polishStrength}
-                    onChange={(event) => setPolishStrength(Number(event.target.value))}
-                    className="w-full accent-[#E0A12E]"
-                  />
-                </div>
-              )}
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {["어깨 갑옷 더 날카롭게", "무기 스파이크 크게", "허리 벨트 정리", "피부 주름 강조"].map((item) => (
                   <button key={item} className="rounded-md border border-[#1F2329] bg-[#141518] px-2 py-2 text-[14px] text-neutral-400 hover:border-[#E0A12E] hover:text-white">
@@ -1068,7 +997,8 @@ function RightPanel({
                 ))}
               </div>
               <button
-                onClick={runAction}
+                onClick={() => runAction()}
+                disabled={isGeneratingModel}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-3 text-[14px] font-medium text-black transition-colors hover:bg-[#F0B43A]"
               >
                 {isProcessing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
@@ -1077,7 +1007,7 @@ function RightPanel({
             </div>
 
             <div className="rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4">
-              <SectionTitle title="수정 범위" helper="선택 영역 우선" />
+              <SectionTitle title="수정 범위" />
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {[
                   ["all", "전체"],
@@ -1114,7 +1044,7 @@ function RightPanel({
             </div>
 
             <div className="rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4">
-              <SectionTitle title="참조 이미지" helper="오크 노트" />
+              <SectionTitle title="참조 이미지" />
               <div className="mt-3 grid grid-cols-5 gap-2">
                 {SOURCE_IMAGES.map((image, index) => (
                   <button key={image} className={`relative overflow-hidden rounded-lg border ${index === 0 ? "border-[#E0A12E]" : "border-[#1F2329]"}`}>
@@ -1176,7 +1106,8 @@ function RightPanel({
 
         {activeStep === "remesh" && (
           <button
-            onClick={runAction}
+            onClick={() => runAction()}
+            disabled={isGeneratingModel}
             className="mb-5 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-3 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
           >
             {isProcessing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Workflow className="h-4 w-4" />}
@@ -1203,7 +1134,7 @@ function RightPanel({
                   </div>
                 ))}
               </div>
-              <button onClick={runAction} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-2.5 text-[14px] font-medium text-black hover:bg-[#F0B43A]">
+              <button onClick={() => runAction()} disabled={isGeneratingModel} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-2.5 text-[14px] font-medium text-black hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50">
                 {isProcessing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
                 {isProcessing ? "텍스처 최적화 중" : "텍스처 최적화"}
               </button>
@@ -1244,10 +1175,25 @@ function RightPanel({
             이전
           </button>
           <button
-            onClick={() => (nextStep ? setActiveStep(nextStep) : runAction())}
-            className="flex w-[68%] items-center justify-center gap-2 rounded-xl bg-[#E0A12E] py-3.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
+            disabled={isGeneratingModel || isProcessing}
+            onClick={() => {
+              if (nextStep) {
+                setActiveStep(nextStep);
+                return;
+              }
+              if (appliedSteps[activeStep]) {
+                onRequestSave();
+                return;
+              }
+              runAction(onRequestSave);
+            }}
+            className="flex w-[68%] items-center justify-center gap-2 rounded-xl bg-[#E0A12E] py-3.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {nextStep ? `다음 단계: ${STEPS[activeIndex + 1].title}` : "최종 모델 저장"}
+            {nextStep
+              ? `다음 단계: ${STEPS[activeIndex + 1].title}`
+              : isProcessing
+                ? "저장 준비 중"
+                : "저장하기"}
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
@@ -1260,9 +1206,14 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
   const [activeStep, setActiveStep] = useState<ModelingStep>("generate");
   const [polygonCount, setPolygonCount] = useState(500000);
   const moduleSetCount = MODULE_SETS.length;
+  const [isGeneratingModel, setIsGeneratingModel] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.sessionStorage.getItem(MODEL_GENERATION_REQUEST_KEY) !== null;
+  });
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [projectName, setProjectName] = useState("오크 전사 3D 모델링");
   const [appliedSteps, setAppliedSteps] = useState<Record<ModelingStep, boolean>>({
     generate: true,
-    polish: false,
     remesh: false,
     texture: false,
   });
@@ -1300,35 +1251,135 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
     onNavigate?.("turnaround");
   };
 
+  useEffect(() => {
+    if (!isGeneratingModel) return;
+
+    const timer = window.setTimeout(() => {
+      window.sessionStorage.removeItem(MODEL_GENERATION_REQUEST_KEY);
+      setIsGeneratingModel(false);
+    }, 1900);
+
+    return () => window.clearTimeout(timer);
+  }, [isGeneratingModel]);
+
+  const handleSaveProject = () => {
+    if (!projectName.trim()) return;
+
+    const generatedProject = createGeneratedProject(
+      projectName,
+      moduleSetCount,
+      polygonCount,
+    );
+    let storedProjects: unknown[] = [];
+
+    try {
+      const raw = window.localStorage.getItem(PROJECT_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) storedProjects = parsed;
+    } catch {
+      storedProjects = [];
+    }
+
+    window.localStorage.setItem(
+      PROJECT_STORAGE_KEY,
+      JSON.stringify([generatedProject, ...storedProjects]),
+    );
+    window.localStorage.setItem(
+      "neopoly_selected_project_id",
+      String(generatedProject.id),
+    );
+    setIsSaveModalOpen(false);
+    onNavigate?.("projects");
+  };
+
   return (
-    <div className="flex h-[calc(100vh-76px)] flex-col overflow-hidden bg-[#050505] text-white">
-      <div className="flex h-[64px] shrink-0 items-center justify-between border-b border-[#1F2329] bg-[#050505] px-6">
-        <h1 className="text-[22px] font-medium tracking-tight text-white">3D 모델링 생성</h1>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 rounded-lg border border-[#1F2329] bg-[#0A0B0D] px-3 py-2 text-[14px] text-neutral-400 hover:text-white">
-            <PanelRight className="h-4 w-4" />
-            작업 히스토리
-          </button>
-          <button className="flex items-center gap-2 rounded-lg border border-[#1F2329] bg-[#0A0B0D] px-3 py-2 text-[14px] text-neutral-400 hover:text-white">
-            <Cpu className="h-4 w-4 text-[#E0A12E]" />
-            Studio D
-            <ChevronDown className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
-
-      <StepRail activeStep={activeStep} />
-
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto custom-scrollbar lg:flex-row lg:overflow-hidden">
-        <ModelViewport activeStep={activeStep} polygonCount={polygonCount} moduleSetCount={moduleSetCount} />
-        <RightPanel
-          activeStep={activeStep}
-          setActiveStep={setActiveStep}
-          appliedSteps={appliedSteps}
-          onApplyStep={handleApplyStep}
-          onBackToWorkflow={handleBackToWorkflow}
+    <div className="flex h-[calc(100vh-76px)] flex-col overflow-y-auto bg-[#050505] text-white custom-scrollbar lg:flex-row lg:overflow-hidden">
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <WorkflowHeader
+          title="3D 모델링 생성"
+          section="modeling"
+          currentStep={activeStep}
         />
-      </div>
+        <ModelViewport
+          activeStep={activeStep}
+          polygonCount={polygonCount}
+          moduleSetCount={moduleSetCount}
+          isGeneratingModel={isGeneratingModel}
+        />
+      </main>
+      <RightPanel
+        activeStep={activeStep}
+        setActiveStep={setActiveStep}
+        appliedSteps={appliedSteps}
+        onApplyStep={handleApplyStep}
+        onBackToWorkflow={handleBackToWorkflow}
+        onRequestSave={() => setIsSaveModalOpen(true)}
+        isGeneratingModel={isGeneratingModel}
+      />
+
+      <AnimatePresence>
+        {isSaveModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onMouseDown={() => setIsSaveModalOpen(false)}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/65 p-5 backdrop-blur-[2px]"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              onMouseDown={(event) => event.stopPropagation()}
+              className="w-full max-w-[480px] rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.75)]"
+            >
+              <div className="flex h-16 items-center justify-between border-b border-[#1F2329] px-5">
+                <h2 className="text-[18px] font-medium text-white">프로젝트로 저장</h2>
+                <button
+                  type="button"
+                  onClick={() => setIsSaveModalOpen(false)}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-white/5 hover:text-white"
+                  aria-label="저장 팝업 닫기"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="p-5">
+                <label htmlFor="generated-project-name" className="text-[14px] font-medium text-neutral-300">
+                  프로젝트 이름
+                </label>
+                <input
+                  id="generated-project-name"
+                  autoFocus
+                  value={projectName}
+                  onChange={(event) => setProjectName(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") handleSaveProject();
+                  }}
+                  className="mt-2 h-12 w-full rounded-lg border border-[#2A2E36] bg-[#111317] px-4 text-[15px] text-white outline-none transition focus:border-[#E0A12E]"
+                />
+              </div>
+              <div className="flex justify-end gap-2 border-t border-[#1F2329] p-5">
+                <button
+                  type="button"
+                  onClick={() => setIsSaveModalOpen(false)}
+                  className="h-11 rounded-lg border border-[#2A2E36] px-4 text-[14px] font-medium text-neutral-300 transition hover:bg-white/5"
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  disabled={!projectName.trim()}
+                  onClick={handleSaveProject}
+                  className="h-11 rounded-lg bg-[#E0A12E] px-5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  프로젝트 저장
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

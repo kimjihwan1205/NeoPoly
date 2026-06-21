@@ -9,6 +9,7 @@ import {
   Layers,
   Loader2,
   Lock,
+  Maximize2,
   MessageSquarePlus,
   Pencil,
   PenTool,
@@ -25,6 +26,16 @@ import {
   parseTurnaroundModuleSession,
   TURNAROUND_MODULE_SESSION_KEY,
 } from "../turnaroundModuleSession";
+import {
+  getNextTurnaroundView,
+  type TurnaroundComparisonViewId,
+} from "../turnaroundComparison";
+import WorkflowHeader from "./WorkflowHeader";
+import WorkflowSidebarHeader from "./WorkflowSidebarHeader";
+import {
+  filterActiveConsistencyIssues,
+  getInitialModuleSelection,
+} from "../workflowState";
 
 interface TurnaroundPageProps {
   onNavigate?: (page: string) => void;
@@ -405,11 +416,12 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   });
   const [viewHistories, setViewHistories] = useState<Partial<Record<ViewId, TurnaroundViewVersion[]>>>({});
   const viewEditCanvasRef = useRef<HTMLDivElement>(null);
-  const [selectedConsistencyIssueId, setSelectedConsistencyIssueId] = useState(CONSISTENCY_ISSUES[0].id);
+  const [selectedConsistencyIssueId, setSelectedConsistencyIssueId] = useState<string | null>(null);
   const [ignoredConsistencyIssues, setIgnoredConsistencyIssues] = useState<Set<string>>(new Set());
   const [resolvedConsistencyIssues, setResolvedConsistencyIssues] = useState<Set<string>>(new Set());
   const [correctingConsistencyIssueId, setCorrectingConsistencyIssueId] = useState<string | null>(null);
-  const [comparisonOpacity, setComparisonOpacity] = useState(52);
+  const [previewViewId, setPreviewViewId] = useState<ViewId>("front");
+  const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingModular, setIsGeneratingModular] = useState(false);
   const [isScanningModules, setIsScanningModules] = useState(false);
@@ -427,7 +439,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
     return restored?.length ? restored : DEFAULT_MODULAR_PARTS;
   });
   const [selectedPart, setSelectedPart] = useState<string>(
-    initialModuleSession?.selectedPart || DEFAULT_MODULAR_PARTS[0].id,
+    getInitialModuleSelection(initialModuleSession?.selectedPart),
   );
   const [generatedModules, setGeneratedModules] = useState<string[]>(
     initialModuleSession?.generatedModules ?? [],
@@ -469,13 +481,18 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
     : [];
   const activeEditingViewVersion = editingViewId ? viewVersions[editingViewId] : 0;
   const hasViewEditSelection = viewEditSelection.length >= 3;
-  const visibleConsistencyIssues = CONSISTENCY_ISSUES.filter((issue) => !ignoredConsistencyIssues.has(issue.id));
-  const selectedConsistencyIssue =
-    visibleConsistencyIssues.find((issue) => issue.id === selectedConsistencyIssueId) ??
-    visibleConsistencyIssues[0] ??
-    null;
+  const visibleConsistencyIssues = filterActiveConsistencyIssues(
+    CONSISTENCY_ISSUES,
+    ignoredConsistencyIssues,
+    resolvedConsistencyIssues,
+  );
+  const selectedConsistencyIssue = selectedConsistencyIssueId
+    ? visibleConsistencyIssues.find((issue) => issue.id === selectedConsistencyIssueId) ?? null
+    : null;
   const unresolvedConsistencyIssues = visibleConsistencyIssues.filter((issue) => !resolvedConsistencyIssues.has(issue.id));
   const consistencyScore = Math.min(98, 86 + resolvedConsistencyIssues.size * 3 + ignoredConsistencyIssues.size);
+  const previewView =
+    TURNAROUND_VIEWS.find((view) => view.id === previewViewId) ?? TURNAROUND_VIEWS[0];
   const selectedPartData = moduleParts.find((part) => part.id === selectedPart) ?? moduleParts[0] ?? DEFAULT_MODULAR_PARTS[0];
   const selectedModuleDraft = moduleDrafts[selectedPart] ?? {
     label: selectedPartData.label,
@@ -699,6 +716,15 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   const handleSelectConsistencyIssue = (issue: ConsistencyIssue) => {
     setSelectedConsistencyIssueId(issue.id);
     setSelectedViewId(issue.targetView);
+    setPreviewViewId(issue.targetView);
+  };
+
+  const handlePreviewViewChange = (nextViewId: TurnaroundComparisonViewId) => {
+    setPreviewViewId(nextViewId);
+  };
+
+  const movePreviewView = (direction: 1 | -1) => {
+    setPreviewViewId((current) => getNextTurnaroundView(current, direction));
   };
 
   const handleAddConsistencyIssueToPrompt = (issue: ConsistencyIssue) => {
@@ -738,6 +764,9 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
         return next;
       });
       setResolvedConsistencyIssues((current) => new Set(current).add(issue.id));
+      setSelectedConsistencyIssueId((current) =>
+        current === issue.id ? null : current,
+      );
       setCorrectingConsistencyIssueId(null);
     }, 1100);
   };
@@ -794,6 +823,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
 
   const startAreaSelection = (mode: "new" | "edit") => {
     if (isAddingModuleScan || isModuleListConfirmed) return;
+    if (mode === "edit" && !selectedPart) return;
 
     setAreaSelectionMode(mode);
     setAreaStart(null);
@@ -972,7 +1002,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
       delete next[partId];
       return next;
     });
-    if (selectedPart === partId) setSelectedPart(nextParts[0]?.id ?? DEFAULT_MODULAR_PARTS[0].id);
+    if (selectedPart === partId) setSelectedPart("");
     resetAreaSelection();
   };
 
@@ -1088,36 +1118,47 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
 
   return (
     <div className="flex h-[calc(100vh-76px)] bg-[#050505] font-sans text-[#F5F5F5] antialiased">
-      <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="flex h-[64px] shrink-0 items-center justify-between border-b border-[#1F2329] bg-[#050505] px-6">
-          <h1 className="text-[22px] font-medium tracking-tight text-white">
-            {expertTab === "turnaround" ? "턴어라운드" : "이미지 모듈화"}
-          </h1>
-          <div className="flex items-center gap-2 rounded-xl border border-[#2A2E36] bg-[#0A0B0D] p-1">
-            <button
-              onClick={() => setExpertTab("turnaround")}
-              className={`flex h-10 items-center gap-2 rounded-lg px-4 text-[14px] font-medium transition ${
-                expertTab === "turnaround" ? "bg-[#E0A12E] text-black" : "text-neutral-400 hover:bg-[#141518] hover:text-white"
-              }`}
-            >
-              <RotateCcw className="h-4 w-4" />
-              턴어라운드
-            </button>
-            <button
-              onClick={() => setExpertTab("modular")}
-              className={`flex h-10 items-center gap-2 rounded-lg px-4 text-[14px] font-medium transition ${
-                expertTab === "modular" ? "bg-[#E0A12E] text-black" : "text-neutral-400 hover:bg-[#141518] hover:text-white"
-              }`}
-            >
-              <Layers className="h-4 w-4" />
-              모듈화
-            </button>
-          </div>
-        </div>
+      <main
+        className={`relative grid min-w-0 flex-1 grid-rows-[64px_minmax(0,1fr)] overflow-hidden ${
+          expertTab === "turnaround"
+            ? "grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_550px]"
+            : isModuleListConfirmed
+              ? "grid-cols-[minmax(0,1fr)_minmax(620px,780px)] 2xl:grid-cols-[minmax(0,1fr)_900px]"
+              : "grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_550px]"
+        }`}
+      >
+        <WorkflowHeader
+          title={expertTab === "turnaround" ? "턴어라운드" : "이미지 모듈화"}
+          section="image"
+          currentStep={expertTab === "turnaround" ? "turnaround" : "modular"}
+          className="col-start-1 row-start-1"
+          actions={
+            <div className="flex items-center gap-2 rounded-xl border border-[#2A2E36] bg-[#0A0B0D] p-1">
+              <button
+                onClick={() => setExpertTab("turnaround")}
+                className={`flex h-10 items-center gap-2 rounded-lg px-4 text-[14px] font-medium transition ${
+                  expertTab === "turnaround" ? "bg-[#E0A12E] text-black" : "text-neutral-400 hover:bg-[#141518] hover:text-white"
+                }`}
+              >
+                <RotateCcw className="h-4 w-4" />
+                턴어라운드
+              </button>
+              <button
+                onClick={() => setExpertTab("modular")}
+                className={`flex h-10 items-center gap-2 rounded-lg px-4 text-[14px] font-medium transition ${
+                  expertTab === "modular" ? "bg-[#E0A12E] text-black" : "text-neutral-400 hover:bg-[#141518] hover:text-white"
+                }`}
+              >
+                <Layers className="h-4 w-4" />
+                모듈화
+              </button>
+            </div>
+          }
+        />
 
         {expertTab === "turnaround" ? (
-          <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_420px] gap-0 overflow-hidden xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_550px]">
-            <section className="flex min-w-0 flex-col overflow-hidden p-4">
+          <div className="contents">
+            <section className="col-start-1 row-start-2 flex min-w-0 flex-col overflow-hidden p-4">
               <div className="grid min-h-0 flex-1 grid-cols-2 gap-3">
                 {TURNAROUND_VIEWS.map((view, index) => {
                   const isSelected = selectedViewId === view.id;
@@ -1227,23 +1268,19 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
               </div>
             </section>
 
-            <aside className="flex min-h-0 flex-col border-l border-[#1F2329] bg-[#0A0B0D]">
-              <div className="border-b border-[#1F2329] p-4">
-                <p className="text-[14px] font-medium text-[#E0A12E]">Selected View</p>
-                <div className="mt-2 flex items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-[20px] font-medium text-white">{selectedView.label}</h2>
-                    <p className="mt-1 text-[14px] font-medium text-neutral-400">{selectedView.focus}</p>
-                  </div>
-                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-[#2A2E36] bg-white">
+            <aside className="col-start-2 row-span-2 row-start-1 flex min-h-0 flex-col border-l border-[#1F2329] bg-[#0A0B0D]">
+              <WorkflowSidebarHeader
+                title={`${selectedView.label} 뷰`}
+                action={
+                  <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-[#2A2E36] bg-white">
                     <img
                       src={`${selectedView.img}?version=${viewVersions[selectedView.id]}`}
                       alt=""
                       className="h-full w-full object-contain p-1"
                     />
                   </div>
-                </div>
-              </div>
+                }
+              />
 
               <div className="min-h-0 flex-1 overflow-y-auto p-4 custom-scrollbar">
                 <div className="space-y-3">
@@ -1337,44 +1374,62 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                           );
                         })}
 
-                        {selectedConsistencyIssue && (
-                          <div className="rounded-lg border border-[#2A2E36] bg-[#0A0B0D] p-3">
-                            <div className="mb-2 flex items-center justify-between">
-                              <span className="text-[14px] font-medium text-neutral-300">
-                                {TURNAROUND_VIEWS.find((view) => view.id === selectedConsistencyIssue.baseView)?.label}
-                                <span className="mx-1.5 text-neutral-600">/</span>
-                                {TURNAROUND_VIEWS.find((view) => view.id === selectedConsistencyIssue.targetView)?.label}
-                              </span>
-                              <span className="text-[14px] text-neutral-500">겹쳐보기</span>
-                            </div>
+                        <div className="rounded-lg border border-[#2A2E36] bg-[#0A0B0D] p-3">
+                          <div className="mb-3 flex items-center justify-between gap-3">
+                            <span className="text-[15px] font-medium text-white">각도 보기</span>
+                            <button
+                              type="button"
+                              onClick={() => setIsComparisonModalOpen(true)}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white"
+                              title="크게 보기"
+                              aria-label="크게 보기"
+                            >
+                              <Maximize2 className="h-4 w-4" />
+                            </button>
+                          </div>
 
-                            <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-[#2A2E36] bg-white">
-                              <img
-                                src={TURNAROUND_VIEWS.find((view) => view.id === selectedConsistencyIssue.baseView)?.img}
-                                alt=""
-                                className="absolute inset-0 h-full w-full object-contain p-2"
-                              />
-                              <img
-                                src={TURNAROUND_VIEWS.find((view) => view.id === selectedConsistencyIssue.targetView)?.img}
-                                alt=""
-                                className="absolute inset-0 h-full w-full object-contain p-2"
-                                style={{ opacity: comparisonOpacity / 100 }}
-                              />
-                            </div>
+                          <div className="mb-3 grid grid-cols-4 gap-1.5">
+                            {TURNAROUND_VIEWS.map((view) => (
+                              <button
+                                key={view.id}
+                                type="button"
+                                onClick={() => handlePreviewViewChange(view.id)}
+                                className={`h-9 rounded-lg border text-[14px] font-medium transition ${
+                                  previewViewId === view.id
+                                    ? "border-[#E0A12E] bg-[#E0A12E]/10 text-[#E0A12E]"
+                                    : "border-[#2A2E36] bg-[#141518] text-neutral-400 hover:text-white"
+                                }`}
+                              >
+                                {view.label}
+                              </button>
+                            ))}
+                          </div>
 
-                            <div className="mt-2 flex items-center gap-3">
-                              <span className="text-[14px] text-neutral-500">투명도</span>
-                              <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={comparisonOpacity}
-                                onChange={(event) => setComparisonOpacity(Number(event.target.value))}
-                                className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-[#252932] accent-[#E0A12E]"
-                              />
-                              <span className="w-9 text-right text-[14px] text-neutral-400">{comparisonOpacity}%</span>
-                            </div>
+                          <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-[#2A2E36] bg-white">
+                            <img
+                              src={`${previewView.img}?version=${viewVersions[previewView.id]}`}
+                              alt={`${previewView.label} 이미지`}
+                              className="h-full w-full object-contain p-2"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => movePreviewView(-1)}
+                              className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur transition hover:bg-black/75"
+                              aria-label="이전 각도 이미지"
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => movePreviewView(1)}
+                              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur transition hover:bg-black/75"
+                              aria-label="다음 각도 이미지"
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </button>
+                          </div>
 
+                          {selectedConsistencyIssue && (
                             <div className="mt-3 grid grid-cols-[1fr_1fr_auto] gap-2">
                               <button
                                 type="button"
@@ -1410,8 +1465,8 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                 <EyeOff className="h-4 w-4" />
                               </button>
                             </div>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 rounded-lg border border-[#4ADE80]/30 bg-[#4ADE80]/8 p-3 text-[14px] text-[#4ADE80]">
@@ -1450,15 +1505,9 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
             </aside>
           </div>
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#050505]">
-            <div
-              className={`grid min-h-0 flex-1 gap-0 overflow-hidden ${
-                isModuleListConfirmed
-                  ? "grid-cols-[minmax(0,1fr)_minmax(620px,780px)] 2xl:grid-cols-[minmax(0,1fr)_900px]"
-                  : "grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_520px]"
-              }`}
-            >
-              <section className="flex min-w-0 flex-col overflow-hidden p-4">
+          <div className="contents">
+            <div className="contents">
+              <section className="col-start-1 row-start-2 flex min-w-0 flex-col overflow-hidden p-4">
                 <div className="mb-3 flex shrink-0 items-center justify-between">
                   <div>
                     <h3 className="text-[17px] font-medium text-white">{"\ubaa8\ub4c8\ud654 \uce94\ubc84\uc2a4"}</h3>
@@ -1628,17 +1677,11 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                 </div>
 
                 {isModuleScanComplete && !isModuleListConfirmed && (
-                  <div className="mt-3 flex shrink-0 items-center justify-between gap-3 rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-3">
-                    <p className="min-w-0 truncate text-[14px] font-medium text-neutral-300">
-                      {isAreaSelectMode
-                        ? "\ub9c8\uc6b0\uc2a4\ub97c \ub204\ub978 \ucc44 \uc7a5\ube44 \ub458\ub808\ub97c \uadf8\ub9b0 \ub4a4 \uc120\ud0dd \uc601\uc5ed \ud655\uc778\uc744 \ub204\ub974\uc138\uc694."
-                        : "\ubaa8\ub4c8 \ucd94\uac00\ub294 AI\uac00 \ud6c4\ubcf4\ub97c \ucc3e\uace0, \uc601\uc5ed \uc120\ud0dd\uc740 \uc0ac\uc6a9\uc790\uac00 \uc9c1\uc811 \uadf8\ub824 \ubaa8\ub4c8\uc744 \ucd94\uac00\ud569\ub2c8\ub2e4."}
-                    </p>
-                    <div className="flex shrink-0 gap-2">
+                  <div className="mt-3 flex shrink-0 justify-end gap-2">
                       <button
                         type="button"
                         onClick={() => startAreaSelection("new")}
-                        disabled={isAddingModuleScan || isBuildingModuleSet}
+                        disabled={isAddingModuleScan || isBuildingModuleSet || !selectedPart}
                         className={`h-9 rounded-lg border px-3 text-[14px] font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
                           areaSelectionMode === "new" ? "border-[#E0A12E] bg-[#E0A12E] text-black" : "border-[#2A2E36] bg-[#111317] text-neutral-300 hover:bg-[#171A20]"
                         }`}
@@ -1664,26 +1707,27 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                         {isAddingModuleScan ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                         {"\uc120\ud0dd \uc601\uc5ed \ud655\uc778"}
                       </button>
-                    </div>
                   </div>
                 )}
               </section>
 
-              <aside className="flex min-h-0 border-l border-[#1F2329] bg-[#0A0B0D]">
+              <aside className="col-start-2 row-span-2 row-start-1 flex min-h-0 flex-col border-l border-[#1F2329] bg-[#0A0B0D]">
+                <WorkflowSidebarHeader
+                  title={isModuleListConfirmed ? "모듈화 세트" : "전체 모듈 리스트"}
+                  action={
+                    <span className="rounded-md border border-[#2A2E36] bg-[#0A0B0D] px-2.5 py-1 text-[14px] text-neutral-400">
+                      {isModuleListConfirmed ? `${moduleSets.length}개 세트` : `${moduleParts.length}개`}
+                    </span>
+                  }
+                />
                 {isBuildingModuleSet ? (
                   <section className="flex min-h-0 flex-1 flex-col items-center justify-center px-8 text-center">
                     <Loader2 className="mb-4 h-9 w-9 animate-spin text-[#E0A12E]" />
                     <h2 className="text-[20px] font-medium text-white">{"\ubaa8\ub4c8\ud654 \uc138\ud2b8 \uc0dd\uc131 \uc911"}</h2>
-                    <p className="mt-2 text-[14px] leading-6 text-neutral-400">{"\ud655\uc815\ud55c \ubaa8\ub4c8 \ub9ac\uc2a4\ud2b8\ub97c \uae30\uc900\uc73c\ub85c AI\uac00 \uc7a5\ube44 \uc138\ud2b8 \uad6c\uc131\uc744 \ucd94\ucc9c\ud558\uace0 \uc788\uc2b5\ub2c8\ub2e4."}</p>
                   </section>
                 ) : (
                   <div className="relative grid min-h-0 flex-1 grid-cols-1">
                     <section className={`${isModuleListConfirmed ? "hidden" : "flex"} min-h-0 flex-col`}>
-                      <div className="border-b border-[#1F2329] p-4">
-                        <p className="text-[14px] font-medium text-[#E0A12E]">Module List</p>
-                        <h2 className="mt-1 text-[20px] font-medium text-white">{"\uc804\uccb4 \ubaa8\ub4c8 \ub9ac\uc2a4\ud2b8"}</h2>
-                      </div>
-
                       <div className="min-h-0 flex-1 overflow-y-auto p-4 custom-scrollbar">
                         {!isModuleScanComplete ? (
                           <div className="flex h-full min-h-[260px] items-center justify-center rounded-xl border border-dashed border-[#1F2329] bg-[#050505]">
@@ -1786,11 +1830,6 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
 
                     {isModuleListConfirmed && (
                       <section className="relative flex min-h-0 flex-col bg-[#050505]">
-                        <div className="border-b border-[#1F2329] p-4">
-                          <p className="text-[14px] font-medium text-[#E0A12E]">Module Set</p>
-                          <h2 className="mt-1 text-[20px] font-medium text-white">{"\ubaa8\ub4c8\ud654 \uc138\ud2b8"}</h2>
-                        </div>
-
                         {!isModuleListDrawerOpen && (
                           <button
                             type="button"
@@ -1977,6 +2016,97 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
             </div>
           </div>
         )}
+
+        <AnimatePresence>
+          {isComparisonModalOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onMouseDown={() => setIsComparisonModalOpen(false)}
+              className="fixed inset-0 z-[175] flex items-center justify-center bg-black/70 p-5 backdrop-blur-[2px]"
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 14, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 14, scale: 0.98 }}
+                transition={{ duration: 0.18 }}
+                onMouseDown={(event) => event.stopPropagation()}
+                className="flex max-h-[94vh] w-full max-w-[1380px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_28px_90px_rgba(0,0,0,0.78)]"
+              >
+                <div className="flex shrink-0 items-center justify-between gap-5 border-b border-[#1F2329] px-5 py-4">
+                  <div>
+                    <p className="text-[14px] font-medium text-[#E0A12E]">턴어라운드 크게 보기</p>
+                    <h3 className="mt-0.5 text-[18px] font-medium text-white">{previewView.label}</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsComparisonModalOpen(false)}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-white/5 hover:text-white"
+                    aria-label="크게 보기 팝업 닫기"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-y-auto p-5 custom-scrollbar">
+                  <div className="mb-4 grid grid-cols-4 gap-3">
+                    {TURNAROUND_VIEWS.map((view) => {
+                      const isActive = previewViewId === view.id;
+                      return (
+                        <button
+                          key={view.id}
+                          type="button"
+                          onClick={() => handlePreviewViewChange(view.id)}
+                          className={`grid grid-cols-[96px_1fr] items-center overflow-hidden rounded-lg border text-left transition ${
+                            isActive
+                              ? "border-[#E0A12E] bg-[#E0A12E]/8"
+                              : "border-[#2A2E36] bg-[#111317] hover:border-[#555A64]"
+                          }`}
+                        >
+                          <div className="aspect-[4/3] bg-white">
+                            <img
+                              src={`${view.img}?version=${viewVersions[view.id]}`}
+                              alt=""
+                              className="h-full w-full object-contain p-1"
+                            />
+                          </div>
+                          <span className={`px-3 text-[15px] font-medium ${isActive ? "text-[#E0A12E]" : "text-white"}`}>
+                            {view.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="relative h-[clamp(420px,66vh,760px)] overflow-hidden rounded-lg border border-[#2A2E36] bg-white">
+                    <img
+                      src={`${previewView.img}?version=${viewVersions[previewView.id]}`}
+                      alt={`${previewView.label} 이미지`}
+                      className="h-full w-full object-contain p-4"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => movePreviewView(-1)}
+                      className="absolute left-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white shadow-lg backdrop-blur transition hover:bg-black/80"
+                      aria-label="이전 각도 이미지"
+                    >
+                      <ChevronLeft className="h-6 w-6" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => movePreviewView(1)}
+                      className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white shadow-lg backdrop-blur transition hover:bg-black/80"
+                      aria-label="다음 각도 이미지"
+                    >
+                      <ChevronRight className="h-6 w-6" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence>
           {editingView && editingViewId && (

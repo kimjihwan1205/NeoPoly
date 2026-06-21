@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
-import { getModelingPreviousTarget, MODULES } from "./ModelingGenerationPage";
+import {
+  getModelingPreviousTarget,
+  MODULES,
+  VIEWPORT_MODES,
+} from "./ModelingGenerationPage";
 
 assert.deepEqual(
   MODULES.map(({ label, itemNumber }) => ({ label, itemNumber })),
@@ -15,8 +19,11 @@ assert.deepEqual(
 console.log("3D 장비 모듈 이미지와 이름 매핑이 올바릅니다.");
 
 assert.equal(getModelingPreviousTarget("texture"), "remesh");
-assert.equal(getModelingPreviousTarget("remesh"), "polish");
-assert.equal(getModelingPreviousTarget("polish"), "generate");
+assert.equal(getModelingPreviousTarget("remesh"), "generate");
 assert.equal(getModelingPreviousTarget("generate"), "turnaround");
 
 console.log("모델링 생성 첫 단계에서 이전 워크플로우로 돌아갑니다.");
+
+assert.deepEqual(VIEWPORT_MODES, ["PBR", "Textured", "Clay", "Wireframe"]);
+
+console.log("3D 뷰포트에는 실제 사용하는 표시 모드만 노출됩니다.");
