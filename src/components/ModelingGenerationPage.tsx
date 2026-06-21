@@ -35,7 +35,7 @@ import {
   Zap,
 } from "lucide-react";
 
-type ModelingStep = "generate" | "polish" | "remesh" | "texture";
+export type ModelingStep = "generate" | "polish" | "remesh" | "texture";
 
 type OrcPbrTextureSet = {
   map: THREE.Texture;
@@ -53,6 +53,11 @@ const STEPS: Array<{
   { id: "remesh", title: "리메시" },
   { id: "texture", title: "텍스처 최적화" },
 ];
+
+export const getModelingPreviousTarget = (activeStep: ModelingStep): ModelingStep | "turnaround" => {
+  const activeIndex = STEPS.findIndex((step) => step.id === activeStep);
+  return activeIndex > 0 ? STEPS[activeIndex - 1].id : "turnaround";
+};
 
 const SOURCE_IMAGES = [
   "/images/orc/orc_2D_front.png",
@@ -74,12 +79,12 @@ type ModuleSetInfo = {
   title: string;
 };
 
-const MODULES: ModuleCategory[] = [
-  { id: "arm", label: "팔 보호대", itemNumber: "01", image: "/images/orc/orc_default_item01.png" },
-  { id: "leg", label: "다리 보호대", itemNumber: "02", image: "/images/orc/orc_default_item02.png" },
-  { id: "weapon", label: "무기", itemNumber: "03", image: "/images/orc/orc_default_item03.png" },
-  { id: "shoulder", label: "어깨 갑옷", itemNumber: "04", image: "/images/orc/orc_default_item04.png" },
-  { id: "belt", label: "벨트 장식", itemNumber: "05", image: "/images/orc/orc_default_item05.png" },
+export const MODULES: ModuleCategory[] = [
+  { id: "weapon", label: "무기", itemNumber: "01", image: "/images/orc/orc_default_item03.png" },
+  { id: "shoulder", label: "어깨 갑옷", itemNumber: "02", image: "/images/orc/orc_default_item04.png" },
+  { id: "leg", label: "다리 보호대", itemNumber: "03", image: "/images/orc/orc_default_item02.png" },
+  { id: "belt", label: "벨트 장식", itemNumber: "04", image: "/images/orc/orc_default_item05.png" },
+  { id: "arm", label: "팔 보호대", itemNumber: "05", image: "/images/orc/orc_default_item01.png" },
 ];
 
 const MODULE_SETS: ModuleSetInfo[] = [
@@ -684,7 +689,7 @@ function ModuleSetBrowser({ onClose }: { onClose: () => void }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 16, scale: 0.98 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className={`absolute right-5 top-[70px] z-40 flex max-h-[calc(100%-90px)] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#080A0D]/97 shadow-[0_24px_70px_rgba(0,0,0,0.75)] backdrop-blur-xl ${
+      className={`absolute right-5 top-[132px] z-40 flex max-h-[calc(100%-152px)] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#080A0D]/97 shadow-[0_24px_70px_rgba(0,0,0,0.75)] backdrop-blur-xl ${
         stage === "sets" ? "w-[620px]" : "w-[900px]"
       } max-w-[calc(100%-112px)]`}
     >
@@ -876,23 +881,23 @@ function ModelViewport({
           <button className="flex items-center gap-2 rounded-md border border-[#1F2329] bg-[#0A0B0D] px-3 py-2 hover:text-white">
             품질 High <ChevronDown className="h-3.5 w-3.5" />
           </button>
-          <button
-            type="button"
-            onClick={() => setIsModuleBrowserOpen((current) => !current)}
-            className={`flex items-center gap-2 rounded-md border px-3 py-2 font-medium transition ${
-              isModuleBrowserOpen
-                ? "border-[#E0A12E] bg-[#E0A12E]/10 text-[#E0A12E]"
-                : "border-[#1F2329] bg-[#0A0B0D] text-neutral-400 hover:border-[#E0A12E]/50 hover:text-white"
-            }`}
-          >
-            <Layers3 className="h-4 w-4" />
-            모듈 세트
-            <span className={isModuleBrowserOpen ? "text-[#E0A12E]" : "text-neutral-500"}>{moduleSetCount}</span>
-          </button>
         </div>
       </div>
 
       <ViewportTools activeStep={activeStep} activeTool={activeTool} onToolSelect={handleToolSelect} gridEnabled={gridEnabled} />
+      <button
+        type="button"
+        onClick={() => setIsModuleBrowserOpen((current) => !current)}
+        className={`absolute right-5 top-20 z-30 flex items-center gap-2 rounded-lg border px-3.5 py-2.5 text-[14px] font-medium shadow-xl backdrop-blur transition ${
+          isModuleBrowserOpen
+            ? "border-[#E0A12E] bg-[#E0A12E]/15 text-[#E0A12E]"
+            : "border-[#2A2E36] bg-[#080A0D]/90 text-neutral-300 hover:border-[#E0A12E]/60 hover:text-white"
+        }`}
+      >
+        <Layers3 className="h-4 w-4" />
+        모듈 세트
+        <span className={isModuleBrowserOpen ? "text-[#E0A12E]" : "text-neutral-500"}>{moduleSetCount}</span>
+      </button>
 
       <AnimatePresence>
         {isModuleBrowserOpen && <ModuleSetBrowser onClose={() => setIsModuleBrowserOpen(false)} />}
@@ -944,11 +949,13 @@ function RightPanel({
   setActiveStep,
   appliedSteps,
   onApplyStep,
+  onBackToWorkflow,
 }: {
   activeStep: ModelingStep;
   setActiveStep: (step: ModelingStep) => void;
   appliedSteps: Record<ModelingStep, boolean>;
   onApplyStep: (step: ModelingStep, quality: string) => void;
+  onBackToWorkflow: () => void;
 }) {
   const [scope, setScope] = useState("selection");
   const [quality, setQuality] = useState("500K");
@@ -961,7 +968,7 @@ function RightPanel({
 
   const activeIndex = STEPS.findIndex((step) => step.id === activeStep);
   const nextStep = STEPS[activeIndex + 1]?.id;
-  const prevStep = STEPS[activeIndex - 1]?.id;
+  const previousTarget = getModelingPreviousTarget(activeStep);
 
   const panelCopy = useMemo(() => {
     if (activeStep === "generate") {
@@ -1224,20 +1231,21 @@ function RightPanel({
 
         <div className="flex gap-2">
           <button
-            disabled={!prevStep}
-            onClick={() => prevStep && setActiveStep(prevStep)}
-            className={`flex w-[34%] items-center justify-center gap-2 rounded-lg border py-3 text-[14px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-35 ${
-              prevStep
-                ? "border-[#E0A12E]/45 bg-[#E0A12E]/10 text-[#F0B43A] hover:border-[#E0A12E] hover:bg-[#E0A12E]/15"
-                : "border-[#2A2E36] bg-[#0A0B0D] text-neutral-500"
-            }`}
+            onClick={() => {
+              if (previousTarget === "turnaround") {
+                onBackToWorkflow();
+                return;
+              }
+              setActiveStep(previousTarget);
+            }}
+            className="flex w-[32%] items-center justify-center gap-1.5 rounded-xl border border-[#2A2E36] bg-[#0A0B0D] py-3.5 text-[14px] font-medium text-neutral-300 transition hover:bg-[#141518]"
           >
             <ArrowLeft className="h-4 w-4" />
-            이전 단계
+            이전
           </button>
           <button
             onClick={() => (nextStep ? setActiveStep(nextStep) : runAction())}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-3 text-[14px] font-medium text-black transition-colors hover:bg-[#F0B43A]"
+            className="flex w-[68%] items-center justify-center gap-2 rounded-xl bg-[#E0A12E] py-3.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
           >
             {nextStep ? `다음 단계: ${STEPS[activeIndex + 1].title}` : "최종 모델 저장"}
             <ArrowRight className="h-4 w-4" />
@@ -1272,6 +1280,26 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
     }
   };
 
+  const handleBackToWorkflow = () => {
+    if (typeof window !== "undefined") {
+      let returnTab: "turnaround" | "modular" = "turnaround";
+      const rawFlowState = window.sessionStorage.getItem("neopoly:turnaround-flow");
+
+      if (rawFlowState) {
+        try {
+          const flowState = JSON.parse(rawFlowState) as { isModularSelected?: boolean };
+          if (flowState.isModularSelected) returnTab = "modular";
+        } catch {
+          returnTab = "turnaround";
+        }
+      }
+
+      window.sessionStorage.setItem("neopoly:return-to-turnaround-tab", returnTab);
+    }
+
+    onNavigate?.("turnaround");
+  };
+
   return (
     <div className="flex h-[calc(100vh-76px)] flex-col overflow-hidden bg-[#050505] text-white">
       <div className="flex h-[64px] shrink-0 items-center justify-between border-b border-[#1F2329] bg-[#050505] px-6">
@@ -1298,6 +1326,7 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
           setActiveStep={setActiveStep}
           appliedSteps={appliedSteps}
           onApplyStep={handleApplyStep}
+          onBackToWorkflow={handleBackToWorkflow}
         />
       </div>
     </div>

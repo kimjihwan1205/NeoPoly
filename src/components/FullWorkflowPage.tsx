@@ -32,6 +32,9 @@ import {
   ChevronLeft,
   Puzzle,
   Box,
+  Pencil,
+  LoaderCircle,
+  PenTool,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import FullWorkflowIntroPage from "./FullWorkflowIntroPage";
@@ -133,6 +136,18 @@ type MessageInfo = {
   content: React.ReactNode;
   time: string;
   chips?: ChipData[];
+};
+
+type ImageEditPoint = {
+  x: number;
+  y: number;
+};
+
+type GeneratedImageHistoryVersion = {
+  id: number;
+  label: string;
+  prompt: string;
+  selection: ImageEditPoint[];
 };
 
 const INITIAL_MESSAGES: MessageInfo[] = [
@@ -313,6 +328,8 @@ export default function FullWorkflowPage({
 
   const [workflowStep, setWorkflowStep] = useState<"prompt" | "image-generation">("prompt");
   const [selectedGridImage, setSelectedGridImage] = useState<number | null>(null);
+  const [generatedImageCount, setGeneratedImageCount] = useState(4);
+  const [isGeneratingMoreImages, setIsGeneratingMoreImages] = useState(false);
   const [rightPanelMode, setRightPanelMode] = useState<"prompt" | "expert">("prompt");
   const [expertTab, setExpertTab] = useState<"turnaround" | "modular">("turnaround");
   const [isTurnaroundSelected, setIsTurnaroundSelected] = useState<boolean>(false);
@@ -322,6 +339,15 @@ export default function FullWorkflowPage({
   const [hasReturnedFromGeneratedStep, setHasReturnedFromGeneratedStep] = useState<boolean>(false);
   const [isOrcWorkflow, setIsOrcWorkflow] = useState<boolean>(false);
   const [importedNoteReferences, setImportedNoteReferences] = useState<Array<{ id: number; title: string; image: string }>>([]);
+  const [editingGeneratedImage, setEditingGeneratedImage] = useState<number | null>(null);
+  const [generatedImageEditDraft, setGeneratedImageEditDraft] = useState("");
+  const [regeneratingImageIndex, setRegeneratingImageIndex] = useState<number | null>(null);
+  const [generatedImageVersions, setGeneratedImageVersions] = useState<Record<number, number>>({});
+  const [generatedImageHistories, setGeneratedImageHistories] = useState<Record<number, GeneratedImageHistoryVersion[]>>({});
+  const [isImageAreaSelectionEnabled, setIsImageAreaSelectionEnabled] = useState(false);
+  const [isDrawingImageArea, setIsDrawingImageArea] = useState(false);
+  const [generatedImageSelectionDraft, setGeneratedImageSelectionDraft] = useState<ImageEditPoint[]>([]);
+  const generatedImageSelectionRef = useRef<HTMLDivElement>(null);
 
   const getAvailableNotes = (): NoteItem[] => {
     if (typeof window === "undefined") return NOTES;
@@ -366,6 +392,16 @@ export default function FullWorkflowPage({
     ORC_WORKFLOW_REFERENCES.find((asset) => asset.id === id) ||
     importedNoteReferences.find((asset) => asset.id === id);
   const hasSelectedGeneratedImage = selectedGridImage !== null;
+  const hasGeneratedImageSelection = generatedImageSelectionDraft.length >= 3;
+  const editingGeneratedImageHistory: GeneratedImageHistoryVersion[] =
+    editingGeneratedImage === null
+      ? []
+      : [
+          { id: 0, label: "원본", prompt: "", selection: [] },
+          ...(generatedImageHistories[editingGeneratedImage] ?? []),
+        ];
+  const activeEditingVersion =
+    editingGeneratedImage === null ? 0 : (generatedImageVersions[editingGeneratedImage] ?? 0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -422,6 +458,7 @@ export default function FullWorkflowPage({
   }, []);
 
   const handleGeneratedImageSelect = (imageIndex: number) => {
+    if (regeneratingImageIndex === imageIndex) return;
     if (selectedGridImage === imageIndex) {
       setSelectedGridImage(null);
       setIsTurnaroundSelected(false);
@@ -429,6 +466,119 @@ export default function FullWorkflowPage({
       return;
     }
     setSelectedGridImage(imageIndex);
+  };
+
+  const handleGenerateMoreImages = () => {
+    if (isGeneratingMoreImages) return;
+    setIsGeneratingMoreImages(true);
+    window.setTimeout(() => {
+      setGeneratedImageCount((current) => current + 4);
+      setIsGeneratingMoreImages(false);
+    }, 1200);
+  };
+
+  const openGeneratedImageEditor = (imageIndex: number) => {
+    if (regeneratingImageIndex === imageIndex) return;
+    const activeVersionId = generatedImageVersions[imageIndex] ?? 0;
+    const activeVersion =
+      activeVersionId === 0
+        ? { id: 0, label: "원본", prompt: "", selection: [] }
+        : generatedImageHistories[imageIndex]?.find((version) => version.id === activeVersionId);
+
+    setEditingGeneratedImage(imageIndex);
+    setGeneratedImageEditDraft(activeVersion?.prompt ?? "");
+    setGeneratedImageSelectionDraft(activeVersion?.selection ?? []);
+    setIsImageAreaSelectionEnabled(false);
+    setIsDrawingImageArea(false);
+  };
+
+  const handleSelectGeneratedImageVersion = (version: GeneratedImageHistoryVersion) => {
+    if (editingGeneratedImage === null) return;
+    setGeneratedImageVersions((current) => ({ ...current, [editingGeneratedImage]: version.id }));
+    setGeneratedImageEditDraft(version.prompt);
+    setGeneratedImageSelectionDraft([]);
+    setIsImageAreaSelectionEnabled(false);
+    setIsDrawingImageArea(false);
+  };
+
+  const closeGeneratedImageEditor = () => {
+    setEditingGeneratedImage(null);
+    setGeneratedImageEditDraft("");
+    setGeneratedImageSelectionDraft([]);
+    setIsImageAreaSelectionEnabled(false);
+    setIsDrawingImageArea(false);
+  };
+
+  const getImageEditPoint = (event: React.PointerEvent<HTMLDivElement>): ImageEditPoint | null => {
+    const bounds = generatedImageSelectionRef.current?.getBoundingClientRect();
+    if (!bounds || bounds.width === 0 || bounds.height === 0) return null;
+
+    return {
+      x: Math.max(0, Math.min(100, ((event.clientX - bounds.left) / bounds.width) * 100)),
+      y: Math.max(0, Math.min(100, ((event.clientY - bounds.top) / bounds.height) * 100)),
+    };
+  };
+
+  const handleImageAreaPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isImageAreaSelectionEnabled) return;
+    const point = getImageEditPoint(event);
+    if (!point) return;
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setGeneratedImageSelectionDraft([point]);
+    setIsDrawingImageArea(true);
+  };
+
+  const handleImageAreaPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isImageAreaSelectionEnabled || !isDrawingImageArea) return;
+    const point = getImageEditPoint(event);
+    if (!point) return;
+
+    setGeneratedImageSelectionDraft((current) => {
+      const previous = current[current.length - 1];
+      if (previous && Math.hypot(point.x - previous.x, point.y - previous.y) < 0.7) return current;
+      return [...current, point];
+    });
+  };
+
+  const handleImageAreaPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDrawingImageArea) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    setIsDrawingImageArea(false);
+    setIsImageAreaSelectionEnabled(false);
+  };
+
+  const handleRegenerateGeneratedImage = () => {
+    if (editingGeneratedImage === null || !generatedImageEditDraft.trim()) return;
+
+    const imageIndex = editingGeneratedImage;
+    const editPrompt = generatedImageEditDraft.trim();
+    const editSelection = generatedImageSelectionDraft.length >= 3 ? [...generatedImageSelectionDraft] : [];
+    const nextVersionId = (generatedImageHistories[imageIndex]?.length ?? 0) + 1;
+    const nextVersion: GeneratedImageHistoryVersion = {
+      id: nextVersionId,
+      label: `수정 ${nextVersionId}`,
+      prompt: editPrompt,
+      selection: editSelection,
+    };
+
+    setRegeneratingImageIndex(imageIndex);
+
+    window.setTimeout(() => {
+      setGeneratedImageHistories((current) => ({
+        ...current,
+        [imageIndex]: [...(current[imageIndex] ?? []), nextVersion],
+      }));
+      setGeneratedImageVersions((current) => ({ ...current, [imageIndex]: nextVersionId }));
+      setGeneratedImageEditDraft(editPrompt);
+      setGeneratedImageSelectionDraft([]);
+      setIsImageAreaSelectionEnabled(false);
+      setIsDrawingImageArea(false);
+      setRegeneratingImageIndex(null);
+    }, 1400);
   };
 
   const handleToggleTurnaround = () => {
@@ -475,6 +625,10 @@ export default function FullWorkflowPage({
   ];
 
   const GENERATED_IMAGE_BACKGROUNDS = ["#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"];
+  const getGeneratedImageSource = (imageIndex: number) =>
+    DUMMY_GENERATED_IMAGES[imageIndex % DUMMY_GENERATED_IMAGES.length];
+  const getGeneratedImageBackground = (imageIndex: number) =>
+    GENERATED_IMAGE_BACKGROUNDS[imageIndex % GENERATED_IMAGE_BACKGROUNDS.length];
 
   const buildPromptFromNotes = (noteIds: number[]) => {
     const selectedNotes = getSelectedNotes(noteIds);
@@ -948,22 +1102,37 @@ export default function FullWorkflowPage({
                 <div className="flex h-[64px] shrink-0 items-center justify-between border-b border-[#1F2329] bg-[#050505] px-6">
                   <h1 className="text-[22px] font-medium tracking-tight text-white">이미지 생성</h1>
                 </div>
-                <div className="relative flex min-h-0 flex-1 flex-col p-4 custom-scrollbar lg:p-6 2xl:p-8">
-                  <div className="max-w-[2200px] w-full h-full flex flex-col min-h-0 mx-auto">
-                  <div className="mb-4 lg:mb-5 shrink-0 flex items-center gap-3">
-                    <h2 className="text-[22px] font-medium tracking-tight text-white">이미지 시안 선택</h2>
-                    <span className="bg-[#141518] border border-[#2A2E36] px-2.5 py-0.5 rounded-full text-[14px] text-white font-medium">4</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 grid-rows-2 gap-3 lg:gap-4 2xl:gap-5 flex-1 min-h-0">
-                    {[0, 1, 2, 3].map((i) => (
-                      <button 
+                <div className="relative min-h-0 flex-1 overflow-y-auto p-4 custom-scrollbar lg:p-6 2xl:p-8">
+                  <div className="mx-auto flex min-h-full w-full max-w-[2200px] flex-col">
+                  <div
+                    className={`grid grid-cols-2 gap-3 lg:gap-4 2xl:gap-5 ${
+                      generatedImageCount <= 4
+                        ? "min-h-[calc(100vh-180px)] flex-1 grid-rows-2"
+                        : "auto-rows-[minmax(320px,42vh)]"
+                    }`}
+                  >
+                    {Array.from({ length: generatedImageCount }, (_, i) => i).map((i) => (
+                      <div
                         key={i}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => handleGeneratedImageSelect(i)}
-                        style={{ backgroundColor: GENERATED_IMAGE_BACKGROUNDS[i] }}
-                        className={`group relative rounded-xl overflow-hidden border-[2px] transition-all duration-300 block w-full h-full ${selectedGridImage === i ? 'border-[#E0A12E]' : 'border-[#1F2329] hover:border-[#555A64]'}`}
+                        onKeyDown={(event) => {
+                          if (event.key !== "Enter" && event.key !== " ") return;
+                          event.preventDefault();
+                          handleGeneratedImageSelect(i);
+                        }}
+                        style={{ backgroundColor: getGeneratedImageBackground(i) }}
+                        className={`group relative block h-full w-full overflow-hidden rounded-xl border-[2px] transition-all duration-300 ${
+                          selectedGridImage === i ? "border-[#E0A12E]" : "border-[#1F2329] hover:border-[#555A64]"
+                        } ${regeneratingImageIndex === i ? "cursor-wait" : ""}`}
                       >
-                        <img referrerPolicy="no-referrer" src={DUMMY_GENERATED_IMAGES[i]} alt={`생성 이미지 ${i+1}`} className="absolute inset-0 h-full w-full object-contain" />
+                        <img
+                          referrerPolicy="no-referrer"
+                          src={`${getGeneratedImageSource(i)}?edit=${generatedImageVersions[i] ?? 0}&slot=${i}`}
+                          alt={`생성 이미지 ${i + 1}`}
+                          className="absolute inset-0 h-full w-full object-contain"
+                        />
                         
                         {/* Status Badge */}
                         <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
@@ -977,15 +1146,43 @@ export default function FullWorkflowPage({
                         {/* Top Actions Bar (Hover) */}
                         <div className="absolute top-0 left-0 right-0 p-4 pb-12 flex items-center justify-end bg-gradient-to-b from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center hover:bg-black/80 transition-colors">
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openGeneratedImageEditor(i);
+                              }}
+                              className="flex h-8 w-8 items-center justify-center rounded-full bg-black/50 backdrop-blur-md transition-colors hover:bg-[#E0A12E] hover:text-black"
+                              title={`시안 ${i + 1} 수정`}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => event.stopPropagation()}
+                              className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center hover:bg-black/80 transition-colors"
+                              title="이미지 다운로드"
+                            >
                               <Download className="w-4 h-4 text-white" />
-                            </div>
-                            <div className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center hover:bg-black/80 transition-colors">
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => event.stopPropagation()}
+                              className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center hover:bg-black/80 transition-colors"
+                              title="보드에 저장"
+                            >
                               <Bookmark className="w-4 h-4 text-white" />
-                            </div>
+                            </button>
                           </div>
                         </div>
-                      </button>
+
+                        {regeneratingImageIndex === i && (
+                          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/70 text-white backdrop-blur-sm">
+                            <LoaderCircle className="h-7 w-7 animate-spin text-[#E0A12E]" />
+                            <span className="text-[15px] font-medium">수정 시안 생성 중</span>
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -1426,7 +1623,7 @@ export default function FullWorkflowPage({
                   {/* Prompt Summary Area */}
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-[15px] font-medium text-neutral-100">프롬프트 요약</h3>
+                      <h3 className="text-[15px] font-medium text-neutral-100">프롬프트</h3>
                       <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#2A2E36] text-[14px] text-neutral-400 hover:text-white hover:bg-[#141518] transition-colors">
                         편집
                       </button>
@@ -1447,13 +1644,28 @@ export default function FullWorkflowPage({
                         ))}
                       </div>
 
-                      <div className="flex items-center justify-between mt-2 pt-3 border-t border-[#1F2329]">
-                        <button className="text-[14px] text-neutral-400 hover:text-white flex items-center gap-1.5 transition-colors">
-                          <Plus className="w-3.5 h-3.5" /> 네거티브 프롬프트 포함
-                        </button>
+                      <div className="flex items-center justify-end mt-2 pt-3 border-t border-[#1F2329]">
                         <span className="text-[14px] text-neutral-400">124 / 1500</span>
                       </div>
                     </div>
+
+                    <button
+                      type="button"
+                      disabled={isGeneratingMoreImages}
+                      onClick={handleGenerateMoreImages}
+                      className={`flex self-end items-center justify-center gap-2 rounded-lg border px-4 py-2 text-[14px] font-medium transition ${
+                        isGeneratingMoreImages
+                          ? "cursor-wait border-[#2A2E36] bg-[#111317] text-neutral-500"
+                          : "border-[#E0A12E]/45 bg-[#E0A12E]/10 text-[#E0A12E] hover:border-[#E0A12E] hover:bg-[#E0A12E]/15"
+                      }`}
+                    >
+                      {isGeneratingMoreImages ? (
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4" />
+                      )}
+                      {isGeneratingMoreImages ? "생성 중" : "생성"}
+                    </button>
                   </div>
                 </div>
 
@@ -1526,6 +1738,220 @@ export default function FullWorkflowPage({
           </>
         )}
       </main>
+
+      <AnimatePresence>
+        {editingGeneratedImage !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onMouseDown={closeGeneratedImageEditor}
+            className="fixed inset-0 z-[150] flex items-center justify-center bg-black/55 p-5 backdrop-blur-[2px]"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 14, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 14, scale: 0.98 }}
+              transition={{ duration: 0.18 }}
+              onMouseDown={(event) => event.stopPropagation()}
+              className="flex max-h-[92vh] w-full max-w-[1240px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_28px_80px_rgba(0,0,0,0.7)]"
+            >
+              <div className="flex items-center justify-between border-b border-[#1F2329] px-5 py-4">
+                <div>
+                  <p className="text-[14px] font-medium text-[#E0A12E]">개별 시안 수정</p>
+                  <h3 className="mt-0.5 text-[18px] font-medium text-white">시안 {editingGeneratedImage + 1}</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeGeneratedImageEditor}
+                  className="rounded-md p-2 text-neutral-400 transition hover:bg-white/5 hover:text-white"
+                  aria-label="시안 수정 닫기"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div
+                className={`grid min-h-0 flex-1 overflow-hidden ${
+                  editingGeneratedImageHistory.length > 1
+                    ? "grid-cols-[minmax(0,1fr)_220px]"
+                    : "grid-cols-1"
+                }`}
+              >
+                <div className="min-h-0 overflow-y-auto p-5 custom-scrollbar">
+                <div
+                  ref={generatedImageSelectionRef}
+                  onPointerDown={handleImageAreaPointerDown}
+                  onPointerMove={handleImageAreaPointerMove}
+                  onPointerUp={handleImageAreaPointerUp}
+                  onPointerCancel={handleImageAreaPointerUp}
+                  className={`relative h-[clamp(360px,55vh,620px)] touch-none overflow-hidden rounded-lg border bg-white ${
+                    isImageAreaSelectionEnabled
+                      ? "cursor-crosshair border-[#E0A12E]"
+                      : "border-[#2A2E36]"
+                  }`}
+                  style={{ backgroundColor: getGeneratedImageBackground(editingGeneratedImage) }}
+                >
+                  <img
+                    src={`${getGeneratedImageSource(editingGeneratedImage)}?edit=${generatedImageVersions[editingGeneratedImage] ?? 0}&slot=${editingGeneratedImage}`}
+                    alt={`수정할 시안 ${editingGeneratedImage + 1}`}
+                    draggable={false}
+                    className="pointer-events-none h-full w-full select-none object-contain"
+                  />
+
+                  <div className="absolute left-4 top-4 z-20 flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={regeneratingImageIndex === editingGeneratedImage}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      onClick={() => setIsImageAreaSelectionEnabled((current) => !current)}
+                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-[14px] font-medium shadow-lg backdrop-blur-md transition ${
+                        isImageAreaSelectionEnabled
+                          ? "border-[#E0A12E] bg-[#E0A12E] text-black"
+                          : "border-white/15 bg-black/65 text-white hover:bg-black/80"
+                      }`}
+                    >
+                      <PenTool className="h-4 w-4" />
+                      영역 선택
+                    </button>
+                  </div>
+
+                  {isImageAreaSelectionEnabled && generatedImageSelectionDraft.length === 0 && (
+                    <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center">
+                      <span className="rounded-full bg-black/70 px-3 py-1.5 text-[14px] text-white backdrop-blur">
+                        수정할 영역의 경계를 따라 자유롭게 그려주세요
+                      </span>
+                    </div>
+                  )}
+
+                  {generatedImageSelectionDraft.length > 0 && (
+                    <svg
+                      className="pointer-events-none absolute inset-0 z-10 h-full w-full"
+                      viewBox="0 0 100 100"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
+                    >
+                      {hasGeneratedImageSelection && !isDrawingImageArea ? (
+                        <polygon
+                          points={generatedImageSelectionDraft.map((point) => `${point.x},${point.y}`).join(" ")}
+                          fill="rgba(224, 161, 46, 0.22)"
+                          stroke="#E0A12E"
+                          strokeWidth="0.6"
+                          strokeDasharray="1.5 1"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      ) : (
+                        <polyline
+                          points={generatedImageSelectionDraft.map((point) => `${point.x},${point.y}`).join(" ")}
+                          fill="none"
+                          stroke="#E0A12E"
+                          strokeWidth="0.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      )}
+                    </svg>
+                  )}
+
+                  {regeneratingImageIndex === editingGeneratedImage && (
+                    <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/70 text-white backdrop-blur-sm">
+                      <LoaderCircle className="h-8 w-8 animate-spin text-[#E0A12E]" />
+                      <span className="text-[15px] font-medium">새 버전 생성 중</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-5 min-w-0">
+                  <label htmlFor="generated-image-edit-prompt" className="text-[15px] font-medium text-white">
+                    수정할 내용
+                  </label>
+                  <textarea
+                    id="generated-image-edit-prompt"
+                    autoFocus
+                    value={generatedImageEditDraft}
+                    onChange={(event) => setGeneratedImageEditDraft(event.target.value)}
+                    placeholder="예: 어깨 갑옷을 더 크게 하고 금속 스크래치를 강조해줘"
+                    className="mt-2 h-24 w-full resize-none rounded-lg border border-[#343842] bg-[#111317] px-3.5 py-3 text-[14px] leading-6 text-white outline-none transition placeholder:text-neutral-500 focus:border-[#E0A12E]"
+                  />
+                </div>
+                </div>
+
+                {editingGeneratedImageHistory.length > 1 && (
+                  <aside className="min-h-0 overflow-y-auto border-l border-[#1F2329] bg-[#08090B] p-3 custom-scrollbar">
+                    <div className="space-y-3">
+                      {editingGeneratedImageHistory.map((version) => {
+                        const isActive = activeEditingVersion === version.id;
+                        return (
+                          <button
+                            key={version.id}
+                            type="button"
+                            onClick={() => handleSelectGeneratedImageVersion(version)}
+                            aria-label={`${version.label} 선택`}
+                            className={`group w-full overflow-hidden rounded-lg border transition ${
+                              isActive
+                                ? "border-[#E0A12E]"
+                                : "border-[#2A2E36] hover:border-[#555A64]"
+                            }`}
+                          >
+                            <div
+                              className="relative aspect-[4/3] overflow-hidden"
+                              style={{ backgroundColor: getGeneratedImageBackground(editingGeneratedImage) }}
+                            >
+                              <img
+                                src={`${getGeneratedImageSource(editingGeneratedImage)}?edit=${version.id}&slot=${editingGeneratedImage}`}
+                                alt={`${version.label} 이미지`}
+                                className="h-full w-full object-contain"
+                              />
+                              {isActive && (
+                                <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#E0A12E] text-black shadow-lg">
+                                  <Check className="h-4 w-4 stroke-[3]" />
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </aside>
+                )}
+              </div>
+
+              <div className="flex shrink-0 items-center justify-between gap-4 border-t border-[#1F2329] px-5 py-4">
+                <p className="text-[14px] text-neutral-500">
+                  {hasGeneratedImageSelection ? "선택한 영역을 기준으로 수정합니다." : "영역을 선택하지 않으면 이미지 전체를 수정합니다."}
+                </p>
+                <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={closeGeneratedImageEditor}
+                  className="rounded-lg border border-[#2A2E36] px-4 py-2.5 text-[14px] font-medium text-neutral-300 transition hover:bg-white/5 hover:text-white"
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  disabled={!generatedImageEditDraft.trim() || regeneratingImageIndex === editingGeneratedImage}
+                  onClick={handleRegenerateGeneratedImage}
+                  className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-[14px] font-medium transition ${
+                    generatedImageEditDraft.trim() && regeneratingImageIndex !== editingGeneratedImage
+                      ? "bg-[#E0A12E] text-black hover:bg-[#F0B43A]"
+                      : "cursor-not-allowed bg-[#202126] text-neutral-500"
+                  }`}
+                >
+                  {regeneratingImageIndex === editingGeneratedImage ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                  재생성
+                </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Board Selection Modal */}
       {isBoardPopupOpen && (

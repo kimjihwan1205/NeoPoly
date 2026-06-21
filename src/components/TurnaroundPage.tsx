@@ -1,21 +1,30 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Check,
+  AlertTriangle,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Copy,
   Eye,
-  Image as ImageIcon,
+  EyeOff,
   Layers,
   Loader2,
   Lock,
+  MessageSquarePlus,
+  Pencil,
+  PenTool,
   RotateCcw,
   SlidersHorizontal,
   Sparkles,
   Unlock,
   Wand2,
+  X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import {
+  createFallbackConfirmedModuleSession,
+  parseTurnaroundModuleSession,
+  TURNAROUND_MODULE_SESSION_KEY,
+} from "../turnaroundModuleSession";
 
 interface TurnaroundPageProps {
   onNavigate?: (page: string) => void;
@@ -32,7 +41,24 @@ type TurnaroundView = {
   prompt: string;
 };
 
+type ConsistencyIssue = {
+  id: string;
+  title: string;
+  detail: string;
+  severity: "high" | "medium";
+  baseView: ViewId;
+  targetView: ViewId;
+  correctionPrompt: string;
+  areas: Partial<Record<ViewId, { left: string; top: string; width: string; height: string }>>;
+};
+
 type LassoPoint = { left: number; top: number };
+
+type TurnaroundViewVersion = {
+  id: number;
+  prompt: string;
+  selection: LassoPoint[];
+};
 
 type ModularPart = {
   id: string;
@@ -54,6 +80,12 @@ type ModuleSet = {
   tag: string;
   accent: string;
   assetPrefix: string;
+};
+
+type ModuleDraft = {
+  label: string;
+  keyword: string;
+  setName: string;
 };
 
 const ORC_BASE_IMAGE = "/images/orc/orc_2D_front.png";
@@ -96,11 +128,59 @@ const TURNAROUND_VIEWS: TurnaroundView[] = [
   },
 ];
 
-const CONSISTENCY_ITEMS = [
-  { label: "실루엣", score: 94 },
-  { label: "장비 위치", score: 88 },
-  { label: "색감", score: 91 },
-  { label: "비율 일관성", score: 86 },
+const CONSISTENCY_ISSUES: ConsistencyIssue[] = [
+  {
+    id: "shoulder-scale",
+    title: "어깨 갑옷 크기 차이",
+    detail: "정면보다 측면의 어깨 갑옷이 작게 표현되어 있습니다.",
+    severity: "high",
+    baseView: "front",
+    targetView: "side",
+    correctionPrompt: "측면 어깨 갑옷의 크기와 돌출 정도를 정면 뷰와 동일하게 맞춰줘.",
+    areas: {
+      front: { left: "19%", top: "22%", width: "62%", height: "23%" },
+      side: { left: "38%", top: "20%", width: "34%", height: "25%" },
+    },
+  },
+  {
+    id: "belt-position",
+    title: "허리 장식 위치 차이",
+    detail: "후면의 허리 장식이 정면 기준보다 위쪽에 배치되어 있습니다.",
+    severity: "medium",
+    baseView: "front",
+    targetView: "back",
+    correctionPrompt: "후면 허리 장식의 높이와 중심 위치를 정면 뷰 기준으로 내려서 맞춰줘.",
+    areas: {
+      front: { left: "37%", top: "51%", width: "27%", height: "18%" },
+      back: { left: "35%", top: "45%", width: "30%", height: "19%" },
+    },
+  },
+  {
+    id: "arm-length",
+    title: "팔 길이 불일치",
+    detail: "45도 뷰의 오른팔이 정면과 비교해 짧게 보입니다.",
+    severity: "medium",
+    baseView: "front",
+    targetView: "angle",
+    correctionPrompt: "45도 뷰 오른팔의 길이와 손 위치를 정면 뷰 비율에 맞춰 자연스럽게 보정해줘.",
+    areas: {
+      front: { left: "67%", top: "37%", width: "19%", height: "38%" },
+      angle: { left: "65%", top: "38%", width: "20%", height: "34%" },
+    },
+  },
+  {
+    id: "armor-color",
+    title: "갑옷 색감 차이",
+    detail: "45도 뷰의 금속 갑옷이 다른 뷰보다 밝게 표현되어 있습니다.",
+    severity: "medium",
+    baseView: "front",
+    targetView: "angle",
+    correctionPrompt: "45도 뷰 갑옷의 명도와 금속 색감을 정면 뷰와 동일하게 조정해줘.",
+    areas: {
+      front: { left: "30%", top: "20%", width: "42%", height: "30%" },
+      angle: { left: "29%", top: "20%", width: "44%", height: "31%" },
+    },
+  },
 ];
 
 const DEFAULT_MODULAR_PARTS: ModularPart[] = [
@@ -177,6 +257,24 @@ const MODULE_SET_TAG_SUGGESTIONS = [
   "\ubd80\uc871 \uc815\ucc30 \uc138\ud2b8",
   "\uac70\uce5c \uc2a4\ud30c\uc774\ud06c \uc138\ud2b8",
 ];
+
+const DEFAULT_MODULE_SET: ModuleSet = {
+  id: "set-01",
+  title: "Set 01",
+  tag: MODULE_SET_TAG_SUGGESTIONS[0],
+  accent: MODULE_SET_ACCENTS[0],
+  assetPrefix: MODULE_SET_ASSET_PREFIXES[0],
+};
+
+const DEFAULT_MODULE_DRAFTS = DEFAULT_MODULAR_PARTS.reduce(
+  (acc, part) => ({ ...acc, [part.id]: { label: part.label, keyword: part.keyword, setName: part.setName } }),
+  {} as Record<string, ModuleDraft>,
+);
+
+const DEFAULT_MODULE_NAME_INPUTS = DEFAULT_MODULAR_PARTS.reduce(
+  (acc, part) => ({ ...acc, [part.id]: part.label }),
+  {} as Record<string, string>,
+);
 
 
 const ADDITIONAL_MODULE_SUGGESTIONS: Omit<ModularPart, "id">[] = [
@@ -259,7 +357,32 @@ const cropImageStyle = (area: ModularPart["area"]): React.CSSProperties => {
 };
 
 export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
-  const [expertTab, setExpertTab] = useState<"turnaround" | "modular">("turnaround");
+  const [initialModuleSession] = useState(() => {
+    if (typeof window === "undefined") return null;
+
+    const storedSession = parseTurnaroundModuleSession(
+      window.sessionStorage.getItem(TURNAROUND_MODULE_SESSION_KEY),
+    );
+    if (storedSession) return storedSession;
+
+    const returnTab = window.sessionStorage.getItem("neopoly:return-to-turnaround-tab");
+    if (returnTab !== "modular") return null;
+
+    return createFallbackConfirmedModuleSession(
+      DEFAULT_MODULAR_PARTS,
+      [DEFAULT_MODULE_SET],
+      DEFAULT_MODULE_DRAFTS,
+      DEFAULT_MODULE_NAME_INPUTS,
+      MODULE_SET_TAG_SUGGESTIONS[1],
+    );
+  });
+  const [expertTab, setExpertTab] = useState<"turnaround" | "modular">(() => {
+    if (typeof window === "undefined") return "turnaround";
+
+    const returnTab = window.sessionStorage.getItem("neopoly:return-to-turnaround-tab");
+    window.sessionStorage.removeItem("neopoly:return-to-turnaround-tab");
+    return returnTab === "modular" ? "modular" : "turnaround";
+  });
   const [selectedViewId, setSelectedViewId] = useState<ViewId>("front");
   const [viewPrompts, setViewPrompts] = useState<Record<ViewId, string>>(() =>
     TURNAROUND_VIEWS.reduce(
@@ -268,44 +391,91 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
     ),
   );
   const [lockedViews, setLockedViews] = useState<Set<ViewId>>(new Set(["front"]));
-  const [confirmedViews, setConfirmedViews] = useState<Set<ViewId>>(new Set(["front"]));
   const [regeneratingViews, setRegeneratingViews] = useState<Set<ViewId>>(new Set());
+  const [editingViewId, setEditingViewId] = useState<ViewId | null>(null);
+  const [viewEditDraft, setViewEditDraft] = useState("");
+  const [viewEditSelection, setViewEditSelection] = useState<LassoPoint[]>([]);
+  const [isViewAreaSelectionEnabled, setIsViewAreaSelectionEnabled] = useState(false);
+  const [isDrawingViewArea, setIsDrawingViewArea] = useState(false);
+  const [viewVersions, setViewVersions] = useState<Record<ViewId, number>>({
+    front: 0,
+    angle: 0,
+    side: 0,
+    back: 0,
+  });
+  const [viewHistories, setViewHistories] = useState<Partial<Record<ViewId, TurnaroundViewVersion[]>>>({});
+  const viewEditCanvasRef = useRef<HTMLDivElement>(null);
+  const [selectedConsistencyIssueId, setSelectedConsistencyIssueId] = useState(CONSISTENCY_ISSUES[0].id);
+  const [ignoredConsistencyIssues, setIgnoredConsistencyIssues] = useState<Set<string>>(new Set());
+  const [resolvedConsistencyIssues, setResolvedConsistencyIssues] = useState<Set<string>>(new Set());
+  const [correctingConsistencyIssueId, setCorrectingConsistencyIssueId] = useState<string | null>(null);
+  const [comparisonOpacity, setComparisonOpacity] = useState(52);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingModular, setIsGeneratingModular] = useState(false);
   const [isScanningModules, setIsScanningModules] = useState(false);
-  const [isModuleScanComplete, setIsModuleScanComplete] = useState(false);
+  const [isModuleScanComplete, setIsModuleScanComplete] = useState(
+    initialModuleSession?.isModuleScanComplete ?? false,
+  );
   const [isBuildingModuleSet, setIsBuildingModuleSet] = useState(false);
   const [isAddingModuleScan, setIsAddingModuleScan] = useState(false);
   const [areaSelectionMode, setAreaSelectionMode] = useState<"new" | "edit" | null>(null);
   const [areaStart, setAreaStart] = useState<{ left: number; top: number } | null>(null);
   const [draftArea, setDraftArea] = useState<ModularPart["area"] | null>(null);
   const [draftPath, setDraftPath] = useState<LassoPoint[]>([]);
-  const [moduleParts, setModuleParts] = useState<ModularPart[]>(() => DEFAULT_MODULAR_PARTS);
-  const [selectedPart, setSelectedPart] = useState<string>(DEFAULT_MODULAR_PARTS[0].id);
-  const [generatedModules, setGeneratedModules] = useState<string[]>([]);
-  const [isModuleListConfirmed, setIsModuleListConfirmed] = useState(false);
-  const [isModuleListDrawerOpen, setIsModuleListDrawerOpen] = useState(false);
+  const [moduleParts, setModuleParts] = useState<ModularPart[]>(() => {
+    const restored = initialModuleSession?.moduleParts as ModularPart[] | undefined;
+    return restored?.length ? restored : DEFAULT_MODULAR_PARTS;
+  });
+  const [selectedPart, setSelectedPart] = useState<string>(
+    initialModuleSession?.selectedPart || DEFAULT_MODULAR_PARTS[0].id,
+  );
+  const [generatedModules, setGeneratedModules] = useState<string[]>(
+    initialModuleSession?.generatedModules ?? [],
+  );
+  const [isModuleListConfirmed, setIsModuleListConfirmed] = useState(
+    initialModuleSession?.isModuleListConfirmed ?? false,
+  );
+  const [isModuleListDrawerOpen, setIsModuleListDrawerOpen] = useState(
+    initialModuleSession?.isModuleListDrawerOpen ?? false,
+  );
   const [isAddingModuleSet, setIsAddingModuleSet] = useState(false);
   const [isDraggingModuleSets, setIsDraggingModuleSets] = useState(false);
   const moduleSetScrollerRef = useRef<HTMLDivElement | null>(null);
   const moduleSetDragRef = useRef({ isDragging: false, startX: 0, scrollLeft: 0 });
   const previousModuleSetCountRef = useRef(0);
-  const [moduleSets, setModuleSets] = useState<ModuleSet[]>([]);
-  const [newSetTag, setNewSetTag] = useState(MODULE_SET_TAG_SUGGESTIONS[1]);
-  const [moduleDrafts, setModuleDrafts] = useState<Record<string, { label: string; keyword: string; setName: string }>>(() =>
-    DEFAULT_MODULAR_PARTS.reduce(
-      (acc, part) => ({ ...acc, [part.id]: { label: part.label, keyword: part.keyword, setName: part.setName } }),
-      {} as Record<string, { label: string; keyword: string; setName: string }>,
-    ),
+  const [moduleSets, setModuleSets] = useState<ModuleSet[]>(() => {
+    const restored = initialModuleSession?.moduleSets as ModuleSet[] | undefined;
+    return restored ?? [];
+  });
+  const [newSetTag, setNewSetTag] = useState(
+    initialModuleSession?.newSetTag || MODULE_SET_TAG_SUGGESTIONS[1],
   );
-  const [moduleNameInputs, setModuleNameInputs] = useState<Record<string, string>>(() =>
-    DEFAULT_MODULAR_PARTS.reduce(
-      (acc, part) => ({ ...acc, [part.id]: part.label }),
-      {} as Record<string, string>,
-    ),
-  );
+  const [moduleDrafts, setModuleDrafts] = useState<Record<string, ModuleDraft>>(() => ({
+    ...DEFAULT_MODULE_DRAFTS,
+    ...(initialModuleSession?.moduleDrafts as Record<string, ModuleDraft> | undefined),
+  }));
+  const [moduleNameInputs, setModuleNameInputs] = useState<Record<string, string>>(() => ({
+    ...DEFAULT_MODULE_NAME_INPUTS,
+    ...initialModuleSession?.moduleNameInputs,
+  }));
 
   const selectedView = TURNAROUND_VIEWS.find((view) => view.id === selectedViewId) ?? TURNAROUND_VIEWS[0];
+  const editingView = TURNAROUND_VIEWS.find((view) => view.id === editingViewId) ?? null;
+  const editingViewHistory: TurnaroundViewVersion[] = editingViewId
+    ? [
+        { id: 0, prompt: "", selection: [] },
+        ...(viewHistories[editingViewId] ?? []),
+      ]
+    : [];
+  const activeEditingViewVersion = editingViewId ? viewVersions[editingViewId] : 0;
+  const hasViewEditSelection = viewEditSelection.length >= 3;
+  const visibleConsistencyIssues = CONSISTENCY_ISSUES.filter((issue) => !ignoredConsistencyIssues.has(issue.id));
+  const selectedConsistencyIssue =
+    visibleConsistencyIssues.find((issue) => issue.id === selectedConsistencyIssueId) ??
+    visibleConsistencyIssues[0] ??
+    null;
+  const unresolvedConsistencyIssues = visibleConsistencyIssues.filter((issue) => !resolvedConsistencyIssues.has(issue.id));
+  const consistencyScore = Math.min(98, 86 + resolvedConsistencyIssues.size * 3 + ignoredConsistencyIssues.size);
   const selectedPartData = moduleParts.find((part) => part.id === selectedPart) ?? moduleParts[0] ?? DEFAULT_MODULAR_PARTS[0];
   const selectedModuleDraft = moduleDrafts[selectedPart] ?? {
     label: selectedPartData.label,
@@ -313,7 +483,6 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
     setName: selectedPartData.setName,
   };
   const isAreaSelectMode = areaSelectionMode !== null;
-  const isSelectedRegenerating = regeneratingViews.has(selectedViewId) || isGenerating;
   const [shouldProceedToModular] = useState(() => {
     if (typeof window === "undefined") return false;
 
@@ -330,6 +499,37 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   const confirmedModuleParts = moduleParts.filter((part) => generatedModules.includes(part.id));
   const moduleSetParts = confirmedModuleParts.length > 0 ? confirmedModuleParts : moduleParts;
   const isModularScanActive = isScanningModules || isBuildingModuleSet || isAddingModuleScan;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.sessionStorage.setItem(
+      TURNAROUND_MODULE_SESSION_KEY,
+      JSON.stringify({
+        isModuleScanComplete,
+        isModuleListConfirmed,
+        isModuleListDrawerOpen,
+        moduleParts,
+        generatedModules,
+        moduleSets,
+        selectedPart,
+        moduleDrafts,
+        moduleNameInputs,
+        newSetTag,
+      }),
+    );
+  }, [
+    generatedModules,
+    isModuleListConfirmed,
+    isModuleListDrawerOpen,
+    isModuleScanComplete,
+    moduleDrafts,
+    moduleNameInputs,
+    moduleParts,
+    moduleSets,
+    newSetTag,
+    selectedPart,
+  ]);
 
   useEffect(() => {
     if (expertTab !== "modular" || isModuleScanComplete) return;
@@ -386,11 +586,6 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
         next.delete(viewId);
         return next;
       });
-      setConfirmedViews((current) => {
-        const next = new Set(current);
-        next.delete(viewId);
-        return next;
-      });
     }, 900);
   };
 
@@ -400,26 +595,155 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
     setRegeneratingViews(new Set(unlocked));
     window.setTimeout(() => {
       setRegeneratingViews(new Set());
-      setConfirmedViews((current) => {
-        const next = new Set(current);
-        unlocked.forEach((id) => next.delete(id));
-        return next;
-      });
       setIsGenerating(false);
     }, 1000);
   };
 
-  const toggleLock = (viewId: ViewId) => {
-    setLockedViews((current) => {
-      const next = new Set(current);
-      if (next.has(viewId)) next.delete(viewId);
-      else next.add(viewId);
-      return next;
+  const openViewModifier = (viewId: ViewId, prompt?: string) => {
+    if (lockedViews.has(viewId)) return;
+    const activeVersionId = viewVersions[viewId];
+    const activeVersion = viewHistories[viewId]?.find((version) => version.id === activeVersionId);
+    setSelectedViewId(viewId);
+    setEditingViewId(viewId);
+    setViewEditDraft(prompt ?? activeVersion?.prompt ?? viewPrompts[viewId]);
+    setViewEditSelection([]);
+    setIsViewAreaSelectionEnabled(false);
+    setIsDrawingViewArea(false);
+  };
+
+  const closeViewModifier = () => {
+    setEditingViewId(null);
+    setViewEditDraft("");
+    setViewEditSelection([]);
+    setIsViewAreaSelectionEnabled(false);
+    setIsDrawingViewArea(false);
+  };
+
+  const getViewEditPoint = (event: React.PointerEvent<HTMLDivElement>): LassoPoint | null => {
+    const bounds = viewEditCanvasRef.current?.getBoundingClientRect();
+    if (!bounds || bounds.width === 0 || bounds.height === 0) return null;
+    return {
+      left: Math.max(0, Math.min(100, ((event.clientX - bounds.left) / bounds.width) * 100)),
+      top: Math.max(0, Math.min(100, ((event.clientY - bounds.top) / bounds.height) * 100)),
+    };
+  };
+
+  const handleViewEditPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isViewAreaSelectionEnabled) return;
+    const point = getViewEditPoint(event);
+    if (!point) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setViewEditSelection([point]);
+    setIsDrawingViewArea(true);
+  };
+
+  const handleViewEditPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isViewAreaSelectionEnabled || !isDrawingViewArea) return;
+    const point = getViewEditPoint(event);
+    if (!point) return;
+    setViewEditSelection((current) => {
+      const previous = current[current.length - 1];
+      if (previous && Math.hypot(point.left - previous.left, point.top - previous.top) < 0.7) return current;
+      return [...current, point];
     });
   };
 
-  const toggleConfirm = (viewId: ViewId) => {
-    setConfirmedViews((current) => {
+  const handleViewEditPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDrawingViewArea) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    setIsDrawingViewArea(false);
+    setIsViewAreaSelectionEnabled(false);
+  };
+
+  const handleSelectViewVersion = (version: TurnaroundViewVersion) => {
+    if (!editingViewId) return;
+    setViewVersions((current) => ({ ...current, [editingViewId]: version.id }));
+    setViewEditDraft(version.prompt);
+    setViewEditSelection([]);
+    setIsViewAreaSelectionEnabled(false);
+    setIsDrawingViewArea(false);
+  };
+
+  const handleRegenerateModifiedView = () => {
+    if (!editingViewId || !viewEditDraft.trim() || lockedViews.has(editingViewId)) return;
+    const viewId = editingViewId;
+    const nextVersionId = (viewHistories[viewId]?.length ?? 0) + 1;
+    const nextVersion: TurnaroundViewVersion = {
+      id: nextVersionId,
+      prompt: viewEditDraft.trim(),
+      selection: hasViewEditSelection ? [...viewEditSelection] : [],
+    };
+
+    setRegeneratingViews((current) => new Set(current).add(viewId));
+    window.setTimeout(() => {
+      setViewHistories((current) => ({
+        ...current,
+        [viewId]: [...(current[viewId] ?? []), nextVersion],
+      }));
+      setViewVersions((current) => ({ ...current, [viewId]: nextVersionId }));
+      setViewPrompts((current) => ({ ...current, [viewId]: nextVersion.prompt }));
+      setViewEditSelection([]);
+      setIsViewAreaSelectionEnabled(false);
+      setIsDrawingViewArea(false);
+      setRegeneratingViews((current) => {
+        const next = new Set(current);
+        next.delete(viewId);
+        return next;
+      });
+    }, 1100);
+  };
+
+  const handleSelectConsistencyIssue = (issue: ConsistencyIssue) => {
+    setSelectedConsistencyIssueId(issue.id);
+    setSelectedViewId(issue.targetView);
+  };
+
+  const handleAddConsistencyIssueToPrompt = (issue: ConsistencyIssue) => {
+    openViewModifier(issue.targetView, issue.correctionPrompt);
+  };
+
+  const handleIgnoreConsistencyIssue = (issueId: string) => {
+    setIgnoredConsistencyIssues((current) => new Set(current).add(issueId));
+    if (selectedConsistencyIssueId === issueId) {
+      const nextIssue = CONSISTENCY_ISSUES.find(
+        (issue) => issue.id !== issueId && !ignoredConsistencyIssues.has(issue.id),
+      );
+      if (nextIssue) {
+        setSelectedConsistencyIssueId(nextIssue.id);
+        setSelectedViewId(nextIssue.targetView);
+      }
+    }
+  };
+
+  const handleAutoCorrectConsistencyIssue = (issue: ConsistencyIssue) => {
+    if (correctingConsistencyIssueId || lockedViews.has(issue.targetView)) return;
+
+    setCorrectingConsistencyIssueId(issue.id);
+    setSelectedViewId(issue.targetView);
+    setRegeneratingViews((current) => new Set(current).add(issue.targetView));
+    setViewPrompts((current) => ({
+      ...current,
+      [issue.targetView]: current[issue.targetView].includes(issue.correctionPrompt)
+        ? current[issue.targetView]
+        : `${current[issue.targetView].trim()}\n\n${issue.correctionPrompt}`,
+    }));
+
+    window.setTimeout(() => {
+      setRegeneratingViews((current) => {
+        const next = new Set(current);
+        next.delete(issue.targetView);
+        return next;
+      });
+      setResolvedConsistencyIssues((current) => new Set(current).add(issue.id));
+      setCorrectingConsistencyIssueId(null);
+    }, 1100);
+  };
+
+  const toggleLock = (viewId: ViewId) => {
+    setLockedViews((current) => {
       const next = new Set(current);
       if (next.has(viewId)) next.delete(viewId);
       else next.add(viewId);
@@ -661,7 +985,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
       setModuleSets((current) =>
         current.length > 0
           ? current
-          : [{ id: "set-01", title: "Set 01", tag: MODULE_SET_TAG_SUGGESTIONS[0], accent: MODULE_SET_ACCENTS[0], assetPrefix: MODULE_SET_ASSET_PREFIXES[0] }],
+          : [DEFAULT_MODULE_SET],
       );
       setIsModuleListConfirmed(true);
       setIsModuleListDrawerOpen(true);
@@ -794,32 +1118,27 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
         {expertTab === "turnaround" ? (
           <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_420px] gap-0 overflow-hidden xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_550px]">
             <section className="flex min-w-0 flex-col overflow-hidden p-4">
-              <div className="mb-3 grid shrink-0 grid-cols-4 gap-2">
-                {CONSISTENCY_ITEMS.map((item) => (
-                  <div key={item.label} className="rounded-lg border border-[#1F2329] bg-[#0A0B0D] p-2.5">
-                    <div className="mb-2 flex items-center justify-between text-[14px]">
-                      <span className="font-medium text-neutral-300">{item.label}</span>
-                      <span className="font-mono text-[#E0A12E]">{item.score}%</span>
-                    </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-[#20232A]">
-                      <div className="h-full rounded-full bg-[#E0A12E]" style={{ width: `${item.score}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
               <div className="grid min-h-0 flex-1 grid-cols-2 gap-3">
                 {TURNAROUND_VIEWS.map((view, index) => {
                   const isSelected = selectedViewId === view.id;
                   const isLocked = lockedViews.has(view.id);
-                  const isConfirmed = confirmedViews.has(view.id);
                   const isRegeneratingView = regeneratingViews.has(view.id) || isGenerating;
+                  const consistencyArea = selectedConsistencyIssue?.areas[view.id];
+                  const isSelectedIssueResolved = selectedConsistencyIssue
+                    ? resolvedConsistencyIssues.has(selectedConsistencyIssue.id)
+                    : false;
 
                   return (
-                    <motion.button
+                    <motion.div
                       key={view.id}
-                      type="button"
+                      role="button"
+                      tabIndex={0}
                       onClick={() => setSelectedViewId(view.id)}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" && event.key !== " ") return;
+                        event.preventDefault();
+                        setSelectedViewId(view.id);
+                      }}
                       initial={{ opacity: 0, y: 14 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.04 }}
@@ -830,33 +1149,69 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(224,161,46,0.08),transparent_60%)]" />
                       <div className="relative z-10 mb-2 flex items-start justify-between gap-2">
                         <div>
-                          <div className="flex items-center gap-2">
-                            <h2 className="text-[16px] font-medium text-white">{view.label}</h2>
-                            {isLocked && <Lock className="h-4 w-4 text-[#E0A12E]" />}
-                          </div>
-                          <p className="mt-0.5 truncate text-[14px] font-normal text-neutral-400">{view.focus}</p>
+                          <h2 className="text-[16px] font-medium text-white">{view.label}</h2>
                         </div>
-                        <span
-                          className={`rounded-full border px-2.5 py-1 text-[14px] font-medium ${
-                            isRegeneratingView
-                              ? "border-[#E0A12E]/30 bg-[#E0A12E]/10 text-[#E0A12E]"
-                              : isConfirmed
-                              ? "border-[#4ADE80]/30 bg-[#4ADE80]/10 text-[#4ADE80]"
-                              : "border-[#60A5FA]/30 bg-[#60A5FA]/10 text-[#60A5FA]"
-                          }`}
-                        >
-                          {isRegeneratingView ? "생성 중" : isConfirmed ? "확정" : "검수 필요"}
-                        </span>
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          <button
+                            type="button"
+                            disabled={isLocked}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openViewModifier(view.id);
+                            }}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#2A2E36] disabled:hover:text-neutral-300"
+                            title={isLocked ? "잠금 해제 후 수정할 수 있습니다" : `${view.label} 수정`}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRegenerateView(view.id);
+                            }}
+                            disabled={isLocked || isRegeneratingView}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+                            title="뷰 재생성"
+                          >
+                            {isRegeneratingView ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleLock(view.id);
+                            }}
+                            className={`flex h-8 w-8 items-center justify-center rounded-lg border transition ${
+                              isLocked
+                                ? "border-[#E0A12E]/45 bg-[#E0A12E]/10 text-[#E0A12E]"
+                                : "border-[#2A2E36] bg-[#141518] text-neutral-300 hover:text-white"
+                            }`}
+                            title={isLocked ? "잠금 해제" : "뷰 잠금"}
+                          >
+                            {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                          </button>
+                        </div>
                       </div>
 
                       <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center rounded-lg bg-white">
                         <img
-                          src={view.img}
+                          src={`${view.img}?version=${viewVersions[view.id]}`}
                           alt={`오크 ${view.label}`}
                           className={`max-h-full max-w-full object-contain p-2 transition duration-300 ${
                             isRegeneratingView ? "scale-95 opacity-30 blur-sm" : "opacity-100"
                           }`}
                         />
+                        {consistencyArea && (
+                          <div
+                            className={`pointer-events-none absolute rounded-lg border-2 border-dashed transition ${
+                              isSelectedIssueResolved
+                                ? "border-[#4ADE80] bg-[#4ADE80]/12"
+                                : "border-[#E0A12E] bg-[#E0A12E]/14 shadow-[0_0_18px_rgba(224,161,46,0.3)]"
+                            }`}
+                            style={consistencyArea}
+                          />
+                        )}
                         {isRegeneratingView && (
                           <div className="absolute inset-0 flex items-center justify-center">
                             <span className="rounded-full border border-[#E0A12E]/30 bg-black/55 px-3 py-1.5 text-[14px] font-medium text-[#E0A12E] backdrop-blur-sm">
@@ -866,47 +1221,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                         )}
                       </div>
 
-                      <div className="relative z-10 mt-2 flex items-center gap-2 opacity-0 transition group-hover:opacity-100">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRegenerateView(view.id);
-                          }}
-                          disabled={isLocked || isRegeneratingView}
-                          className="flex h-8 flex-1 items-center justify-center gap-2 rounded-lg border border-[#2A2E36] bg-[#141518] text-[14px] font-medium text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
-                        >
-                          {isRegeneratingView ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
-                          재생성
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleLock(view.id);
-                          }}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:text-white"
-                          title={isLocked ? "잠금 해제" : "뷰 잠금"}
-                        >
-                          {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleConfirm(view.id);
-                          }}
-                          className={`flex h-8 w-8 items-center justify-center rounded-lg border transition ${
-                            isConfirmed
-                              ? "border-[#4ADE80]/40 bg-[#4ADE80]/10 text-[#4ADE80]"
-                              : "border-[#2A2E36] bg-[#141518] text-neutral-300 hover:text-white"
-                          }`}
-                          title="뷰 확정"
-                        >
-                          <Check className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </motion.button>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -921,7 +1236,11 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                     <p className="mt-1 text-[14px] font-medium text-neutral-400">{selectedView.focus}</p>
                   </div>
                   <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-[#2A2E36] bg-white">
-                    <img src={selectedView.img} alt="" className="h-full w-full object-contain p-1" />
+                    <img
+                      src={`${selectedView.img}?version=${viewVersions[selectedView.id]}`}
+                      alt=""
+                      className="h-full w-full object-contain p-1"
+                    />
                   </div>
                 </div>
               </div>
@@ -929,82 +1248,179 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
               <div className="min-h-0 flex-1 overflow-y-auto p-4 custom-scrollbar">
                 <div className="space-y-3">
                   <section className="rounded-xl border border-[#1F2329] bg-[#111317] p-3">
-                    <div className="mb-3 flex items-center justify-between">
+                    <div className="mb-3 flex items-center justify-between gap-3">
                       <h3 className="flex items-center gap-2 text-[16px] font-medium text-white">
-                        <SlidersHorizontal className="h-4 w-4 text-[#E0A12E]" />
-                        뷰별 수정 요청
+                        <Eye className="h-4 w-4 text-[#E0A12E]" />
+                        일관성 점검
                       </h3>
-                      <button className="flex items-center gap-1.5 rounded-lg border border-[#2A2E36] px-2.5 py-1.5 text-[14px] font-medium text-neutral-400 transition hover:text-white">
-                        <Copy className="h-3.5 w-3.5" /> 복사
-                      </button>
+                      <span className="text-[18px] font-medium text-[#E0A12E]">{consistencyScore}%</span>
                     </div>
-                    <textarea
-                      value={viewPrompts[selectedViewId]}
-                      onChange={(e) => setViewPrompts((prev) => ({ ...prev, [selectedViewId]: e.target.value }))}
-                      className="min-h-[112px] w-full resize-none rounded-lg border border-[#2A2E36] bg-[#050505] p-3 text-[15px] leading-[1.55] text-white outline-none placeholder:text-neutral-500 focus:border-[#E0A12E]/60"
-                    />
-                    <div className="mt-3 flex gap-2">
-                      <button
-                        onClick={() => handleRegenerateView(selectedViewId)}
-                        disabled={lockedViews.has(selectedViewId) || isSelectedRegenerating}
-                        className="flex h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-[#E0A12E] text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {isSelectedRegenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
-                        선택 뷰 재생성
-                      </button>
-                      <button
-                        onClick={() => toggleLock(selectedViewId)}
-                        className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:text-white"
-                      >
-                        {lockedViews.has(selectedViewId) ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
-                      </button>
+
+                    <div className="mb-3 rounded-lg border border-[#2A2E36] bg-[#0A0B0D] p-3">
+                      <div className="flex items-center justify-between text-[14px]">
+                        <span className="text-neutral-400">전체 일관성</span>
+                        <span className="text-neutral-300">
+                          수정 필요 {unresolvedConsistencyIssues.length}개
+                        </span>
+                      </div>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#20232A]">
+                        <div
+                          className="h-full rounded-full bg-[#E0A12E] transition-all duration-500"
+                          style={{ width: `${consistencyScore}%` }}
+                        />
+                      </div>
                     </div>
+
+                    {visibleConsistencyIssues.length > 0 ? (
+                      <div className="space-y-2">
+                        {visibleConsistencyIssues.map((issue) => {
+                          const isActive = selectedConsistencyIssue?.id === issue.id;
+                          const isResolved = resolvedConsistencyIssues.has(issue.id);
+                          const isCorrecting = correctingConsistencyIssueId === issue.id;
+                          const isTargetLocked = lockedViews.has(issue.targetView);
+                          return (
+                            <div
+                              key={issue.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => handleSelectConsistencyIssue(issue)}
+                              onKeyDown={(event) => {
+                                if (event.key !== "Enter" && event.key !== " ") return;
+                                event.preventDefault();
+                                handleSelectConsistencyIssue(issue);
+                              }}
+                              className={`group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition ${
+                                isActive
+                                  ? "border-[#E0A12E] bg-[#E0A12E]/8"
+                                  : "border-[#2A2E36] bg-[#0A0B0D] hover:border-[#555A64]"
+                              }`}
+                            >
+                              <div className="flex min-w-0 flex-1 items-start gap-2.5">
+                                {isResolved ? (
+                                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#4ADE80]" />
+                                ) : (
+                                  <AlertTriangle
+                                    className={`mt-0.5 h-4 w-4 shrink-0 ${
+                                      issue.severity === "high" ? "text-[#F97316]" : "text-[#E0A12E]"
+                                    }`}
+                                  />
+                                )}
+                                <div className="min-w-0">
+                                  <p className={`text-[14px] font-medium ${isResolved ? "text-neutral-400" : "text-white"}`}>
+                                    {issue.title}
+                                  </p>
+                                  <p className="mt-1 text-[14px] leading-5 text-neutral-500">{issue.detail}</p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                disabled={isResolved || isCorrecting || isTargetLocked || correctingConsistencyIssueId !== null}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleAutoCorrectConsistencyIssue(issue);
+                                }}
+                                className={`flex shrink-0 items-center gap-1 text-[14px] font-medium transition ${
+                                  isResolved
+                                    ? "text-[#4ADE80] opacity-100"
+                                    : isCorrecting
+                                      ? "text-[#E0A12E] opacity-100"
+                                      : isTargetLocked
+                                        ? "text-neutral-600 opacity-0 group-hover:opacity-100"
+                                        : "text-[#E0A12E] opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                } disabled:cursor-not-allowed`}
+                              >
+                                {isCorrecting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                {isResolved ? "적용 완료" : isCorrecting ? "적용 중" : isTargetLocked ? "잠금됨" : "바로 적용"}
+                                {!isResolved && !isCorrecting && !isTargetLocked && <ChevronRight className="h-4 w-4" />}
+                              </button>
+                            </div>
+                          );
+                        })}
+
+                        {selectedConsistencyIssue && (
+                          <div className="rounded-lg border border-[#2A2E36] bg-[#0A0B0D] p-3">
+                            <div className="mb-2 flex items-center justify-between">
+                              <span className="text-[14px] font-medium text-neutral-300">
+                                {TURNAROUND_VIEWS.find((view) => view.id === selectedConsistencyIssue.baseView)?.label}
+                                <span className="mx-1.5 text-neutral-600">/</span>
+                                {TURNAROUND_VIEWS.find((view) => view.id === selectedConsistencyIssue.targetView)?.label}
+                              </span>
+                              <span className="text-[14px] text-neutral-500">겹쳐보기</span>
+                            </div>
+
+                            <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-[#2A2E36] bg-white">
+                              <img
+                                src={TURNAROUND_VIEWS.find((view) => view.id === selectedConsistencyIssue.baseView)?.img}
+                                alt=""
+                                className="absolute inset-0 h-full w-full object-contain p-2"
+                              />
+                              <img
+                                src={TURNAROUND_VIEWS.find((view) => view.id === selectedConsistencyIssue.targetView)?.img}
+                                alt=""
+                                className="absolute inset-0 h-full w-full object-contain p-2"
+                                style={{ opacity: comparisonOpacity / 100 }}
+                              />
+                            </div>
+
+                            <div className="mt-2 flex items-center gap-3">
+                              <span className="text-[14px] text-neutral-500">투명도</span>
+                              <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={comparisonOpacity}
+                                onChange={(event) => setComparisonOpacity(Number(event.target.value))}
+                                className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-[#252932] accent-[#E0A12E]"
+                              />
+                              <span className="w-9 text-right text-[14px] text-neutral-400">{comparisonOpacity}%</span>
+                            </div>
+
+                            <div className="mt-3 grid grid-cols-[1fr_1fr_auto] gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleAutoCorrectConsistencyIssue(selectedConsistencyIssue)}
+                                disabled={
+                                  correctingConsistencyIssueId !== null ||
+                                  lockedViews.has(selectedConsistencyIssue.targetView) ||
+                                  resolvedConsistencyIssues.has(selectedConsistencyIssue.id)
+                                }
+                                className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#E0A12E] px-2 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                {correctingConsistencyIssueId === selectedConsistencyIssue.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Wand2 className="h-4 w-4" />
+                                )}
+                                {resolvedConsistencyIssues.has(selectedConsistencyIssue.id) ? "보정 완료" : "AI 보정"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleAddConsistencyIssueToPrompt(selectedConsistencyIssue)}
+                                className="flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[#2A2E36] bg-[#141518] px-2 text-[14px] font-medium text-neutral-300 transition hover:text-white"
+                              >
+                                <MessageSquarePlus className="h-4 w-4" />
+                                수정 요청
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleIgnoreConsistencyIssue(selectedConsistencyIssue.id)}
+                                className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-400 transition hover:text-white"
+                                title="이 문제 무시"
+                              >
+                                <EyeOff className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 rounded-lg border border-[#4ADE80]/30 bg-[#4ADE80]/8 p-3 text-[14px] text-[#4ADE80]">
+                        <CheckCircle2 className="h-4 w-4" />
+                        확인할 일관성 문제가 없습니다.
+                      </div>
+                    )}
                   </section>
 
-                  <section className="rounded-xl border border-[#1F2329] bg-[#111317] p-3">
-                    <h3 className="mb-3 flex items-center gap-2 text-[16px] font-medium text-white">
-                      <Eye className="h-4 w-4 text-[#E0A12E]" />
-                      일관성 점검
-                    </h3>
-                    <div className="space-y-3">
-                      {CONSISTENCY_ITEMS.map((item) => (
-                        <div key={item.label}>
-                          <div className="mb-1 flex justify-between text-[14px]">
-                            <span className="font-medium text-neutral-300">{item.label}</span>
-                            <span className="font-mono text-neutral-400">{item.score}%</span>
-                          </div>
-                          <div className="h-1.5 overflow-hidden rounded-full bg-[#20232A]">
-                            <div className="h-full rounded-full bg-[#E0A12E]" style={{ width: `${item.score}%` }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="rounded-xl border border-[#1F2329] bg-[#111317] p-3">
-                    <h3 className="mb-3 flex items-center gap-2 text-[16px] font-medium text-white">
-                      <ImageIcon className="h-4 w-4 text-[#E0A12E]" />
-                      확정 상태
-                    </h3>
-                    <div className="grid grid-cols-4 gap-2">
-                      {TURNAROUND_VIEWS.map((view) => {
-                        const isConfirmed = confirmedViews.has(view.id);
-                        return (
-                          <button
-                            key={view.id}
-                            onClick={() => toggleConfirm(view.id)}
-                            className={`rounded-lg border px-2 py-2 text-[14px] font-medium transition ${
-                              isConfirmed
-                                ? "border-[#4ADE80]/40 bg-[#4ADE80]/10 text-[#4ADE80]"
-                                : "border-[#2A2E36] bg-[#0A0B0D] text-neutral-400 hover:text-white"
-                            }`}
-                          >
-                            {view.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </section>
                 </div>
               </div>
 
@@ -1561,6 +1977,222 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
             </div>
           </div>
         )}
+
+        <AnimatePresence>
+          {editingView && editingViewId && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onMouseDown={closeViewModifier}
+              className="fixed inset-0 z-[180] flex items-center justify-center bg-black/60 p-5 backdrop-blur-[2px]"
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 14, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 14, scale: 0.98 }}
+                transition={{ duration: 0.18 }}
+                onMouseDown={(event) => event.stopPropagation()}
+                className="flex max-h-[92vh] w-full max-w-[1240px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_28px_80px_rgba(0,0,0,0.72)]"
+              >
+                <div className="flex shrink-0 items-center justify-between border-b border-[#1F2329] px-5 py-4">
+                  <div>
+                    <p className="text-[14px] font-medium text-[#E0A12E]">턴어라운드 수정</p>
+                    <h3 className="mt-0.5 text-[18px] font-medium text-white">{editingView.label}</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeViewModifier}
+                    className="rounded-md p-2 text-neutral-400 transition hover:bg-white/5 hover:text-white"
+                    aria-label="수정 팝업 닫기"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div
+                  className={`grid min-h-0 flex-1 overflow-hidden ${
+                    editingViewHistory.length > 1
+                      ? "grid-cols-[minmax(0,1fr)_220px]"
+                      : "grid-cols-1"
+                  }`}
+                >
+                  <div className="min-h-0 overflow-y-auto p-5 custom-scrollbar">
+                    <div
+                      ref={viewEditCanvasRef}
+                      onPointerDown={handleViewEditPointerDown}
+                      onPointerMove={handleViewEditPointerMove}
+                      onPointerUp={handleViewEditPointerUp}
+                      onPointerCancel={handleViewEditPointerUp}
+                      className={`relative h-[clamp(360px,55vh,620px)] touch-none overflow-hidden rounded-lg border bg-white ${
+                        isViewAreaSelectionEnabled
+                          ? "cursor-crosshair border-[#E0A12E]"
+                          : "border-[#2A2E36]"
+                      }`}
+                    >
+                      <img
+                        src={`${editingView.img}?version=${activeEditingViewVersion}`}
+                        alt={`${editingView.label} 수정 이미지`}
+                        draggable={false}
+                        className="pointer-events-none h-full w-full select-none object-contain"
+                      />
+
+                      <button
+                        type="button"
+                        disabled={regeneratingViews.has(editingViewId)}
+                        onPointerDown={(event) => event.stopPropagation()}
+                        onClick={() => setIsViewAreaSelectionEnabled((current) => !current)}
+                        className={`absolute left-4 top-4 z-20 flex items-center gap-2 rounded-lg border px-3 py-2 text-[14px] font-medium shadow-lg backdrop-blur-md transition ${
+                          isViewAreaSelectionEnabled
+                            ? "border-[#E0A12E] bg-[#E0A12E] text-black"
+                            : "border-white/15 bg-black/65 text-white hover:bg-black/80"
+                        }`}
+                      >
+                        <PenTool className="h-4 w-4" />
+                        영역 선택
+                      </button>
+
+                      {isViewAreaSelectionEnabled && viewEditSelection.length === 0 && (
+                        <div className="pointer-events-none absolute inset-x-0 bottom-5 z-20 flex justify-center">
+                          <span className="rounded-full bg-black/70 px-3 py-1.5 text-[14px] text-white backdrop-blur">
+                            수정할 영역의 경계를 따라 그려주세요
+                          </span>
+                        </div>
+                      )}
+
+                      {viewEditSelection.length > 0 && (
+                        <svg
+                          className="pointer-events-none absolute inset-0 z-10 h-full w-full"
+                          viewBox="0 0 100 100"
+                          preserveAspectRatio="none"
+                          aria-hidden="true"
+                        >
+                          {hasViewEditSelection && !isDrawingViewArea ? (
+                            <polygon
+                              points={viewEditSelection.map((point) => `${point.left},${point.top}`).join(" ")}
+                              fill="rgba(224,161,46,0.22)"
+                              stroke="#E0A12E"
+                              strokeWidth="0.6"
+                              strokeDasharray="1.5 1"
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          ) : (
+                            <polyline
+                              points={viewEditSelection.map((point) => `${point.left},${point.top}`).join(" ")}
+                              fill="none"
+                              stroke="#E0A12E"
+                              strokeWidth="0.8"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          )}
+                        </svg>
+                      )}
+
+                      {regeneratingViews.has(editingViewId) && (
+                        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/70 text-white backdrop-blur-sm">
+                          <Loader2 className="h-8 w-8 animate-spin text-[#E0A12E]" />
+                          <span className="text-[15px] font-medium">수정 이미지 생성 중</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-5">
+                      <label htmlFor="turnaround-view-edit-prompt" className="text-[15px] font-medium text-white">
+                        수정할 내용
+                      </label>
+                      <textarea
+                        id="turnaround-view-edit-prompt"
+                        autoFocus
+                        value={viewEditDraft}
+                        onChange={(event) => setViewEditDraft(event.target.value)}
+                        placeholder="예: 어깨 갑옷 크기를 정면과 동일하게 맞춰줘"
+                        className="mt-2 h-24 w-full resize-none rounded-lg border border-[#343842] bg-[#111317] px-3.5 py-3 text-[14px] leading-6 text-white outline-none transition placeholder:text-neutral-500 focus:border-[#E0A12E]"
+                      />
+                    </div>
+                  </div>
+
+                  {editingViewHistory.length > 1 && (
+                    <aside className="min-h-0 overflow-y-auto border-l border-[#1F2329] bg-[#08090B] p-3 custom-scrollbar">
+                      <div className="space-y-3">
+                        {editingViewHistory.map((version) => {
+                          const isActive = activeEditingViewVersion === version.id;
+                          return (
+                            <button
+                              key={version.id}
+                              type="button"
+                              onClick={() => handleSelectViewVersion(version)}
+                              aria-label={`${editingView.label} 버전 ${version.id + 1} 선택`}
+                              className={`w-full overflow-hidden rounded-lg border transition ${
+                                isActive ? "border-[#E0A12E]" : "border-[#2A2E36] hover:border-[#555A64]"
+                              }`}
+                            >
+                              <div className="relative aspect-[4/3] overflow-hidden bg-white">
+                                <img
+                                  src={`${editingView.img}?version=${version.id}`}
+                                  alt=""
+                                  className="h-full w-full object-contain"
+                                />
+                                {isActive && (
+                                  <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#E0A12E] text-black shadow-lg">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </aside>
+                  )}
+                </div>
+
+                <div className="flex shrink-0 items-center justify-between gap-4 border-t border-[#1F2329] px-5 py-4">
+                  <p className="text-[14px] text-neutral-500">
+                    {lockedViews.has(editingViewId)
+                      ? "잠금 해제 후 수정할 수 있습니다."
+                      : hasViewEditSelection
+                        ? "선택한 영역을 기준으로 수정합니다."
+                        : "영역을 선택하지 않으면 전체 이미지를 수정합니다."}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={closeViewModifier}
+                      className="rounded-lg border border-[#2A2E36] px-4 py-2.5 text-[14px] font-medium text-neutral-300 transition hover:bg-white/5 hover:text-white"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      disabled={
+                        !viewEditDraft.trim() ||
+                        lockedViews.has(editingViewId) ||
+                        regeneratingViews.has(editingViewId)
+                      }
+                      onClick={handleRegenerateModifiedView}
+                      className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-[14px] font-medium transition ${
+                        viewEditDraft.trim() &&
+                        !lockedViews.has(editingViewId) &&
+                        !regeneratingViews.has(editingViewId)
+                          ? "bg-[#E0A12E] text-black hover:bg-[#F0B43A]"
+                          : "cursor-not-allowed bg-[#202126] text-neutral-500"
+                      }`}
+                    >
+                      {regeneratingViews.has(editingViewId) ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RotateCcw className="h-4 w-4" />
+                      )}
+                      재생성
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

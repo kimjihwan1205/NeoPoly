@@ -28,6 +28,7 @@ import SupportPage from './components/SupportPage';
 import TurnaroundPage from './components/TurnaroundPage';
 import ModelingGenerationPage from './components/ModelingGenerationPage';
 import { UserProfile } from './types';
+import { isPersistentModelingWorkflowPage } from './workflowPageCache';
 
 // --- Constants & Updated Asset Data ---
 
@@ -3912,6 +3913,9 @@ export default function App() {
     const validPages: PageType[] = ['home', 'uploads', 'purchases', 'favorites', 'settings', 'board', 'projects', 'note-editor', 'studio', 'support', 'full_workflow', 'full_workflow_chat', 'turnaround', 'modeling_generation', 'product_detail'];
     return validPages.includes(hashPage) ? hashPage : 'home';
   });
+  const [visitedModelingWorkflowPages, setVisitedModelingWorkflowPages] = useState<Set<PageType>>(
+    () => new Set(isPersistentModelingWorkflowPage(currentPage) ? [currentPage] : []),
+  );
   const [activeNav, setActiveNav] = useState<'market' | 'art' | 'studio' | 'projects' | 'support' | null>(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedProductId, setSelectedProductId] = useState<number>(() => {
@@ -4110,6 +4114,19 @@ export default function App() {
     setCurrentPage('note-editor');
   };
 
+  const navigateModelingWorkflow = (page: string) => {
+    const nextPage = page as PageType;
+    if (isPersistentModelingWorkflowPage(nextPage)) {
+      setVisitedModelingWorkflowPages((current) => {
+        if (current.has(nextPage)) return current;
+        const next = new Set(current);
+        next.add(nextPage);
+        return next;
+      });
+    }
+    setCurrentPage(nextPage);
+  };
+
   const handleHeaderNavigate = (page: PageType) => {
     if (page === 'board') {
       setFocusedBoardView('all');
@@ -4147,10 +4164,19 @@ export default function App() {
         <AccountSettingsPage userProfile={userProfile} setUserProfile={setUserProfile} />
       ) : currentPage === 'studio' ? (
         <AIStudioPage onNavigate={(page) => setCurrentPage(page as PageType)} />
-      ) : currentPage === 'turnaround' ? (
-        <TurnaroundPage onNavigate={(page) => setCurrentPage(page as PageType)} />
-      ) : currentPage === 'modeling_generation' ? (
-        <ModelingGenerationPage onNavigate={(page) => setCurrentPage(page as PageType)} />
+      ) : isPersistentModelingWorkflowPage(currentPage) ? (
+        <div className="flex-1">
+          {visitedModelingWorkflowPages.has('turnaround') && (
+            <div className={currentPage === 'turnaround' ? 'block' : 'hidden'} aria-hidden={currentPage !== 'turnaround'}>
+              <TurnaroundPage onNavigate={navigateModelingWorkflow} />
+            </div>
+          )}
+          {visitedModelingWorkflowPages.has('modeling_generation') && (
+            <div className={currentPage === 'modeling_generation' ? 'block' : 'hidden'} aria-hidden={currentPage !== 'modeling_generation'}>
+              <ModelingGenerationPage onNavigate={navigateModelingWorkflow} />
+            </div>
+          )}
+        </div>
       ) : currentPage === 'product_detail' ? (
         <ProductDetailPage
           assetId={selectedProductId}
@@ -4163,9 +4189,9 @@ export default function App() {
       ) : currentPage === 'support' ? (
         <SupportPage />
       ) : currentPage === 'full_workflow' ? (
-        <FullWorkflowPage onNavigate={(page) => setCurrentPage(page as PageType)} showIntroOverlay={true} />
+        <FullWorkflowPage onNavigate={navigateModelingWorkflow} showIntroOverlay={true} />
       ) : currentPage === 'full_workflow_chat' ? (
-        <FullWorkflowPage onNavigate={(page) => setCurrentPage(page as PageType)} showIntroOverlay={false} />
+        <FullWorkflowPage onNavigate={navigateModelingWorkflow} showIntroOverlay={false} />
       ) : (
         <main className="flex-1 pb-32 bg-bg-dark">
           <Hero onNavigate={(page) => setCurrentPage(page as PageType)} />
