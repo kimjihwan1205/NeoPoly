@@ -7,7 +7,7 @@ import { WORKFLOW_HEADER_CLASS } from "../workflowLayout";
 import WorkflowProgress from "./WorkflowProgress";
 
 type WorkflowHeaderProps = {
-  title: string;
+  title: ReactNode;
   section: WorkflowProgressSection;
   currentStep: WorkflowProgressStep;
   actions?: ReactNode;
@@ -23,9 +23,15 @@ export default function WorkflowHeader({
 }: WorkflowHeaderProps) {
   return (
     <header className={`${WORKFLOW_HEADER_CLASS} ${className}`}>
-      <h1 className="truncate text-[22px] font-medium tracking-tight text-white">
-        {title}
-      </h1>
+      <div className="min-w-0">
+        {typeof title === "string" ? (
+          <h1 className="truncate text-[22px] font-medium tracking-tight text-white">
+            {title}
+          </h1>
+        ) : (
+          title
+        )}
+      </div>
       <div className="flex shrink-0 items-center gap-3">
         {actions}
         <WorkflowProgress section={section} currentStep={currentStep} />

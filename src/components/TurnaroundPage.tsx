@@ -6,8 +6,6 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
-  Layers,
-  Loader2,
   Lock,
   Maximize2,
   MessageSquarePlus,
@@ -32,9 +30,14 @@ import {
 } from "../turnaroundComparison";
 import WorkflowHeader from "./WorkflowHeader";
 import WorkflowSidebarHeader from "./WorkflowSidebarHeader";
+import LoadingIndicator from "./LoadingIndicator";
 import {
   filterActiveConsistencyIssues,
+  getInitialTurnaroundTab,
   getInitialModuleSelection,
+  getTurnaroundHeaderPresentation,
+  getTurnaroundHeaderTabState,
+  requestModelGeneration,
 } from "../workflowState";
 
 interface TurnaroundPageProps {
@@ -391,9 +394,13 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
     if (typeof window === "undefined") return "turnaround";
 
     const returnTab = window.sessionStorage.getItem("neopoly:return-to-turnaround-tab");
+    const rawFlowState = window.sessionStorage.getItem("neopoly:turnaround-flow");
     window.sessionStorage.removeItem("neopoly:return-to-turnaround-tab");
-    return returnTab === "modular" ? "modular" : "turnaround";
+    return getInitialTurnaroundTab(returnTab, rawFlowState);
   });
+  const [isModularAccessible, setIsModularAccessible] = useState(
+    () => expertTab === "modular" || Boolean(initialModuleSession),
+  );
   const [selectedViewId, setSelectedViewId] = useState<ViewId>("front");
   const [viewPrompts, setViewPrompts] = useState<Record<ViewId, string>>(() =>
     TURNAROUND_VIEWS.reduce(
@@ -500,18 +507,52 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
     setName: selectedPartData.setName,
   };
   const isAreaSelectMode = areaSelectionMode !== null;
-  const [shouldProceedToModular] = useState(() => {
-    if (typeof window === "undefined") return false;
+  const [workflowSelection] = useState(() => {
+    if (typeof window === "undefined") {
+      return {
+        isTurnaroundSelected: expertTab === "turnaround",
+        isModularSelected: expertTab === "modular",
+      };
+    }
 
     const rawFlowState = window.sessionStorage.getItem("neopoly:turnaround-flow");
-    if (!rawFlowState) return false;
+    if (!rawFlowState) {
+      return {
+        isTurnaroundSelected: expertTab === "turnaround",
+        isModularSelected: expertTab === "modular",
+      };
+    }
 
     try {
-      return Boolean((JSON.parse(rawFlowState) as { isModularSelected?: boolean }).isModularSelected);
+      const parsed = JSON.parse(rawFlowState) as {
+        startTab?: "turnaround" | "modular";
+        isTurnaroundSelected?: boolean;
+        isModularSelected?: boolean;
+      };
+      return {
+        isTurnaroundSelected:
+          parsed.isTurnaroundSelected ??
+          parsed.startTab !== "modular",
+        isModularSelected: Boolean(parsed.isModularSelected),
+      };
     } catch {
-      return false;
+      return {
+        isTurnaroundSelected: expertTab === "turnaround",
+        isModularSelected: expertTab === "modular",
+      };
     }
   });
+  const shouldProceedToModular = workflowSelection.isModularSelected;
+  const turnaroundHeaderTabState = getTurnaroundHeaderTabState(
+    shouldProceedToModular,
+    isModularAccessible,
+    expertTab,
+  );
+  const turnaroundHeaderPresentation = getTurnaroundHeaderPresentation(
+    workflowSelection.isTurnaroundSelected,
+    workflowSelection.isModularSelected,
+    expertTab,
+  );
 
   const confirmedModuleParts = moduleParts.filter((part) => generatedModules.includes(part.id));
   const moduleSetParts = confirmedModuleParts.length > 0 ? confirmedModuleParts : moduleParts;
@@ -1113,6 +1154,9 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   };
 
   const handleCompleteModular = () => {
+    if (typeof window !== "undefined") {
+      requestModelGeneration(window.sessionStorage, "modular");
+    }
     onNavigate?.("modeling_generation");
   };
 
@@ -1128,32 +1172,55 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
         }`}
       >
         <WorkflowHeader
-          title={expertTab === "turnaround" ? "턴어라운드" : "이미지 모듈화"}
+          title={
+            turnaroundHeaderPresentation.mode === "title" ? (
+              turnaroundHeaderPresentation.title
+            ) : (
+              <div
+                role="tablist"
+                aria-label="이미지 제작 단계"
+                className="flex items-center gap-1 rounded-lg border border-[#2A2E36] bg-[#0A0B0D] p-1"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={expertTab === "turnaround"}
+                  onClick={() => setExpertTab("turnaround")}
+                  className={`flex h-9 items-center rounded-md px-4 text-[14px] font-medium transition ${
+                    expertTab === "turnaround"
+                      ? "bg-[#E0A12E] text-black"
+                      : "text-neutral-400 hover:bg-[#141518] hover:text-white"
+                  }`}
+                >
+                  턴어라운드
+                </button>
+                {turnaroundHeaderTabState.showModularTab && (
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={expertTab === "modular"}
+                    disabled={turnaroundHeaderTabState.isModularTabDisabled}
+                    onClick={() => setExpertTab("modular")}
+                    title={
+                      turnaroundHeaderTabState.isModularTabDisabled
+                        ? "턴어라운드를 완료하면 이동할 수 있습니다"
+                        : "이미지 모듈화로 이동"
+                    }
+                    className={`flex h-9 items-center rounded-md px-4 text-[14px] font-medium transition ${
+                      expertTab === "modular"
+                        ? "bg-[#E0A12E] text-black"
+                        : "text-neutral-400 hover:bg-[#141518] hover:text-white disabled:cursor-not-allowed disabled:text-neutral-700 disabled:hover:bg-transparent"
+                    }`}
+                  >
+                    이미지 모듈화
+                  </button>
+                )}
+              </div>
+            )
+          }
           section="image"
           currentStep={expertTab === "turnaround" ? "turnaround" : "modular"}
           className="col-start-1 row-start-1"
-          actions={
-            <div className="flex items-center gap-2 rounded-xl border border-[#2A2E36] bg-[#0A0B0D] p-1">
-              <button
-                onClick={() => setExpertTab("turnaround")}
-                className={`flex h-10 items-center gap-2 rounded-lg px-4 text-[14px] font-medium transition ${
-                  expertTab === "turnaround" ? "bg-[#E0A12E] text-black" : "text-neutral-400 hover:bg-[#141518] hover:text-white"
-                }`}
-              >
-                <RotateCcw className="h-4 w-4" />
-                턴어라운드
-              </button>
-              <button
-                onClick={() => setExpertTab("modular")}
-                className={`flex h-10 items-center gap-2 rounded-lg px-4 text-[14px] font-medium transition ${
-                  expertTab === "modular" ? "bg-[#E0A12E] text-black" : "text-neutral-400 hover:bg-[#141518] hover:text-white"
-                }`}
-              >
-                <Layers className="h-4 w-4" />
-                모듈화
-              </button>
-            </div>
-          }
         />
 
         {expertTab === "turnaround" ? (
@@ -1215,7 +1282,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
                             title="뷰 재생성"
                           >
-                            {isRegeneratingView ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                            {isRegeneratingView ? <LoadingIndicator tone="current" /> : <RotateCcw className="h-4 w-4" />}
                           </button>
                           <button
                             type="button"
@@ -1366,7 +1433,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                         : "text-[#E0A12E] opacity-0 group-hover:opacity-100 focus:opacity-100"
                                 } disabled:cursor-not-allowed`}
                               >
-                                {isCorrecting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                {isCorrecting && <LoadingIndicator tone="current" />}
                                 {isResolved ? "적용 완료" : isCorrecting ? "적용 중" : isTargetLocked ? "잠금됨" : "바로 적용"}
                                 {!isResolved && !isCorrecting && !isTargetLocked && <ChevronRight className="h-4 w-4" />}
                               </button>
@@ -1442,7 +1509,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                 className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#E0A12E] px-2 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 {correctingConsistencyIssueId === selectedConsistencyIssue.id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  <LoadingIndicator tone="current" />
                                 ) : (
                                   <Wand2 className="h-4 w-4" />
                                 )}
@@ -1490,8 +1557,12 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                   <button
                     onClick={() => {
                       if (shouldProceedToModular) {
+                        setIsModularAccessible(true);
                         setExpertTab("modular");
                         return;
+                      }
+                      if (typeof window !== "undefined") {
+                        requestModelGeneration(window.sessionStorage, "turnaround");
                       }
                       onNavigate?.("modeling_generation");
                     }}
@@ -1588,8 +1659,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                   {isBuildingModuleSet && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
                       <div className="rounded-xl border border-[#E0A12E]/30 bg-black/70 px-5 py-4 text-center shadow-2xl">
-                        <Loader2 className="mx-auto mb-2 h-7 w-7 animate-spin text-[#E0A12E]" />
-                        <p className="text-[15px] font-medium text-white">{"AI\uac00 \uc7a5\ube44 \uc138\ud2b8\ub97c \uad6c\uc131 \uc911\uc785\ub2c8\ub2e4"}</p>
+                        <LoadingIndicator size="md" label={"\u0041\u0049\uac00 \uc7a5\ube44 \uc138\ud2b8\ub97c \uad6c\uc131 \uc911\uc785\ub2c8\ub2e4"} layout="stacked" />
                       </div>
                     </div>
                   )}
@@ -1704,7 +1774,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                         disabled={draftPath.length < 3 || isAddingModuleScan || isBuildingModuleSet}
                         className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#E0A12E] px-3 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                        {isAddingModuleScan ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+                        {isAddingModuleScan ? <LoadingIndicator tone="current" /> : <Wand2 className="h-4 w-4" />}
                         {"\uc120\ud0dd \uc601\uc5ed \ud655\uc778"}
                       </button>
                   </div>
@@ -1722,8 +1792,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                 />
                 {isBuildingModuleSet ? (
                   <section className="flex min-h-0 flex-1 flex-col items-center justify-center px-8 text-center">
-                    <Loader2 className="mb-4 h-9 w-9 animate-spin text-[#E0A12E]" />
-                    <h2 className="text-[20px] font-medium text-white">{"\ubaa8\ub4c8\ud654 \uc138\ud2b8 \uc0dd\uc131 \uc911"}</h2>
+                    <LoadingIndicator size="lg" label={"\ubaa8\ub4c8\ud654 \uc138\ud2b8 \uc0dd\uc131 \uc911"} layout="stacked" />
                   </section>
                 ) : (
                   <div className="relative grid min-h-0 flex-1 grid-cols-1">
@@ -1731,7 +1800,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                       <div className="min-h-0 flex-1 overflow-y-auto p-4 custom-scrollbar">
                         {!isModuleScanComplete ? (
                           <div className="flex h-full min-h-[260px] items-center justify-center rounded-xl border border-dashed border-[#1F2329] bg-[#050505]">
-                            <Loader2 className="h-6 w-6 animate-spin text-[#E0A12E]" />
+                            <LoadingIndicator size="md" />
                           </div>
                         ) : (
                           <div className="space-y-2.5">
@@ -1811,7 +1880,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               disabled={!isModuleScanComplete || isAddingModuleScan || isModuleListConfirmed}
                               className="flex items-center justify-center gap-1.5 rounded-xl border border-[#2A2E36] bg-[#111317] py-3.5 text-[14px] font-medium text-neutral-300 transition hover:bg-[#171A20] disabled:cursor-not-allowed disabled:opacity-55"
                             >
-                              {isAddingModuleScan ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                              {isAddingModuleScan ? <LoadingIndicator tone="current" /> : <Sparkles className="h-4 w-4" />}
                               {isAddingModuleScan ? "AI \ud6c4\ubcf4 \ucd94\uac00 \uc911" : "\ubaa8\ub4c8 \ucd94\uac00"}
                             </button>
                             <button
@@ -1820,7 +1889,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               disabled={!isModuleScanComplete || isBuildingModuleSet || moduleParts.length === 0}
                               className="flex items-center justify-center gap-2 rounded-xl bg-[#E0A12E] py-3.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                              {isBuildingModuleSet ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                              {isBuildingModuleSet ? <LoadingIndicator tone="current" /> : <Sparkles className="h-4 w-4" />}
                               {"\ub9ac\uc2a4\ud2b8 \ud655\uc815"}
                             </button>
                           </div>
@@ -1950,7 +2019,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             }`}>
                               <div className="mb-3 flex items-center justify-between">
                                 <h4 className="text-[16px] font-medium text-white">{isAddingModuleSet ? "AI Set" : "\uc0c8 \uc138\ud2b8"}</h4>
-                                {isAddingModuleSet ? <Loader2 className="h-4 w-4 animate-spin text-[#E0A12E]" /> : <SlidersHorizontal className="h-4 w-4 text-neutral-500" />}
+                                {isAddingModuleSet ? <LoadingIndicator /> : <SlidersHorizontal className="h-4 w-4 text-neutral-500" />}
                               </div>
                               <div className="flex flex-1 flex-col justify-center rounded-lg border border-dashed border-[#2A2E36] p-3 text-center">
                                 {isAddingModuleSet ? (
@@ -2221,9 +2290,8 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                       )}
 
                       {regeneratingViews.has(editingViewId) && (
-                        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/70 text-white backdrop-blur-sm">
-                          <Loader2 className="h-8 w-8 animate-spin text-[#E0A12E]" />
-                          <span className="text-[15px] font-medium">수정 이미지 생성 중</span>
+                        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 text-white backdrop-blur-sm">
+                          <LoadingIndicator size="md" label="수정 이미지 생성 중" layout="stacked" />
                         </div>
                       )}
                     </div>
@@ -2311,7 +2379,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                       }`}
                     >
                       {regeneratingViews.has(editingViewId) ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <LoadingIndicator tone="current" />
                       ) : (
                         <RotateCcw className="h-4 w-4" />
                       )}

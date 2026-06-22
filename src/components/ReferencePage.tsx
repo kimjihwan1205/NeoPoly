@@ -26,6 +26,7 @@ import {
   X,
 } from "lucide-react";
 import { ASSETS } from "../App";
+import LoadingIndicator from "./LoadingIndicator";
 
 interface ReferencePageProps {
   favorites: number[];
@@ -838,7 +839,7 @@ export default function ReferencePage({
             >
               {isLoadingMore ? (
                 <>
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-primary border-t-transparent" />
+                  <LoadingIndicator />
                   불러오는 중
                 </>
               ) : (

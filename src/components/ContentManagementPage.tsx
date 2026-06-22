@@ -4,14 +4,18 @@ import {
   MoreHorizontal, Eye, Heart, ShoppingCart, Bookmark,
   CreditCard, Settings, HelpCircle, AlertCircle, Clock,
   CheckCircle2, X, Edit, Lock, Trash2, ArrowUpRight, Check, Image as ImageIcon, Box,
-  BarChart3, TrendingUp, WalletCards
+  BarChart3, TrendingUp, WalletCards, MousePointerClick, Repeat2, RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   applyPricing,
   calculateRevenueSummary,
+  calculateRevenueShares,
   formatCompactWon,
+  getRevenueChartPositions,
+  normalizeRevenueTrend,
   parseWon,
+  scaleRevenueTrend,
 } from '../contentManagement';
 
 // Types
@@ -153,6 +157,18 @@ const ITEMS: ContentItem[] = [
   }
 ];
 
+const MONTHLY_REVENUE_BASE = [
+  { month: '1월', revenue: 418000 },
+  { month: '2월', revenue: 486000 },
+  { month: '3월', revenue: 452000 },
+  { month: '4월', revenue: 574000 },
+  { month: '5월', revenue: 642000 },
+];
+
+type RevenuePeriod = '30d' | '3m' | '6m' | 'year';
+type RevenueChannel = 'all' | 'market' | 'license';
+type RevenueSort = 'revenue' | 'sales';
+
 export default function ContentManagementPage() {
   const [items, setItems] = useState<ContentItem[]>(ITEMS);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(ITEMS[0]);
@@ -162,6 +178,10 @@ export default function ContentManagementPage() {
   const [originalPriceDraft, setOriginalPriceDraft] = useState(0);
   const [discountPriceDraft, setDiscountPriceDraft] = useState(0);
   const [saleEnabledDraft, setSaleEnabledDraft] = useState(false);
+  const [isRevenueSummaryOpen, setIsRevenueSummaryOpen] = useState(false);
+  const [revenuePeriod, setRevenuePeriod] = useState<RevenuePeriod>('6m');
+  const [revenueChannel, setRevenueChannel] = useState<RevenueChannel>('all');
+  const [revenueSort, setRevenueSort] = useState<RevenueSort>('revenue');
 
   const revenueRows = useMemo(
     () =>
@@ -178,6 +198,72 @@ export default function ContentManagementPage() {
     () => calculateRevenueSummary(revenueRows),
     [revenueRows],
   );
+  const monthlyRevenueTrend = useMemo(
+    () =>
+      normalizeRevenueTrend([
+        ...MONTHLY_REVENUE_BASE,
+        { month: '6월', revenue: revenueSummary.totalRevenue },
+      ]),
+    [revenueSummary.totalRevenue],
+  );
+  const revenueAnalyticsTrend = useMemo(() => {
+    const periodSeries: Record<RevenuePeriod, Array<{ month: string; revenue: number }>> = {
+      '30d': [
+        { month: '1주', revenue: 142000 },
+        { month: '2주', revenue: 178000 },
+        { month: '3주', revenue: 165000 },
+        { month: '4주', revenue: 242500 },
+      ],
+      '3m': [
+        { month: '4월', revenue: 574000 },
+        { month: '5월', revenue: 642000 },
+        { month: '6월', revenue: revenueSummary.totalRevenue },
+      ],
+      '6m': [
+        ...MONTHLY_REVENUE_BASE,
+        { month: '6월', revenue: revenueSummary.totalRevenue },
+      ],
+      year: [
+        { month: '7월', revenue: 362000 },
+        { month: '8월', revenue: 394000 },
+        { month: '9월', revenue: 421000 },
+        { month: '10월', revenue: 388000 },
+        { month: '11월', revenue: 456000 },
+        { month: '12월', revenue: 502000 },
+        ...MONTHLY_REVENUE_BASE,
+        { month: '6월', revenue: revenueSummary.totalRevenue },
+      ],
+    };
+    const channelRatio: Record<RevenueChannel, number> = {
+      all: 1,
+      market: 0.78,
+      license: 0.22,
+    };
+    return normalizeRevenueTrend(
+      scaleRevenueTrend(periodSeries[revenuePeriod], channelRatio[revenueChannel]),
+    );
+  }, [revenueChannel, revenuePeriod, revenueSummary.totalRevenue]);
+  const selectedPeriodRevenue = revenueAnalyticsTrend.reduce(
+    (sum, point) => sum + point.revenue,
+    0,
+  );
+  const selectedPeriodSales = Math.max(
+    1,
+    Math.round(selectedPeriodRevenue / Math.max(1, revenueSummary.averageOrderValue)),
+  );
+  const revenueShares = useMemo(
+    () =>
+      calculateRevenueShares([
+        { label: '캐릭터', revenue: Math.round(selectedPeriodRevenue * 0.58) },
+        { label: '환경', revenue: Math.round(selectedPeriodRevenue * 0.23) },
+        { label: '소품', revenue: Math.round(selectedPeriodRevenue * 0.19) },
+      ]),
+    [selectedPeriodRevenue],
+  );
+  const previousMonthRevenue = MONTHLY_REVENUE_BASE[MONTHLY_REVENUE_BASE.length - 1].revenue;
+  const revenueGrowthRate = previousMonthRevenue > 0
+    ? Math.round(((revenueSummary.totalRevenue - previousMonthRevenue) / previousMonthRevenue) * 1000) / 10
+    : 0;
 
   const openPriceEditor = (item: ContentItem) => {
     const originalPrice = item.originalPrice ?? item.price ?? 0;
@@ -315,44 +401,99 @@ export default function ContentManagementPage() {
         <div className="px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 w-full flex-1">
           {activeSection === 'revenue' ? (
             <div className="mx-auto w-full max-w-[1500px]">
-              <div className="mb-6 flex items-end justify-between gap-4">
+              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h1 className="text-[28px] font-bold text-white">수익 관리</h1>
-                  <p className="mt-2 text-[14px] text-neutral-400">판매 중인 콘텐츠의 매출 흐름을 확인합니다.</p>
+                  <h1 className="text-[28px] font-bold text-white">수익 분석</h1>
+                  <p className="mt-2 text-[14px] text-neutral-400">기간과 상품 유형별 판매 흐름을 비교합니다.</p>
                 </div>
-                <FilterSelect label="2026년 6월" width="w-[150px]" />
+                <label className="relative">
+                  <span className="sr-only">수익 분석 기간</span>
+                  <select
+                    value={revenuePeriod}
+                    onChange={(event) => setRevenuePeriod(event.target.value as RevenuePeriod)}
+                    className="h-10 min-w-[150px] appearance-none rounded-lg border border-[#2A2E36] bg-[#111215] pl-3 pr-9 text-[14px] text-neutral-300 outline-none transition hover:bg-[#15161A] focus:border-[#E0A12E]"
+                  >
+                    <option value="30d">최근 30일</option>
+                    <option value="3m">최근 3개월</option>
+                    <option value="6m">최근 6개월</option>
+                    <option value="year">최근 1년</option>
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                </label>
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
-                <MonthlyRevenueCard
-                  value={revenueSummary.totalRevenue}
-                  sales={revenueSummary.totalSales}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <RevenueMetric
+                  icon={<TrendingUp className="h-5 w-5" />}
+                  label="선택 기간 수익"
+                  value={formatCompactWon(selectedPeriodRevenue)}
+                  accent
                 />
-                <div className="grid grid-cols-2 gap-4">
-                  <RevenueMetric
-                    icon={<ShoppingCart className="h-5 w-5" />}
-                    label="판매 건수"
-                    value={`${revenueSummary.totalSales}건`}
-                  />
-                  <RevenueMetric
-                    icon={<WalletCards className="h-5 w-5" />}
-                    label="평균 결제액"
-                    value={formatCompactWon(revenueSummary.averageOrderValue)}
-                  />
-                </div>
+                <RevenueMetric
+                  icon={<ShoppingCart className="h-5 w-5" />}
+                  label="판매 건수"
+                  value={`${selectedPeriodSales}건`}
+                />
+                <RevenueMetric
+                  icon={<WalletCards className="h-5 w-5" />}
+                  label="평균 결제액"
+                  value={formatCompactWon(revenueSummary.averageOrderValue)}
+                />
+                <RevenueMetric
+                  icon={<CreditCard className="h-5 w-5" />}
+                  label="정산 예정"
+                  value={formatCompactWon(Math.round(selectedPeriodRevenue * 0.85))}
+                />
+              </div>
+
+              <RevenueAnalyticsChart
+                points={revenueAnalyticsTrend}
+                channel={revenueChannel}
+                onChannelChange={setRevenueChannel}
+              />
+
+              <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+                <RevenueCategoryShare shares={revenueShares} />
+                <SalesEfficiencyPanel channel={revenueChannel} />
               </div>
 
               <section className="mt-6 overflow-hidden rounded-xl border border-[#1C1E24] bg-[#0A0B0D]">
                 <div className="flex items-center justify-between border-b border-[#1C1E24] px-5 py-4">
-                  <h2 className="text-[18px] font-medium text-white">작품별 수익</h2>
-                  <span className="text-[14px] text-neutral-500">최근 30일</span>
+                  <div>
+                    <h2 className="text-[18px] font-medium text-white">작품별 수익</h2>
+                    <p className="mt-1 text-[14px] text-neutral-500">판매 성과가 높은 작품을 비교합니다.</p>
+                  </div>
+                  <div className="flex rounded-lg border border-[#2A2E36] bg-[#111215] p-1">
+                    <button
+                      type="button"
+                      onClick={() => setRevenueSort('revenue')}
+                      className={`h-8 rounded-md px-3 text-[14px] font-medium transition ${
+                        revenueSort === 'revenue' ? 'bg-[#2A2E36] text-white' : 'text-neutral-500 hover:text-white'
+                      }`}
+                    >
+                      수익순
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRevenueSort('sales')}
+                      className={`h-8 rounded-md px-3 text-[14px] font-medium transition ${
+                        revenueSort === 'sales' ? 'bg-[#2A2E36] text-white' : 'text-neutral-500 hover:text-white'
+                      }`}
+                    >
+                      판매순
+                    </button>
+                  </div>
                 </div>
                 <div className="divide-y divide-[#1C1E24]">
                   {revenueRows
                     .slice()
-                    .sort((a, b) => b.revenue - a.revenue)
+                    .sort((a, b) =>
+                      revenueSort === 'revenue'
+                        ? b.revenue - a.revenue
+                        : b.sales - a.sales,
+                    )
                     .map(({ item, sales, revenue }) => (
-                      <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_90px_130px] items-center gap-4 px-5 py-4">
+                      <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_80px_minmax(120px,180px)_110px] items-center gap-4 px-5 py-4">
                         <div className="flex min-w-0 items-center gap-3">
                           <img src={item.image} alt="" className="h-12 w-16 rounded-lg object-cover" />
                           <div className="min-w-0">
@@ -365,6 +506,18 @@ export default function ContentManagementPage() {
                           </div>
                         </div>
                         <span className="text-right text-[14px] text-neutral-400">{sales}건</span>
+                        <div className="min-w-0">
+                          <div className="mb-1.5 flex justify-between text-[14px] text-neutral-500">
+                            <span>수익 비중</span>
+                            <span>{Math.round((revenue / Math.max(1, revenueSummary.totalRevenue)) * 100)}%</span>
+                          </div>
+                          <div className="h-1.5 overflow-hidden rounded-full bg-[#252830]">
+                            <div
+                              className="h-full rounded-full bg-[#E0A12E]"
+                              style={{ width: `${Math.min(100, (revenue / Math.max(1, revenueSummary.totalRevenue)) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
                         <span className="text-right text-[16px] font-medium text-[#E0A12E]">{formatCompactWon(revenue)}</span>
                       </div>
                     ))}
@@ -373,19 +526,31 @@ export default function ContentManagementPage() {
             </div>
           ) : (
           <>
-          <MonthlyRevenueCard
-            value={revenueSummary.totalRevenue}
-            sales={revenueSummary.totalSales}
-            compact
-          />
+          <div className="mb-6">
+            <h1 className="text-[28px] font-bold text-white">전체 콘텐츠</h1>
+            <p className="mt-2 text-[14px] text-neutral-400">업로드한 작품의 상태와 판매 정보를 관리합니다.</p>
+          </div>
 
-          <div className="mb-8 mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+          <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
             <StatCard icon={<Box className="w-5 h-5 text-neutral-400" />} title="전체 업로드" value="42" desc="전체 작품 수" />
             <StatCard icon={<ShoppingCart className="w-5 h-5 text-neutral-400" />} title="판매 중" value="18" desc="마켓 판매 중" />
             <StatCard icon={<ImageIcon className="w-5 h-5 text-neutral-400" />} title="아트 공개" value="16" desc="아트 공개 중" />
             <StatCard icon={<Clock className="w-5 h-5 text-[#E0A12E]" />} title="심사 중" value="3" desc="검토 대기 중" />
             <StatCard icon={<AlertCircle className="w-5 h-5 text-[#E46B6B]" />} title="수정 필요" value="2" desc="수정 요청" />
           </div>
+
+          <RevenueSummaryDisclosure
+            isOpen={isRevenueSummaryOpen}
+            onToggle={() => setIsRevenueSummaryOpen((current) => !current)}
+            onOpenDetails={() => {
+              setActiveSection('revenue');
+              setSelectedItem(null);
+            }}
+            value={revenueSummary.totalRevenue}
+            sales={revenueSummary.totalSales}
+            growthRate={revenueGrowthRate}
+            points={monthlyRevenueTrend}
+          />
 
           <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 mb-6">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
@@ -479,7 +644,7 @@ export default function ContentManagementPage() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 50 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
             className="absolute inset-0 md:relative md:inset-auto w-full md:w-[380px] shrink-0 bg-[#0A0B0D] border-l border-[#1C1E24] shadow-[0_0_50px_rgba(0,0,0,0.8)] md:shadow-2xl flex flex-col z-30 md:z-20"
           >
             <button 
@@ -730,33 +895,411 @@ export default function ContentManagementPage() {
   );
 }
 
-function MonthlyRevenueCard({ value, sales, compact = false }: { value: number, sales: number, compact?: boolean }) {
+function RevenueSummaryDisclosure({
+  isOpen,
+  onToggle,
+  onOpenDetails,
+  value,
+  sales,
+  growthRate,
+  points,
+}: {
+  isOpen: boolean;
+  onToggle: () => void;
+  onOpenDetails: () => void;
+  value: number;
+  sales: number;
+  growthRate: number;
+  points: Array<{ month: string; revenue: number; height: number }>;
+}) {
   return (
-    <section className={`min-w-0 overflow-hidden rounded-xl border border-[#E0A12E]/25 bg-[#E0A12E]/[0.06] ${compact ? 'px-5 py-4' : 'p-6'}`}>
-      <div className={`flex ${compact ? 'items-center justify-between gap-5' : 'h-full flex-col justify-between'}`}>
+    <section className="mb-6 overflow-hidden rounded-xl border border-[#1C1E24] bg-[#0A0B0D]">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        className="flex w-full items-center justify-between gap-5 px-5 py-4 text-left transition hover:bg-white/[0.025]"
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#E0A12E]/10 text-[#E0A12E]">
+            <TrendingUp className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-[17px] font-medium text-white">수익 요약</h2>
+            <p className="mt-0.5 text-[14px] text-neutral-500">최근 판매 흐름을 간단히 확인합니다.</p>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-5">
+          <div className="hidden text-right sm:block">
+            <p className="text-[14px] text-neutral-500">이번 달</p>
+            <p className="mt-0.5 text-[18px] font-medium text-[#E0A12E]">{formatCompactWon(value)}</p>
+          </div>
+          <span className={`hidden rounded-full px-2.5 py-1 text-[14px] font-medium md:inline-flex ${
+            growthRate >= 0 ? 'bg-[#4ADE80]/10 text-[#4ADE80]' : 'bg-[#E46B6B]/10 text-[#E46B6B]'
+          }`}>
+            전월 대비 {growthRate >= 0 ? '+' : ''}{growthRate}%
+          </span>
+          <ChevronDown className={`h-5 w-5 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </div>
+      </button>
+
+      {isOpen && (
+        <div className="border-t border-[#1C1E24] p-5">
+          <div className="grid gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
+            <div className="flex flex-col justify-between rounded-lg bg-[#111215] p-4">
+              <div>
+                <p className="text-[14px] text-neutral-400">이번 달 수익</p>
+                <p className="mt-2 truncate text-[clamp(26px,3vw,36px)] font-medium text-[#E0A12E]">
+                  {formatCompactWon(value)}
+                </p>
+              </div>
+              <p className="mt-5 text-[14px] text-neutral-400">
+                {sales}건 판매 · 전월 대비 {growthRate >= 0 ? '+' : ''}{growthRate}%
+              </p>
+            </div>
+            <RevenueTrendChart points={points} compact />
+          </div>
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={onOpenDetails}
+              className="flex h-10 items-center gap-2 rounded-lg px-3 text-[14px] font-medium text-neutral-300 transition hover:bg-white/5 hover:text-white"
+            >
+              수익 관리에서 자세히 보기
+              <ArrowUpRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function MonthlyRevenueCard({
+  value,
+  sales,
+  growthRate,
+}: {
+  value: number;
+  sales: number;
+  growthRate: number;
+}) {
+  return (
+    <section className="min-w-0 overflow-hidden rounded-xl border border-[#E0A12E]/25 bg-[#E0A12E]/[0.06] p-6">
+      <div className="flex h-full flex-col justify-between">
         <div className="flex items-center gap-2.5">
           <TrendingUp className="h-5 w-5 shrink-0 text-[#E0A12E]" />
           <span className="text-[14px] font-medium text-neutral-300">이번 달 수익</span>
         </div>
-        <div className={compact ? 'min-w-0 text-right' : 'mt-8'}>
-          <p className={`max-w-full truncate font-medium tracking-tight text-[#E0A12E] ${compact ? 'text-[clamp(22px,2vw,30px)]' : 'text-[clamp(30px,4vw,48px)]'}`}>
+        <div className="mt-8">
+          <p className="max-w-full truncate text-[clamp(30px,4vw,48px)] font-medium tracking-tight text-[#E0A12E]">
             {formatCompactWon(value)}
           </p>
-          <p className="mt-1 text-[14px] text-neutral-400">{sales}건 판매 · 전월 대비 +24%</p>
+          <p className="mt-1 text-[14px] text-neutral-400">
+            {sales}건 판매 · 전월 대비 {growthRate >= 0 ? '+' : ''}{growthRate}%
+          </p>
         </div>
       </div>
     </section>
   );
 }
 
-function RevenueMetric({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) {
+function RevenueTrendChart({
+  points,
+  compact = false,
+  title,
+  description,
+}: {
+  points: Array<{ month: string; revenue: number; height: number }>;
+  compact?: boolean;
+  title?: string;
+  description?: string;
+}) {
   return (
-    <div className="min-w-0 rounded-xl border border-[#1C1E24] bg-[#111215] p-5">
-      <div className="flex items-center gap-2 text-neutral-400">
+    <section className={`${compact ? 'min-h-[190px]' : 'mt-6 min-h-[300px] rounded-xl border border-[#1C1E24] bg-[#0A0B0D] p-5'}`}>
+      {!compact && (
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-[18px] font-medium text-white">{title}</h2>
+            <p className="mt-1 text-[14px] text-neutral-500">{description}</p>
+          </div>
+          <span className="text-[14px] text-neutral-500">단위: 원</span>
+        </div>
+      )}
+      <div className={`flex items-end gap-3 ${compact ? 'h-[170px]' : 'h-[220px]'}`}>
+        {points.map((point, index) => {
+          const isCurrentMonth = index === points.length - 1;
+          return (
+            <div key={point.month} className="flex h-full min-w-0 flex-1 flex-col justify-end">
+              <div className="group relative flex min-h-0 flex-1 items-end justify-center">
+                <div
+                  className={`relative w-full max-w-[54px] rounded-t-md transition ${
+                    isCurrentMonth
+                      ? 'bg-[#E0A12E]'
+                      : 'bg-[#343842] group-hover:bg-[#555A64]'
+                  }`}
+                  style={{ height: `${Math.max(point.height, point.revenue > 0 ? 8 : 2)}%` }}
+                >
+                  <span className="absolute bottom-[calc(100%+8px)] left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[#2A2E36] bg-[#111317] px-2 py-1 text-[14px] text-white shadow-xl group-hover:block">
+                    {formatCompactWon(point.revenue)}
+                  </span>
+                </div>
+              </div>
+              <span className={`mt-2 text-center text-[14px] ${isCurrentMonth ? 'font-medium text-[#E0A12E]' : 'text-neutral-500'}`}>
+                {point.month}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function RevenueAnalyticsChart({
+  points,
+  channel,
+  onChannelChange,
+}: {
+  points: Array<{ month: string; revenue: number; height: number }>;
+  channel: RevenueChannel;
+  onChannelChange: (channel: RevenueChannel) => void;
+}) {
+  const chartWidth = 800;
+  const chartHeight = 220;
+  const chartPositions = getRevenueChartPositions(points);
+  const coordinates = points.map((point, index) => ({
+    ...point,
+    ...chartPositions[index],
+    x: (chartPositions[index].xPercent / 100) * chartWidth,
+    y: (chartPositions[index].yPercent / 100) * chartHeight,
+  }));
+  const linePoints = coordinates.map((point) => `${point.x},${point.y}`).join(' ');
+  const areaPoints = coordinates.length
+    ? `${coordinates[0].x},${chartHeight * 0.9} ${linePoints} ${coordinates[coordinates.length - 1].x},${chartHeight * 0.9}`
+    : '';
+
+  return (
+    <section className="mt-4 overflow-hidden rounded-lg border border-[#1C1E24] bg-[#0A0B0D] p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-[18px] font-medium text-white">수익 변화</h2>
+          <p className="mt-1 text-[14px] text-neutral-500">선택한 기간의 판매 수익 추이</p>
+        </div>
+        <div className="flex rounded-lg border border-[#2A2E36] bg-[#111215] p-1">
+          {([
+            ['all', '전체'],
+            ['market', '마켓'],
+            ['license', '라이선스'],
+          ] as Array<[RevenueChannel, string]>).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onChannelChange(value)}
+              className={`h-8 rounded-md px-3 text-[14px] font-medium transition ${
+                channel === value
+                  ? 'bg-[#2A2E36] text-white'
+                  : 'text-neutral-500 hover:text-white'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="relative mt-5 h-[260px] w-full">
+        <div className="pointer-events-none absolute inset-x-0 top-[22px] flex h-[176px] flex-col justify-between">
+          {[0, 1, 2, 3].map((line) => (
+            <span key={line} className="block border-t border-dashed border-[#20232A]" />
+          ))}
+        </div>
+        <svg
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          preserveAspectRatio="none"
+          className="absolute inset-x-0 top-0 h-[220px] w-full overflow-visible"
+          aria-label="기간별 수익 변화 그래프"
+        >
+          <defs>
+            <linearGradient id="revenue-area-gradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#E0A12E" stopOpacity="0.32" />
+              <stop offset="100%" stopColor="#E0A12E" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {areaPoints && (
+            <polygon points={areaPoints} fill="url(#revenue-area-gradient)" />
+          )}
+          {linePoints && (
+            <polyline
+              points={linePoints}
+              fill="none"
+              stroke="#E0A12E"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
+        </svg>
+        {coordinates.map((point) => (
+          <div
+            key={`${point.month}-point`}
+            className="group absolute top-0 h-[220px] w-0"
+            style={{ left: `${point.xPercent}%` }}
+          >
+            <span
+              data-revenue-point={point.month}
+              className="absolute z-10 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-[#E0A12E] bg-[#0A0B0D]"
+              style={{ top: `${point.yPercent}%` }}
+            />
+            <span
+              className="pointer-events-none absolute z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-[#2A2E36] bg-[#111317] px-2 py-1 text-[14px] text-white shadow-xl group-hover:block"
+              style={{ top: `calc(${point.yPercent}% - 38px)` }}
+            >
+              {formatCompactWon(point.revenue)}
+            </span>
+            <span
+              data-revenue-label={point.month}
+              className="absolute top-[225px] -translate-x-1/2 whitespace-nowrap text-[14px] text-neutral-500"
+            >
+              {point.month}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function RevenueCategoryShare({
+  shares,
+}: {
+  shares: Array<{ label: string; revenue: number; share: number }>;
+}) {
+  const colors = ['#E0A12E', '#4F7CFF', '#4ADE80'];
+  const firstEnd = shares[0]?.share ?? 0;
+  const secondEnd = firstEnd + (shares[1]?.share ?? 0);
+
+  return (
+    <section className="rounded-lg border border-[#1C1E24] bg-[#0A0B0D] p-5">
+      <h2 className="text-[18px] font-medium text-white">상품 유형별 수익</h2>
+      <p className="mt-1 text-[14px] text-neutral-500">전체 수익에서 차지하는 비중</p>
+      <div className="mt-5 grid items-center gap-6 sm:grid-cols-[180px_minmax(0,1fr)]">
+        <div
+          className="relative mx-auto aspect-square w-[160px] rounded-full"
+          style={{
+            background: `conic-gradient(${colors[0]} 0 ${firstEnd}%, ${colors[1]} ${firstEnd}% ${secondEnd}%, ${colors[2]} ${secondEnd}% 100%)`,
+          }}
+        >
+          <div className="absolute inset-[28px] flex flex-col items-center justify-center rounded-full bg-[#0A0B0D]">
+            <span className="text-[14px] text-neutral-500">총수익</span>
+            <strong className="mt-1 text-[18px] font-medium text-white">
+              {formatCompactWon(shares.reduce((sum, item) => sum + item.revenue, 0))}
+            </strong>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {shares.map((item, index) => (
+            <div key={item.label}>
+              <div className="flex items-center justify-between gap-4 text-[14px]">
+                <span className="flex items-center gap-2 text-neutral-300">
+                  <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: colors[index] }} />
+                  {item.label}
+                </span>
+                <span className="font-medium text-white">{item.share}%</span>
+              </div>
+              <div className="mt-1.5 flex items-center justify-between text-[14px] text-neutral-500">
+                <span>{formatCompactWon(item.revenue)}</span>
+                <span>수익 비중</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SalesEfficiencyPanel({ channel }: { channel: RevenueChannel }) {
+  const channelAdjustment = channel === 'market' ? 0.4 : channel === 'license' ? -0.6 : 0;
+  const metrics = [
+    {
+      icon: <MousePointerClick className="h-5 w-5" />,
+      label: '구매 전환율',
+      value: `${(3.8 + channelAdjustment).toFixed(1)}%`,
+      detail: '조회 후 구매',
+      change: '+0.6%',
+    },
+    {
+      icon: <Repeat2 className="h-5 w-5" />,
+      label: '재구매율',
+      value: `${(18.2 + channelAdjustment * 2).toFixed(1)}%`,
+      detail: '구매자 재방문',
+      change: '+2.1%',
+    },
+    {
+      icon: <RotateCcw className="h-5 w-5" />,
+      label: '환불률',
+      value: `${Math.max(0.4, 1.2 - channelAdjustment / 2).toFixed(1)}%`,
+      detail: '전체 판매 기준',
+      change: '-0.3%',
+    },
+  ];
+
+  return (
+    <section className="rounded-lg border border-[#1C1E24] bg-[#0A0B0D] p-5">
+      <h2 className="text-[18px] font-medium text-white">판매 효율</h2>
+      <p className="mt-1 text-[14px] text-neutral-500">방문부터 구매 이후까지의 핵심 지표</p>
+      <div className="mt-5 grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+        {metrics.map((metric) => (
+          <div
+            key={metric.label}
+            className="flex min-w-0 items-center gap-4 rounded-lg border border-[#20232A] bg-[#111215] p-4"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-neutral-400">
+              {metric.icon}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[14px] font-medium text-neutral-300">{metric.label}</p>
+              <p className="mt-1 text-[14px] text-neutral-500">{metric.detail}</p>
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-[20px] font-medium text-white">{metric.value}</p>
+              <p className={`mt-1 text-[14px] ${metric.change.startsWith('-') ? 'text-[#4ADE80]' : 'text-[#4ADE80]'}`}>
+                {metric.change}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function RevenueMetric({
+  icon,
+  label,
+  value,
+  accent = false,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className={`min-w-0 rounded-lg border p-5 ${
+      accent
+        ? 'border-[#E0A12E]/35 bg-[#E0A12E]/[0.06]'
+        : 'border-[#1C1E24] bg-[#111215]'
+    }`}>
+      <div className={`flex items-center gap-2 ${accent ? 'text-[#E0A12E]' : 'text-neutral-400'}`}>
         {icon}
         <span className="text-[14px] font-medium">{label}</span>
       </div>
-      <p className="mt-5 truncate text-[clamp(20px,2vw,28px)] font-medium text-white">{value}</p>
+      <p className={`mt-5 truncate text-[clamp(20px,2vw,28px)] font-medium ${accent ? 'text-[#E0A12E]' : 'text-white'}`}>
+        {value}
+      </p>
     </div>
   );
 }

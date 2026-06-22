@@ -7,6 +7,7 @@ import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { TGALoader } from "three/examples/jsm/loaders/TGALoader.js";
 import WorkflowHeader from "./WorkflowHeader";
 import WorkflowSidebarHeader from "./WorkflowSidebarHeader";
+import LoadingIndicator from "./LoadingIndicator";
 import { WORKFLOW_SIDEBAR_WIDTH_CLASS } from "../workflowLayout";
 import {
   createGeneratedProject,
@@ -852,7 +853,7 @@ function ModelViewport({
         {isGeneratingModel ? (
           <div className="flex h-full w-full flex-col items-center justify-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[#E0A12E]/30 bg-[#E0A12E]/10">
-              <RefreshCw className="h-7 w-7 animate-spin text-[#E0A12E]" />
+              <LoadingIndicator size="md" />
             </div>
             <h2 className="mt-5 text-[20px] font-medium text-white">3D 모델링 생성 중</h2>
             <div className="mt-5 h-1.5 w-56 overflow-hidden rounded-full bg-[#1F2329]">
@@ -1001,7 +1002,7 @@ function RightPanel({
                 disabled={isGeneratingModel}
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-3 text-[14px] font-medium text-black transition-colors hover:bg-[#F0B43A]"
               >
-                {isProcessing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {isProcessing ? <LoadingIndicator tone="current" /> : <Sparkles className="h-4 w-4" />}
                 {panelCopy.button}
               </button>
             </div>
@@ -1110,7 +1111,7 @@ function RightPanel({
             disabled={isGeneratingModel}
             className="mb-5 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-3 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
           >
-            {isProcessing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Workflow className="h-4 w-4" />}
+            {isProcessing ? <LoadingIndicator tone="current" /> : <Workflow className="h-4 w-4" />}
             {isProcessing ? "리메시 처리 중" : "리메시 적용"}
           </button>
         )}
@@ -1135,7 +1136,7 @@ function RightPanel({
                 ))}
               </div>
               <button onClick={() => runAction()} disabled={isGeneratingModel} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-2.5 text-[14px] font-medium text-black hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50">
-                {isProcessing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                {isProcessing ? <LoadingIndicator tone="current" /> : <Zap className="h-4 w-4" />}
                 {isProcessing ? "텍스처 최적화 중" : "텍스처 최적화"}
               </button>
             </div>

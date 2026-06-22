@@ -33,7 +33,6 @@ import {
   Puzzle,
   Box,
   Pencil,
-  LoaderCircle,
   PenTool,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,7 +43,13 @@ import ProjectPage from "./ProjectPage";
 import NewProjectModal from "./NewProjectModal";
 import WorkflowHeader from "./WorkflowHeader";
 import WorkflowSidebarHeader from "./WorkflowSidebarHeader";
-import { MODEL_GENERATION_REQUEST_KEY } from "../workflowState";
+import LoadingIndicator from "./LoadingIndicator";
+import {
+  requestModelGeneration,
+  requestTurnaroundFlow,
+  resolveImageWorkflowNextStep,
+} from "../workflowState";
+import { startImageGenerationLoading } from "../imageGenerationLoading";
 import { ASSETS } from "../App";
 
 const COLORS = {
@@ -332,6 +337,7 @@ export default function FullWorkflowPage({
   const [workflowStep, setWorkflowStep] = useState<"prompt" | "image-generation">("prompt");
   const [selectedGridImage, setSelectedGridImage] = useState<number | null>(null);
   const [generatedImageCount, setGeneratedImageCount] = useState(4);
+  const [isGeneratingInitialImages, setIsGeneratingInitialImages] = useState(false);
   const [isGeneratingMoreImages, setIsGeneratingMoreImages] = useState(false);
   const [rightPanelMode, setRightPanelMode] = useState<"prompt" | "expert">("prompt");
   const [expertTab, setExpertTab] = useState<"turnaround" | "modular">("turnaround");
@@ -597,30 +603,36 @@ export default function FullWorkflowPage({
   const handleDirectModeling = () => {
     if (!hasSelectedGeneratedImage) return;
     if (typeof window !== "undefined") {
-      window.sessionStorage.setItem(MODEL_GENERATION_REQUEST_KEY, "direct");
+      requestModelGeneration(window.sessionStorage, "direct");
     }
     onNavigate?.("modeling_generation");
   };
 
   const handleRefineSelectedSettings = () => {
     if (!hasSelectedGeneratedImage) return;
-    if (isTurnaroundSelected && onNavigate) {
+    const nextStep = resolveImageWorkflowNextStep(
+      isTurnaroundSelected,
+      isModularSelected,
+    );
+
+    if (nextStep.page === "turnaround" && onNavigate) {
       if (typeof window !== "undefined") {
-        window.sessionStorage.setItem(
-          "neopoly:turnaround-flow",
-          JSON.stringify({
-            isModularSelected,
-            selectedGridImage,
-            isOrcWorkflow,
-          }),
-        );
+        requestTurnaroundFlow(window.sessionStorage, {
+          startTab: nextStep.startTab,
+          isTurnaroundSelected,
+          isModularSelected,
+          selectedGridImage,
+          isOrcWorkflow,
+        });
       }
       onNavigate("turnaround");
       return;
     }
-    setWorkflowStep("prompt");
-    setRightPanelMode("expert");
-    setExpertTab(isTurnaroundSelected ? "turnaround" : "modular");
+
+    if (typeof window !== "undefined") {
+      requestModelGeneration(window.sessionStorage, "image-generation");
+    }
+    onNavigate?.("modeling_generation");
   };
 
   const DUMMY_GENERATED_IMAGES = [
@@ -741,13 +753,19 @@ export default function FullWorkflowPage({
   };
 
   const handleGenerateImage = () => {
+    if (isGeneratingInitialImages) return;
     setWorkflowStep("image-generation");
-    setHasGeneratedImages(true);
-    setHasReturnedFromGeneratedStep(false);
-    setHasUnsavedChanges(false);
-    setSelectedGridImage(null);
-    setIsTurnaroundSelected(false);
-    setIsModularSelected(false);
+    startImageGenerationLoading({
+      setLoading: setIsGeneratingInitialImages,
+      onComplete: () => {
+        setHasGeneratedImages(true);
+        setHasReturnedFromGeneratedStep(false);
+        setHasUnsavedChanges(false);
+        setSelectedGridImage(null);
+        setIsTurnaroundSelected(false);
+        setIsModularSelected(false);
+      },
+    });
   };
 
   const scrollToBottom = () => {
@@ -1113,6 +1131,11 @@ export default function FullWorkflowPage({
                   currentStep="image-generation"
                 />
                 <div className="relative min-h-0 flex-1 overflow-y-auto p-4 custom-scrollbar lg:p-6 2xl:p-8">
+                  {isGeneratingInitialImages ? (
+                    <div className="flex min-h-full items-center justify-center">
+                      <LoadingIndicator size="lg" label="이미지 생성 중" layout="stacked" />
+                    </div>
+                  ) : (
                   <div className="mx-auto flex min-h-full w-full max-w-[2200px] flex-col">
                   <div
                     className={`grid grid-cols-2 gap-3 lg:gap-4 2xl:gap-5 ${
@@ -1187,15 +1210,15 @@ export default function FullWorkflowPage({
                         </div>
 
                         {regeneratingImageIndex === i && (
-                          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/70 text-white backdrop-blur-sm">
-                            <LoaderCircle className="h-7 w-7 animate-spin text-[#E0A12E]" />
-                            <span className="text-[15px] font-medium">수정 시안 생성 중</span>
+                          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 text-white backdrop-blur-sm">
+                            <LoadingIndicator size="md" label="수정 시안 생성 중" layout="stacked" />
                           </div>
                         )}
                       </div>
                     ))}
                   </div>
                 </div>
+                  )}
               </div>
               </div>
             )}
@@ -1687,7 +1710,7 @@ export default function FullWorkflowPage({
                       }`}
                     >
                       {isGeneratingMoreImages ? (
-                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                        <LoadingIndicator tone="current" />
                       ) : (
                         <Sparkles className="h-4 w-4" />
                       )}
@@ -1882,9 +1905,8 @@ export default function FullWorkflowPage({
                   )}
 
                   {regeneratingImageIndex === editingGeneratedImage && (
-                    <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/70 text-white backdrop-blur-sm">
-                      <LoaderCircle className="h-8 w-8 animate-spin text-[#E0A12E]" />
-                      <span className="text-[15px] font-medium">새 버전 생성 중</span>
+                    <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 text-white backdrop-blur-sm">
+                      <LoadingIndicator size="md" label="새 버전 생성 중" layout="stacked" />
                     </div>
                   )}
                 </div>
@@ -1967,7 +1989,7 @@ export default function FullWorkflowPage({
                   }`}
                 >
                   {regeneratingImageIndex === editingGeneratedImage ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    <LoadingIndicator tone="current" />
                   ) : (
                     <RefreshCw className="h-4 w-4" />
                   )}

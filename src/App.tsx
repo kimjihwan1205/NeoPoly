@@ -28,6 +28,7 @@ import SupportPage from './components/SupportPage';
 import TurnaroundPage from './components/TurnaroundPage';
 import ModelingGenerationPage from './components/ModelingGenerationPage';
 import { UserProfile } from './types';
+import { PRODUCT_DETAIL_CONTAINER_CLASS } from './productDetailLayout';
 import { isPersistentModelingWorkflowPage } from './workflowPageCache';
 
 // --- Constants & Updated Asset Data ---
@@ -2441,7 +2442,7 @@ function ProductDetailPage({
 
   return (
     <main className="flex-1 bg-[#08090B]">
-      <div className="mx-auto w-full max-w-[2560px] px-4 py-8 sm:px-6 2xl:px-8 min-[2200px]:px-10">
+      <div className={PRODUCT_DETAIL_CONTAINER_CLASS}>
         <button
           onClick={onNavigateHome}
           className="mb-5 inline-flex items-center gap-2 text-[14px] font-medium text-text-tertiary transition hover:text-brand-primary"
@@ -3089,11 +3090,7 @@ function ProductPurchasePanel({
             }
             setCheckoutItems([purchaseItem]);
           }}
-          className={`mb-2 w-full rounded-md py-3 text-[14px] font-medium transition ${
-            isPurchased
-              ? 'bg-[#2D3138] text-white hover:bg-[#383D46]'
-              : 'bg-brand-primary text-bg-dark hover:bg-brand-hover'
-          }`}
+          className="mb-2 w-full rounded-md bg-brand-primary py-3 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover"
         >
           {isPurchased ? '\uAD6C\uB9E4\uD55C \uC791\uC5C5\uBB3C \uBCF4\uAE30' : '\uAD6C\uB9E4\uD558\uAE30'}
         </button>
