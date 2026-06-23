@@ -25,8 +25,61 @@ assert.deepEqual(
 const project = createGeneratedProject("오크 전사 최종본", 4, 500000);
 assert.equal(project.name, "오크 전사 최종본");
 assert.equal(project.status, "Completed");
+assert.deepEqual(project.viewerImages, [
+  "/images/orc_3DF/orc_00_3dF01.png",
+  "/images/orc_3DF/orc_00_3dF02.png",
+  "/images/orc_3DF/orc_00_3dF03.png",
+  "/images/orc_3DF/orc_00_3dF04.png",
+]);
 assert.equal(project.tags.includes("#4개모듈세트"), true);
 assert.equal(project.tags.includes("#500K"), true);
+
+const savedPreviewProject = createGeneratedProject(
+  "정찰 장비 오크",
+  4,
+  150000,
+  {
+    representativeImage: "/images/orc_3DF/orc_04_3dF02.png",
+    viewerImages: [
+      "/images/orc_3DF/orc_04_3dF01.png",
+      "/images/orc_3DF/orc_04_3dF02.png",
+      "/images/orc_3DF/orc_04_3dF03.png",
+      "/images/orc_3DF/orc_04_3dF04.png",
+    ],
+    moduleSetTitle: "부족 정찰 세트",
+    renderImage: "/images/Discover_in_orc01.png",
+    renderPrompt: "orc render prompt",
+    sourceImages: ["/images/orc/orc_create01.png"],
+    moduleSetImages: [
+      "/images/orc_3DF/orc_01_3dF01.png",
+      "/images/orc_3DF/orc_02_3dF01.png",
+      "/images/orc_3DF/orc_03_3dF01.png",
+      "/images/orc_3DF/orc_04_3dF01.png",
+    ],
+    finalModelImage: "/images/Discover_in_orc04.png",
+  },
+);
+assert.equal(savedPreviewProject.image, "/images/orc_3DF/orc_04_3dF02.png");
+assert.equal(savedPreviewProject.listImage, "/images/orc_3DF/orc_04_3dF02.png");
+assert.deepEqual(savedPreviewProject.viewerImages, [
+  "/images/orc_3DF/orc_04_3dF01.png",
+  "/images/orc_3DF/orc_04_3dF02.png",
+  "/images/orc_3DF/orc_04_3dF03.png",
+  "/images/orc_3DF/orc_04_3dF04.png",
+]);
+assert.equal(savedPreviewProject.tags.includes("#부족정찰세트"), true);
+assert.deepEqual(savedPreviewProject.workflowAssets, {
+  renderImage: "/images/Discover_in_orc01.png",
+  renderPrompt: "orc render prompt",
+  sourceImages: ["/images/orc/orc_create01.png"],
+  moduleSetImages: [
+    "/images/orc_3DF/orc_01_3dF01.png",
+    "/images/orc_3DF/orc_02_3dF01.png",
+    "/images/orc_3DF/orc_03_3dF01.png",
+    "/images/orc_3DF/orc_04_3dF01.png",
+  ],
+  finalModelImage: "/images/Discover_in_orc04.png",
+});
 assert.equal(getInitialModuleSelection(undefined), "");
 assert.equal(getInitialModuleSelection("weapon"), "weapon");
 

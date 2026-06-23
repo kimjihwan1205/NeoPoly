@@ -103,6 +103,15 @@ const getModuleSetItemImage = (setId: string, itemNumber: string) =>
 const getModuleSetPreviewImage = (setId: string, viewIndex: number) =>
   `/images/orc_3DF/orc_${setId}_3dF${String(viewIndex + 1).padStart(2, "0")}.png`;
 
+const getTurnaroundPreviewImage = (viewIndex: number) =>
+  `/images/orc_3DF/orc_00_3dF${String(viewIndex + 1).padStart(2, "0")}.png`;
+
+const ENVIRONMENT_RENDER_IMAGE = "/images/Discover_in_orc01.png";
+const FINAL_MODEL_RENDER_IMAGE = "/images/Discover_in_orc04.png";
+const SOURCE_GENERATION_IMAGE = "/images/orc/orc_create01.png";
+const DEFAULT_ENVIRONMENT_RENDER_PROMPT =
+  "거친 협곡 전장에 선 오크 전사, 완성된 3D 모델을 영화적인 조명과 먼지 낀 배경으로 렌더링";
+
 
 const TEXTURE_MAPS = [
   { id: "body-base", label: "Body BaseColor", color: "#6E8B47", file: "orc_orc_body_BaseColor.1001.tga" },
@@ -622,9 +631,16 @@ function ThreeModelPreview({
   );
 }
 
-function ModuleSetBrowser({ onClose }: { onClose: () => void }) {
+function ModuleSetBrowser({
+  onClose,
+  selectedSetId,
+  onSelectSet,
+}: {
+  onClose: () => void;
+  selectedSetId: string;
+  onSelectSet: (setId: string) => void;
+}) {
   const [stage, setStage] = useState<"sets" | "detail">("sets");
-  const [selectedSetId, setSelectedSetId] = useState(MODULE_SETS[0].id);
   const [selectedViewIndex, setSelectedViewIndex] = useState(0);
   const [selectedEquipmentId, setSelectedEquipmentId] = useState(MODULES[0].id);
 
@@ -680,7 +696,7 @@ function ModuleSetBrowser({ onClose }: { onClose: () => void }) {
               <button
                 key={set.id}
                 onClick={() => {
-                  setSelectedSetId(set.id);
+                  onSelectSet(set.id);
                   setSelectedViewIndex(0);
                   setStage("detail");
                 }}
@@ -777,11 +793,15 @@ function ModelViewport({
   polygonCount,
   moduleSetCount,
   isGeneratingModel,
+  selectedModuleSetId,
+  onSelectModuleSet,
 }: {
   activeStep: ModelingStep;
   polygonCount: number;
   moduleSetCount: number;
   isGeneratingModel: boolean;
+  selectedModuleSetId: string;
+  onSelectModuleSet: (setId: string) => void;
 }) {
   const [viewMode, setViewMode] = useState("PBR");
   const [activeTool, setActiveTool] = useState("선택");
@@ -846,7 +866,13 @@ function ModelViewport({
       </button>
 
       <AnimatePresence>
-        {isModuleBrowserOpen && <ModuleSetBrowser onClose={() => setIsModuleBrowserOpen(false)} />}
+        {isModuleBrowserOpen && (
+          <ModuleSetBrowser
+            onClose={() => setIsModuleBrowserOpen(false)}
+            selectedSetId={selectedModuleSetId}
+            onSelectSet={onSelectModuleSet}
+          />
+        )}
       </AnimatePresence>
 
       <div className="relative z-10 flex flex-1 items-center justify-center overflow-hidden p-8">
@@ -1213,11 +1239,44 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
   });
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [projectName, setProjectName] = useState("오크 전사 3D 모델링");
+  const [selectedModuleSetId, setSelectedModuleSetId] = useState(MODULE_SETS[0].id);
+  const [selectedSaveViewIndex, setSelectedSaveViewIndex] = useState(0);
+  const [renderPrompt, setRenderPrompt] = useState(DEFAULT_ENVIRONMENT_RENDER_PROMPT);
+  const [isRenderPromptOpen, setIsRenderPromptOpen] = useState(false);
+  const [isGeneratingEnvironmentRender, setIsGeneratingEnvironmentRender] = useState(false);
+  const [environmentRenderImage, setEnvironmentRenderImage] = useState<string | null>(null);
+  const [representativeImageSource, setRepresentativeImageSource] = useState<"turnaround" | "render">("turnaround");
   const [appliedSteps, setAppliedSteps] = useState<Record<ModelingStep, boolean>>({
     generate: true,
     remesh: false,
     texture: false,
   });
+  const selectedModuleSet =
+    MODULE_SETS.find((set) => set.id === selectedModuleSetId) ?? MODULE_SETS[0];
+  const savePreviewImages = MODULE_PREVIEW_LABELS.map((_, index) =>
+    getTurnaroundPreviewImage(index),
+  );
+  const moduleWorkflowImages = MODULE_SETS.map((set) =>
+    getModuleSetPreviewImage(set.id, 0),
+  );
+  const selectedRepresentativeImage =
+    representativeImageSource === "render" && environmentRenderImage
+      ? environmentRenderImage
+      : savePreviewImages[selectedSaveViewIndex];
+  const savedWorkflowAssets = [
+    { label: "이미지 생성", image: SOURCE_GENERATION_IMAGE },
+    { label: "환경 렌더", image: ENVIRONMENT_RENDER_IMAGE },
+    { label: "모델링 완성", image: FINAL_MODEL_RENDER_IMAGE },
+  ];
+  const appliedPostProcessLabels = [
+    appliedSteps.remesh ? "리메시" : null,
+    appliedSteps.texture ? "텍스처 최적화" : null,
+  ].filter((label): label is string => Boolean(label));
+  const saveDate = new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 
   const handleApplyStep = (step: ModelingStep, quality: string) => {
     setAppliedSteps((prev) => ({ ...prev, [step]: true }));
@@ -1230,6 +1289,15 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
       };
       setPolygonCount(polygonTargets[quality] ?? 500000);
     }
+  };
+
+  const handleGenerateEnvironmentRender = () => {
+    setIsGeneratingEnvironmentRender(true);
+    window.setTimeout(() => {
+      setEnvironmentRenderImage(ENVIRONMENT_RENDER_IMAGE);
+      setIsGeneratingEnvironmentRender(false);
+      setIsRenderPromptOpen(false);
+    }, 900);
   };
 
   const handleBackToWorkflow = () => {
@@ -1270,6 +1338,16 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
       projectName,
       moduleSetCount,
       polygonCount,
+      {
+        representativeImage: selectedRepresentativeImage,
+        viewerImages: savePreviewImages,
+        moduleSetTitle: selectedModuleSet.title,
+        renderImage: ENVIRONMENT_RENDER_IMAGE,
+        renderPrompt,
+        sourceImages: [SOURCE_GENERATION_IMAGE],
+        moduleSetImages: moduleWorkflowImages,
+        finalModelImage: FINAL_MODEL_RENDER_IMAGE,
+      },
     );
     let storedProjects: unknown[] = [];
 
@@ -1306,6 +1384,8 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
           polygonCount={polygonCount}
           moduleSetCount={moduleSetCount}
           isGeneratingModel={isGeneratingModel}
+          selectedModuleSetId={selectedModuleSetId}
+          onSelectModuleSet={setSelectedModuleSetId}
         />
       </main>
       <RightPanel
@@ -1332,10 +1412,12 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.98 }}
               onMouseDown={(event) => event.stopPropagation()}
-              className="w-full max-w-[480px] rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.75)]"
+              className="flex max-h-[calc(100vh-40px)] w-full max-w-[1240px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.75)]"
             >
               <div className="flex h-16 items-center justify-between border-b border-[#1F2329] px-5">
-                <h2 className="text-[18px] font-medium text-white">프로젝트로 저장</h2>
+                <div>
+                  <h2 className="text-[18px] font-medium text-white">프로젝트로 저장</h2>
+                </div>
                 <button
                   type="button"
                   onClick={() => setIsSaveModalOpen(false)}
@@ -1345,20 +1427,228 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <div className="p-5">
-                <label htmlFor="generated-project-name" className="text-[14px] font-medium text-neutral-300">
-                  프로젝트 이름
-                </label>
-                <input
-                  id="generated-project-name"
-                  autoFocus
-                  value={projectName}
-                  onChange={(event) => setProjectName(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") handleSaveProject();
-                  }}
-                  className="mt-2 h-12 w-full rounded-lg border border-[#2A2E36] bg-[#111317] px-4 text-[15px] text-white outline-none transition focus:border-[#E0A12E]"
-                />
+              <div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-[minmax(300px,0.88fr)_minmax(360px,1fr)_minmax(320px,0.78fr)]">
+                <section className="border-b border-[#1F2329] p-5 lg:border-b-0 lg:border-r">
+                  <label htmlFor="generated-project-name" className="text-[14px] font-medium text-neutral-300">
+                    프로젝트 이름
+                  </label>
+                  <input
+                    id="generated-project-name"
+                    autoFocus
+                    value={projectName}
+                    onChange={(event) => setProjectName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") handleSaveProject();
+                    }}
+                    className="mt-2 h-12 w-full rounded-lg border border-[#2A2E36] bg-[#111317] px-4 text-[15px] text-white outline-none transition focus:border-[#E0A12E]"
+                  />
+
+                  <div className="mb-3 mt-5 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[15px] font-medium text-white">환경 렌더 이미지</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isGeneratingEnvironmentRender}
+                      onClick={() => setIsRenderPromptOpen(true)}
+                      className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-[#2A2E36] bg-[#111317] px-3 text-[14px] font-medium text-neutral-200 transition hover:border-[#E0A12E]/60 hover:text-white disabled:cursor-wait disabled:opacity-70"
+                    >
+                      <Sparkles className="h-4 w-4 text-[#E0A12E]" />
+                      {environmentRenderImage ? "다시 렌더" : "렌더 이미지 생성"}
+                    </button>
+                  </div>
+
+                  {isRenderPromptOpen && (
+                    <div className="mb-3 rounded-lg border border-[#2A2E36] bg-[#111317] p-3">
+                      <div className="mb-2 flex items-center justify-between">
+                        <label htmlFor="environment-render-prompt" className="text-[14px] font-medium text-neutral-300">
+                          렌더 프롬프트
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setIsRenderPromptOpen(false)}
+                          className="rounded-md p-1 text-neutral-500 transition hover:bg-white/5 hover:text-white"
+                          aria-label="렌더 프롬프트 닫기"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <textarea
+                        id="environment-render-prompt"
+                        value={renderPrompt}
+                        onChange={(event) => setRenderPrompt(event.target.value)}
+                        className="min-h-[90px] w-full resize-none rounded-lg border border-[#2A2E36] bg-[#080A0D] px-3 py-3 text-[14px] leading-6 text-white outline-none transition focus:border-[#E0A12E]"
+                      />
+                      <div className="mt-3 flex justify-end">
+                        <button
+                          type="button"
+                          disabled={isGeneratingEnvironmentRender}
+                          onClick={handleGenerateEnvironmentRender}
+                          className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#E0A12E] px-4 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-wait disabled:opacity-70"
+                        >
+                          {isGeneratingEnvironmentRender ? <LoadingIndicator tone="current" /> : <Sparkles className="h-4 w-4" />}
+                          생성
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-dashed border-[#2A2E36] bg-[#15171B]">
+                    {environmentRenderImage ? (
+                      <img
+                        src={environmentRenderImage}
+                        alt="환경 렌더 이미지"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+                        <Sparkles className="h-6 w-6 text-neutral-600" />
+                        <p className="mt-3 text-[15px] font-medium text-neutral-300">렌더 이미지 대기 중</p>
+                        <p className="mt-1 text-[14px] leading-5 text-neutral-500">프롬프트를 확인하고 생성하면 이 영역에 결과가 표시됩니다.</p>
+                      </div>
+                    )}
+                    {isGeneratingEnvironmentRender && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/55 backdrop-blur-[1px]">
+                        <LoadingIndicator size="md" />
+                        <p className="mt-3 text-[15px] font-medium text-white">환경 렌더를 생성 중입니다</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {environmentRenderImage && representativeImageSource !== "render" && (
+                    <button
+                      type="button"
+                      onClick={() => setRepresentativeImageSource("render")}
+                      className="mt-3 h-10 w-full rounded-lg border border-[#2A2E36] bg-[#111317] text-[14px] font-medium text-neutral-200 transition hover:border-[#E0A12E]/60 hover:text-white"
+                    >
+                      대표 이미지로 설정
+                    </button>
+                  )}
+                </section>
+
+                <section className="border-b border-[#1F2329] p-5 lg:border-b-0 lg:border-r">
+                  <div className="mb-3 flex items-center justify-between gap-4">
+                    <p className="text-[15px] font-medium text-white">3D 모델링 미리보기</p>
+                    <span className="rounded-md border border-[#E0A12E]/25 bg-[#E0A12E]/10 px-2.5 py-1 text-[14px] text-[#E0A12E]">
+                      {MODULE_PREVIEW_LABELS[selectedSaveViewIndex]}
+                    </span>
+                  </div>
+
+                  <div className="relative mt-3 aspect-[4/3] overflow-hidden rounded-lg border border-[#2A2E36] bg-[#15171B]">
+                    <img
+                      src={savePreviewImages[selectedSaveViewIndex]}
+                      alt={`3D 모델링 미리보기 ${MODULE_PREVIEW_LABELS[selectedSaveViewIndex]}`}
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-4 gap-2">
+                    {savePreviewImages.map((image, index) => {
+                      const isSelected = selectedSaveViewIndex === index;
+                      return (
+                        <button
+                          key={image}
+                          type="button"
+                          onClick={() => {
+                            setSelectedSaveViewIndex(index);
+                            setRepresentativeImageSource("turnaround");
+                          }}
+                          className={`overflow-hidden rounded-lg border text-left transition ${
+                            isSelected
+                              ? "border-[#E0A12E] bg-[#E0A12E]/8"
+                              : "border-[#1F2329] bg-[#111317] hover:border-[#555A64]"
+                          }`}
+                        >
+                          <div className="aspect-[4/3] bg-[#15171B]">
+                            <img src={image} alt="" className="h-full w-full object-contain" />
+                          </div>
+                          <p className={`border-t border-[#1F2329] py-1.5 text-center text-[14px] ${isSelected ? "text-[#E0A12E]" : "text-neutral-400"}`}>
+                            {MODULE_PREVIEW_LABELS[index]}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-5">
+                    <h3 className="text-[15px] font-medium text-white">저장 자료</h3>
+                    <div className="mt-3 grid grid-cols-3 gap-2">
+                      {savedWorkflowAssets.map((asset) => (
+                        <div key={asset.label} className="overflow-hidden rounded-lg border border-[#1F2329] bg-[#111317]">
+                          <div className="aspect-square bg-[#15171B]">
+                            <img src={asset.image} alt="" className="h-full w-full object-cover" />
+                          </div>
+                          <p className="border-t border-[#1F2329] px-2 py-1.5 text-center text-[14px] text-neutral-400">
+                            {asset.label}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 rounded-lg border border-[#1F2329] bg-[#111317] p-2">
+                      <div className="mb-2 flex items-center justify-between">
+                        <span className="text-[14px] font-medium text-neutral-300">모듈화 캐릭터 4종</span>
+                        <span className="text-[14px] text-neutral-500">{moduleWorkflowImages.length}개</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {moduleWorkflowImages.map((image, index) => (
+                          <div key={image} className="aspect-square overflow-hidden rounded-md bg-[#15171B]">
+                            <img
+                              src={image}
+                              alt={`모듈 세트 ${index + 1}`}
+                              className="h-full w-full object-contain"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="p-5">
+                  <div>
+                    <h3 className="text-[15px] font-medium text-white">프로젝트 정보</h3>
+                    <dl className="mt-3 divide-y divide-[#1F2329] border-y border-[#1F2329] text-[14px]">
+                      <div className="flex items-center justify-between gap-4 py-3">
+                        <dt className="text-neutral-500">모듈 세트</dt>
+                        <dd className="text-right font-medium text-neutral-200">{selectedModuleSet.title}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-4 py-3">
+                        <dt className="text-neutral-500">폴리곤 수</dt>
+                        <dd className="font-medium text-neutral-200">{polygonCount.toLocaleString("ko-KR")}</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-4 py-3">
+                        <dt className="text-neutral-500">생성된 모듈 세트</dt>
+                        <dd className="font-medium text-neutral-200">{moduleSetCount}개</dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-4 py-3">
+                        <dt className="text-neutral-500">후작업</dt>
+                        <dd className="text-right font-medium text-neutral-200">
+                          {appliedPostProcessLabels.length > 0
+                            ? appliedPostProcessLabels.join(", ")
+                            : "추가 후작업 없음"}
+                        </dd>
+                      </div>
+                      <div className="flex items-center justify-between gap-4 py-3">
+                        <dt className="text-neutral-500">생성일</dt>
+                        <dd className="font-medium text-neutral-200">{saveDate}</dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <div className="mt-6">
+                    <h3 className="text-[15px] font-medium text-white">저장 항목</h3>
+                    <div className="mt-3 space-y-2 text-[14px] text-neutral-300">
+                      {["3D 모델", "환경 렌더 및 3D 모델링 미리보기", "모듈 세트 정보"].map((item) => (
+                        <div key={item} className="flex items-center gap-2.5">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E0A12E]/12 text-[#E0A12E]">
+                            <Check className="h-3.5 w-3.5" />
+                          </span>
+                          {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
               </div>
               <div className="flex justify-end gap-2 border-t border-[#1F2329] p-5">
                 <button

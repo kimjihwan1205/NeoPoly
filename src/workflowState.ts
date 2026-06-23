@@ -91,7 +91,28 @@ export function createGeneratedProject(
   name: string,
   moduleSetCount: number,
   polygonCount: number,
+  preview?: {
+    representativeImage: string;
+    viewerImages: string[];
+    moduleSetTitle: string;
+    renderImage?: string;
+    renderPrompt?: string;
+    sourceImages?: string[];
+    moduleSetImages?: string[];
+    finalModelImage?: string;
+  },
 ) {
+  const defaultImage = "/images/Discover_in_orc01.png";
+  const defaultViewerImages = [
+    "/images/orc_3DF/orc_00_3dF01.png",
+    "/images/orc_3DF/orc_00_3dF02.png",
+    "/images/orc_3DF/orc_00_3dF03.png",
+    "/images/orc_3DF/orc_00_3dF04.png",
+  ];
+  const moduleSetTag = preview?.moduleSetTitle
+    ? `#${preview.moduleSetTitle.replace(/\s+/g, "")}`
+    : null;
+
   return {
     id: Date.now(),
     name: name.trim() || "새 3D 모델링",
@@ -100,14 +121,27 @@ export function createGeneratedProject(
     status: "Completed",
     statusColor: "#4ADE80",
     date: new Date().toLocaleDateString("ko-KR"),
-    image: "/images/Discover_in_orc01.png",
-    listImage: "/images/Discover_in_orc01.png",
-    viewerImages: [
-      "/images/Discover_in_orc01.png",
-      "/images/Discover_in_orc02.png",
-      "/images/Discover_in_orc03.png",
-      "/images/Discover_in_orc04.png",
-    ],
+    image: preview?.representativeImage || defaultImage,
+    listImage: preview?.representativeImage || defaultImage,
+    viewerImages: preview?.viewerImages?.length
+      ? preview.viewerImages
+      : defaultViewerImages,
+    workflowAssets: {
+      renderImage: preview?.renderImage || "/images/Discover_in_orc01.png",
+      renderPrompt: preview?.renderPrompt || "",
+      sourceImages: preview?.sourceImages?.length
+        ? preview.sourceImages
+        : ["/images/orc/orc_create01.png"],
+      moduleSetImages: preview?.moduleSetImages?.length
+        ? preview.moduleSetImages
+        : [
+            "/images/orc_3DF/orc_01_3dF01.png",
+            "/images/orc_3DF/orc_02_3dF01.png",
+            "/images/orc_3DF/orc_03_3dF01.png",
+            "/images/orc_3DF/orc_04_3dF01.png",
+          ],
+      finalModelImage: preview?.finalModelImage || "/images/Discover_in_orc04.png",
+    },
     referenceImages: [
       "/images/orc_re/orc_re01.png",
       "/images/orc_re/orc_re02.jpg",
@@ -119,6 +153,7 @@ export function createGeneratedProject(
       "#3D모델링",
       `#${moduleSetCount}개모듈세트`,
       `#${Math.round(polygonCount / 1000)}K`,
+      ...(moduleSetTag ? [moduleSetTag] : []),
     ],
   };
 }
