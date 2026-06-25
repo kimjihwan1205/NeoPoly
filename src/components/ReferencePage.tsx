@@ -18,7 +18,6 @@ import {
   Link as LinkIcon,
   List,
   Maximize2,
-  MoreHorizontal,
   Plus,
   Search,
   Trash2,
@@ -38,6 +37,8 @@ interface ReferencePageProps {
   onAcceptSelection?: (selectedIds: number[]) => void;
   onSelectionChange?: (selectedIds: number[]) => void;
   hideSelectionActionBar?: boolean;
+  initialTrashIds?: Set<number>;
+  onTrashChange?: (trashIds: Set<number>) => void;
 }
 
 export type ReferenceAsset = (typeof ASSETS)[number] & {
@@ -202,6 +203,17 @@ function referenceScore(asset: ReferenceAsset) {
 }
 
 type ReferenceBoard = (typeof REFERENCE_BOARDS)[number] & { assetIds?: number[]; memo?: string };
+const REFERENCE_TRASH_KEY = "neopoly_reference_trash_v3";
+
+function loadReferenceTrashIds() {
+  try {
+    const saved = localStorage.getItem(REFERENCE_TRASH_KEY);
+    const parsed = saved ? (JSON.parse(saved) as number[]) : [];
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set<number>();
+  }
+}
 
 export function boardMatchesAsset(board: ReferenceBoard, asset: ReferenceAsset) {
   if (board.assetIds?.includes(asset.id)) return true;
@@ -243,6 +255,8 @@ export default function ReferencePage({
   onAcceptSelection,
   onSelectionChange,
   hideSelectionActionBar = false,
+  initialTrashIds,
+  onTrashChange,
 }: ReferencePageProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [activeBadge, setActiveBadge] = useState("전체");
@@ -252,7 +266,9 @@ export default function ReferencePage({
   const [refFavorites, setRefFavorites] = useState<number[]>(() =>
     favorites.length ? favorites : [1, 4, 7],
   );
-  const [trashIds, setTrashIds] = useState<Set<number>>(new Set([2, 5]));
+  const [trashIds, setTrashIds] = useState<Set<number>>(
+    () => new Set(initialTrashIds ?? loadReferenceTrashIds()),
+  );
   const [previewImage, setPreviewImage] = useState<ReferenceAsset | null>(null);
   const [displayLimit, setDisplayLimit] = useState(40);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -276,6 +292,11 @@ export default function ReferencePage({
   useEffect(() => {
     onSelectionChange?.(Array.from(selectedIds));
   }, [onSelectionChange, selectedIds]);
+
+  useEffect(() => {
+    localStorage.setItem(REFERENCE_TRASH_KEY, JSON.stringify(Array.from(trashIds)));
+    onTrashChange?.(new Set(trashIds));
+  }, [onTrashChange, trashIds]);
 
 
 
@@ -448,6 +469,16 @@ export default function ReferencePage({
     setTrashIds((prev) => new Set([...prev, ...selectedIds]));
     setSelectedIds(new Set());
     setToast("선택한 항목을 휴지통으로 보냈습니다.");
+  };
+
+  const sendAssetToTrash = (assetId: number) => {
+    setTrashIds((prev) => new Set([...prev, assetId]));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(assetId);
+      return next;
+    });
+    setToast("레퍼런스를 휴지통으로 보냈습니다.");
   };
 
   const activeBoardLabel = activeCategory === "all"
@@ -783,6 +814,10 @@ export default function ReferencePage({
                     toggleAssetSelection(asset.id);
                     setToast("보드로 묶을 항목을 선택했습니다.");
                   }}
+                  onDelete={(e) => {
+                    e.stopPropagation();
+                    sendAssetToTrash(asset.id);
+                  }}
                 />
               );
             })}
@@ -819,6 +854,15 @@ export default function ReferencePage({
                     refFavorites.includes(asset.id) ? "fill-brand-primary text-brand-primary" : "text-neutral-400"
                   }`}
                 />
+                {activeCategory !== "trash" && (
+                  <Trash2
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      sendAssetToTrash(asset.id);
+                    }}
+                    className="h-5 w-5 text-neutral-500 transition hover:text-red-300"
+                  />
+                )}
               </button>
             ))}
           </div>
@@ -1180,6 +1224,7 @@ function ReferenceCard({
   onDownload,
   onLink,
   onAdd,
+  onDelete,
 }: {
   asset: ReferenceAsset;
   rowSpan: number;
@@ -1194,6 +1239,7 @@ function ReferenceCard({
   onDownload: (e: React.MouseEvent) => void;
   onLink: (e: React.MouseEvent) => void;
   onAdd: (e: React.MouseEvent) => void;
+  onDelete: (e: React.MouseEvent) => void;
 }) {
   return (
     <motion.button
@@ -1249,6 +1295,14 @@ function ReferenceCard({
           >
             <Star className={`h-4 w-4 ${isFavorite ? "fill-brand-primary" : ""}`} />
           </button>
+          <button
+            type="button"
+            title="삭제"
+            onClick={onDelete}
+            className="absolute bottom-3 right-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-[#0A0B0D]/70 text-white opacity-0 backdrop-blur-md transition hover:bg-red-500/15 hover:text-red-200 group-hover:opacity-100"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
         </>
       ) : isFavorite && !isSelected ? (
         <div className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[#E0A12E]/30 bg-[#0A0B0D]/85 text-brand-primary backdrop-blur-sm">
@@ -1272,7 +1326,7 @@ function ReferenceCard({
                 />
                 <ActionButton icon={<Maximize2 className="h-3.5 w-3.5" />} title="\uD06C\uAC8C\uBCF4\uAE30" onClick={onPreview} />
                 <span className="mx-1 h-4 w-px bg-[#2A2E36]" />
-                <ActionButton icon={<MoreHorizontal className="h-3.5 w-3.5" />} title="\uB354\uBCF4\uAE30" />
+                <ActionButton icon={<Trash2 className="h-3.5 w-3.5" />} title="삭제" onClick={onDelete} />
               </>
             )}
           </div>

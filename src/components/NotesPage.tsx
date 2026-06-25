@@ -9,7 +9,6 @@ import {
   LayoutGrid,
   Link as LinkIcon,
   List,
-  MoreHorizontal,
   PenLine,
   Plus,
   Search,
@@ -33,6 +32,8 @@ interface NotesPageProps {
   onOpenNote?: (noteId: number) => void;
   hideSelectionActionBar?: boolean;
   onCreateNote?: () => void;
+  initialTrashIds?: Set<number>;
+  onTrashChange?: (trashIds: Set<number>) => void;
 }
 
 export type NoteItem = {
@@ -50,6 +51,7 @@ export type NoteItem = {
 
 const STORAGE_KEY = "neopoly_notes_v3";
 const CHECKLIST_KEY = "neopoly_note_checklist_v3";
+const TRASH_KEY = "neopoly_note_trash_v3";
 
 export const NOTES: NoteItem[] = [
   {
@@ -275,6 +277,16 @@ function loadChecklist() {
   }
 }
 
+function loadTrashIds() {
+  try {
+    const saved = localStorage.getItem(TRASH_KEY);
+    const parsed = saved ? (JSON.parse(saved) as number[]) : [];
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set<number>();
+  }
+}
+
 export default function NotesPage({
   onNavigate,
   isPopup,
@@ -287,6 +299,8 @@ export default function NotesPage({
   onOpenNote,
   hideSelectionActionBar = false,
   onCreateNote,
+  initialTrashIds,
+  onTrashChange,
 }: NotesPageProps) {
   const [notes, setNotes] = useState<NoteItem[]>(loadNotes);
   const [activeNote, setActiveNote] = useState<number | null>(() => hideDetailPanel || isPopup ? null : notes[0]?.id ?? null);
@@ -297,7 +311,9 @@ export default function NotesPage({
   const [sortMode, setSortMode] = useState<"recent" | "name">("recent");
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const [favoritesFirst, setFavoritesFirst] = useState(false);
-  const [trashIds, setTrashIds] = useState<Set<number>>(new Set());
+  const [trashIds, setTrashIds] = useState<Set<number>>(
+    () => new Set(initialTrashIds ?? loadTrashIds()),
+  );
   const [checklists, setChecklists] = useState<Record<string, boolean[]>>(
     loadChecklist,
   );
@@ -319,6 +335,10 @@ export default function NotesPage({
   useEffect(() => {
     localStorage.setItem(CHECKLIST_KEY, JSON.stringify(checklists));
   }, [checklists]);
+  useEffect(() => {
+    localStorage.setItem(TRASH_KEY, JSON.stringify(Array.from(trashIds)));
+    onTrashChange?.(new Set(trashIds));
+  }, [onTrashChange, trashIds]);
   useEffect(() => {
     onSelectionChange?.(Array.from(selectedNotes));
   }, [onSelectionChange, selectedNotes]);
@@ -484,6 +504,19 @@ export default function NotesPage({
     setToast("선택한 노트를 휴지통으로 보냈습니다.");
   };
 
+  const moveNoteToTrash = (id: number) => {
+    setTrashIds((prev) => new Set([...prev, id]));
+    setSelectedNotes((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    if (activeNote === id) {
+      setActiveNote(filteredNotes.find((note) => note.id !== id)?.id ?? null);
+    }
+    setToast("노트를 휴지통으로 보냈습니다.");
+  };
+
   const selectedCount = selectedNotes.size;
 
   return (
@@ -639,17 +672,22 @@ export default function NotesPage({
                         </span>
                       )}
                     </div>
-                    <span
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleStar(note.id);
-                      }}
-                      className={`transition ${
-                        note.starred ? "text-brand-primary" : "text-neutral-400 group-hover:text-white"
-                      }`}
-                    >
-                      <Star className={`h-[18px] w-[18px] ${note.starred ? "fill-brand-primary" : ""}`} />
-                    </span>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        title="즐겨찾기"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleStar(note.id);
+                        }}
+                        className={`transition ${
+                          note.starred ? "text-brand-primary" : "text-neutral-400 group-hover:text-white"
+                        }`}
+                      >
+                        <Star className={`h-[18px] w-[18px] ${note.starred ? "fill-brand-primary" : ""}`} />
+                      </span>
+                    </div>
                   </div>
 
                   <p className="mb-4 h-10 text-[14px] leading-relaxed text-neutral-400 line-clamp-2">
@@ -691,13 +729,20 @@ export default function NotesPage({
                     <span className="font-sans text-[14px] text-neutral-400">
                       {note.date}
                     </span>
-                    <span className="text-neutral-400 transition hover:text-white">
-                      {activeNote === note.id ? (
-                        <PenLine className="h-[18px] w-[18px]" />
-                      ) : (
-                        <MoreHorizontal className="h-[18px] w-[18px]" />
-                      )}
-                    </span>
+                    {filter !== "trash" && (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        title="삭제"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          moveNoteToTrash(note.id);
+                        }}
+                        className="text-neutral-400 opacity-0 transition hover:text-red-300 group-hover:opacity-100"
+                      >
+                        <Trash2 className="h-[18px] w-[18px]" />
+                      </span>
+                    )}
                   </div>
                 </button>
               );
@@ -751,6 +796,15 @@ export default function NotesPage({
                 >
                   <Star className={`h-[22px] w-[22px] ${activeNoteData.starred ? "fill-brand-primary" : ""}`} />
                 </button>
+                {filter !== "trash" && (
+                  <button
+                    onClick={() => moveNoteToTrash(activeNoteData.id)}
+                    className="text-neutral-400 transition hover:text-red-300"
+                    title="삭제"
+                  >
+                    <Trash2 className="h-[21px] w-[21px]" />
+                  </button>
+                )}
                 <button
                   onClick={() => setActiveNote(null)}
                   className="text-neutral-400 hover:text-white"

@@ -2150,7 +2150,7 @@ function AssetCard({
         <img 
           src={asset.image} 
           alt={asset.title} 
-          className="w-full h-full object-cover transition-all duration-300 ease-in-out group-hover:scale-[1.007] group-hover:brightness-[0.82]" 
+          className="h-full w-full origin-center transform-gpu object-cover transition-transform duration-300 ease-out will-change-transform group-hover:scale-[1.006]"
           referrerPolicy="no-referrer"
         />
 
@@ -2164,7 +2164,7 @@ function AssetCard({
         </div>
 
         {/* Hover Information Overlay (Desktop) */}
-        <div className="absolute inset-x-0 bottom-0 h-[75%] bg-gradient-to-t from-black/95 via-black/60 to-transparent hidden md:flex flex-col justify-end p-4 pb-5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-[300ms] ease-out z-10">
+        <div className="absolute inset-x-0 bottom-0 z-10 hidden h-[75%] flex-col justify-end bg-gradient-to-t from-black/95 via-black/60 to-transparent p-4 pb-5 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 md:flex">
           <h3 className="text-[18px] font-medium text-text-primary line-clamp-2 leading-[1.32] mb-0.5">
             {asset.title}
           </h3>
@@ -2570,6 +2570,19 @@ function ProductDetailPage({
   );
 }
 
+const readStoredIdSet = (key: string) => {
+  try {
+    const saved = localStorage.getItem(key);
+    const parsed = saved ? (JSON.parse(saved) as number[]) : [];
+    return new Set(Array.isArray(parsed) ? parsed : []);
+  } catch {
+    return new Set<number>();
+  }
+};
+
+const NOTE_TRASH_STORAGE_KEY = "neopoly_note_trash_v3";
+const REFERENCE_TRASH_STORAGE_KEY = "neopoly_reference_trash_v3";
+
 function BoardPage({
   onNavigate,
   favorites,
@@ -2587,6 +2600,12 @@ function BoardPage({
   const [boardNoteFilter, setBoardNoteFilter] = useState("all");
   const [boardReferenceCategory, setBoardReferenceCategory] = useState("all");
   const [activeBoardNoteId, setActiveBoardNoteId] = useState<number | null>(null);
+  const [boardDeletedNoteIds, setBoardDeletedNoteIds] = useState<Set<number>>(
+    () => readStoredIdSet(NOTE_TRASH_STORAGE_KEY),
+  );
+  const [boardDeletedReferenceIds, setBoardDeletedReferenceIds] = useState<Set<number>>(
+    () => readStoredIdSet(REFERENCE_TRASH_STORAGE_KEY),
+  );
 
   useEffect(() => {
     setBoardView(initialView);
@@ -2598,14 +2617,23 @@ function BoardPage({
     }
   }, [boardView]);
 
+  useEffect(() => {
+    localStorage.setItem(NOTE_TRASH_STORAGE_KEY, JSON.stringify(Array.from(boardDeletedNoteIds)));
+  }, [boardDeletedNoteIds]);
+
+  useEffect(() => {
+    localStorage.setItem(REFERENCE_TRASH_STORAGE_KEY, JSON.stringify(Array.from(boardDeletedReferenceIds)));
+  }, [boardDeletedReferenceIds]);
+
   const boardItems = [
     { id: "all" as const, label: "전체", desc: "노트와 레퍼런스 함께 보기", icon: LayoutGrid },
     { id: "notes" as const, label: "노트", desc: "아이디어 / 작업 메모", icon: FileText },
     { id: "references" as const, label: "레퍼런스", desc: "이미지 / 보드 / 자료", icon: ImageIcon },
   ];
 
-  const liveNotes = NOTES;
+  const liveNotes = NOTES.filter((note) => !boardDeletedNoteIds.has(note.id));
   const liveReferences = ASSETS.filter((asset) =>
+    !boardDeletedReferenceIds.has(asset.id) &&
     REFERENCE_BOARDS.some((board) => boardMatchesAsset(board, asset as any)),
   );
   const activeBoardNote = activeBoardNoteId
@@ -2620,7 +2648,7 @@ function BoardPage({
     if (category === "favorites") return favorites.length;
     if (category === "recent") return Math.min(12, liveReferences.length);
     const board = REFERENCE_BOARDS.find((item) => item.id === category);
-    return board ? ASSETS.filter((asset) => boardMatchesAsset(board, asset as any)).length : 0;
+    return board ? liveReferences.filter((asset) => boardMatchesAsset(board, asset as any)).length : 0;
   };
 
   const noteFolders = [
@@ -2760,7 +2788,9 @@ function BoardPage({
           <h3 className="line-clamp-2 text-[17px] font-semibold leading-tight text-white">{note.title}</h3>
           <p className="mt-1 text-[14px] font-medium text-text-tertiary">{note.date}</p>
         </div>
-        {note.starred && <Star className="h-4 w-4 shrink-0 fill-brand-primary text-brand-primary" />}
+        <div className="flex shrink-0 items-center gap-2">
+          {note.starred && <Star className="h-4 w-4 fill-brand-primary text-brand-primary" />}
+        </div>
       </div>
       <p className="line-clamp-3 text-[15px] leading-[1.6] text-text-secondary">{note.desc}</p>
       <div className="mt-3 flex flex-wrap gap-1.5">
@@ -2966,6 +2996,8 @@ function BoardPage({
             onOpenNote={openBoardNoteDetail}
             onCreateNote={() => onEditNote(null)}
             boardFilter={boardNoteFilter}
+            initialTrashIds={boardDeletedNoteIds}
+            onTrashChange={setBoardDeletedNoteIds}
           />
         ) : (
           <ReferencePage
@@ -2975,6 +3007,8 @@ function BoardPage({
             isPopup
             hideSidebar
             boardCategory={boardReferenceCategory}
+            initialTrashIds={boardDeletedReferenceIds}
+            onTrashChange={setBoardDeletedReferenceIds}
           />
         )}
       </section>
@@ -4321,6 +4355,17 @@ export default function App() {
                         </div>
                       </button>
                     ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsPanelOpen(false);
+                        openNoteEditor(null);
+                      }}
+                      className="flex h-9 items-center justify-center gap-2 rounded-md px-2 text-[14px] font-medium text-text-tertiary transition hover:bg-white/5 hover:text-brand-primary"
+                    >
+                      <Plus className="h-4 w-4" />
+                      노트 추가
+                    </button>
                   </div>
                 </div>
 
