@@ -9,3 +9,7 @@ coverage/
 
 .vercel
 .superpowers/
+
+# Local helper files
+네오폴리_로컬서버켜기.bat
+verification-localhost-3000.png

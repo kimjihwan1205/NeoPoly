@@ -113,12 +113,80 @@ const DEFAULT_ENVIRONMENT_RENDER_PROMPT =
   "거친 협곡 전장에 선 오크 전사, 완성된 3D 모델을 영화적인 조명과 먼지 낀 배경으로 렌더링";
 
 
-const TEXTURE_MAPS = [
-  { id: "body-base", label: "Body BaseColor", color: "#6E8B47", file: "orc_orc_body_BaseColor.1001.tga" },
-  { id: "body-normal", label: "Body Normal", color: "#4358B8", file: "orc_body_Normal.1001.tga" },
-  { id: "body-rough", label: "Body Roughness", color: "#8E8E8E", file: "orc_body_Roughness.1001.tga" },
-  { id: "gear-base", label: "Gear BaseColor", color: "#A8752B", file: "orc_02 - Default_BaseColor.1001.tga" },
-  { id: "gear-metal", label: "Gear Metallic", color: "#D8D8D8", file: "orc_02 - Default_Metallic.1001.tga" },
+type TextureMapInfo = {
+  id: string;
+  label: string;
+  color: string;
+  file: string;
+  path: string;
+  part: "Body" | "Gear";
+  channel: string;
+};
+
+const TEXTURE_MAPS: TextureMapInfo[] = [
+  {
+    id: "body-base",
+    label: "Body BaseColor",
+    color: "#6E8B47",
+    file: "orc_orc_body_BaseColor.1001.tga",
+    path: "/models/orc/orc_texture/orc_orc_body_BaseColor.1001.tga",
+    part: "Body",
+    channel: "BaseColor",
+  },
+  {
+    id: "body-normal",
+    label: "Body Normal",
+    color: "#4358B8",
+    file: "orc_body_Normal.1001.tga",
+    path: "/models/orc/orc_texture/orc_body_Normal.1001.tga",
+    part: "Body",
+    channel: "Normal",
+  },
+  {
+    id: "body-rough",
+    label: "Body Roughness",
+    color: "#8E8E8E",
+    file: "orc_body_Roughness.1001.tga",
+    path: "/models/orc/orc_texture/orc_body_Roughness.1001.tga",
+    part: "Body",
+    channel: "Roughness",
+  },
+  {
+    id: "gear-base",
+    label: "Gear BaseColor",
+    color: "#A8752B",
+    file: "orc_02 - Default_BaseColor.1001.tga",
+    path: "/models/orc/orc_texture/orc_02 - Default_BaseColor.1001.tga",
+    part: "Gear",
+    channel: "BaseColor",
+  },
+  {
+    id: "gear-normal",
+    label: "Gear Normal",
+    color: "#4358B8",
+    file: "orc_02 - Default_Normal.1001.tga",
+    path: "/models/orc/orc_texture/orc_02 - Default_Normal.1001.tga",
+    part: "Gear",
+    channel: "Normal",
+  },
+  {
+    id: "gear-rough",
+    label: "Gear Roughness",
+    color: "#8E8E8E",
+    file: "orc_02 - Default_Roughness.1001.tga",
+    path: "/models/orc/orc_texture/orc_02 - Default_Roughness.1001.tga",
+    part: "Gear",
+    channel: "Roughness",
+  },
+  {
+    id: "gear-metal",
+    label: "Gear Metallic",
+    color: "#D8D8D8",
+    file: "orc_02 - Default_Metallic.1001.tga",
+    path: "/models/orc/orc_texture/orc_02 - Default_Metallic.1001.tga",
+    part: "Gear",
+    channel: "Metallic",
+  },
 ];
 
 const ORC_MODEL_FILE = "orc_20260603.fbx";
@@ -812,6 +880,14 @@ function ModelViewport({
     setActiveTool("선택");
   }, [activeStep]);
 
+  useEffect(() => {
+    if (activeStep === "remesh") {
+      setViewMode("Wireframe");
+    } else if (activeStep === "texture") {
+      setViewMode("Textured");
+    }
+  }, [activeStep]);
+
   const handleToolSelect = (tool: string) => {
     if (tool === "카메라") {
       setCameraResetKey((value) => value + 1);
@@ -924,6 +1000,67 @@ function SectionTitle({ title, helper }: { title: string; helper?: string }) {
   );
 }
 
+function TgaTexturePreview({ map, className = "" }: { map: TextureMapInfo; className?: string }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [loadState, setLoadState] = useState<"loading" | "loaded" | "error">("loading");
+
+  useEffect(() => {
+    let disposed = false;
+    setLoadState("loading");
+
+    const loader = new TGALoader();
+    loader.load(
+      encodeURI(versionedAsset(map.path)),
+      (texture) => {
+        if (disposed) {
+          texture.dispose();
+          return;
+        }
+
+        const image = texture.image as { data?: Uint8Array | Uint8ClampedArray; width?: number; height?: number };
+        const canvas = canvasRef.current;
+        const context = canvas?.getContext("2d");
+
+        if (!canvas || !context || !image.data || !image.width || !image.height) {
+          setLoadState("error");
+          texture.dispose();
+          return;
+        }
+
+        canvas.width = image.width;
+        canvas.height = image.height;
+        context.imageSmoothingEnabled = false;
+        context.putImageData(
+          new ImageData(new Uint8ClampedArray(image.data), image.width, image.height),
+          0,
+          0,
+        );
+        texture.dispose();
+        setLoadState("loaded");
+      },
+      undefined,
+      () => {
+        if (!disposed) setLoadState("error");
+      },
+    );
+
+    return () => {
+      disposed = true;
+    };
+  }, [map.path]);
+
+  return (
+    <div className={`relative overflow-hidden bg-[#050505] ${className}`}>
+      <canvas ref={canvasRef} className={`h-full w-full object-contain ${loadState === "loaded" ? "block" : "hidden"}`} />
+      {loadState !== "loaded" && (
+        <div className="absolute inset-0 flex items-center justify-center text-[12px] text-neutral-500">
+          {loadState === "loading" ? "Loading" : "No preview"}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RightPanel({
   activeStep,
   setActiveStep,
@@ -943,6 +1080,7 @@ function RightPanel({
 }) {
   const [scope, setScope] = useState("selection");
   const [quality, setQuality] = useState("500K");
+  const [selectedTextureMapId, setSelectedTextureMapId] = useState(TEXTURE_MAPS[0].id);
   const [isProcessing, setIsProcessing] = useState(false);
   const [promptDrafts, setPromptDrafts] = useState<Record<"generate", string>>({
     generate: "",
@@ -951,6 +1089,8 @@ function RightPanel({
   const activeIndex = STEPS.findIndex((step) => step.id === activeStep);
   const nextStep = STEPS[activeIndex + 1]?.id;
   const previousTarget = getModelingPreviousTarget(activeStep);
+  const selectedTextureMap =
+    TEXTURE_MAPS.find((map) => map.id === selectedTextureMapId) ?? TEXTURE_MAPS[0];
 
   const panelCopy = useMemo(() => {
     if (activeStep === "generate") {
@@ -1169,16 +1309,50 @@ function RightPanel({
 
             <div className="rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4">
               <SectionTitle title="텍스처 맵" />
-              <div className="mt-3 space-y-2">
-                {TEXTURE_MAPS.map((map) => (
-                  <div key={map.id} className="flex items-center justify-between rounded-lg border border-[#1F2329] bg-[#141518] px-3 py-2">
-                    <span className="flex min-w-0 items-center gap-2 text-[14px] text-neutral-300">
-                      <span className="h-4 w-4 shrink-0 rounded-sm border border-white/10" style={{ backgroundColor: map.color }} />
-                      <span className="truncate">{map.label}</span>
+              <div className="mt-3 overflow-hidden rounded-lg border border-[#1F2329] bg-[#050505]">
+                <TgaTexturePreview map={selectedTextureMap} className="aspect-square w-full" />
+                <div className="border-t border-[#1F2329] p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-[15px] font-medium text-white">{selectedTextureMap.label}</p>
+                      <p className="mt-1 truncate text-[13px] text-neutral-500">{selectedTextureMap.file}</p>
+                    </div>
+                    <span className="shrink-0 rounded-md border border-[#2A2E36] px-2 py-1 text-[12px] text-neutral-400">
+                      TGA
                     </span>
-                    <Eye className="h-3.5 w-3.5 shrink-0 text-neutral-500" />
                   </div>
-                ))}
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-[12px] text-neutral-400">
+                    <span className="rounded-md bg-[#111317] px-2 py-1">{selectedTextureMap.part}</span>
+                    <span className="rounded-md bg-[#111317] px-2 py-1">{selectedTextureMap.channel}</span>
+                    <span className="rounded-md bg-[#111317] px-2 py-1">2048</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {TEXTURE_MAPS.map((map) => {
+                  const isSelected = selectedTextureMap.id === map.id;
+                  return (
+                    <button
+                      key={map.id}
+                      type="button"
+                      onClick={() => setSelectedTextureMapId(map.id)}
+                      className={`flex min-w-0 items-center gap-2 rounded-lg border p-2 text-left transition ${
+                        isSelected
+                          ? "border-[#E0A12E] bg-[#E0A12E]/10"
+                          : "border-[#1F2329] bg-[#141518] hover:border-[#555A64]"
+                      }`}
+                    >
+                      <TgaTexturePreview map={map} className="h-12 w-12 shrink-0 rounded-md border border-white/10" />
+                      <span className="min-w-0">
+                        <span className={`block truncate text-[13px] font-medium ${isSelected ? "text-[#E0A12E]" : "text-neutral-300"}`}>
+                          {map.channel}
+                        </span>
+                        <span className="block truncate text-[12px] text-neutral-500">{map.part}</span>
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>

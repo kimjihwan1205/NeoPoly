@@ -2014,7 +2014,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               </div>
                             </div>
 
-                            <div className={`flex w-[300px] shrink-0 flex-col rounded-xl border bg-[#0A0B0D] p-3 shadow-[-18px_0_28px_rgba(0,0,0,0.2)] transition ${
+                            <div className={`flex w-[220px] shrink-0 flex-col rounded-xl border bg-[#0A0B0D] p-3 shadow-[-18px_0_28px_rgba(0,0,0,0.2)] transition ${
                               isAddingModuleSet ? "border-[#E0A12E]/55" : "border-[#1F2329]"
                             }`}>
                               <div className="mb-3 flex items-center justify-between">

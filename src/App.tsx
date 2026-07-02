@@ -5,11 +5,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Search, ShoppingCart, Bell, LayoutGrid, User, Mountain, Building2, 
+  Search, ShoppingCart, Bell, LayoutGrid, User, Mountain, Building2, Menu, 
   Car, Sword, Box, Leaf, Wand2, Heart, Eye, Sliders, Plus, Folder, ChevronRight,
   Sparkles, Video, BrainCircuit, GripVertical, FileText, Skull,
   PanelRightClose, X, ChevronDown, Check, Instagram, Youtube, ShoppingBag,
-  Upload, Trash2, Clock, LogOut, Settings, Star, ImageIcon, ArrowUp
+  Upload, Trash2, Clock, LogOut, Settings, Star, ImageIcon, ArrowUp, CircleHelp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ContentManagementPage from './components/ContentManagementPage';
@@ -906,6 +906,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const [cartItems, setCartItems] = useState<PrototypePurchaseItem[]>(() => safeReadPurchaseItems(PURCHASE_CART_KEY));
   const [checkoutItems, setCheckoutItems] = useState<PrototypePurchaseItem[] | null>(null);
@@ -1094,16 +1095,76 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
   const totalCartPrice = cartItems.reduce((acc, item) => acc + item.rawPrice, 0);
   const formattedTotalPrice = totalCartPrice.toLocaleString() + '₩';
 
+  const mobileNavItems = [
+    {
+      label: 'Discover',
+      icon: LayoutGrid,
+      isActive: currentPage === 'home',
+      action: () => { if(setActiveNav) setActiveNav(null); if(onNavigate) onNavigate('home'); },
+    },
+    {
+      label: 'AI Studio',
+      icon: Sparkles,
+      isActive: activeNav === 'studio' || currentPage === 'studio' || currentPage === 'full_workflow' || currentPage === 'full_workflow_chat' || currentPage === 'turnaround' || currentPage === 'modeling_generation',
+      action: () => { if(setActiveNav) setActiveNav('studio'); if(onNavigate) onNavigate('studio'); },
+    },
+    {
+      label: 'Projects',
+      icon: Folder,
+      isActive: activeNav === 'projects' || currentPage === 'projects',
+      action: () => { if(setActiveNav) setActiveNav('projects'); if(onNavigate) onNavigate('projects'); },
+    },
+    {
+      label: 'Board',
+      icon: FileText,
+      isActive: currentPage === 'board' || currentPage === 'notes' || currentPage === 'references' || currentPage === 'note-editor',
+      action: () => { if(setActiveNav) setActiveNav(null); if(onNavigate) onNavigate('board'); },
+    },
+    {
+      label: 'Support',
+      icon: CircleHelp,
+      isActive: activeNav === 'support' || currentPage === 'support',
+      action: () => { if(setActiveNav) setActiveNav('support'); if(onNavigate) onNavigate('support'); },
+    },
+  ];
+  const mobileStudioShortcuts = [
+    { label: '전체 워크플로우', page: 'full_workflow' },
+    { label: '턴어라운드', page: 'turnaround' },
+    { label: '3D 모델링 생성', page: 'modeling_generation' },
+  ];
+
+  const handleMobileNav = (action: () => void) => {
+    action();
+    setIsMobileMenuOpen(false);
+    setIsCartOpen(false);
+    setIsNotifOpen(false);
+    setIsProfileMenuOpen(false);
+  };
+
   return (
-    <header className="sticky top-0 z-50 bg-[#08090B]/80 backdrop-blur-xl px-6 h-[76px] flex items-center justify-between border-b border-border-primary/45 w-full gap-4 md:gap-6">
+    <header className="sticky top-0 z-50 flex h-[60px] w-full items-center justify-between gap-3 border-b border-border-primary/45 bg-[#08090B]/80 px-4 backdrop-blur-xl sm:px-5 md:gap-6 lg:h-[76px] lg:px-6">
       {/* Left section: Logo + Left-aligned menu with comfortable custom spacing */}
-      <div className="flex items-center gap-4 md:gap-8 lg:gap-12 xl:gap-16 shrink-0">
+      <div className="flex items-center gap-3 md:gap-8 lg:gap-12 xl:gap-16 shrink-0">
+        <button
+          type="button"
+          onClick={() => {
+            setIsMobileMenuOpen(true);
+            setIsCartOpen(false);
+            setIsNotifOpen(false);
+            setIsProfileMenuOpen(false);
+            setIsFocused(false);
+          }}
+          className="flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-transparent text-text-secondary transition hover:bg-white/5 hover:text-text-primary lg:hidden"
+          aria-label="모바일 메뉴 열기"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
         <div className="flex items-center">
           <img referrerPolicy="no-referrer" 
             src="/images/logo.png?v=2" 
             alt="NeoPoly" 
             onClick={() => { if(onNavigate) onNavigate('home'); if(setActiveNav) setActiveNav(null); }} 
-            className="h-[32px] md:h-[35px] w-auto max-h-[37px] object-contain transition-all cursor-pointer" 
+            className="absolute left-1/2 top-1/2 h-[28px] w-auto max-h-[37px] -translate-x-1/2 -translate-y-1/2 cursor-pointer object-contain transition-all sm:h-[32px] md:h-[35px] lg:static lg:translate-x-0 lg:translate-y-0" 
           />
         </div>
         
@@ -1148,7 +1209,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
       {/* Right Column: Search + Proponent Action widgets (Responsive & beautifully scales with generous, high-readability sizes) */}
       <div className="flex-1 flex items-center gap-3 md:gap-5 min-w-0 justify-end max-w-full">
         {/* Stateful Search Bar Area - Enriched to meet user demands for spacious layout and 14px clear text */}
-        <div className="hidden sm:flex relative items-center gap-2 flex-1 max-w-[200px] md:max-w-[320px] lg:max-w-[420px] xl:max-w-[580px]" ref={searchContainerRef}>
+        <div className="relative hidden items-center gap-2 flex-1 max-w-[420px] lg:flex xl:max-w-[580px]" ref={searchContainerRef}>
           <div className="relative flex-1">
             <input 
               type="text" 
@@ -1415,7 +1476,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
         
         <div className="flex items-center gap-3 md:gap-4 shrink-0">
           {/* Cart Icon + Dropdown */}
-          <div className="relative" ref={cartRef}>
+          <div className="relative hidden lg:block" ref={cartRef}>
             <button 
               onClick={toggleCart}
               className={`text-text-tertiary hover:text-text-primary transition-all p-2 hover:scale-110 relative cursor-pointer rounded-full hover:bg-surface-primary/30 ${isCartOpen ? 'text-brand-primary' : ''}`}
@@ -1498,7 +1559,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
             </div>
 
             {/* Notification Icon + Dropdown */}
-            <div className="relative" ref={notifRef}>
+            <div className="relative hidden lg:block" ref={notifRef}>
               <button 
                 onClick={toggleNotif}
                 className={`text-text-tertiary hover:text-text-primary transition-all relative p-2 hover:scale-110 cursor-pointer rounded-full hover:bg-surface-primary/30 ${isNotifOpen ? 'text-brand-primary' : ''}`}
@@ -1674,6 +1735,111 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            onMouseDown={() => setIsMobileMenuOpen(false)}
+            className="fixed inset-0 z-[240] bg-black/62 backdrop-blur-sm lg:hidden"
+          >
+            <motion.aside
+              initial={{ x: -320 }}
+              animate={{ x: 0 }}
+              exit={{ x: -320 }}
+              transition={{ duration: 0.24, ease: "easeOut" }}
+              onMouseDown={(event) => event.stopPropagation()}
+              className="flex h-full w-[min(86vw,340px)] flex-col border-r border-[#242831] bg-[#08090B] shadow-[24px_0_60px_rgba(0,0,0,0.65)]"
+            >
+              <div className="flex h-[60px] items-center justify-between border-b border-[#1F2329] px-4">
+                <img
+                  referrerPolicy="no-referrer"
+                  src="/images/logo.png?v=2"
+                  alt="NeoPoly"
+                  className="h-[29px] w-auto object-contain"
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-text-secondary transition hover:border-brand-primary/50 hover:text-text-primary"
+                  aria-label="모바일 메뉴 닫기"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 custom-scrollbar">
+                <div className="space-y-1">
+                  {mobileNavItems.map(({ label, icon: Icon, isActive, action }) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => handleMobileNav(action)}
+                      className={`flex h-12 w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] font-medium transition ${
+                        isActive
+                          ? "border border-brand-primary/35 bg-brand-primary/12 text-brand-primary"
+                          : "border border-transparent text-text-secondary hover:border-[#2A2E36] hover:bg-[#111317] hover:text-text-primary"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5 shrink-0" />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-5 border-t border-[#1F2329] pt-4">
+                  <p className="px-3 text-[12px] font-medium uppercase tracking-[0.12em] text-text-tertiary">Studio</p>
+                  <div className="mt-2 space-y-1">
+                    {mobileStudioShortcuts.map((item) => (
+                      <button
+                        key={item.page}
+                        type="button"
+                        onClick={() => handleMobileNav(() => {
+                          if(setActiveNav) setActiveNav('studio');
+                          if(onNavigate) onNavigate(item.page);
+                        })}
+                        className={`flex h-11 w-full items-center justify-between rounded-lg px-3 text-left text-[14px] font-medium transition ${
+                          currentPage === item.page
+                            ? "bg-brand-primary/12 text-brand-primary"
+                            : "text-text-secondary hover:bg-[#111317] hover:text-text-primary"
+                        }`}
+                      >
+                        <span>{item.label}</span>
+                        <ChevronRight className="h-4 w-4 text-text-tertiary" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-5 border-t border-[#1F2329] pt-4">
+                  <p className="px-3 text-[12px] font-medium uppercase tracking-[0.12em] text-text-tertiary">My</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {[
+                      { label: 'Uploads', icon: Upload, page: 'uploads' },
+                      { label: 'Favorites', icon: Heart, page: 'favorites' },
+                      { label: 'Purchases', icon: ShoppingBag, page: 'purchases' },
+                      { label: 'Settings', icon: Settings, page: 'settings' },
+                    ].map(({ label, icon: Icon, page }) => (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => handleMobileNav(() => { if(onNavigate) onNavigate(page); })}
+                        className="flex min-h-[78px] flex-col items-start justify-between rounded-lg border border-[#1F2329] bg-[#0A0B0D] p-3 text-left text-[13px] font-medium text-text-secondary transition hover:border-brand-primary/40 hover:text-text-primary"
+                      >
+                        <Icon className="h-5 w-5 text-brand-primary/80" />
+                        <span>{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {checkoutItems && (
           <CheckoutDialog
