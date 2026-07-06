@@ -11,7 +11,7 @@ import {
   PanelRightClose, X, ChevronDown, Check, Instagram, Youtube, ShoppingBag,
   Upload, Trash2, Clock, LogOut, Settings, Star, ImageIcon, ArrowUp, CircleHelp
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useDragControls } from 'motion/react';
 import ContentManagementPage from './components/ContentManagementPage';
 import PurchasedAssetsPage from './components/PurchasedAssetsPage';
 import FavoritesPage from './components/FavoritesPage';
@@ -1087,6 +1087,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen(prev => !prev);
+    setIsMobileMenuOpen(false);
     setIsNotifOpen(false);
     setIsCartOpen(false);
     setIsFocused(false);
@@ -1127,12 +1128,6 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
       action: () => { if(setActiveNav) setActiveNav('support'); if(onNavigate) onNavigate('support'); },
     },
   ];
-  const mobileStudioShortcuts = [
-    { label: '전체 워크플로우', page: 'full_workflow' },
-    { label: '턴어라운드', page: 'turnaround' },
-    { label: '3D 모델링 생성', page: 'modeling_generation' },
-  ];
-
   const handleMobileNav = (action: () => void) => {
     action();
     setIsMobileMenuOpen(false);
@@ -1142,22 +1137,24 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
   };
 
   return (
+    <>
     <header className="sticky top-0 z-50 flex h-[60px] w-full items-center justify-between gap-3 border-b border-border-primary/45 bg-[#08090B]/80 px-4 backdrop-blur-xl sm:px-5 md:gap-6 lg:h-[76px] lg:px-6">
       {/* Left section: Logo + Left-aligned menu with comfortable custom spacing */}
       <div className="flex items-center gap-3 md:gap-8 lg:gap-12 xl:gap-16 shrink-0">
         <button
           type="button"
           onClick={() => {
-            setIsMobileMenuOpen(true);
+            setIsMobileMenuOpen(prev => !prev);
             setIsCartOpen(false);
             setIsNotifOpen(false);
             setIsProfileMenuOpen(false);
             setIsFocused(false);
           }}
           className="flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-transparent text-text-secondary transition hover:bg-white/5 hover:text-text-primary lg:hidden"
-          aria-label="모바일 메뉴 열기"
+          aria-label={isMobileMenuOpen ? "모바일 메뉴 닫기" : "모바일 메뉴 열기"}
+          aria-expanded={isMobileMenuOpen}
         >
-          <Menu className="h-5 w-5" />
+          {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
         <div className="flex items-center">
           <img referrerPolicy="no-referrer" 
@@ -1664,12 +1661,21 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 
   <AnimatePresence>
     {isProfileMenuOpen && (
+      <>
       <motion.div
-        initial={{ opacity: 0, y: 15 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.16, ease: "easeOut" }}
+        onMouseDown={() => setIsProfileMenuOpen(false)}
+        className="fixed inset-x-0 bottom-0 top-[60px] z-[230] bg-black/45 backdrop-blur-[2px] lg:hidden"
+      />
+      <motion.div
+        initial={{ opacity: 0, y: -18 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 15 }}
-        transition={{ duration: 0.18, ease: 'easeOut' }}
-        className="absolute top-full right-[-10px] sm:right-0 mt-3.5 w-[300px] bg-[#0E1011] border border-[#2A2E36]/80 rounded-[12px] pb-1 shadow-[0_25px_60px_rgba(0,0,0,0.95)] backdrop-blur-3xl z-50 flex flex-col font-sans"
+        exit={{ opacity: 0, y: -14 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed inset-x-0 top-[60px] z-[240] flex flex-col border-b border-[#242831] bg-[#0B0D10]/98 px-4 pb-2 shadow-[0_18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl font-sans lg:absolute lg:inset-auto lg:top-full lg:right-0 lg:mt-3.5 lg:w-[300px] lg:rounded-[12px] lg:border lg:border-[#2A2E36]/80 lg:bg-[#0E1011] lg:px-0 lg:pb-1 lg:shadow-[0_25px_60px_rgba(0,0,0,0.95)] lg:backdrop-blur-3xl"
       >
         {/* Header: User Info */}
         <div className="flex items-center gap-3 p-4 border-b border-[#2A2E36]/50">
@@ -1701,10 +1707,10 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
           <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('uploads'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
             <Upload className="w-[20px] h-[20px]" /> 업로드한 작업물 관리
           </button>
-          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('projects'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
+          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('projects'); }} className="hidden lg:flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
             <Folder className="w-[20px] h-[20px]" /> 내 프로젝트
           </button>
-          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('board'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
+          <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('board'); }} className="hidden lg:flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
             <LayoutGrid className="w-[20px] h-[20px]" /> 보드
           </button>
           <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('favorites'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
@@ -1730,11 +1736,13 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
           </button>
         </div>
       </motion.div>
+      </>
     )}
   </AnimatePresence>
 </div>
         </div>
       </div>
+    </header>
 
       <AnimatePresence>
         {isMobileMenuOpen && (
@@ -1742,101 +1750,36 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
             onMouseDown={() => setIsMobileMenuOpen(false)}
-            className="fixed inset-0 z-[240] bg-black/62 backdrop-blur-sm lg:hidden"
+            className="fixed inset-x-0 bottom-0 top-[60px] z-[240] bg-black/45 backdrop-blur-[2px] lg:hidden"
           >
-            <motion.aside
-              initial={{ x: -320 }}
-              animate={{ x: 0 }}
-              exit={{ x: -320 }}
-              transition={{ duration: 0.24, ease: "easeOut" }}
+            <motion.nav
+              initial={{ opacity: 0, y: -18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -14 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               onMouseDown={(event) => event.stopPropagation()}
-              className="flex h-full w-[min(86vw,340px)] flex-col border-r border-[#242831] bg-[#08090B] shadow-[24px_0_60px_rgba(0,0,0,0.65)]"
+              className="border-b border-[#242831] bg-[#0B0D10]/98 px-4 pb-4 pt-5 shadow-[0_18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl"
+              aria-label="모바일 메뉴"
             >
-              <div className="flex h-[60px] items-center justify-between border-b border-[#1F2329] px-4">
-                <img
-                  referrerPolicy="no-referrer"
-                  src="/images/logo.png?v=2"
-                  alt="NeoPoly"
-                  className="h-[29px] w-auto object-contain"
-                />
-                <button
-                  type="button"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-text-secondary transition hover:border-brand-primary/50 hover:text-text-primary"
-                  aria-label="모바일 메뉴 닫기"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+              <div className="mx-auto flex max-w-[720px] flex-col gap-1 md:flex-row md:items-center md:justify-center md:gap-9">
+                {mobileNavItems.map(({ label, isActive, action }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => handleMobileNav(action)}
+                    className={`group flex h-12 w-full items-center justify-start rounded-md bg-transparent px-3 text-left text-[17px] transition-colors md:h-11 md:w-auto md:px-0 md:hover:bg-transparent ${
+                      isActive
+                        ? "font-semibold text-brand-primary"
+                        : "font-medium text-text-tertiary hover:bg-white/[0.04] hover:text-text-primary"
+                    }`}
+                  >
+                    <span>{label}</span>
+                  </button>
+                ))}
               </div>
-
-              <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 custom-scrollbar">
-                <div className="space-y-1">
-                  {mobileNavItems.map(({ label, icon: Icon, isActive, action }) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => handleMobileNav(action)}
-                      className={`flex h-12 w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] font-medium transition ${
-                        isActive
-                          ? "border border-brand-primary/35 bg-brand-primary/12 text-brand-primary"
-                          : "border border-transparent text-text-secondary hover:border-[#2A2E36] hover:bg-[#111317] hover:text-text-primary"
-                      }`}
-                    >
-                      <Icon className="h-5 w-5 shrink-0" />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="mt-5 border-t border-[#1F2329] pt-4">
-                  <p className="px-3 text-[12px] font-medium uppercase tracking-[0.12em] text-text-tertiary">Studio</p>
-                  <div className="mt-2 space-y-1">
-                    {mobileStudioShortcuts.map((item) => (
-                      <button
-                        key={item.page}
-                        type="button"
-                        onClick={() => handleMobileNav(() => {
-                          if(setActiveNav) setActiveNav('studio');
-                          if(onNavigate) onNavigate(item.page);
-                        })}
-                        className={`flex h-11 w-full items-center justify-between rounded-lg px-3 text-left text-[14px] font-medium transition ${
-                          currentPage === item.page
-                            ? "bg-brand-primary/12 text-brand-primary"
-                            : "text-text-secondary hover:bg-[#111317] hover:text-text-primary"
-                        }`}
-                      >
-                        <span>{item.label}</span>
-                        <ChevronRight className="h-4 w-4 text-text-tertiary" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-5 border-t border-[#1F2329] pt-4">
-                  <p className="px-3 text-[12px] font-medium uppercase tracking-[0.12em] text-text-tertiary">My</p>
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    {[
-                      { label: 'Uploads', icon: Upload, page: 'uploads' },
-                      { label: 'Favorites', icon: Heart, page: 'favorites' },
-                      { label: 'Purchases', icon: ShoppingBag, page: 'purchases' },
-                      { label: 'Settings', icon: Settings, page: 'settings' },
-                    ].map(({ label, icon: Icon, page }) => (
-                      <button
-                        key={page}
-                        type="button"
-                        onClick={() => handleMobileNav(() => { if(onNavigate) onNavigate(page); })}
-                        className="flex min-h-[78px] flex-col items-start justify-between rounded-lg border border-[#1F2329] bg-[#0A0B0D] p-3 text-left text-[13px] font-medium text-text-secondary transition hover:border-brand-primary/40 hover:text-text-primary"
-                      >
-                        <Icon className="h-5 w-5 text-brand-primary/80" />
-                        <span>{label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.aside>
+            </motion.nav>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1861,7 +1804,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
           />
         )}
       </AnimatePresence>
-    </header>
+    </>
   );
 }
 
@@ -1918,7 +1861,7 @@ function CategoryNav({
   onCategoryChange: (categoryId: string) => void;
 }) {
   return (
-    <section className="relative">
+    <section className="relative hidden md:block">
       <div className="flex items-center gap-0 h-[100px] overflow-x-auto scrollbar-hide">
         {CATEGORIES.map((cat) => (
           <button
@@ -1937,6 +1880,195 @@ function CategoryNav({
           </button>
         ))}
       </div>
+    </section>
+  );
+}
+
+function MobileCategoryRail({
+  activeCategory,
+  onCategoryChange,
+}: {
+  activeCategory: string;
+  onCategoryChange: (categoryId: string) => void;
+}) {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const dragStateRef = useRef({ isDragging: false, startX: 0, scrollLeft: 0, hasMoved: false });
+  const suppressClickRef = useRef(false);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    dragStateRef.current = {
+      isDragging: true,
+      startX: event.clientX,
+      scrollLeft: scroller.scrollLeft,
+      hasMoved: false,
+    };
+    scroller.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const scroller = scrollerRef.current;
+    const dragState = dragStateRef.current;
+    if (!scroller || !dragState.isDragging) return;
+
+    const deltaX = event.clientX - dragState.startX;
+    if (Math.abs(deltaX) > 4) {
+      dragState.hasMoved = true;
+      suppressClickRef.current = true;
+    }
+
+    scroller.scrollLeft = dragState.scrollLeft - deltaX;
+  };
+
+  const endPointerDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const scroller = scrollerRef.current;
+    const didMove = dragStateRef.current.hasMoved;
+
+    dragStateRef.current.isDragging = false;
+    if (scroller?.hasPointerCapture(event.pointerId)) {
+      scroller.releasePointerCapture(event.pointerId);
+    }
+    if (didMove) {
+      window.setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 0);
+    }
+  };
+
+  return (
+    <section className="md:hidden border-b border-[#1F2329]/80 pb-1" aria-label="모바일 카테고리">
+      <div
+        ref={scrollerRef}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={endPointerDrag}
+        onPointerCancel={endPointerDrag}
+        onPointerLeave={endPointerDrag}
+        className="-mx-4 flex cursor-grab touch-pan-x select-none items-center gap-5 overflow-x-auto px-4 scrollbar-hide active:cursor-grabbing"
+      >
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat.id}
+            type="button"
+            onClick={() => {
+              if (suppressClickRef.current) return;
+              onCategoryChange(cat.id);
+            }}
+            aria-pressed={activeCategory === cat.id}
+            className={`relative flex h-10 shrink-0 items-center text-[14px] font-medium transition-colors ${
+              activeCategory === cat.id
+                ? 'text-brand-primary'
+                : 'text-text-tertiary hover:text-text-primary'
+            }`}
+          >
+            <span>{cat.label}</span>
+            {activeCategory === cat.id && (
+              <motion.span layoutId="mobileCategoryUnderline" className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand-primary" />
+            )}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function MobileCategoryPicker({
+  activeCategory,
+  onCategoryChange,
+}: {
+  activeCategory: string;
+  onCategoryChange: (categoryId: string) => void;
+}) {
+  const [isCategorySheetOpen, setIsCategorySheetOpen] = useState(false);
+  const categorySheetDragControls = useDragControls();
+  const activeCategoryMeta = CATEGORIES.find((cat) => cat.id === activeCategory) ?? CATEGORIES[0];
+  const ActiveCategoryIcon = activeCategoryMeta.icon;
+
+  const handleCategorySheetDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { y: number }; velocity: { y: number } }) => {
+    if (info.offset.y > 84 || info.velocity.y > 480) {
+      setIsCategorySheetOpen(false);
+    }
+  };
+
+  return (
+    <section className="md:hidden" aria-label="모바일 카테고리">
+      <button
+        type="button"
+        onClick={() => setIsCategorySheetOpen(true)}
+        aria-expanded={isCategorySheetOpen}
+        className="inline-flex h-8 items-center gap-2 rounded-md bg-transparent px-0 text-left text-[14px] font-medium text-text-tertiary transition-colors hover:text-text-primary"
+      >
+        <ActiveCategoryIcon className="h-4 w-4 text-brand-primary" />
+        <span className="text-text-primary">{activeCategoryMeta.label}</span>
+        <ChevronDown className={`h-4 w-4 transition-transform ${isCategorySheetOpen ? 'rotate-180 text-brand-primary' : 'text-text-tertiary'}`} />
+      </button>
+
+      <AnimatePresence>
+        {isCategorySheetOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.16, ease: "easeOut" }}
+              onMouseDown={() => setIsCategorySheetOpen(false)}
+              className="fixed inset-x-0 bottom-0 top-[60px] z-[245] bg-black/45 backdrop-blur-[2px]"
+            />
+            <motion.div
+              initial={{ y: "100%", opacity: 1 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 1 }}
+              transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+              drag="y"
+              dragControls={categorySheetDragControls}
+              dragListener={false}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 0.35 }}
+              onDragEnd={handleCategorySheetDragEnd}
+              className="fixed inset-x-0 bottom-0 z-[260] max-h-[76vh] overflow-hidden rounded-t-[16px] border-t border-[#242831] bg-[#0B0D10]/98 shadow-[0_-18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl"
+            >
+              <div
+                className="flex cursor-grab touch-none flex-col items-center border-b border-[#242831] px-4 pb-4 pt-3 active:cursor-grabbing"
+                onPointerDown={(event) => categorySheetDragControls.start(event)}
+              >
+                <span className="h-1 w-10 rounded-full bg-[#3A3F48]" />
+                <div className="mt-3 flex w-full items-center justify-center">
+                  <span className="text-[16px] font-semibold tracking-tight text-text-primary">카테고리</span>
+                </div>
+              </div>
+
+              <div className="grid max-h-[calc(76vh-68px)] grid-cols-2 gap-2 overflow-y-auto p-4 pb-6 custom-scrollbar">
+                {CATEGORIES.map((cat) => {
+                  const Icon = cat.icon;
+                  const isActive = activeCategory === cat.id;
+
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => {
+                        onCategoryChange(cat.id);
+                        setIsCategorySheetOpen(false);
+                      }}
+                      aria-pressed={isActive}
+                      className={`flex h-11 items-center gap-2 rounded-[8px] border px-3 text-left transition-colors ${
+                        isActive
+                          ? 'border-brand-primary/55 bg-brand-primary/12 text-brand-primary'
+                          : 'border-[#1F2329] bg-[#0A0B0D] text-text-secondary hover:border-[#2A2E36] hover:text-text-primary'
+                      }`}
+                    >
+                      <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-brand-primary' : 'text-text-tertiary'}`} />
+                      <span className="min-w-0 truncate text-[14px] font-medium">{cat.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
@@ -2330,10 +2462,7 @@ function AssetCard({
         </div>
 
         {/* Hover Information Overlay (Desktop) */}
-        <div className="absolute inset-x-0 bottom-0 z-10 hidden h-[75%] flex-col justify-end bg-gradient-to-t from-black/95 via-black/60 to-transparent p-4 pb-5 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 md:flex">
-          <h3 className="text-[18px] font-medium text-text-primary line-clamp-2 leading-[1.32] mb-0.5">
-            {asset.title}
-          </h3>
+        <div className="absolute inset-x-0 bottom-0 z-10 hidden h-[48%] flex-col justify-end bg-gradient-to-t from-black/90 via-black/48 to-transparent p-4 pb-4 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 md:flex">
           <p className="text-[15px] text-text-secondary font-medium">
             {asset.author}
           </p>
@@ -2368,10 +2497,6 @@ function AssetCard({
         </div>
       </div>
 
-      {/* Mobile Title View (Always visible on mobile, hidden on desktop hover area) */}
-      <div className="md:hidden p-3 bg-surface-secondary border-t border-border-soft">
-        <h3 className="text-[15px] font-medium text-text-primary line-clamp-1 leading-tight">{asset.title}</h3>
-      </div>
     </motion.div>
   );
 }
@@ -2620,13 +2745,13 @@ function ProductDetailPage({
         <div
           draggable
           onDragStart={(event) => onAssetDragStart?.(asset, event)}
-          className="group relative mb-6 overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D]"
+          className="group relative mb-6 aspect-[1456/744] overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D] md:aspect-auto"
         >
           <SmartProductImage
             candidates={detailImageCandidates(product, asset.id, heroOrder)}
             fallback={productFallbackImage(asset.id, heroOrder, asset.image)}
             alt={displayTitle}
-            className="h-auto w-full object-contain"
+            className="h-full w-full object-cover md:h-auto md:object-contain"
           />
           <div className="absolute right-4 top-4 flex gap-2 opacity-0 transition group-hover:opacity-100">
             <button
@@ -3451,6 +3576,7 @@ function DiscoverSection({
   toggleFavorite,
   activeNav,
   activeCategory = 'all',
+  onCategoryChange,
   onOpenProduct,
   onQuickCollect,
   onAssetDragStart,
@@ -3460,6 +3586,7 @@ function DiscoverSection({
   toggleFavorite: (id: number) => void,
   activeNav?: 'market' | 'art' | 'studio' | 'projects' | 'support' | null,
   activeCategory?: string,
+  onCategoryChange?: (categoryId: string) => void,
   onOpenProduct?: (assetId: number) => void,
   onQuickCollect?: (target: QuickDropTarget, asset: any) => void,
   onAssetDragStart?: (asset: any, e: React.DragEvent) => void,
@@ -3480,6 +3607,10 @@ function DiscoverSection({
   const [appliedPolyCount, setAppliedPolyCount] = useState<string[]>([]);
   const [appliedPolyRange, setAppliedPolyRange] = useState({ min: '0', max: '1,000,000' });
   const [appliedLicense, setAppliedLicense] = useState<string[]>([]);
+  const filterSheetDragControls = useDragControls();
+  const [isMobileFilterSheet, setIsMobileFilterSheet] = useState(() => (
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false
+  ));
 
 
   const tabs: Array<typeof activeTab> = ['전체', '마켓', '아트', '최신', '팔로잉'];
@@ -3487,6 +3618,15 @@ function DiscoverSection({
   const formats = ['.FBX', '.OBJ', '.ABC', '.BLEND', '.MAX', '.GLB'];
   const polyOptions = ['Low Poly', 'Mid Poly', 'High Poly'];
   const licenseOptions = ['\uD45C\uC900', '\uD655\uC7A5', '\uC0C1\uC5C5\uC801'];
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 767px)');
+    const updateMobileFilterMode = () => setIsMobileFilterSheet(query.matches);
+
+    updateMobileFilterMode();
+    query.addEventListener('change', updateMobileFilterMode);
+    return () => query.removeEventListener('change', updateMobileFilterMode);
+  }, []);
 
   const parseFilterNumber = (value: string, fallback: number) => {
     const parsed = Number(value.replace(/[^0-9]/g, ''));
@@ -3609,6 +3749,7 @@ function DiscoverSection({
       ? [`${appliedLicense.join(', ')}`]
       : [])
   ];
+  const isFilterButtonActive = showFilters || activeFilters.length > 0;
 
 
   const resetDraftFilters = () => {
@@ -3644,6 +3785,13 @@ function DiscoverSection({
     setShowFilters(false);
   };
 
+  const handleFilterSheetDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { y: number }; velocity: { y: number } }) => {
+    if (!isMobileFilterSheet) return;
+    if (info.offset.y > 96 || info.velocity.y > 520) {
+      setShowFilters(false);
+    }
+  };
+
   const removeFilter = (filterText: string) => {
     if (filterText.startsWith('\uAC00\uACA9:')) {
       setPriceType('all');
@@ -3676,24 +3824,37 @@ function DiscoverSection({
       <div className="mb-6 flex flex-col gap-3 border-b border-border-soft/50 pb-3 sm:h-[46px] sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:pb-2">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:gap-8 lg:gap-10">
           <h2 className="text-[30px] font-bold tracking-tight text-text-primary leading-none font-display">Discover</h2>
-          <div className="mb-[-2px] flex min-w-0 items-end gap-4 overflow-x-auto scrollbar-hide pr-1 sm:self-end sm:gap-6">
-            {tabs.map(tab => (
-              <button 
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`text-[18px] font-medium transition-all relative py-1 ${
-                  activeTab === tab ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
-                }`}
-              >
-                {tab}
-                {activeTab === tab && (
-                  <motion.div layoutId="activeUnderline" className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-brand-primary" />
-                )}
-              </button>
-            ))}
+          <div className="mb-[-2px] flex min-w-0 items-end gap-2 sm:self-end md:translate-y-[4px]">
+            <div className="flex min-w-0 flex-1 items-end gap-4 overflow-x-auto scrollbar-hide pr-1 sm:gap-6">
+              {tabs.map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`text-[18px] font-medium transition-all relative py-1 ${
+                    activeTab === tab ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
+                  }`}
+                >
+                  {tab}
+                  {activeTab === tab && (
+                    <motion.div layoutId="activeUnderline" className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-brand-primary" />
+                  )}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={openFilterPanel}
+              aria-label="필터 열기"
+              aria-expanded={showFilters}
+              className={`mb-[-2px] flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-transparent bg-transparent transition-colors md:hidden ${
+                isFilterButtonActive ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
+              }`}
+            >
+              <Sliders className="h-5 w-5" />
+            </button>
           </div>
         </div>
-        <div className="flex h-8 min-w-0 flex-1 items-center justify-end gap-4 self-end pl-[1px] pt-0">
+        <div className="hidden h-8 min-w-0 flex-1 items-center justify-end gap-4 self-end pl-[1px] pt-0 md:flex">
           {/* Active Filter Tags */}
           <div className="hidden xl:flex items-center justify-end flex-nowrap gap-2 max-w-[700px] overflow-x-auto scrollbar-hide h-8 flex-1 min-w-0">
             {activeFilters.map((filter) => (
@@ -3714,7 +3875,7 @@ function DiscoverSection({
           <button 
             onClick={openFilterPanel}
             className={`flex items-center gap-2 text-[17px] font-semibold transition-all h-8 ${
-              showFilters ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
+              isFilterButtonActive ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
             }`}
           >
             <Sliders className="w-5 h-5" /> 필터
@@ -3722,21 +3883,54 @@ function DiscoverSection({
         </div>
       </div>
 
+      {onCategoryChange && (
+        <div className="-mt-4 mb-4 flex">
+          <MobileCategoryPicker activeCategory={activeCategory} onCategoryChange={onCategoryChange} />
+        </div>
+      )}
+
       <AnimatePresence>
         {showFilters && (
+          <>
+          {isMobileFilterSheet && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.16, ease: "easeOut" }}
+              className="fixed inset-x-0 bottom-0 top-[60px] z-[245] bg-black/45 backdrop-blur-[2px] md:hidden"
+            />
+          )}
           <motion.div
-            initial={{ y: 5, opacity: 0 }}
+            initial={isMobileFilterSheet ? { y: "100%", opacity: 1 } : { y: 5, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 5, opacity: 0 }}
-            className="absolute left-0 right-0 top-[74px] z-50 rounded-[8px] border border-border-primary bg-[#0E1011]/95 p-5 shadow-[0_30px_60px_rgba(0,0,0,0.9)] backdrop-blur-md sm:left-auto sm:top-[50px] sm:w-[80%] sm:max-w-[1000px] sm:p-6"
+            exit={isMobileFilterSheet ? { y: "100%", opacity: 1 } : { y: 5, opacity: 0 }}
+            transition={{ duration: isMobileFilterSheet ? 0.28 : 0.18, ease: [0.16, 1, 0.3, 1] }}
+            drag={isMobileFilterSheet ? "y" : false}
+            dragControls={filterSheetDragControls}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.35 }}
+            onDragEnd={handleFilterSheetDragEnd}
+            className="fixed inset-x-0 bottom-0 z-[260] max-h-[70vh] overflow-hidden rounded-t-[16px] border-t border-[#242831] bg-[#0B0D10]/98 shadow-[0_-18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl md:absolute md:bottom-auto md:left-auto md:right-0 md:top-[50px] md:z-50 md:max-h-none md:w-[80%] md:max-w-[1000px] md:rounded-[8px] md:border md:border-border-primary md:bg-[#0E1011]/95 md:p-6 md:shadow-[0_30px_60px_rgba(0,0,0,0.9)] md:backdrop-blur-md"
           >
+            <div
+              className="flex cursor-grab touch-none flex-col items-center border-b border-[#242831] px-4 pb-3 pt-2.5 active:cursor-grabbing md:hidden"
+              onPointerDown={(event) => filterSheetDragControls.start(event)}
+            >
+              <span className="h-1 w-10 rounded-full bg-[#3A3F48]" />
+              <div className="mt-2.5 flex w-full items-center justify-center">
+                <span className="text-[16px] font-semibold tracking-tight text-text-primary">필터</span>
+              </div>
+            </div>
             <button 
               onClick={() => setShowFilters(false)}
-              className="absolute top-5 right-5 text-text-tertiary hover:text-text-primary transition-colors"
+              className="absolute top-5 right-5 hidden text-text-tertiary transition-colors hover:text-text-primary md:block"
             >
               <X className="w-5 h-5" />
             </button>
 
+            <div className="max-h-[calc(70vh-58px)] overflow-y-auto px-4 pb-5 pt-4 custom-scrollbar md:max-h-none md:overflow-visible md:p-0">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
               {/* 가격 필터 */}
               <div className="space-y-4 col-span-1 md:col-span-3">
@@ -3884,21 +4078,21 @@ function DiscoverSection({
               {/* 라이선스 */}
               <div className="space-y-4 col-span-1 md:col-span-2">
                 <h4 className="text-[15px] font-medium text-text-tertiary uppercase tracking-wider">라이선스</h4>
-                <div className="space-y-3">
+                <div className="grid grid-cols-3 gap-2 md:block md:space-y-3">
                   {licenseOptions.map((opt) => (
                     <label 
                       key={opt} 
-                      className="flex items-center gap-3 cursor-pointer group"
+                      className="flex min-w-0 cursor-pointer items-center gap-2 group md:gap-3"
                       onClick={() => toggleFilter(license, setLicense, opt)}
                     >
                       <div 
-                        className={`w-5 h-5 rounded-sm border flex items-center justify-center transition-all ${
+                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border transition-all md:h-5 md:w-5 ${
                           license.includes(opt) ? 'bg-brand-primary border-brand-primary' : 'bg-surface-primary border-border-soft group-hover:border-brand-primary/30'
                         }`}
                       >
-                        {license.includes(opt) && <Check className="w-3.5 h-3.5 text-bg-dark" />}
+                        {license.includes(opt) && <Check className="h-3 w-3 text-bg-dark md:h-3.5 md:w-3.5" />}
                       </div>
-                      <span className="text-[15px] text-text-tertiary group-hover:text-text-secondary transition-colors font-medium">{opt}</span>
+                      <span className="min-w-0 truncate text-[14px] font-medium text-text-tertiary transition-colors group-hover:text-text-secondary md:text-[15px]">{opt}</span>
                     </label>
                   ))}
                 </div>
@@ -3925,14 +4119,16 @@ function DiscoverSection({
                 </button>
               </div>
             </div>
+            </div>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
 
       <div className={`grid gap-1.5 transition-all duration-300 ${
         isSidebarOpen 
-          ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5" 
-          : "grid-cols-2 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
+          ? "grid-cols-1 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+          : "grid-cols-1 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
       }`}>
         {discoverAssets.map((asset, index) => {
           let displayedAsset = { ...asset };
@@ -4403,6 +4599,7 @@ export default function App() {
                   toggleFavorite={toggleFavorite}
                   activeNav={activeNav}
                   activeCategory={activeCategory}
+                  onCategoryChange={setActiveCategory}
                   onOpenProduct={openProductDetail}
                   onQuickCollect={handleQuickCollect}
                   onAssetDragStart={handleAssetDragStart}
@@ -4471,7 +4668,7 @@ export default function App() {
                         key={project.id}
                         type="button"
                         onClick={() => { setIsPanelOpen(false); openProjectsPage(project.id); }}
-                        className="bg-surface-primary/80 hover:bg-surface-primary border border-border-primary/20 rounded-[10px] p-2.5 transition-all hover:scale-[1.005] flex flex-col gap-3 group cursor-pointer hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)] text-left"
+                        className="bg-surface-primary/80 hover:bg-surface-primary border border-border-primary/20 rounded-[10px] p-2.5 transition-colors flex flex-col gap-3 group cursor-pointer hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)] text-left"
                       >
                         <div className="w-full aspect-[16/10] rounded-[6px] overflow-hidden bg-bg-secondary relative border border-border-primary/10">
                           <img src={project.image} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
