@@ -165,11 +165,11 @@ export default function AIStudioPage({
   };
 
   return (
-    <div className="flex h-[calc(100vh-76px)] w-full flex-1 flex-col overflow-hidden bg-[#050505] font-sans text-white">
-      <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-8 sm:px-6 2xl:px-8 min-[2200px]:px-10">
+    <div className="flex h-[calc(100dvh-60px)] w-full flex-1 flex-col overflow-hidden bg-[#050505] font-sans text-white lg:h-[calc(100dvh-76px)]">
+      <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 2xl:px-8 min-[2200px]:px-10">
         <div className="mx-auto flex w-full max-w-[2560px] flex-col gap-5">
           <div className="flex flex-col gap-5">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
               <h1 className="text-[20px] font-bold text-white">
                 어떤 방식으로 시작할까요?
               </h1>
@@ -188,7 +188,7 @@ export default function AIStudioPage({
                 <button
                   key={card.title}
                   onClick={() => onNavigate?.(card.page)}
-                  className="group relative flex aspect-[2/1] cursor-pointer flex-col overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D] px-8 py-5 text-left transition hover:border-[#3A404F]"
+                  className="group relative flex min-h-[240px] cursor-pointer flex-col overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D] px-5 py-5 text-left transition hover:border-[#3A404F] sm:aspect-[2/1] sm:min-h-0 sm:px-8"
                 >
                   <img
                     referrerPolicy="no-referrer"
@@ -201,7 +201,7 @@ export default function AIStudioPage({
 
                   <div className="relative z-10 flex h-full flex-col justify-between">
                     <div>
-                      <h2 className="mb-3 flex items-center gap-2 text-[22px] font-bold text-white">
+                      <h2 className="mb-3 flex items-center gap-2 text-[20px] font-bold text-white sm:text-[22px]">
                         {card.title}
                         {card.badge && (
                           <span className="relative -top-[1px] rounded border border-[#E0A12E]/30 bg-[#E0A12E]/20 px-2 py-0.5 text-[11px] font-bold text-[#E0A12E]">
@@ -209,7 +209,7 @@ export default function AIStudioPage({
                           </span>
                         )}
                       </h2>
-                      <p className="max-w-[260px] text-[16px] leading-relaxed text-neutral-300">
+                      <p className="max-w-[240px] text-[14px] leading-relaxed text-neutral-300 sm:max-w-[260px] sm:text-[16px]">
                         {card.subtitle}
                       </p>
                     </div>
@@ -245,7 +245,7 @@ export default function AIStudioPage({
           </div>
 
           <div className="mb-12">
-            <div className="mb-6 flex items-end justify-between border-b border-[#1F2329] pb-4">
+            <div className="mb-6 flex flex-col items-start justify-between gap-3 border-b border-[#1F2329] pb-4 sm:flex-row sm:items-end">
               <div className="flex items-baseline gap-4">
                 <h2 className="text-[20px] font-bold text-white">
                   Continue Working

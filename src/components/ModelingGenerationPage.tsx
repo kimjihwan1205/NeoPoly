@@ -691,7 +691,7 @@ function ThreeModelPreview({
         >
           <CircleHelp className="h-4 w-4" />
         </button>
-        <div className="pointer-events-none absolute bottom-0 left-12 w-max max-w-[320px] translate-x-1 rounded-lg border border-[#2A2E36] bg-[#080A0D]/95 px-3 py-2 text-[14px] text-neutral-300 opacity-0 shadow-xl backdrop-blur transition group-hover:translate-x-0 group-hover:opacity-100">
+        <div className="pointer-events-none absolute bottom-0 left-12 w-max max-w-[min(260px,calc(100vw-80px))] translate-x-1 rounded-lg border border-[#2A2E36] bg-[#080A0D]/95 px-3 py-2 text-[14px] text-neutral-300 opacity-0 shadow-xl backdrop-blur transition group-hover:translate-x-0 group-hover:opacity-100 group-focus-within:translate-x-0 group-focus-within:opacity-100 sm:max-w-[320px]">
           회전: 드래그 · 확대: 휠 · 이동: 우클릭 드래그
         </div>
       </div>
@@ -727,9 +727,9 @@ function ModuleSetBrowser({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 16, scale: 0.98 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className={`absolute right-5 top-[132px] z-40 flex max-h-[calc(100%-152px)] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#080A0D]/97 shadow-[0_24px_70px_rgba(0,0,0,0.75)] backdrop-blur-xl ${
+      className={`absolute right-3 top-[132px] z-40 flex max-h-[calc(100%-152px)] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#080A0D]/97 shadow-[0_24px_70px_rgba(0,0,0,0.75)] backdrop-blur-xl sm:right-5 ${
         stage === "sets" ? "w-[620px]" : "w-[900px]"
-      } max-w-[calc(100%-112px)]`}
+      } max-w-[calc(100%-100px)] sm:max-w-[calc(100%-112px)]`}
     >
       <div className="flex min-h-[58px] shrink-0 items-center justify-between border-b border-[#1F2329] px-4">
         <div className="flex min-w-0 items-center gap-2 text-[14px] font-medium">
@@ -787,15 +787,15 @@ function ModuleSetBrowser({
       )}
 
       {stage === "detail" && (
-        <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)] overflow-hidden">
-          <section className="flex min-h-0 flex-col border-r border-[#1F2329] p-4">
+        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto custom-scrollbar md:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)] md:overflow-hidden">
+          <section className="flex min-h-[360px] flex-col border-b border-[#1F2329] p-3 md:min-h-0 md:border-b-0 md:border-r md:p-4">
             <div className="mb-3 flex items-center justify-between">
               <div>
                 <h2 className="text-[18px] font-medium text-white">{selectedSet.title}</h2>
               </div>
               <span className="rounded-md border border-[#E0A12E]/25 bg-[#E0A12E]/10 px-2.5 py-1 text-[14px] text-[#E0A12E]">장비 {MODULES.length}개</span>
             </div>
-            <div className="min-h-0 flex-1 overflow-hidden rounded-lg border border-[#1F2329] bg-[#15171B]">
+            <div className="min-h-[180px] flex-1 overflow-hidden rounded-lg border border-[#1F2329] bg-[#15171B] md:min-h-0">
               <img
                 src={getModuleSetPreviewImage(selectedSet.id, selectedViewIndex)}
                 alt={`${selectedSet.title} ${MODULE_PREVIEW_LABELS[selectedViewIndex]}`}
@@ -820,7 +820,7 @@ function ModuleSetBrowser({
             </div>
           </section>
 
-          <aside className="min-h-0 overflow-y-auto p-4 custom-scrollbar">
+          <aside className="min-h-0 p-3 md:overflow-y-auto md:p-4 custom-scrollbar">
             <div className="mb-3">
               <h3 className="text-[16px] font-medium text-white">3D 장비 모듈</h3>
               <p className="mt-1 text-[14px] text-neutral-500">장비를 누르면 선택 상태를 확인할 수 있어요.</p>
@@ -905,8 +905,8 @@ function ModelViewport({
   return (
     <section className="relative flex min-h-[520px] min-w-0 flex-1 flex-col overflow-hidden border-b border-[#1F2329] bg-[#050505] lg:min-h-0 lg:border-b-0 lg:border-r">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,0.08),transparent_34%),linear-gradient(135deg,rgba(224,161,46,0.08),transparent_30%,rgba(96,165,250,0.04))]" />
-      <div className="relative z-10 flex h-[58px] shrink-0 items-center justify-between border-b border-[#1F2329] px-5">
-        <div className="flex items-center gap-2">
+      <div className="relative z-10 flex h-[58px] shrink-0 items-center justify-between overflow-x-auto border-b border-[#1F2329] px-3 scrollbar-hide sm:px-5">
+        <div className="flex min-w-max items-center gap-2">
           {VIEWPORT_MODES.map((mode) => (
             <button
               key={mode}
@@ -1546,7 +1546,7 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
   };
 
   return (
-    <div className="flex h-[calc(100vh-76px)] flex-col overflow-y-auto bg-[#050505] text-white custom-scrollbar lg:flex-row lg:overflow-hidden">
+    <div className="flex h-[calc(100dvh-60px)] flex-col overflow-y-auto bg-[#050505] text-white custom-scrollbar lg:h-[calc(100dvh-76px)] lg:flex-row lg:overflow-hidden">
       <main className="flex min-h-0 min-w-0 flex-1 flex-col">
         <WorkflowHeader
           title="3D 모델링 생성"
@@ -1579,14 +1579,14 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onMouseDown={() => setIsSaveModalOpen(false)}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/65 p-5 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/65 p-3 backdrop-blur-[2px] sm:p-5"
           >
             <motion.div
               initial={{ opacity: 0, y: 12, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.98 }}
               onMouseDown={(event) => event.stopPropagation()}
-              className="flex max-h-[calc(100vh-40px)] w-full max-w-[1240px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.75)]"
+              className="flex max-h-[calc(100dvh-24px)] w-full max-w-[1240px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.75)] sm:max-h-[calc(100dvh-40px)]"
             >
               <div className="flex h-16 items-center justify-between border-b border-[#1F2329] px-5">
                 <div>

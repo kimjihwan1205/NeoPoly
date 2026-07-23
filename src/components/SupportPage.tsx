@@ -78,7 +78,7 @@ export default function SupportPage() {
   }, [searchQuery]);
 
   return (
-    <div className="relative min-h-[calc(100vh-76px)] bg-bg-dark font-sans text-text-primary">
+    <div className="relative min-h-[calc(100dvh-60px)] bg-bg-dark font-sans text-text-primary lg:min-h-[calc(100dvh-76px)]">
       <div className="relative overflow-hidden border-b border-[#1F2329] bg-[#0A0B0D]">
         <div className="absolute inset-0 bg-gradient-to-b from-[#E0A12E]/5 to-transparent" />
         <div className="relative z-10 mx-auto flex max-w-[1200px] flex-col items-center px-4 py-12 text-center sm:px-6 2xl:px-8 min-[2200px]:px-10">

@@ -1161,14 +1161,14 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   };
 
   return (
-    <div className="flex h-[calc(100vh-76px)] bg-[#050505] font-sans text-[#F5F5F5] antialiased">
+    <div className="flex h-[calc(100dvh-60px)] bg-[#050505] font-sans text-[#F5F5F5] antialiased lg:h-[calc(100dvh-76px)]">
       <main
-        className={`relative grid min-w-0 flex-1 grid-rows-[64px_minmax(0,1fr)] overflow-hidden ${
+        className={`relative grid min-w-0 flex-1 grid-cols-1 grid-rows-[64px_minmax(520px,1fr)_minmax(560px,auto)] overflow-y-auto custom-scrollbar lg:grid-rows-[64px_minmax(0,1fr)] lg:overflow-hidden ${
           expertTab === "turnaround"
-            ? "grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_550px]"
+            ? "lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_550px]"
             : isModuleListConfirmed
-              ? "grid-cols-[minmax(0,1fr)_minmax(620px,780px)] 2xl:grid-cols-[minmax(0,1fr)_900px]"
-              : "grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_550px]"
+              ? "lg:grid-cols-[minmax(0,1fr)_minmax(620px,780px)] 2xl:grid-cols-[minmax(0,1fr)_900px]"
+              : "lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_550px]"
         }`}
       >
         <WorkflowHeader
@@ -1226,7 +1226,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
         {expertTab === "turnaround" ? (
           <div className="contents">
             <section className="col-start-1 row-start-2 flex min-w-0 flex-col overflow-hidden p-4">
-              <div className="grid min-h-0 flex-1 grid-cols-2 gap-3">
+              <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
                 {TURNAROUND_VIEWS.map((view, index) => {
                   const isSelected = selectedViewId === view.id;
                   const isLocked = lockedViews.has(view.id);
@@ -1335,7 +1335,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
               </div>
             </section>
 
-            <aside className="col-start-2 row-span-2 row-start-1 flex min-h-0 flex-col border-l border-[#1F2329] bg-[#0A0B0D]">
+            <aside className="col-start-1 row-start-3 flex min-h-[560px] flex-col border-t border-[#1F2329] bg-[#0A0B0D] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:min-h-0 lg:border-l lg:border-t-0">
               <WorkflowSidebarHeader
                 title={`${selectedView.label} 뷰`}
                 action={
@@ -1429,8 +1429,8 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                     : isCorrecting
                                       ? "text-[#E0A12E] opacity-100"
                                       : isTargetLocked
-                                        ? "text-neutral-600 opacity-0 group-hover:opacity-100"
-                                        : "text-[#E0A12E] opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                        ? "text-neutral-600 opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                        : "text-[#E0A12E] opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
                                 } disabled:cursor-not-allowed`}
                               >
                                 {isCorrecting && <LoadingIndicator tone="current" />}
@@ -1724,7 +1724,9 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             }`}
                             style={{ left: part.point.left, top: part.point.top }}
                           >
-                            <span className="pointer-events-none absolute left-1/2 top-6 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-black/75 px-2 py-1 text-[14px] font-medium text-white opacity-0 backdrop-blur-sm transition group-hover:opacity-100">
+                            <span className={`pointer-events-none absolute left-1/2 top-6 z-10 -translate-x-1/2 whitespace-nowrap rounded-md bg-black/75 px-2 py-1 text-[14px] font-medium text-white backdrop-blur-sm transition ${
+                              isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            }`}>
                               {moduleDrafts[part.id]?.label ?? part.label}
                             </span>
                           </button>
@@ -1781,7 +1783,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                 )}
               </section>
 
-              <aside className="col-start-2 row-span-2 row-start-1 flex min-h-0 flex-col border-l border-[#1F2329] bg-[#0A0B0D]">
+              <aside className="col-start-1 row-start-3 flex min-h-[560px] flex-col border-t border-[#1F2329] bg-[#0A0B0D] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:min-h-0 lg:border-l lg:border-t-0">
                 <WorkflowSidebarHeader
                   title={isModuleListConfirmed ? "모듈화 세트" : "전체 모듈 리스트"}
                   action={
@@ -1917,7 +1919,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               animate={{ x: 0, opacity: 1 }}
                               exit={{ x: -28, opacity: 0 }}
                               transition={{ duration: 0.22, ease: "easeOut" }}
-                              className="absolute bottom-[84px] left-4 top-[84px] z-30 flex w-[320px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D]/95 shadow-2xl backdrop-blur-md"
+                              className="absolute bottom-[84px] left-4 top-[84px] z-30 flex w-[calc(100%_-_32px)] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D]/95 shadow-2xl backdrop-blur-md sm:w-[320px]"
                             >
                               <div className="flex items-start justify-between gap-3 border-b border-[#1F2329] p-4">
                                 <div>
@@ -2101,7 +2103,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                 exit={{ opacity: 0, y: 14, scale: 0.98 }}
                 transition={{ duration: 0.18 }}
                 onMouseDown={(event) => event.stopPropagation()}
-                className="flex max-h-[94vh] w-full max-w-[1380px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_28px_90px_rgba(0,0,0,0.78)]"
+                className="flex max-h-[94dvh] w-full max-w-[1380px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_28px_90px_rgba(0,0,0,0.78)]"
               >
                 <div className="flex shrink-0 items-center justify-between gap-5 border-b border-[#1F2329] px-5 py-4">
                   <div>
@@ -2192,7 +2194,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                 exit={{ opacity: 0, y: 14, scale: 0.98 }}
                 transition={{ duration: 0.18 }}
                 onMouseDown={(event) => event.stopPropagation()}
-                className="flex max-h-[92vh] w-full max-w-[1240px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_28px_80px_rgba(0,0,0,0.72)]"
+                className="flex max-h-[92dvh] w-full max-w-[1240px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_28px_80px_rgba(0,0,0,0.72)]"
               >
                 <div className="flex shrink-0 items-center justify-between border-b border-[#1F2329] px-5 py-4">
                   <div>

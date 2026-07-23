@@ -325,13 +325,15 @@ export default function UserProfilePage({
               referrerPolicy="no-referrer"
             />
             {/* Hover Camera overlay */}
-            <div 
+            <button
+              type="button"
+              aria-label="프로필 이미지 업로드"
               onClick={() => avatarInputRef.current?.click()}
-              className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              className="absolute bottom-1 right-1 flex h-10 w-10 cursor-pointer flex-col items-center justify-center gap-1 rounded-full bg-black/70 opacity-100 transition-opacity duration-200 md:inset-0 md:h-auto md:w-auto md:rounded-none md:bg-black/60 md:opacity-0 md:group-hover:opacity-100"
             >
-              <Upload className="w-5 h-5 text-brand-primary animate-pulse" />
-              <span className="text-[14px] font-medium text-text-primary tracking-widest uppercase">UPLOAD</span>
-            </div>
+              <Upload className="h-4 w-4 text-brand-primary md:h-5 md:w-5" />
+              <span className="hidden text-[14px] font-medium uppercase tracking-widest text-text-primary md:block">UPLOAD</span>
+            </button>
             <input 
               type="file" 
               ref={avatarInputRef} 
@@ -706,9 +708,9 @@ export default function UserProfilePage({
                             }`}>
                               {asset.badge}
                             </div>
-                            <div className="absolute inset-x-0 bottom-0 h-[80%] bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3 opacity-0 group-hover:opacity-100 translate-y-1.5 group-hover:translate-y-0 transition-all duration-[300ms] ease-out z-10">
-                              <h3 className="text-[15px] font-medium text-text-primary line-clamp-2 leading-tight mb-1">{asset.title}</h3>
-                              <div className="flex items-center gap-2.5 text-[14px] text-text-secondary">
+                            <div className="absolute inset-x-0 bottom-0 z-10 flex h-[88%] translate-y-0 flex-col justify-end bg-gradient-to-t from-black/95 via-black/40 to-transparent p-2.5 opacity-100 transition-all duration-[300ms] ease-out md:h-[80%] md:translate-y-1.5 md:p-3 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100">
+                              <h3 className="mb-1 line-clamp-2 text-[12px] font-medium leading-tight text-text-primary sm:text-[14px]">{asset.title}</h3>
+                              <div className="flex items-center gap-2 text-[11px] text-text-secondary sm:text-[13px]">
                                 <span className="flex items-center gap-1"><Heart className="w-3 h-3 fill-red-500/10 text-red-500/80" /> {asset.likes}</span>
                                 <span className="flex items-center gap-1"><Eye className="w-3 h-3 text-text-tertiary" /> {asset.views}</span>
                               </div>

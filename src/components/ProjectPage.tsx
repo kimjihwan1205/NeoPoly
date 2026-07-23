@@ -378,12 +378,12 @@ export default function ProjectPage({
   return (
     <div
       className={`flex bg-bg-dark text-[#F5F5F5] font-sans antialiased ${
-        isPopup ? "h-full" : "min-h-[calc(100vh-76px)]"
+        isPopup ? "h-full" : "min-h-[calc(100dvh-60px)] lg:min-h-[calc(100dvh-76px)]"
       }`}
     >
       <aside
         className={`hidden w-[350px] shrink-0 overflow-y-auto border-r border-[#181A1F] bg-bg-dark px-5 py-6 lg:block ${
-          isPopup ? "h-full" : "sticky top-[76px] h-[calc(100vh-76px)]"
+          isPopup ? "h-full" : "sticky top-[76px] h-[calc(100dvh-76px)]"
         }`}
       >
         <div className="mb-6">
@@ -467,9 +467,33 @@ export default function ProjectPage({
 
       <main
         className={`min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 ${
-          isPopup ? "h-full pb-24" : "h-[calc(100vh-76px)]"
+          isPopup ? "h-full pb-24" : "h-[calc(100dvh-60px)] lg:h-[calc(100dvh-76px)]"
         }`}
       >
+        <div className="mb-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide lg:hidden" aria-label="프로젝트 선택">
+          {projects.map((project) => (
+            <button
+              key={`mobile-${project.id}`}
+              type="button"
+              onClick={() => setActiveProject(project.id)}
+              className={`h-11 shrink-0 rounded-lg border px-4 text-[14px] font-medium transition ${
+                project.id === activeProject
+                  ? "border-[#E0A12E]/60 bg-[#E0A12E]/10 text-[#E0A12E]"
+                  : "border-[#242832] bg-[#111317] text-neutral-300"
+              }`}
+            >
+              {project.name}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setIsNewProjectModalOpen(true)}
+            className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[#2A2E36] bg-[#111317] px-4 text-[14px] font-medium text-neutral-300"
+          >
+            <Plus className="h-4 w-4 text-[#E0A12E]" />
+            새 프로젝트
+          </button>
+        </div>
         <div className="w-full space-y-2">
           <section className="overflow-hidden rounded-lg border border-[#181A1F]/80 bg-[#111317]">
             <div className="grid min-h-[140px] grid-cols-1 xl:grid-cols-[220px_1fr_320px]">
@@ -630,7 +654,7 @@ export default function ProjectPage({
                   </div>
                 </div>
 
-                <div className="relative flex h-[500px] items-center justify-center overflow-hidden rounded-lg border border-[#181A1F] bg-[#050505]">
+                <div className="relative flex h-[320px] items-center justify-center overflow-hidden rounded-lg border border-[#181A1F] bg-[#050505] sm:h-[420px] lg:h-[500px]">
                   {viewerImage && (
                     <button
                       type="button"
@@ -835,7 +859,7 @@ export default function ProjectPage({
           onClick={() => setIsViewerPreviewOpen(false)}
         >
           <div
-            className="relative flex max-h-[92vh] w-full max-w-[1280px] items-center justify-center overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] p-4 shadow-2xl"
+            className="relative flex max-h-[92dvh] w-full max-w-[1280px] items-center justify-center overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] p-4 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <button
@@ -849,7 +873,7 @@ export default function ProjectPage({
             <img
               src={viewerImage}
               alt={`${activeProjData.name} 작업 뷰 크게 보기`}
-              className="max-h-[86vh] max-w-full object-contain"
+              className="max-h-[86dvh] max-w-full object-contain"
               referrerPolicy="no-referrer"
             />
           </div>
@@ -862,7 +886,7 @@ export default function ProjectPage({
           onClick={() => setReferencePreviewImage(null)}
         >
           <div
-            className="relative flex max-h-[92vh] w-full max-w-[1280px] items-center justify-center overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] p-4 shadow-2xl"
+            className="relative flex max-h-[92dvh] w-full max-w-[1280px] items-center justify-center overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] p-4 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <button
@@ -876,7 +900,7 @@ export default function ProjectPage({
             <img
               src={referencePreviewImage}
               alt={`${activeProjData.name} reference preview`}
-              className="max-h-[86vh] max-w-full object-contain"
+              className="max-h-[86dvh] max-w-full object-contain"
               referrerPolicy="no-referrer"
             />
           </div>

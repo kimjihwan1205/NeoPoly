@@ -1138,7 +1138,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 
   return (
     <>
-    <header className="sticky top-0 z-50 flex h-[60px] w-full items-center justify-between gap-3 border-b border-border-primary/45 bg-[#08090B]/80 px-4 backdrop-blur-xl sm:px-5 md:gap-6 lg:h-[76px] lg:px-6">
+    <header className="sticky top-0 z-50 flex h-[60px] w-full items-center justify-between gap-2 border-b border-border-primary/45 bg-[#08090B]/80 px-3 backdrop-blur-xl sm:px-5 md:gap-6 lg:h-[76px] lg:px-6">
       {/* Left section: Logo + Left-aligned menu with comfortable custom spacing */}
       <div className="flex items-center gap-3 md:gap-8 lg:gap-12 xl:gap-16 shrink-0">
         <button
@@ -1150,7 +1150,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
             setIsProfileMenuOpen(false);
             setIsFocused(false);
           }}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-transparent text-text-secondary transition hover:bg-white/5 hover:text-text-primary lg:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-lg border border-transparent bg-transparent text-text-secondary transition hover:bg-white/5 hover:text-text-primary lg:hidden"
           aria-label={isMobileMenuOpen ? "모바일 메뉴 닫기" : "모바일 메뉴 열기"}
           aria-expanded={isMobileMenuOpen}
         >
@@ -1632,7 +1632,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 
                             <button 
                               onClick={(e) => handleRemoveNotif(notif.id, e)}
-                              className="opacity-0 group-hover:opacity-100 text-text-tertiary hover:text-red-400 p-1.5 rounded-full transition-colors self-center duration-150 border-0 bg-transparent cursor-pointer"
+                              aria-label={`${notif.title} 알림 삭제`}
+                              className="self-center cursor-pointer rounded-full border-0 bg-transparent p-1.5 text-text-tertiary opacity-100 transition-colors duration-150 hover:text-red-400 md:opacity-0 md:group-hover:opacity-100"
                               title="삭제"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1652,12 +1653,15 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
             </div>
 
 <div className="relative" ref={profileRef}>
-  <div 
+  <button
+    type="button"
+    aria-label="프로필 메뉴 열기"
+    aria-expanded={isProfileMenuOpen}
     onClick={toggleProfileMenu}
-    className="w-8 h-8 rounded-full bg-surface-secondary border border-border-soft cursor-pointer overflow-hidden hover:border-brand-primary transition-colors"
+    className="h-9 w-9 rounded-full bg-surface-secondary border border-border-soft cursor-pointer overflow-hidden hover:border-brand-primary transition-colors sm:h-10 sm:w-10 lg:h-8 lg:w-8"
   >
     <img src={PROFILE_IMAGE} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-  </div>
+  </button>
 
   <AnimatePresence>
     {isProfileMenuOpen && (
@@ -1675,7 +1679,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -14 }}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed inset-x-0 top-[60px] z-[240] flex flex-col border-b border-[#242831] bg-[#0B0D10]/98 px-4 pb-2 shadow-[0_18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl font-sans lg:absolute lg:inset-auto lg:top-full lg:right-0 lg:mt-3.5 lg:w-[300px] lg:rounded-[12px] lg:border lg:border-[#2A2E36]/80 lg:bg-[#0E1011] lg:px-0 lg:pb-1 lg:shadow-[0_25px_60px_rgba(0,0,0,0.95)] lg:backdrop-blur-3xl"
+        className="safe-area-bottom fixed inset-x-0 top-[60px] z-[240] flex max-h-[calc(100dvh-60px)] flex-col overflow-y-auto border-b border-[#242831] bg-[#0B0D10]/98 px-4 pb-2 shadow-[0_18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl font-sans custom-scrollbar lg:absolute lg:inset-auto lg:top-full lg:right-0 lg:mt-3.5 lg:max-h-[calc(100dvh-96px)] lg:w-[300px] lg:rounded-[12px] lg:border lg:border-[#2A2E36]/80 lg:bg-[#0E1011] lg:px-0 lg:pb-1 lg:shadow-[0_25px_60px_rgba(0,0,0,0.95)] lg:backdrop-blur-3xl"
       >
         {/* Header: User Info */}
         <div className="flex items-center gap-3 p-4 border-b border-[#2A2E36]/50">
@@ -1760,7 +1764,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
               exit={{ opacity: 0, y: -14 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               onMouseDown={(event) => event.stopPropagation()}
-              className="border-b border-[#242831] bg-[#0B0D10]/98 px-4 pb-4 pt-5 shadow-[0_18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl"
+              className="safe-area-bottom max-h-[calc(100dvh-60px)] overflow-y-auto border-b border-[#242831] bg-[#0B0D10]/98 px-4 pb-4 pt-5 shadow-[0_18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl custom-scrollbar"
               aria-label="모바일 메뉴"
             >
               <div className="mx-auto flex max-w-[720px] flex-col gap-1 md:flex-row md:items-center md:justify-center md:gap-9">
@@ -1811,12 +1815,12 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 
 function Hero({ onNavigate }: { onNavigate?: (page: any) => void }) {
   return (
-    <section className="relative w-full h-[420px] overflow-hidden">
+    <section className="relative h-[360px] w-full overflow-hidden sm:h-[400px] md:h-[420px]">
       <div className="absolute inset-0">
         <img 
           src={HERO_IMAGE} 
           alt="Hero" 
-          className="w-full h-[calc(100%+20px)] object-cover object-top -translate-y-5" 
+          className="h-[calc(100%+20px)] w-full -translate-y-5 object-cover object-[62%_top] sm:object-[58%_top] md:object-top"
           referrerPolicy="no-referrer"
         />
         {/* Adjusted cinematic overlays (reduced opacity) */}
@@ -1824,19 +1828,19 @@ function Hero({ onNavigate }: { onNavigate?: (page: any) => void }) {
         <div className="absolute inset-0 bg-gradient-to-t from-bg-dark/70 via-transparent to-transparent"></div>
       </div>
       
-      <div className="max-w-[2560px] mx-auto px-4 sm:px-6 2xl:px-8 min-[2200px]:px-10 h-full flex flex-col justify-center items-center md:items-start relative z-10 pt-4 text-center md:text-left">
+      <div className="relative z-10 mx-auto flex h-full max-w-[2560px] flex-col items-start justify-center px-5 pt-4 text-left sm:px-6 2xl:px-8 min-[2200px]:px-10">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          className="max-w-2xl w-full md:pl-[8%] lg:pl-[10%] md:translate-x-[300px]"
+          className="w-full max-w-[560px] md:ml-[18vw] lg:ml-[28vw] xl:ml-[30vw]"
         >
-          <div className="space-y-3 mb-8">
-            <h1 className="text-[32px] md:text-[44px] font-bold leading-[1.2] tracking-tight text-text-primary drop-shadow-2xl font-display">
+          <div className="mb-7 space-y-3 sm:mb-8">
+            <h1 className="text-[30px] font-bold leading-[1.3] tracking-tight text-text-primary drop-shadow-2xl font-display sm:text-[36px] md:text-[40px] md:leading-[1.3]">
               아이디어를 현실로<br />
               <span className="text-text-primary/95">3D 제작의 모든 과정</span>
             </h1>
-            <p className="text-text-tertiary text-[15px] md:text-[15px] leading-[1.6] font-medium max-w-sm mx-auto md:mx-0 opacity-80">
+            <p className="max-w-sm text-[14px] font-medium leading-[1.65] text-text-secondary/85 sm:text-[15px]">
               레퍼런스 수집부터 AI 생성, 모델링까지<br />
               당신의 3D 워크플로우를 하나로 연결합니다.
             </p>
@@ -1844,7 +1848,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: any) => void }) {
           
           <button 
             onClick={() => onNavigate && onNavigate('studio')}
-            className="group relative px-6 py-2 border border-brand-primary/80 text-brand-primary rounded-sm text-[14px] font-medium transition-all hover:bg-brand-primary hover:text-bg-dark bg-transparent">
+            className="group relative min-h-11 rounded-sm border border-brand-primary/80 bg-black/15 px-6 py-2 text-[14px] font-medium text-brand-primary transition-all hover:bg-brand-primary hover:text-bg-dark">
             AI 스튜디오 시작
           </button>
         </motion.div>
@@ -1862,21 +1866,21 @@ function CategoryNav({
 }) {
   return (
     <section className="relative hidden md:block">
-      <div className="flex items-center gap-0 h-[100px] overflow-x-auto scrollbar-hide">
+      <div className="flex h-[92px] items-center gap-0 overflow-x-auto scrollbar-hide lg:h-[100px]">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.id}
             onClick={() => onCategoryChange(cat.id)}
-            className={`flex flex-col items-center justify-center min-w-[110px] w-[110px] h-full transition-all group shrink-0 ${
+            className={`group flex h-full w-[88px] min-w-[88px] shrink-0 flex-col items-center justify-center transition-all lg:w-[104px] lg:min-w-[104px] xl:w-[110px] xl:min-w-[110px] ${
               activeCategory === cat.id 
                 ? 'text-brand-primary' 
                 : 'text-text-tertiary hover:text-brand-primary/60'
             }`}
           >
             <div className={`flex items-center justify-center transition-all mb-1`}>
-              <cat.icon className={activeCategory === cat.id ? "w-[30px] h-[30px]" : "w-[30px] h-[30px] opacity-60 group-hover:opacity-100 transition-opacity"} />
+              <cat.icon className={activeCategory === cat.id ? "h-7 w-7 lg:h-[30px] lg:w-[30px]" : "h-7 w-7 opacity-60 transition-opacity group-hover:opacity-100 lg:h-[30px] lg:w-[30px]"} />
             </div>
-            <span className={`text-[15px] font-medium tracking-tight`}>{cat.label}</span>
+            <span className="text-[14px] font-medium tracking-tight lg:text-[15px]">{cat.label}</span>
           </button>
         ))}
       </div>
@@ -1998,7 +2002,7 @@ function MobileCategoryPicker({
         type="button"
         onClick={() => setIsCategorySheetOpen(true)}
         aria-expanded={isCategorySheetOpen}
-        className="inline-flex h-8 items-center gap-2 rounded-md bg-transparent px-0 text-left text-[14px] font-medium text-text-tertiary transition-colors hover:text-text-primary"
+        className="inline-flex h-11 items-center gap-2 rounded-md bg-transparent px-0 text-left text-[14px] font-medium text-text-tertiary transition-colors hover:text-text-primary"
       >
         <ActiveCategoryIcon className="h-4 w-4 text-brand-primary" />
         <span className="text-text-primary">{activeCategoryMeta.label}</span>
@@ -2027,7 +2031,7 @@ function MobileCategoryPicker({
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={{ top: 0, bottom: 0.35 }}
               onDragEnd={handleCategorySheetDragEnd}
-              className="fixed inset-x-0 bottom-0 z-[260] max-h-[76vh] overflow-hidden rounded-t-[16px] border-t border-[#242831] bg-[#0B0D10]/98 shadow-[0_-18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl"
+              className="fixed inset-x-0 bottom-0 z-[260] max-h-[76dvh] overflow-hidden rounded-t-[16px] border-t border-[#242831] bg-[#0B0D10]/98 shadow-[0_-18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl"
             >
               <div
                 className="flex cursor-grab touch-none flex-col items-center border-b border-[#242831] px-4 pb-4 pt-3 active:cursor-grabbing"
@@ -2039,7 +2043,7 @@ function MobileCategoryPicker({
                 </div>
               </div>
 
-              <div className="grid max-h-[calc(76vh-68px)] grid-cols-2 gap-2 overflow-y-auto p-4 pb-6 custom-scrollbar">
+              <div className="grid max-h-[calc(76dvh-68px)] grid-cols-2 gap-2 overflow-y-auto p-4 pb-6 custom-scrollbar">
                 {CATEGORIES.map((cat) => {
                   const Icon = cat.icon;
                   const isActive = activeCategory === cat.id;
@@ -2433,17 +2437,25 @@ function AssetCard({
   onAssetDragStart?: (asset: any, e: React.DragEvent) => void,
 }) {
   const isMarket = asset.badge === 'M';
+  const authorInitial = String(asset.author ?? "").trim().charAt(0).toUpperCase() || "?";
   
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       onClick={() => onOpenProduct?.(asset)}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        onOpenProduct?.(asset);
+      }}
+      role="button"
+      tabIndex={0}
       draggable
       onDragStart={(e) => onAssetDragStart?.(asset, e as unknown as React.DragEvent)}
-      className="group relative rounded-[6px] overflow-hidden bg-surface-primary border border-border-soft shadow-xl cursor-pointer flex flex-col aspect-[16/10]"
+      className="group relative flex cursor-pointer flex-col overflow-hidden rounded-[6px] border border-border-soft bg-surface-primary shadow-xl"
     >
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative aspect-[16/10] overflow-hidden">
         {/* Main Image */}
         <img 
           src={asset.image} 
@@ -2453,7 +2465,7 @@ function AssetCard({
         />
 
         {/* Badge - M or A */}
-        <div className={`absolute top-2 right-2 h-7 min-w-7 px-1 rounded-[6px] flex items-center justify-center text-[14px] font-medium backdrop-blur-[8px] z-20 transition-all duration-200 ${
+        <div className={`absolute right-1.5 top-1.5 z-20 flex h-6 min-w-6 items-center justify-center rounded-[5px] px-1 text-[12px] font-medium backdrop-blur-[8px] transition-all duration-200 sm:right-2 sm:top-2 sm:h-7 sm:min-w-7 sm:rounded-[6px] sm:text-[14px] ${
           isMarket 
             ? 'bg-[#E0A12E]/40 text-[#F0B43A] group-hover:bg-[#E0A12E]/50' 
             : 'bg-[#4C88D9]/40 text-[#A0C5FF] group-hover:bg-[#4C88D9]/50'
@@ -2461,8 +2473,23 @@ function AssetCard({
           {asset.badge}
         </div>
 
+        {/* Always-visible Information Overlay (Mobile & Tablet) */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex min-h-[48%] flex-col justify-end bg-gradient-to-t from-black/95 via-black/55 to-transparent px-3 pb-3 pt-10 sm:px-3.5 sm:pb-3.5 lg:hidden">
+          <p className="truncate text-[16px] font-semibold leading-6 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] sm:text-[14px] sm:leading-5 md:text-[15px] md:leading-[22px]">
+            {asset.title}
+          </p>
+          <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-[10px] font-semibold text-white/90 backdrop-blur-sm">
+              {authorInitial}
+            </span>
+            <span className="truncate text-[12px] leading-[18px] text-white/65">
+              {asset.author}
+            </span>
+          </div>
+        </div>
+
         {/* Hover Information Overlay (Desktop) */}
-        <div className="absolute inset-x-0 bottom-0 z-10 hidden h-[48%] flex-col justify-end bg-gradient-to-t from-black/90 via-black/48 to-transparent p-4 pb-4 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 md:flex">
+        <div className="absolute inset-x-0 bottom-0 z-10 hidden h-[48%] flex-col justify-end bg-gradient-to-t from-black/90 via-black/48 to-transparent p-4 pb-4 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 lg:flex">
           <p className="text-[15px] text-text-secondary font-medium">
             {asset.author}
           </p>
@@ -2753,13 +2780,13 @@ function ProductDetailPage({
             alt={displayTitle}
             className="h-full w-full object-cover md:h-auto md:object-contain"
           />
-          <div className="absolute right-4 top-4 flex gap-2 opacity-0 transition group-hover:opacity-100">
+          <div className="absolute right-2 top-2 flex gap-1.5 opacity-100 transition md:right-4 md:top-4 md:gap-2 md:opacity-0 md:group-hover:opacity-100">
             <button
               onClick={(event) => {
                 event.stopPropagation();
                 onQuickCollect?.("references", asset);
               }}
-              className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+              className="min-h-9 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:px-3 sm:py-2 sm:text-[14px]"
             >
               레퍼런스
             </button>
@@ -2768,7 +2795,7 @@ function ProductDetailPage({
                 event.stopPropagation();
                 onQuickCollect?.("notes", asset);
               }}
-              className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+              className="min-h-9 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:px-3 sm:py-2 sm:text-[14px]"
             >
               메모
             </button>
@@ -2790,13 +2817,13 @@ function ProductDetailPage({
                   alt={`${displayTitle} detail ${order}`}
                   className="h-auto w-full object-contain"
                 />
-                <div className="absolute right-4 top-4 flex gap-2 opacity-0 transition group-hover:opacity-100">
+                <div className="absolute right-2 top-2 flex gap-1.5 opacity-100 transition md:right-4 md:top-4 md:gap-2 md:opacity-0 md:group-hover:opacity-100">
                   <button
                     onClick={(event) => {
                       event.stopPropagation();
                       onQuickCollect?.("references", asset);
                     }}
-                    className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+                    className="min-h-9 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:px-3 sm:py-2 sm:text-[14px]"
                   >
                     레퍼런스
                   </button>
@@ -2805,7 +2832,7 @@ function ProductDetailPage({
                       event.stopPropagation();
                       onQuickCollect?.("notes", asset);
                     }}
-                    className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
+                    className="min-h-9 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:px-3 sm:py-2 sm:text-[14px]"
                   >
                     메모
                   </button>
@@ -3189,7 +3216,7 @@ function BoardPage({
         onClick={() => setActiveBoardNoteId(null)}
       >
         <div
-          className="h-[min(780px,calc(100vh-48px))] w-full max-w-[960px] overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] shadow-2xl"
+          className="h-[min(780px,calc(100dvh-32px))] w-full max-w-[960px] overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] shadow-2xl sm:h-[min(780px,calc(100dvh-48px))]"
           onClick={(event) => event.stopPropagation()}
         >
           {renderBoardNoteDetail(activeBoardNote)}
@@ -3214,7 +3241,7 @@ function BoardPage({
 
   return (
     <>
-      <main className="flex h-[calc(100vh-76px)] overflow-hidden bg-bg-dark text-text-primary">
+      <main className="flex h-[calc(100dvh-60px)] overflow-hidden bg-bg-dark text-text-primary lg:h-[calc(100dvh-76px)]">
       <aside className="hidden w-[300px] shrink-0 border-r border-[#1C1E24] bg-[#0B0D10] p-5 lg:flex lg:flex-col">
         <div className="mb-6">
           <p className="text-[14px] font-medium uppercase tracking-[0.18em] text-brand-primary">Board</p>
@@ -3250,7 +3277,7 @@ function BoardPage({
         </div>
 
         {boardView === "all" ? (
-          <div className="grid h-full min-h-0 grid-cols-1 gap-4 xl:grid-cols-2">
+          <div className="grid h-[calc(100%_-_60px)] min-h-0 grid-cols-1 gap-4 lg:h-full xl:grid-cols-2">
             <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-[#1C1E24] bg-bg-dark">
               <div className="flex shrink-0 items-center justify-between border-b border-[#1C1E24] px-5 py-4">
                 <div>
@@ -3821,16 +3848,16 @@ function DiscoverSection({
 
   return (
     <div className="flex-1 min-w-0 relative">
-      <div className="mb-6 flex flex-col gap-3 border-b border-border-soft/50 pb-3 sm:h-[46px] sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:pb-2">
+      <div className="mb-5 flex flex-col gap-3 border-b border-border-soft/50 pb-3 sm:mb-6 sm:h-[46px] sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:pb-2">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:gap-8 lg:gap-10">
-          <h2 className="text-[30px] font-bold tracking-tight text-text-primary leading-none font-display">Discover</h2>
+          <h2 className="text-[28px] font-bold leading-[38px] tracking-tight text-text-primary font-display sm:leading-none">Discover</h2>
           <div className="mb-[-2px] flex min-w-0 items-end gap-2 sm:self-end md:translate-y-[4px]">
             <div className="flex min-w-0 flex-1 items-end gap-4 overflow-x-auto scrollbar-hide pr-1 sm:gap-6">
               {tabs.map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`text-[18px] font-medium transition-all relative py-1 ${
+                    className={`relative min-h-10 py-2 text-[15px] font-medium transition-all sm:min-h-0 sm:py-1 sm:text-[16px] md:text-[18px] ${
                     activeTab === tab ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
                   }`}
                 >
@@ -3898,6 +3925,7 @@ function DiscoverSection({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.16, ease: "easeOut" }}
+              onMouseDown={() => setShowFilters(false)}
               className="fixed inset-x-0 bottom-0 top-[60px] z-[245] bg-black/45 backdrop-blur-[2px] md:hidden"
             />
           )}
@@ -3912,7 +3940,7 @@ function DiscoverSection({
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.35 }}
             onDragEnd={handleFilterSheetDragEnd}
-            className="fixed inset-x-0 bottom-0 z-[260] max-h-[70vh] overflow-hidden rounded-t-[16px] border-t border-[#242831] bg-[#0B0D10]/98 shadow-[0_-18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl md:absolute md:bottom-auto md:left-auto md:right-0 md:top-[50px] md:z-50 md:max-h-none md:w-[80%] md:max-w-[1000px] md:rounded-[8px] md:border md:border-border-primary md:bg-[#0E1011]/95 md:p-6 md:shadow-[0_30px_60px_rgba(0,0,0,0.9)] md:backdrop-blur-md"
+            className="fixed inset-x-0 bottom-0 z-[260] max-h-[82dvh] overflow-hidden rounded-t-[16px] border-t border-[#242831] bg-[#0B0D10]/98 shadow-[0_-18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl md:absolute md:bottom-auto md:left-auto md:right-0 md:top-[50px] md:z-50 md:max-h-none md:w-[80%] md:max-w-[1000px] md:rounded-[8px] md:border md:border-border-primary md:bg-[#0E1011]/95 md:p-6 md:shadow-[0_30px_60px_rgba(0,0,0,0.9)] md:backdrop-blur-md"
           >
             <div
               className="flex cursor-grab touch-none flex-col items-center border-b border-[#242831] px-4 pb-3 pt-2.5 active:cursor-grabbing md:hidden"
@@ -3930,7 +3958,7 @@ function DiscoverSection({
               <X className="w-5 h-5" />
             </button>
 
-            <div className="max-h-[calc(70vh-58px)] overflow-y-auto px-4 pb-5 pt-4 custom-scrollbar md:max-h-none md:overflow-visible md:p-0">
+            <div className="safe-area-bottom max-h-[calc(82dvh-58px)] overflow-y-auto px-4 pb-5 pt-4 custom-scrollbar md:max-h-none md:overflow-visible md:p-0">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
               {/* 가격 필터 */}
               <div className="space-y-4 col-span-1 md:col-span-3">
@@ -4125,10 +4153,10 @@ function DiscoverSection({
         )}
       </AnimatePresence>
 
-      <div className={`grid gap-1.5 transition-all duration-300 ${
+      <div className={`grid grid-cols-1 gap-3 transition-all duration-300 sm:grid-cols-2 md:grid-cols-3 md:gap-2 ${
         isSidebarOpen 
-          ? "grid-cols-1 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
-          : "grid-cols-1 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
+          ? "lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+          : "lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
       }`}>
         {discoverAssets.map((asset, index) => {
           let displayedAsset = { ...asset };
@@ -4282,9 +4310,10 @@ function ScrollToTopButton() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           onClick={scrollToTop}
-          className="fixed bottom-[40px] right-[40px] z-[100] p-3.5 bg-surface-primary hover:bg-[#22252B] text-text-secondary hover:text-brand-primary hover:border-brand-primary/50 border border-border-primary/50 shadow-lg rounded-full transition-colors group"
+          aria-label="페이지 맨 위로 이동"
+          className="group fixed bottom-4 right-4 z-[100] rounded-full border border-border-primary/50 bg-surface-primary p-3 text-text-secondary shadow-lg transition-colors hover:border-brand-primary/50 hover:bg-[#22252B] hover:text-brand-primary sm:bottom-6 sm:right-6 sm:p-3.5 lg:bottom-10 lg:right-10"
         >
-          <ArrowUp className="w-6 h-6 group-hover:-translate-y-0.5 transition-transform" />
+          <ArrowUp className="h-5 w-5 transition-transform group-hover:-translate-y-0.5 sm:h-6 sm:w-6" />
         </motion.button>
       )}
     </AnimatePresence>
@@ -4532,7 +4561,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-bg-dark flex flex-col font-sans selection:bg-brand-primary/30 scroll-smooth">
+    <div className="flex min-h-dvh flex-col bg-bg-dark font-sans selection:bg-brand-primary/30 scroll-smooth">
       <Header onNavigate={(page) => handleHeaderNavigate(page as PageType)} currentPage={currentPage} activeNav={activeNav} setActiveNav={setActiveNav} />
       
       {currentPage === 'uploads' ? (
@@ -4589,7 +4618,7 @@ export default function App() {
         <main className="flex-1 pb-32 bg-bg-dark">
           <Hero onNavigate={(page) => setCurrentPage(page as PageType)} />
           
-          <div className="mx-auto w-full max-w-[2560px] px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10">
+          <div className="mx-auto w-full max-w-[2560px] px-4 py-5 sm:px-6 sm:py-6 2xl:px-8 min-[2200px]:px-10">
             <div className="flex flex-col gap-8 xl:gap-12">
               <div className="flex-1 min-w-0 space-y-6">
                 <CategoryNav activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
@@ -4616,14 +4645,14 @@ export default function App() {
               animate={{ opacity: 1, y: 0, x: "-50%" }}
               exit={{ opacity: 0, y: 50, x: "-50%" }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed bottom-8 left-1/2 z-40 transform"
+              className="fixed bottom-4 left-1/2 z-40 transform sm:bottom-8"
             >
               <button
                 onClick={() => {
                   setIsPanelDropMode(false);
                   setIsPanelOpen(true);
                 }}
-                className="flex items-center gap-2 px-8 py-3 bg-bg-secondary/95 backdrop-blur-md rounded-[8px] text-[15px] font-medium text-text-primary border border-border-primary/80 hover:border-brand-primary hover:text-brand-primary transition-all shadow-[0_15px_40px_rgba(0,0,0,0.9)] cursor-pointer tracking-wide"
+                className="flex min-h-11 items-center gap-2 rounded-[8px] border border-border-primary/80 bg-bg-secondary/95 px-6 py-2.5 text-[14px] font-medium tracking-wide text-text-primary shadow-[0_15px_40px_rgba(0,0,0,0.9)] backdrop-blur-md transition-all hover:border-brand-primary hover:text-brand-primary sm:px-8 sm:py-3 sm:text-[15px]"
               >
                 패널 열기
               </button>
@@ -4640,7 +4669,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0, x: "-50%" }}
               exit={{ opacity: 0, y: 150, x: "-50%" }}
               transition={{ type: "spring", damping: 25, stiffness: 180 }}
-              className="fixed bottom-6 left-1/2 z-50 max-h-[82vh] w-[1536px] max-w-[95%] overflow-y-auto bg-[#0E1011]/95 md:bg-[#0E1011]/93 backdrop-blur-xl border border-border-primary/50 rounded-[12px] pt-[46px] pl-[24px] pr-[24px] pb-[20px] ml-0 shadow-[0_30px_60px_rgba(0,0,0,0.95)]"
+              className="safe-area-bottom fixed bottom-0 left-1/2 z-50 max-h-[88dvh] w-full max-w-full overflow-y-auto rounded-t-[16px] border border-border-primary/50 bg-[#0E1011]/95 px-4 pb-5 pt-[46px] shadow-[0_30px_60px_rgba(0,0,0,0.95)] backdrop-blur-xl custom-scrollbar sm:bottom-4 sm:w-[calc(100%_-_32px)] sm:max-w-[95%] sm:rounded-[12px] sm:px-6 md:bottom-6 md:max-h-[82dvh] md:w-[1536px] md:bg-[#0E1011]/93"
             >
               {/* Close Button - Inside but safe from overlap */}
               <button

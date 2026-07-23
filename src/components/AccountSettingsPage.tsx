@@ -26,16 +26,16 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
   ];
 
   return (
-    <div className="flex h-[calc(100vh-76px)] overflow-hidden bg-[#050505] font-sans w-full text-white">
+    <div className="flex h-[calc(100dvh-60px)] w-full flex-col overflow-hidden bg-[#050505] font-sans text-white lg:h-[calc(100dvh-76px)] lg:flex-row">
       {/* Left Nav (Sidebar) */}
-      <aside className="w-[240px] xl:w-[260px] border-r border-[#1F2329] h-full flex flex-col shrink-0 px-6 py-6 overflow-y-auto custom-scrollbar">
-        <h2 className="text-[24px] font-bold tracking-tight text-neutral-100 mb-6 px-1">계정 설정</h2>
-        <div className="space-y-1.5 mb-12">
+      <aside className="shrink-0 border-b border-[#1F2329] px-4 py-4 lg:flex lg:h-full lg:w-[240px] lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r lg:px-6 lg:py-6 custom-scrollbar xl:w-[260px]">
+        <h2 className="mb-3 px-1 text-[20px] font-bold tracking-tight text-neutral-100 lg:mb-6 lg:text-[24px]">계정 설정</h2>
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-hide lg:mb-12 lg:block lg:space-y-1.5 lg:overflow-visible lg:pb-0">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-4 px-4 py-4 rounded-xl border text-left transition-all ${
+              className={`flex h-11 shrink-0 items-center gap-2 rounded-lg border px-3 text-left transition-all lg:h-auto lg:w-full lg:gap-4 lg:rounded-xl lg:px-4 lg:py-4 ${
                 activeTab === item.id
                   ? 'border-[#E0A12E]/30 bg-[#16140D] relative after:absolute after:left-0 after:top-1/2 after:-translate-y-1/2 after:w-1 after:h-[60%] after:bg-[#E0A12E] after:rounded-r-full shadow-sm'
                   : 'border-transparent hover:bg-[#141518]'
@@ -46,13 +46,13 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className={`text-[14px] font-medium ${activeTab === item.id ? 'text-[#E0A12E]' : 'text-neutral-300'}`}>{item.title}</span>
-                <span className={`text-[14px] opacity-80 ${activeTab === item.id ? 'text-neutral-400' : 'text-neutral-400'}`}>{item.desc}</span>
+                <span className={`hidden text-[14px] opacity-80 lg:block ${activeTab === item.id ? 'text-neutral-400' : 'text-neutral-400'}`}>{item.desc}</span>
               </div>
             </button>
           ))}
         </div>
 
-        <div className="border border-[#1F2329] rounded-xl p-5 bg-[#0A0B0D] mt-auto">
+        <div className="mt-auto hidden rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-5 lg:block">
           <h3 className="font-medium text-[14px] text-neutral-200 mb-2">도움이 필요하신가요?</h3>
           <p className="text-[14px] text-neutral-400 leading-relaxed mb-5">고객센터에서 계정 관련<br/>도움을 받아보세요.</p>
           <button className="flex items-center justify-center w-full gap-2 text-[14px] font-medium text-[#E0A12E] border border-[#E0A12E]/40 rounded-lg px-4 py-2.5 hover:bg-[#E0A12E]/10 transition-colors">
@@ -63,7 +63,7 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
 
       {/* Main Area */}
       <main className="flex-1 h-full overflow-y-auto custom-scrollbar">
-        <div className="max-w-[2560px] mx-auto px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10">
+        <div className="mx-auto max-w-[2560px] px-4 py-5 sm:px-6 sm:py-6 2xl:px-8 min-[2200px]:px-10">
           <div className="w-full grid grid-cols-1 xl:grid-cols-[minmax(0,_1fr)_340px] 2xl:grid-cols-[minmax(0,_1fr)_360px] gap-6 xl:gap-8">
             
             {/* Middle Content */}

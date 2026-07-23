@@ -171,7 +171,9 @@ type RevenueSort = 'revenue' | 'sales';
 
 export default function ContentManagementPage() {
   const [items, setItems] = useState<ContentItem[]>(ITEMS);
-  const [selectedItem, setSelectedItem] = useState<ContentItem | null>(ITEMS[0]);
+  const [selectedItem, setSelectedItem] = useState<ContentItem | null>(() =>
+    window.matchMedia('(min-width: 1024px)').matches ? ITEMS[0] : null,
+  );
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeSection, setActiveSection] = useState<'content' | 'revenue'>('content');
   const [pricingItem, setPricingItem] = useState<ContentItem | null>(null);
@@ -295,7 +297,7 @@ export default function ContentManagementPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-76px)] overflow-hidden bg-[#0A0B0D] font-sans text-text-primary w-full">
+    <div className="flex h-[calc(100dvh-60px)] w-full overflow-hidden bg-[#0A0B0D] font-sans text-text-primary lg:h-[calc(100dvh-76px)]">
       
       {/* Left Sidebar Menu */}
       <aside className="hidden lg:flex w-[300px] shrink-0 border-r border-[#1C1E24] bg-[#050505] flex-col h-full z-10 custom-scrollbar overflow-y-auto">
@@ -398,6 +400,48 @@ export default function ContentManagementPage() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto custom-scrollbar bg-[#0A0B0D] relative flex flex-col">
+        <nav
+          aria-label="콘텐츠 관리 메뉴"
+          className="grid shrink-0 grid-cols-3 gap-1.5 border-b border-[#1C1E24] bg-[#08090B] p-2 lg:hidden"
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSection('content');
+              setSelectedItem(null);
+            }}
+            className={`flex min-h-11 items-center justify-center gap-1.5 rounded-lg text-[13px] font-medium transition ${
+              activeSection === 'content'
+                ? 'bg-[#E0A12E] text-black'
+                : 'border border-[#2A2E36] bg-[#111215] text-neutral-300'
+            }`}
+          >
+            <LayoutGrid className="h-4 w-4" />
+            콘텐츠
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSection('revenue');
+              setSelectedItem(null);
+            }}
+            className={`flex min-h-11 items-center justify-center gap-1.5 rounded-lg text-[13px] font-medium transition ${
+              activeSection === 'revenue'
+                ? 'bg-[#E0A12E] text-black'
+                : 'border border-[#2A2E36] bg-[#111215] text-neutral-300'
+            }`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            수익
+          </button>
+          <button
+            type="button"
+            className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[#2A2E36] bg-[#111215] text-[13px] font-medium text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-[#E0A12E]"
+          >
+            <Plus className="h-4 w-4" />
+            업로드
+          </button>
+        </nav>
         <div className="px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 w-full flex-1">
           {activeSection === 'revenue' ? (
             <div className="mx-auto w-full max-w-[1500px]">
@@ -458,7 +502,7 @@ export default function ContentManagementPage() {
               </div>
 
               <section className="mt-6 overflow-hidden rounded-xl border border-[#1C1E24] bg-[#0A0B0D]">
-                <div className="flex items-center justify-between border-b border-[#1C1E24] px-5 py-4">
+                <div className="flex flex-col gap-3 border-b border-[#1C1E24] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
                   <div>
                     <h2 className="text-[18px] font-medium text-white">작품별 수익</h2>
                     <p className="mt-1 text-[14px] text-neutral-500">판매 성과가 높은 작품을 비교합니다.</p>
@@ -493,20 +537,24 @@ export default function ContentManagementPage() {
                         : b.sales - a.sales,
                     )
                     .map(({ item, sales, revenue }) => (
-                      <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_80px_minmax(120px,180px)_110px] items-center gap-4 px-5 py-4">
+                      <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 sm:grid-cols-[minmax(0,1fr)_80px_minmax(120px,180px)_110px] sm:gap-4 sm:px-5">
                         <div className="flex min-w-0 items-center gap-3">
-                          <img src={item.image} alt="" className="h-12 w-16 rounded-lg object-cover" />
+                          <img src={item.image} alt="" className="h-11 w-14 shrink-0 rounded-lg object-cover sm:h-12 sm:w-16" />
                           <div className="min-w-0">
-                            <p className="truncate text-[15px] font-medium text-white">{item.title}</p>
-                            <p className="mt-1 text-[14px] text-neutral-500">
+                            <p className="truncate text-[14px] font-medium text-white sm:text-[15px]">{item.title}</p>
+                            <p className="mt-1 truncate text-[12px] text-neutral-500 sm:text-[14px]">
                               {item.saleEnabled && item.originalPrice
                                 ? `할인가 ₩${item.price?.toLocaleString()}`
                                 : `₩${item.price?.toLocaleString()}`}
                             </p>
                           </div>
                         </div>
-                        <span className="text-right text-[14px] text-neutral-400">{sales}건</span>
-                        <div className="min-w-0">
+                        <div className="text-right sm:hidden">
+                          <p className="text-[12px] text-neutral-400">{sales}건</p>
+                          <p className="mt-1 text-[14px] font-medium text-[#E0A12E]">{formatCompactWon(revenue)}</p>
+                        </div>
+                        <span className="hidden text-right text-[14px] text-neutral-400 sm:block">{sales}건</span>
+                        <div className="hidden min-w-0 sm:block">
                           <div className="mb-1.5 flex justify-between text-[14px] text-neutral-500">
                             <span>수익 비중</span>
                             <span>{Math.round((revenue / Math.max(1, revenueSummary.totalRevenue)) * 100)}%</span>
@@ -518,7 +566,7 @@ export default function ContentManagementPage() {
                             />
                           </div>
                         </div>
-                        <span className="text-right text-[16px] font-medium text-[#E0A12E]">{formatCompactWon(revenue)}</span>
+                        <span className="hidden text-right text-[16px] font-medium text-[#E0A12E] sm:block">{formatCompactWon(revenue)}</span>
                       </div>
                     ))}
                 </div>
@@ -645,7 +693,7 @@ export default function ContentManagementPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 50 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="absolute inset-0 md:relative md:inset-auto w-full md:w-[380px] shrink-0 bg-[#0A0B0D] border-l border-[#1C1E24] shadow-[0_0_50px_rgba(0,0,0,0.8)] md:shadow-2xl flex flex-col z-30 md:z-20"
+            className="fixed inset-x-0 bottom-0 top-[60px] z-30 flex w-full shrink-0 flex-col border-l border-[#1C1E24] bg-[#0A0B0D] shadow-[0_0_50px_rgba(0,0,0,0.8)] lg:relative lg:inset-auto lg:z-20 lg:w-[380px] lg:shadow-2xl"
           >
             <button 
               onClick={() => setSelectedItem(null)}

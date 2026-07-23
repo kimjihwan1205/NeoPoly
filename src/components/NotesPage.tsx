@@ -522,7 +522,7 @@ export default function NotesPage({
   return (
     <div
       className={`flex overflow-hidden bg-bg-dark font-sans text-text-primary ${
-        isPopup ? "h-full" : "h-[calc(100vh-76px)]"
+        isPopup ? "h-full" : "h-[calc(100dvh-60px)] lg:h-[calc(100dvh-76px)]"
       }`}
     >
       {!hideSidebar && (
@@ -544,8 +544,31 @@ export default function NotesPage({
         }`}
       >
         <div className="mx-auto flex h-full w-full max-w-[2400px] flex-col gap-6">
-          <div className="flex items-center gap-4">
-            <div className={`relative w-full ${isPopup ? "max-w-[400px] flex-[0_1_400px]" : "max-w-[560px] flex-[0_1_560px]"}`}>
+          {!hideSidebar && (
+            <div className="-mb-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide lg:hidden" aria-label="노트 보기">
+              {[
+                ["all", "전체 노트"],
+                ["starred", "즐겨찾기"],
+                ["trash", "휴지통"],
+              ].map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setFilter(id)}
+                  className={`h-10 shrink-0 rounded-lg border px-4 text-[14px] font-medium transition ${
+                    filter === id
+                      ? "border-brand-primary/60 bg-brand-primary/10 text-brand-primary"
+                      : "border-[#242832] bg-[#111317] text-text-secondary"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className={`relative order-first basis-full sm:order-none sm:basis-auto ${isPopup ? "sm:max-w-[400px] sm:flex-[0_1_400px]" : "sm:max-w-[560px] sm:flex-[1_1_360px]"}`}>
               <Search className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-400" />
               <input
                 type="text"
@@ -556,25 +579,27 @@ export default function NotesPage({
               />
             </div>
 
-            <div className="flex-1" />
+            <div className="hidden flex-1 lg:block" />
 
             <button
               onClick={openCreateNote}
-              className="flex h-12 shrink-0 items-center gap-2 rounded-lg border border-[#E0A12E]/35 bg-[#E0A12E]/10 px-4 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-[#E0A12E]/15"
+              className="flex h-12 w-12 shrink-0 items-center justify-center gap-2 rounded-lg border border-[#E0A12E]/35 bg-[#E0A12E]/10 px-0 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-[#E0A12E]/15 sm:w-auto sm:px-4"
+              aria-label="노트 추가"
             >
               <Plus className="h-4 w-4" />
-              노트 추가
+              <span className="hidden sm:inline">노트 추가</span>
             </button>
             <button
               onClick={() => setFavoritesFirst((value) => !value)}
-              className={`flex h-12 items-center gap-2 rounded-lg border px-4 text-[14px] font-medium transition ${
+              className={`flex h-12 w-12 items-center justify-center gap-2 rounded-lg border px-0 text-[14px] font-medium transition sm:w-auto sm:px-4 ${
                 favoritesFirst
                   ? "border-[#E0A12E]/45 bg-[#E0A12E]/10 text-brand-primary"
                   : "border-[#1C1E24] bg-[#121417] text-text-secondary hover:bg-surface-primary hover:text-white"
               }`}
+              aria-label="즐겨찾기 우선 보기"
             >
               <Star className={`h-4 w-4 ${favoritesFirst ? "fill-brand-primary" : ""}`} />
-              즐겨찾기
+              <span className="hidden sm:inline">즐겨찾기</span>
             </button>
 
             <div className="relative">
@@ -583,7 +608,7 @@ export default function NotesPage({
                 className="flex h-12 cursor-pointer items-center rounded-lg border border-[#1C1E24] bg-[#121417] px-3 text-[14px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
               >
                 {sortMode === "recent" ? "최신순" : "이름순"}
-                <ChevronDown className="ml-6 h-4 w-4" />
+                <ChevronDown className="ml-2 h-4 w-4 sm:ml-6" />
               </button>
               {isSortMenuOpen && (
                 <div className="absolute right-0 top-[calc(100%+8px)] z-40 w-[132px] rounded-lg border border-[#2A2E36] bg-[#111317] p-1 shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
@@ -630,7 +655,7 @@ export default function NotesPage({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-1 text-[13px] text-neutral-400">
+          <div className="hidden items-center gap-2 px-1 text-[13px] text-neutral-400 sm:flex">
             <CheckSquare className="h-4 w-4 text-neutral-400" />
             Ctrl 또는 Cmd를 누른 채 클릭하면 여러 노트를 선택할 수 있습니다.
           </div>
@@ -738,7 +763,7 @@ export default function NotesPage({
                           e.stopPropagation();
                           moveNoteToTrash(note.id);
                         }}
-                        className="text-neutral-400 opacity-0 transition hover:text-red-300 group-hover:opacity-100"
+                        className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-400 opacity-100 transition hover:bg-red-500/10 hover:text-red-300 sm:opacity-0 sm:group-hover:opacity-100"
                       >
                         <Trash2 className="h-[18px] w-[18px]" />
                       </span>
@@ -761,11 +786,11 @@ export default function NotesPage({
       <AnimatePresence>
         {!hideDetailPanel && activeNoteData && (
           <motion.aside
-            initial={{ width: 0, opacity: 0, x: 20 }}
-            animate={{ width: 400, opacity: 1, x: 0 }}
-            exit={{ width: 0, opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="relative z-10 hidden h-full shrink-0 flex-col overflow-y-auto border-l border-[#161618] bg-[#0A0B0D] xl:flex"
+            className="fixed inset-x-0 bottom-0 top-[60px] z-[80] flex w-full shrink-0 flex-col overflow-y-auto border-l border-[#161618] bg-[#0A0B0D] xl:relative xl:inset-auto xl:z-10 xl:h-full xl:w-[400px]"
           >
             <div className="sticky top-0 z-20 flex items-start justify-between border-b border-[#161618] bg-[#0A0B0D]/85 p-5 backdrop-blur-xl">
               <div>

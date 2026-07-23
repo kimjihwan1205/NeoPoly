@@ -59,14 +59,14 @@ export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteE
   ];
 
   return (
-    <div className="flex h-[calc(100vh-76px)] overflow-hidden bg-bg-dark font-sans text-text-primary">
+    <div className="flex h-[calc(100dvh-60px)] overflow-hidden bg-bg-dark font-sans text-text-primary lg:h-[calc(100dvh-76px)]">
       {/* Left Sidebar */}
       <NoteSidebar onNavigate={onNavigate} mode="editor" editorTitle={initialNote?.title} isNewNote={!initialNote} />
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto custom-scrollbar bg-bg-dark flex flex-col relative w-full">
         {/* Top Formatting Toolbar */}
-        <div className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 bg-[#0A0B0D]/90 backdrop-blur-md border-b border-[#1C1E24] text-neutral-400">
+        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-[#1C1E24] bg-[#0A0B0D]/90 px-4 py-3 text-neutral-400 backdrop-blur-md sm:px-6 sm:py-4">
           <div className="flex items-center gap-4 md:gap-6 overflow-x-auto custom-scrollbar">
             <div className="flex items-center gap-3 shrink-0">
               <button className="text-[15px] font-bold hover:text-white transition-colors">H1</button>
@@ -111,7 +111,7 @@ export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteE
               type="text"
               defaultValue={initialNote?.title ?? ""}
               placeholder="제목을 입력하세요"
-              className="w-full bg-transparent border-none outline-none text-[36px] font-bold text-white placeholder-[#3A404F] tracking-tight"
+              className="w-full border-none bg-transparent text-[28px] font-bold tracking-tight text-white outline-none placeholder-[#3A404F] sm:text-[36px]"
             />
             <p className="text-[16px] text-neutral-400 mt-4 font-medium tracking-tight">
               {initialNote
@@ -123,14 +123,14 @@ export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteE
           <div className="h-px w-full border-b border-[#1C1E24] mt-2 mb-4"></div>
 
           {/* Active Editor Block */}
-          <div className="bg-[#111215] border border-[#1C1E24] rounded-xl p-6 flex-1 flex flex-col items-start relative group shadow-sm min-h-[340px]">
+          <div className="group relative flex min-h-[300px] flex-1 flex-col items-start rounded-xl border border-[#1C1E24] bg-[#111215] p-4 shadow-sm sm:min-h-[340px] sm:p-6">
             <textarea
               key={`memo-${initialNote?.id ?? "new"}`}
               defaultValue={initialNote?.desc ?? ""}
               placeholder="메모를 입력하세요."
               className="min-h-[260px] w-full flex-1 resize-y bg-transparent border-none outline-none text-[16px] leading-[1.75] text-white placeholder:text-neutral-500"
             />
-            <button className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-[#1A1C20] border border-[#2A2E36] hover:bg-[#22252A] hover:border-[#3A404F] text-neutral-300 px-4 py-2 rounded-lg text-[14px] font-semibold transition-all opacity-0 group-hover:opacity-100 shadow-md">
+            <button className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-lg border border-[#2A2E36] bg-[#1A1C20] px-4 py-2 text-[14px] font-semibold text-neutral-300 opacity-100 shadow-md transition-all hover:border-[#3A404F] hover:bg-[#22252A] md:opacity-0 md:group-hover:opacity-100">
               <Plus className="w-4 h-4" /> 블록 추가
             </button>
           </div>
@@ -185,7 +185,7 @@ export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteE
       </main>
 
       {/* Right Sidebar - AI Assist */}
-      <aside className="w-[350px] shrink-0 border-l border-[#161618] bg-[#0A0B0D] flex flex-col h-full relative z-10">
+      <aside className="relative z-10 hidden h-full w-[320px] shrink-0 flex-col border-l border-[#161618] bg-[#0A0B0D] xl:flex 2xl:w-[350px]">
         <div className="flex items-center justify-between p-5 border-b border-[#1C1E24]">
           <div className="flex items-center gap-2 text-[16px] font-bold text-white">
             <Sparkles className="w-4 h-4 text-brand-primary" /> AI 어시스트

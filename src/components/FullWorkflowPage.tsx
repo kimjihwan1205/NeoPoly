@@ -817,7 +817,7 @@ export default function FullWorkflowPage({
   };
 
   return (
-    <div className="flex bg-[#050505] h-[calc(100vh-76px)] text-white font-sans antialiased w-full overflow-hidden relative">
+    <div className="relative flex h-[calc(100dvh-60px)] w-full overflow-hidden bg-[#050505] font-sans text-white antialiased lg:h-[calc(100dvh-76px)]">
       {showIntroOverlay && (
         <FullWorkflowIntroPage
           onNavigate={onNavigate}
@@ -826,17 +826,17 @@ export default function FullWorkflowPage({
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 flex overflow-hidden relative">
+      <main className="relative flex min-w-0 flex-1 flex-col overflow-y-auto custom-scrollbar lg:flex-row lg:overflow-hidden">
         {activeProject === null ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 relative w-full h-full bg-[#050505] overflow-y-auto custom-scrollbar">
-            <div className="max-w-[1200px] w-full flex flex-col items-center justify-center min-h-[60vh] pb-16">
+          <div className="relative flex h-full w-full flex-1 flex-col items-center justify-start overflow-y-auto bg-[#050505] p-4 custom-scrollbar sm:p-8 lg:justify-center">
+            <div className="flex min-h-full w-full max-w-[1200px] flex-col items-center justify-center py-10 sm:py-12 lg:min-h-[60vh] lg:pb-16 lg:pt-0">
               <div className="w-20 h-20 bg-[#141518] rounded-[24px] flex items-center justify-center border border-[#2A2E36] mb-8 shadow-xl">
                 <Sparkles className="w-10 h-10 text-[#E0A12E]" />
               </div>
-              <h2 className="text-[32px] font-bold text-white mb-4 tracking-tight">
+              <h2 className="mb-4 text-center text-[28px] font-bold tracking-tight text-white sm:text-[32px]">
                 새로운 작업 시작하기
               </h2>
-              <p className="text-[16px] text-neutral-300 leading-[1.65] max-w-xl text-center mb-12">
+              <p className="mb-8 max-w-xl text-center text-[14px] leading-[1.65] text-neutral-300 sm:mb-12 sm:text-[16px]">
                 바로 빈 캔버스에서 아이디어를 펼치거나,
                 <br />
                 미리 정리해둔 보드 자료를 세팅하고 시작할 수 있습니다.
@@ -846,7 +846,7 @@ export default function FullWorkflowPage({
                 {/* 빈 프로젝트로 시작 */}
                 <button
                   onClick={handleStartEmptyProject}
-                  className="flex flex-col items-center justify-start h-full pt-10 pb-9 px-7 bg-[#0A0B0D] hover:bg-[#141518] border border-[#1F2329] hover:border-[#E0A12E]/50 rounded-[24px] transition-all group shadow-[0_4px_24px_rgba(0,0,0,0.2)] text-center relative overflow-hidden"
+                  className="group relative flex h-full flex-col items-center justify-start overflow-hidden rounded-[20px] border border-[#1F2329] bg-[#0A0B0D] px-5 pb-7 pt-8 text-center shadow-[0_4px_24px_rgba(0,0,0,0.2)] transition-all hover:border-[#E0A12E]/50 hover:bg-[#141518] sm:rounded-[24px] sm:px-7 sm:pb-9 sm:pt-10"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-[#E0A12E]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <div className="h-12 mb-6 flex items-center justify-center shrink-0">
@@ -863,7 +863,7 @@ export default function FullWorkflowPage({
                 {/* 진행중인 프로젝트로 시작 */}
                 <button
                   onClick={() => setIsProjectPopupOpen(true)}
-                  className="flex flex-col items-center justify-start h-full pt-10 pb-9 px-7 bg-[#0A0B0D] hover:bg-[#141518] border border-[#1F2329] hover:border-[#E0A12E]/50 rounded-[24px] transition-all group shadow-[0_4px_24px_rgba(0,0,0,0.2)] text-center relative overflow-hidden"
+                  className="group relative flex h-full flex-col items-center justify-start overflow-hidden rounded-[20px] border border-[#1F2329] bg-[#0A0B0D] px-5 pb-7 pt-8 text-center shadow-[0_4px_24px_rgba(0,0,0,0.2)] transition-all hover:border-[#E0A12E]/50 hover:bg-[#141518] sm:rounded-[24px] sm:px-7 sm:pb-9 sm:pt-10"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-[#E0A12E]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <div className="h-12 mb-6 flex items-center justify-center shrink-0">
@@ -883,7 +883,7 @@ export default function FullWorkflowPage({
                   tabIndex={0}
                   onClick={openBoardImportPopup}
                   onKeyDown={handleBoardImportCardKeyDown}
-                  className="group flex flex-col items-center justify-start h-full pt-10 pb-9 px-7 bg-[#0A0B0D] hover:bg-[#141518] border border-[#1F2329] hover:border-[#E0A12E]/50 rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.2)] text-center relative overflow-hidden transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E0A12E]/70"
+                  className="group relative flex h-full cursor-pointer flex-col items-center justify-start overflow-hidden rounded-[20px] border border-[#1F2329] bg-[#0A0B0D] px-5 pb-7 pt-8 text-center shadow-[0_4px_24px_rgba(0,0,0,0.2)] transition-all hover:border-[#E0A12E]/50 hover:bg-[#141518] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E0A12E]/70 sm:rounded-[24px] sm:px-7 sm:pb-9 sm:pt-10"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-[#E0A12E]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <motion.div
@@ -967,7 +967,7 @@ export default function FullWorkflowPage({
           </div>
         ) : (
           <>
-            <div className="flex-1 flex flex-col min-w-0 relative">
+            <div className="relative flex min-h-[65dvh] min-w-0 flex-1 flex-col lg:min-h-0">
               {workflowStep === "prompt" ? (
                 <>
                   {/* Main Top Header */}
@@ -978,7 +978,7 @@ export default function FullWorkflowPage({
                   />
 
                   {/* Chat Area */}
-                  <div className="flex-1 overflow-y-auto px-8 py-5 custom-scrollbar flex flex-col gap-8 pb-4">
+                  <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 py-5 pb-4 custom-scrollbar sm:px-6 lg:gap-8 lg:px-8">
                     {messages.map((msg) => {
                   if (msg.role === "assistant") {
                     return (
@@ -1138,10 +1138,10 @@ export default function FullWorkflowPage({
                   ) : (
                   <div className="mx-auto flex min-h-full w-full max-w-[2200px] flex-col">
                   <div
-                    className={`grid grid-cols-2 gap-3 lg:gap-4 2xl:gap-5 ${
+                    className={`grid grid-cols-1 gap-3 sm:grid-cols-2 lg:gap-4 2xl:gap-5 ${
                       generatedImageCount <= 4
-                        ? "min-h-[calc(100vh-180px)] flex-1 grid-rows-2"
-                        : "auto-rows-[minmax(320px,42vh)]"
+                        ? "min-h-[calc(100dvh-180px)] flex-1 grid-rows-none sm:grid-rows-2"
+                        : "auto-rows-[minmax(260px,42dvh)] sm:auto-rows-[minmax(320px,42dvh)]"
                     }`}
                   >
                     {Array.from({ length: generatedImageCount }, (_, i) => i).map((i) => (
@@ -1177,8 +1177,8 @@ export default function FullWorkflowPage({
                         </div>
 
                         {/* Top Actions Bar (Hover) */}
-                        <div className="absolute top-0 left-0 right-0 p-4 pb-12 flex items-center justify-end bg-gradient-to-b from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <div className="flex items-center gap-3">
+                        <div className="absolute inset-x-0 top-0 flex items-center justify-end bg-gradient-to-b from-black/60 to-transparent p-2 pb-10 opacity-100 transition-opacity duration-300 md:p-4 md:pb-12 md:opacity-0 md:group-hover:opacity-100">
+                          <div className="flex items-center gap-1.5 sm:gap-3">
                             <button
                               type="button"
                               onClick={(event) => {
@@ -1227,7 +1227,7 @@ export default function FullWorkflowPage({
             {/* Right Sidebar - Output & Options */}
             {workflowStep === "prompt" ? (
               ((rightPanelMode === "prompt") || rightPanelMode === "expert") && (
-              <div className="w-[420px] xl:w-[480px] 2xl:w-[550px] flex-shrink-0 border-l border-[#1F2329] bg-[#050505] flex flex-col h-full overflow-hidden">
+              <div className="flex h-[70dvh] w-full flex-shrink-0 flex-col overflow-hidden border-t border-[#1F2329] bg-[#050505] lg:h-full lg:w-[420px] lg:border-l lg:border-t-0 xl:w-[480px] 2xl:w-[550px]">
                 {rightPanelMode === "prompt" ? (
                 <>
                   <WorkflowSidebarHeader
@@ -1240,7 +1240,7 @@ export default function FullWorkflowPage({
                   />
                   <div className="flex-1 flex flex-col overflow-hidden p-6 gap-6 pb-0">
                     {/* Selected Refs */}
-                    <div className="rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4 flex flex-col max-h-[45vh] shrink-0">
+                    <div className="flex max-h-[45dvh] shrink-0 flex-col rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4">
                       <div className="flex items-center justify-between mb-3 text-[14px] shrink-0">
                         <span className="text-neutral-100 font-bold">레퍼런스</span>
                         <span className="text-neutral-400">
@@ -1279,7 +1279,8 @@ export default function FullWorkflowPage({
                                       );
                                       setHasUnsavedChanges(true);
                                     }}
-                                    className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-md text-white/70 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm border border-white/10 z-20"
+                                    aria-label="레퍼런스 제거"
+                                    className="absolute right-2 top-2 z-20 rounded-md border border-white/10 bg-black/60 p-1.5 text-white/70 opacity-100 backdrop-blur-sm transition-opacity hover:text-white md:opacity-0 md:group-hover:opacity-100"
                                   >
                                     <X className="w-3 h-3" />
                                   </button>
@@ -1586,7 +1587,7 @@ export default function FullWorkflowPage({
               )}
             </div>
             )) : (
-              <div className="w-[420px] xl:w-[480px] 2xl:w-[550px] flex-shrink-0 border-l border-[#1F2329] bg-[#050505] flex flex-col h-full overflow-hidden">
+              <div className="flex h-[70dvh] w-full flex-shrink-0 flex-col overflow-hidden border-t border-[#1F2329] bg-[#050505] lg:h-full lg:w-[420px] lg:border-l lg:border-t-0 xl:w-[480px] 2xl:w-[550px]">
                 <WorkflowSidebarHeader
                   title="이미지 생성 설정"
                   action={
@@ -1796,7 +1797,7 @@ export default function FullWorkflowPage({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onMouseDown={closeGeneratedImageEditor}
-            className="fixed inset-0 z-[150] flex items-center justify-center bg-black/55 p-5 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[150] flex items-center justify-center bg-black/55 p-3 backdrop-blur-[2px] sm:p-5"
           >
             <motion.div
               initial={{ opacity: 0, y: 14, scale: 0.98 }}
@@ -1804,7 +1805,7 @@ export default function FullWorkflowPage({
               exit={{ opacity: 0, y: 14, scale: 0.98 }}
               transition={{ duration: 0.18 }}
               onMouseDown={(event) => event.stopPropagation()}
-              className="flex max-h-[92vh] w-full max-w-[1240px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_28px_80px_rgba(0,0,0,0.7)]"
+              className="flex max-h-[92dvh] w-full max-w-[1240px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_28px_80px_rgba(0,0,0,0.7)]"
             >
               <div className="flex items-center justify-between border-b border-[#1F2329] px-5 py-4">
                 <div>

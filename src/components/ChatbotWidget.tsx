@@ -73,14 +73,15 @@ export default function ChatbotWidget() {
       {/* Floating Chat Button */}
       <button 
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-[40px] right-[40px] z-[100] w-[52px] h-[52px] bg-[#141518] hover:bg-[#1A1C21] text-[#E0A12E] border border-[#E0A12E]/60 hover:border-[#E0A12E] rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.6)] flex items-center justify-center transition-all hover:scale-110 ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
+        className={`fixed bottom-4 right-4 z-[100] flex h-12 w-12 items-center justify-center rounded-full border border-[#E0A12E]/60 bg-[#141518] text-[#E0A12E] shadow-[0_8px_24px_rgba(0,0,0,0.6)] transition-all hover:scale-110 hover:border-[#E0A12E] hover:bg-[#1A1C21] sm:bottom-6 sm:right-6 sm:h-[52px] sm:w-[52px] lg:bottom-10 lg:right-10 ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
+        aria-label="AI 도우미 열기"
       >
         <BotMessageSquare className="w-6 h-6 stroke-[1.5px]" />
       </button>
 
       {/* Chat Window */}
       <div 
-        className={`fixed bottom-[40px] right-[40px] z-[110] w-[360px] h-[520px] bg-[#0A0B0D] border border-[#2A2E36] rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden transition-all duration-300 origin-bottom-right ${isOpen ? 'scale-100 opacity-100' : 'scale-75 opacity-0 pointer-events-none'}`}
+        className={`fixed inset-x-3 bottom-3 z-[110] flex h-[min(620px,calc(100dvh-84px))] flex-col overflow-hidden rounded-2xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_12px_40px_rgba(0,0,0,0.8)] transition-all duration-300 origin-bottom-right sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[520px] sm:w-[360px] lg:bottom-10 lg:right-10 ${isOpen ? 'scale-100 opacity-100' : 'scale-75 opacity-0 pointer-events-none'}`}
       >
         {/* Header */}
         <div className="flex justify-between items-center px-5 py-4 bg-[#141518] border-b border-[#1F2329] shrink-0">
@@ -97,6 +98,7 @@ export default function ChatbotWidget() {
             <button 
               onClick={() => setIsOpen(false)}
               className="p-1.5 text-neutral-400 hover:text-white hover:bg-[#2A2E36] rounded-lg transition-colors"
+              aria-label="AI 도우미 닫기"
             >
               <Minimize2 className="w-4 h-4" />
             </button>
