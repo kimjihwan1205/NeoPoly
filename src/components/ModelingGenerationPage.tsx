@@ -214,12 +214,12 @@ function ViewportTools({
   ];
 
   return (
-    <div className="absolute left-4 top-20 z-20 flex w-[58px] flex-col overflow-hidden rounded-xl border border-[#1F2329] bg-[#080A0D]/90 shadow-2xl backdrop-blur">
+    <div className="absolute left-3 right-3 top-[70px] z-20 flex flex-row overflow-x-auto rounded-xl border border-[#1F2329] bg-[#080A0D]/90 shadow-2xl backdrop-blur scrollbar-hide sm:left-4 sm:right-auto sm:top-20 sm:w-[58px] sm:flex-col sm:overflow-hidden">
       {tools.map(([label, Icon], idx) => (
         <button
           key={label as string}
           onClick={() => onToolSelect(label as string)}
-          className={`flex h-[58px] flex-col items-center justify-center gap-1 border-b border-[#1F2329] text-[14px] transition-colors last:border-b-0 ${
+          className={`flex h-12 min-w-[52px] flex-1 flex-col items-center justify-center gap-0.5 border-r border-[#1F2329] text-[12px] transition-colors last:border-r-0 sm:h-[58px] sm:min-w-0 sm:flex-none sm:gap-1 sm:border-b sm:border-r-0 sm:text-[14px] sm:last:border-b-0 ${
             activeTool === label || (label === "그리드" && gridEnabled)
               ? "bg-[#E0A12E]/10 text-[#E0A12E]"
               : "text-neutral-400 hover:bg-[#141518] hover:text-white"
@@ -683,10 +683,10 @@ function ThreeModelPreview({
   return (
     <div className="relative h-full w-full">
       <div ref={mountRef} className="absolute inset-0 cursor-grab active:cursor-grabbing" />
-      <div className="group absolute bottom-24 left-5 z-30">
+      <div className="group absolute bottom-3 right-3 z-30 sm:bottom-24 sm:left-5 sm:right-auto">
         <button
           type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#2A2E36] bg-[#080A0D]/90 text-neutral-400 shadow-lg backdrop-blur transition hover:border-[#E0A12E]/60 hover:text-[#E0A12E]"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-[#2A2E36] bg-[#080A0D]/90 text-neutral-400 shadow-lg backdrop-blur transition hover:border-[#E0A12E]/60 hover:text-[#E0A12E] sm:h-9 sm:w-9"
           aria-label="뷰포트 조작 안내"
         >
           <CircleHelp className="h-4 w-4" />
@@ -727,9 +727,9 @@ function ModuleSetBrowser({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 16, scale: 0.98 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className={`absolute right-3 top-[132px] z-40 flex max-h-[calc(100%-152px)] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#080A0D]/97 shadow-[0_24px_70px_rgba(0,0,0,0.75)] backdrop-blur-xl sm:right-5 ${
+      className={`absolute right-3 top-[188px] z-40 flex max-h-[calc(100%-208px)] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#080A0D]/97 shadow-[0_24px_70px_rgba(0,0,0,0.75)] backdrop-blur-xl sm:right-5 sm:top-[132px] sm:max-h-[calc(100%-152px)] ${
         stage === "sets" ? "w-[620px]" : "w-[900px]"
-      } max-w-[calc(100%-100px)] sm:max-w-[calc(100%-112px)]`}
+      } max-w-[calc(100%-24px)] sm:max-w-[calc(100%-112px)]`}
     >
       <div className="flex min-h-[58px] shrink-0 items-center justify-between border-b border-[#1F2329] px-4">
         <div className="flex min-w-0 items-center gap-2 text-[14px] font-medium">
@@ -903,7 +903,7 @@ function ModelViewport({
   };
 
   return (
-    <section className="relative flex min-h-[520px] min-w-0 flex-1 flex-col overflow-hidden border-b border-[#1F2329] bg-[#050505] lg:min-h-0 lg:border-b-0 lg:border-r">
+    <section className="relative flex min-h-[600px] min-w-0 flex-1 flex-col overflow-hidden border-b border-[#1F2329] bg-[#050505] sm:min-h-[520px] lg:min-h-0 lg:border-b-0 lg:border-r">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(255,255,255,0.08),transparent_34%),linear-gradient(135deg,rgba(224,161,46,0.08),transparent_30%,rgba(96,165,250,0.04))]" />
       <div className="relative z-10 flex h-[58px] shrink-0 items-center justify-between overflow-x-auto border-b border-[#1F2329] px-3 scrollbar-hide sm:px-5">
         <div className="flex min-w-max items-center gap-2">
@@ -930,14 +930,14 @@ function ModelViewport({
         type="button"
         onClick={() => setIsModuleBrowserOpen((current) => !current)}
         disabled={isGeneratingModel}
-        className={`absolute right-5 top-20 z-30 flex items-center gap-2 rounded-lg border px-3.5 py-2.5 text-[14px] font-medium shadow-xl backdrop-blur transition ${
+        className={`absolute right-3 top-[130px] z-30 flex min-h-11 items-center gap-2 rounded-lg border px-3 py-2.5 text-[14px] font-medium shadow-xl backdrop-blur transition sm:right-5 sm:top-20 sm:min-h-0 sm:px-3.5 ${
           isModuleBrowserOpen
             ? "border-[#E0A12E] bg-[#E0A12E]/15 text-[#E0A12E]"
             : "border-[#2A2E36] bg-[#080A0D]/90 text-neutral-300 hover:border-[#E0A12E]/60 hover:text-white"
         }`}
       >
         <Layers3 className="h-4 w-4" />
-        모듈 세트
+        <span className="hidden sm:inline">모듈 세트</span>
         <span className={isModuleBrowserOpen ? "text-[#E0A12E]" : "text-neutral-500"}>{moduleSetCount}</span>
       </button>
 
@@ -951,7 +951,7 @@ function ModelViewport({
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 flex flex-1 items-center justify-center overflow-hidden p-8">
+      <div className="relative z-10 flex flex-1 items-center justify-center overflow-hidden p-3 pb-16 pt-20 sm:p-8">
         {isGeneratingModel ? (
           <div className="flex h-full w-full flex-col items-center justify-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[#E0A12E]/30 bg-[#E0A12E]/10">
@@ -979,9 +979,9 @@ function ModelViewport({
           </div>
         )}
 
-        {!isGeneratingModel && <div className="absolute bottom-5 left-5 z-20">
-          <p className="text-[14px] text-neutral-500">폴리곤 수</p>
-          <p className="mt-1 text-[16px] font-medium text-white">{polygonCount.toLocaleString("ko-KR")}</p>
+        {!isGeneratingModel && <div className="absolute bottom-3 left-3 z-20 rounded-lg border border-[#2A2E36] bg-[#080A0D]/90 px-3 py-2 shadow-lg backdrop-blur sm:bottom-5 sm:left-5 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
+          <p className="text-[12px] text-neutral-500 sm:text-[14px]">폴리곤 수</p>
+          <p className="mt-0.5 text-[15px] font-medium text-white sm:mt-1 sm:text-[16px]">{polygonCount.toLocaleString("ko-KR")}</p>
         </div>}
       </div>
     </section>
@@ -1193,7 +1193,7 @@ function RightPanel({
                 ))}
               </div>
 
-              <div className="mt-4 grid grid-cols-6 gap-2">
+              <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
                 {MODULES.map((module, index) => (
                   <button
                     key={module.id}
@@ -1204,7 +1204,7 @@ function RightPanel({
                     <div className="aspect-square overflow-hidden">
                       <img src={module.image} alt={module.label} className="h-full w-full object-contain p-1 opacity-85 group-hover:opacity-100" />
                     </div>
-                    <span className="block truncate px-1 py-1 text-[14px] text-neutral-400">{module.label}</span>
+                    <span className="flex min-h-9 items-center justify-center px-1 py-1 text-center text-[12px] leading-4 text-neutral-400">{module.label}</span>
                   </button>
                 ))}
               </div>
@@ -1228,7 +1228,7 @@ function RightPanel({
           <div className="space-y-5">
             <div className="rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4">
               <SectionTitle title="최적화 목적 선택" />
-              <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="mt-3 grid grid-cols-1 gap-2 min-[480px]:grid-cols-2">
                 {[
                   ["영상용", "500K", Grid3X3],
                   ["게임용", "80K", Gauge],
@@ -1337,18 +1337,18 @@ function RightPanel({
                       key={map.id}
                       type="button"
                       onClick={() => setSelectedTextureMapId(map.id)}
-                      className={`flex min-w-0 items-center gap-2 rounded-lg border p-2 text-left transition ${
+                      className={`flex min-w-0 items-center gap-1.5 rounded-lg border p-1.5 text-left transition ${
                         isSelected
                           ? "border-[#E0A12E] bg-[#E0A12E]/10"
                           : "border-[#1F2329] bg-[#141518] hover:border-[#555A64]"
                       }`}
                     >
-                      <TgaTexturePreview map={map} className="h-12 w-12 shrink-0 rounded-md border border-white/10" />
+                      <TgaTexturePreview map={map} className="h-10 w-10 shrink-0 rounded-md border border-white/10" />
                       <span className="min-w-0">
                         <span className={`block truncate text-[13px] font-medium ${isSelected ? "text-[#E0A12E]" : "text-neutral-300"}`}>
                           {map.channel}
                         </span>
-                        <span className="block truncate text-[12px] text-neutral-500">{map.part}</span>
+                        <span className="block text-[12px] leading-[16px] text-neutral-500">{map.part}</span>
                       </span>
                     </button>
                   );
@@ -1546,8 +1546,8 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
   };
 
   return (
-    <div className="flex h-[calc(100dvh-60px)] flex-col overflow-y-auto bg-[#050505] text-white custom-scrollbar lg:h-[calc(100dvh-76px)] lg:flex-row lg:overflow-hidden">
-      <main className="flex min-h-0 min-w-0 flex-1 flex-col">
+    <div className="np-workspace-shell flex h-[calc(100dvh-60px)] flex-col overflow-y-auto bg-[#050505] text-white custom-scrollbar lg:h-[calc(100dvh-76px)] lg:flex-row lg:overflow-hidden">
+      <main className="flex min-w-0 shrink-0 flex-col lg:min-h-0 lg:flex-1">
         <WorkflowHeader
           title="3D 모델링 생성"
           section="modeling"

@@ -804,7 +804,7 @@ export default function ReferencePage({
           </div>
 
           {viewMode === "grid" ? (
-          <div className="grid grid-cols-2 gap-4 [grid-auto-flow:dense] [grid-auto-rows:8px] md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 [grid-auto-flow:dense] [grid-auto-rows:8px] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {displayedAssets.map((asset, index) => {
               const profile = MASONRY_PROFILES[(asset.id * 3 + index * 7) % MASONRY_PROFILES.length];
               return (

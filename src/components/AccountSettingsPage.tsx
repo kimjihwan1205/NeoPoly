@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Lock, Bell, Globe, Settings2, Store, CreditCard, ExternalLink, Camera, ChevronDown, X, Plus, MapPin, Link2 } from 'lucide-react';
+import { User, Lock, Bell, Globe, Settings2, Store, CreditCard, ExternalLink, Camera, ChevronDown, ChevronRight, X, Plus, MapPin, Link2 } from 'lucide-react';
 import { UserProfile } from '../types';
 
 interface AccountSettingsPageProps {
@@ -30,26 +30,31 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
       {/* Left Nav (Sidebar) */}
       <aside className="shrink-0 border-b border-[#1F2329] px-4 py-4 lg:flex lg:h-full lg:w-[240px] lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r lg:px-6 lg:py-6 custom-scrollbar xl:w-[260px]">
         <h2 className="mb-3 px-1 text-[20px] font-bold tracking-tight text-neutral-100 lg:mb-6 lg:text-[24px]">계정 설정</h2>
-        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-hide lg:mb-12 lg:block lg:space-y-1.5 lg:overflow-visible lg:pb-0">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`flex h-11 shrink-0 items-center gap-2 rounded-lg border px-3 text-left transition-all lg:h-auto lg:w-full lg:gap-4 lg:rounded-xl lg:px-4 lg:py-4 ${
-                activeTab === item.id
-                  ? 'border-[#E0A12E]/30 bg-[#16140D] relative after:absolute after:left-0 after:top-1/2 after:-translate-y-1/2 after:w-1 after:h-[60%] after:bg-[#E0A12E] after:rounded-r-full shadow-sm'
-                  : 'border-transparent hover:bg-[#141518]'
-              }`}
-            >
-              <div className={`w-[22px] flex justify-center ${activeTab === item.id ? 'text-[#E0A12E]' : 'text-neutral-400'}`}>
-                <item.icon className="w-5 h-5" strokeWidth={2} />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <span className={`text-[14px] font-medium ${activeTab === item.id ? 'text-[#E0A12E]' : 'text-neutral-300'}`}>{item.title}</span>
-                <span className={`hidden text-[14px] opacity-80 lg:block ${activeTab === item.id ? 'text-neutral-400' : 'text-neutral-400'}`}>{item.desc}</span>
-              </div>
-            </button>
-          ))}
+        <div className="relative -mx-1 lg:mb-12">
+          <div className="flex snap-x gap-2 overflow-x-auto px-1 pb-1 pr-10 scrollbar-hide lg:block lg:space-y-1.5 lg:overflow-visible lg:pr-1 lg:pb-0">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex h-11 shrink-0 snap-start items-center gap-2 rounded-lg border px-3 text-left transition-all lg:h-auto lg:w-full lg:gap-4 lg:rounded-xl lg:px-4 lg:py-4 ${
+                  activeTab === item.id
+                    ? 'border-[#E0A12E]/30 bg-[#16140D] relative after:absolute after:left-0 after:top-1/2 after:-translate-y-1/2 after:w-1 after:h-[60%] after:bg-[#E0A12E] after:rounded-r-full shadow-sm'
+                    : 'border-transparent hover:bg-[#141518]'
+                }`}
+              >
+                <div className={`w-[22px] flex justify-center ${activeTab === item.id ? 'text-[#E0A12E]' : 'text-neutral-400'}`}>
+                  <item.icon className="w-5 h-5" strokeWidth={2} />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <span className={`text-[14px] font-medium ${activeTab === item.id ? 'text-[#E0A12E]' : 'text-neutral-300'}`}>{item.title}</span>
+                  <span className={`hidden text-[14px] opacity-80 lg:block ${activeTab === item.id ? 'text-neutral-400' : 'text-neutral-400'}`}>{item.desc}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex w-10 items-center justify-end bg-gradient-to-l from-[#050505] via-[#050505]/90 to-transparent pr-1 lg:hidden" aria-hidden="true">
+            <ChevronRight className="h-4 w-4 text-[#E0A12E]" />
+          </div>
         </div>
 
         <div className="mt-auto hidden rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-5 lg:block">
@@ -273,7 +278,7 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
                 {bio}
               </p>
 
-              <div className="grid grid-cols-4 items-center py-4 border-y border-[#1F2329] mb-6 text-center">
+              <div className="mb-6 grid grid-cols-2 items-center border-y border-[#1F2329] py-4 text-center sm:grid-cols-4">
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[14px] text-neutral-400 font-medium">팔로워</span>
                   <span className="text-[17px] font-semibold text-neutral-100 tracking-tight">1.2K</span>

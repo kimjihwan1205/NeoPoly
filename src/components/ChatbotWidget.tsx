@@ -97,7 +97,7 @@ export default function ChatbotWidget() {
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setIsOpen(false)}
-              className="p-1.5 text-neutral-400 hover:text-white hover:bg-[#2A2E36] rounded-lg transition-colors"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-[#2A2E36] hover:text-white sm:h-8 sm:w-8"
               aria-label="AI 도우미 닫기"
             >
               <Minimize2 className="w-4 h-4" />
@@ -142,7 +142,7 @@ export default function ChatbotWidget() {
             <button 
               onClick={handleSend}
               disabled={!inputValue.trim()}
-              className="w-8 h-8 rounded-lg bg-[#E0A12E] text-[#050505] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-opacity shrink-0"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#E0A12E] text-[#050505] transition-opacity disabled:cursor-not-allowed disabled:opacity-50 sm:h-8 sm:w-8"
             >
               <Send className="w-3.5 h-3.5" />
             </button>

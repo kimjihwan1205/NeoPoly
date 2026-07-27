@@ -1161,7 +1161,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   };
 
   return (
-    <div className="flex h-[calc(100dvh-60px)] bg-[#050505] font-sans text-[#F5F5F5] antialiased lg:h-[calc(100dvh-76px)]">
+    <div className="np-workspace-shell flex h-[calc(100dvh-60px)] bg-[#050505] font-sans text-[#F5F5F5] antialiased lg:h-[calc(100dvh-76px)]">
       <main
         className={`relative grid min-w-0 flex-1 grid-cols-1 grid-rows-[64px_minmax(520px,1fr)_minmax(560px,auto)] overflow-y-auto custom-scrollbar lg:grid-rows-[64px_minmax(0,1fr)] lg:overflow-hidden ${
           expertTab === "turnaround"
@@ -1267,7 +1267,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               e.stopPropagation();
                               openViewModifier(view.id);
                             }}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#2A2E36] disabled:hover:text-neutral-300"
+                            className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#2A2E36] disabled:hover:text-neutral-300 sm:h-8 sm:w-8"
                             title={isLocked ? "잠금 해제 후 수정할 수 있습니다" : `${view.label} 수정`}
                           >
                             <Pencil className="h-4 w-4" />
@@ -1279,7 +1279,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               handleRegenerateView(view.id);
                             }}
                             disabled={isLocked || isRegeneratingView}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+                            className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-45 sm:h-8 sm:w-8"
                             title="뷰 재생성"
                           >
                             {isRegeneratingView ? <LoadingIndicator tone="current" /> : <RotateCcw className="h-4 w-4" />}
@@ -1290,7 +1290,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               e.stopPropagation();
                               toggleLock(view.id);
                             }}
-                            className={`flex h-8 w-8 items-center justify-center rounded-lg border transition ${
+                            className={`flex h-11 w-11 items-center justify-center rounded-lg border transition sm:h-8 sm:w-8 ${
                               isLocked
                                 ? "border-[#E0A12E]/45 bg-[#E0A12E]/10 text-[#E0A12E]"
                                 : "border-[#2A2E36] bg-[#141518] text-neutral-300 hover:text-white"
@@ -1447,7 +1447,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             <button
                               type="button"
                               onClick={() => setIsComparisonModalOpen(true)}
-                              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white"
+                              className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white sm:h-8 sm:w-8"
                               title="크게 보기"
                               aria-label="크게 보기"
                             >
@@ -1481,7 +1481,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             <button
                               type="button"
                               onClick={() => movePreviewView(-1)}
-                              className="absolute left-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur transition hover:bg-black/75"
+                              className="absolute left-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur transition hover:bg-black/75 sm:h-8 sm:w-8"
                               aria-label="이전 각도 이미지"
                             >
                               <ChevronLeft className="h-4 w-4" />
@@ -1489,7 +1489,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             <button
                               type="button"
                               onClick={() => movePreviewView(1)}
-                              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur transition hover:bg-black/75"
+                              className="absolute right-2 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur transition hover:bg-black/75 sm:h-8 sm:w-8"
                               aria-label="다음 각도 이미지"
                             >
                               <ChevronRight className="h-4 w-4" />

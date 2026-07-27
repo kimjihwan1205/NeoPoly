@@ -36,11 +36,50 @@
   }
 
   body {
-    @apply min-w-0 bg-bg-dark text-text-primary font-sans antialiased text-[14px];
+    @apply bg-bg-dark text-text-primary font-sans antialiased text-[14px];
+    min-width: 360px;
+    word-break: keep-all;
+    overflow-wrap: break-word;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display font-semibold tracking-tight text-text-primary;
+    word-break: keep-all;
+    text-wrap: balance;
+  }
+
+  input,
+  textarea,
+  [data-break-anywhere="true"] {
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+@layer components {
+  /*
+   * NeoPoly responsive guardrails
+   * - Dense workspaces stop compressing on mouse-based desktop windows.
+   * - Touch devices continue using the native mobile/tablet layouts.
+   */
+  .np-workspace-shell {
+    min-width: 0;
+  }
+
+  .np-control-label {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .np-copy-safe {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) and (max-width: 1023px) {
+  .np-workspace-shell {
+    min-width: 960px;
   }
 }
 

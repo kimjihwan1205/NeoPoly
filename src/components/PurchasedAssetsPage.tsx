@@ -81,7 +81,7 @@ export default function PurchasedAssetsPage() {
             <button
               key={item}
               onClick={() => setFilter(item)}
-              className={`rounded-[6px] border px-4 py-2 text-[14px] font-medium transition-all ${
+              className={`min-h-11 rounded-[6px] border px-4 py-2 text-[14px] font-medium transition-all ${
                 filter === item
                   ? 'border-brand-primary bg-brand-primary text-bg-dark'
                   : 'border-border-soft bg-surface-primary text-text-secondary hover:border-border-primary hover:text-text-primary'
@@ -144,7 +144,7 @@ export default function PurchasedAssetsPage() {
                 </div>
 
                 <div className="mt-auto">
-                  <button className="flex w-full items-center justify-center gap-2 rounded-[6px] border border-border-soft bg-surface-secondary py-2.5 text-[14px] font-medium text-text-primary transition-all hover:border-brand-primary/50 hover:bg-[#1A1814] hover:text-brand-primary">
+                  <button className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[6px] border border-border-soft bg-surface-secondary py-2.5 text-[14px] font-medium text-text-primary transition-all hover:border-brand-primary/50 hover:bg-[#1A1814] hover:text-brand-primary">
                     <Download className="h-4 w-4" /> {'\uB2E4\uC6B4\uB85C\uB4DC \uBC1B\uAE30'}
                   </button>
                 </div>

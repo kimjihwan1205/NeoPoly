@@ -30,7 +30,7 @@ export default function FavoritesPage({ favorites, toggleFavorite }: FavoritesPa
       </div>
 
       {favoriteAssets.length > 0 ? (
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 min-[2200px]:grid-cols-6">
           <AnimatePresence>
             {favoriteAssets.map(asset => (
               <motion.div
@@ -52,7 +52,8 @@ export default function FavoritesPage({ favorites, toggleFavorite }: FavoritesPa
                   <div className="absolute top-2 right-2 z-20">
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleFavorite(asset.id); }}
-                      className="p-1.5 bg-black/40 hover:bg-black/80 rounded-full text-red-500 backdrop-blur-md transition-all"
+                      aria-label={`${asset.title} 즐겨찾기 해제`}
+                      className="flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-red-500 backdrop-blur-md transition-all hover:bg-black/80 sm:h-8 sm:w-8"
                     >
                       <Heart className="w-4 h-4 fill-red-500" />
                     </button>

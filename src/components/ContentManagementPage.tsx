@@ -172,7 +172,7 @@ type RevenueSort = 'revenue' | 'sales';
 export default function ContentManagementPage() {
   const [items, setItems] = useState<ContentItem[]>(ITEMS);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(() =>
-    window.matchMedia('(min-width: 1024px)').matches ? ITEMS[0] : null,
+    window.matchMedia('(min-width: 1440px)').matches ? ITEMS[0] : null,
   );
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeSection, setActiveSection] = useState<'content' | 'revenue'>('content');
@@ -297,10 +297,10 @@ export default function ContentManagementPage() {
   };
 
   return (
-    <div className="flex h-[calc(100dvh-60px)] w-full overflow-hidden bg-[#0A0B0D] font-sans text-text-primary lg:h-[calc(100dvh-76px)]">
+    <div className="np-workspace-shell flex h-[calc(100dvh-60px)] w-full overflow-hidden bg-[#0A0B0D] font-sans text-text-primary lg:h-[calc(100dvh-76px)]">
       
       {/* Left Sidebar Menu */}
-      <aside className="hidden lg:flex w-[300px] shrink-0 border-r border-[#1C1E24] bg-[#050505] flex-col h-full z-10 custom-scrollbar overflow-y-auto">
+      <aside className="z-10 hidden h-full w-[240px] shrink-0 flex-col overflow-y-auto border-r border-[#1C1E24] bg-[#050505] custom-scrollbar lg:flex xl:w-[300px]">
         <div className="p-6">
           <h2 className="text-[18px] font-semibold text-white tracking-tight">콘텐츠 관리</h2>
           <p className="text-[14px] text-text-secondary mt-2 mb-6">마켓과 아트에 업로드한 작업물을 확인합니다.</p>
@@ -399,7 +399,7 @@ export default function ContentManagementPage() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto custom-scrollbar bg-[#0A0B0D] relative flex flex-col">
+      <main className="relative flex min-w-0 flex-1 flex-col overflow-y-auto bg-[#0A0B0D] custom-scrollbar">
         <nav
           aria-label="콘텐츠 관리 메뉴"
           className="grid shrink-0 grid-cols-3 gap-1.5 border-b border-[#1C1E24] bg-[#08090B] p-2 lg:hidden"
@@ -579,7 +579,7 @@ export default function ContentManagementPage() {
             <p className="mt-2 text-[14px] text-neutral-400">업로드한 작품의 상태와 판매 정보를 관리합니다.</p>
           </div>
 
-          <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+          <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3 min-[1600px]:grid-cols-5">
             <StatCard icon={<Box className="w-5 h-5 text-neutral-400" />} title="전체 업로드" value="42" desc="전체 작품 수" />
             <StatCard icon={<ShoppingCart className="w-5 h-5 text-neutral-400" />} title="판매 중" value="18" desc="마켓 판매 중" />
             <StatCard icon={<ImageIcon className="w-5 h-5 text-neutral-400" />} title="아트 공개" value="16" desc="아트 공개 중" />
@@ -623,13 +623,15 @@ export default function ContentManagementPage() {
               <div className="flex items-center bg-[#111215] border border-[#2A2E36] rounded-lg p-1 gap-1">
                 <button 
                   onClick={() => setViewMode('grid')}
-                  className={`p-1 rounded transition-colors ${viewMode === 'grid' ? 'bg-[#E0A12E]/20 text-[#E0A12E]' : 'text-text-secondary hover:text-white'}`}
+                  aria-label="그리드 보기"
+                  className={`flex h-11 w-11 items-center justify-center rounded transition-colors sm:h-8 sm:w-8 ${viewMode === 'grid' ? 'bg-[#E0A12E]/20 text-[#E0A12E]' : 'text-text-secondary hover:text-white'}`}
                 >
                   <LayoutGrid className="w-[18px] h-[18px]" />
                 </button>
                 <button 
                   onClick={() => setViewMode('list')}
-                  className={`p-1 rounded transition-colors ${viewMode === 'list' ? 'bg-[#E0A12E]/20 text-[#E0A12E]' : 'text-text-secondary hover:text-white'}`}
+                  aria-label="목록 보기"
+                  className={`flex h-11 w-11 items-center justify-center rounded transition-colors sm:h-8 sm:w-8 ${viewMode === 'list' ? 'bg-[#E0A12E]/20 text-[#E0A12E]' : 'text-text-secondary hover:text-white'}`}
                 >
                   <List className="w-[18px] h-[18px]" />
                 </button>
@@ -639,7 +641,13 @@ export default function ContentManagementPage() {
 
           {/* Grid/List Area */}
           {viewMode === 'grid' ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-5 pb-12">
+            <div
+              className={`grid grid-cols-1 gap-4 pb-12 sm:grid-cols-2 sm:gap-5 lg:grid-cols-2 min-[1280px]:grid-cols-3 ${
+                selectedItem
+                  ? 'min-[1440px]:grid-cols-2 min-[1600px]:grid-cols-3 min-[2000px]:grid-cols-4'
+                  : 'min-[1600px]:grid-cols-4'
+              }`}
+            >
               {items.slice(0, 8).map((item) => (
                 <ContentCard 
                   key={item.id} 
@@ -666,15 +674,15 @@ export default function ContentManagementPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-20 border-t border-[#1C1E24] pt-6">
             <span className="text-[14px] text-text-secondary font-medium shrink-0">총 42개 항목</span>
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#111215] border border-[#2A2E36] text-text-secondary hover:text-white transition-colors">&lt;</button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#E0A12E] border border-[#E0A12E] text-black font-medium text-[14px]">1</button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">2</button>
+              <button aria-label="이전 페이지" className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#111215] text-text-secondary transition-colors hover:text-white sm:h-8 sm:w-8">&lt;</button>
+              <button className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#E0A12E] bg-[#E0A12E] text-[14px] font-medium text-black sm:h-8 sm:w-8">1</button>
+              <button className="flex h-11 w-11 items-center justify-center rounded-lg text-[14px] font-medium text-text-secondary transition-colors hover:bg-[#111215] hover:text-white sm:h-8 sm:w-8">2</button>
               <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">3</button>
               <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">4</button>
               <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">5</button>
               <span className="text-text-secondary px-1 sm:px-2">...</span>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">9</button>
-              <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#111215] border border-[#2A2E36] text-text-secondary hover:text-white transition-colors">&gt;</button>
+              <button className="flex h-11 w-11 items-center justify-center rounded-lg text-[14px] font-medium text-text-secondary transition-colors hover:bg-[#111215] hover:text-white sm:h-8 sm:w-8">9</button>
+              <button aria-label="다음 페이지" className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#111215] text-text-secondary transition-colors hover:text-white sm:h-8 sm:w-8">&gt;</button>
             </div>
             <div className="w-full md:w-auto flex justify-center md:justify-end">
               <FilterSelect label="8개씩 보기" width="w-[120px]" />
@@ -693,11 +701,11 @@ export default function ContentManagementPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 50 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="fixed inset-x-0 bottom-0 top-[60px] z-30 flex w-full shrink-0 flex-col border-l border-[#1C1E24] bg-[#0A0B0D] shadow-[0_0_50px_rgba(0,0,0,0.8)] lg:relative lg:inset-auto lg:z-20 lg:w-[380px] lg:shadow-2xl"
+            className="fixed inset-x-0 bottom-0 top-[60px] z-30 flex w-full shrink-0 flex-col border-l border-[#1C1E24] bg-[#0A0B0D] shadow-[0_0_50px_rgba(0,0,0,0.8)] lg:top-[76px] min-[1440px]:relative min-[1440px]:inset-auto min-[1440px]:!top-auto min-[1440px]:z-20 min-[1440px]:w-[380px] min-[1440px]:shadow-2xl"
           >
             <button 
               onClick={() => setSelectedItem(null)}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-transparent rounded-lg text-neutral-400 hover:text-white hover:bg-[#111215] transition-colors z-30"
+              className="absolute right-4 top-4 z-30 flex h-11 w-11 items-center justify-center rounded-lg bg-transparent text-neutral-400 transition-colors hover:bg-[#111215] hover:text-white sm:h-8 sm:w-8"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1369,7 +1377,7 @@ function StatCard({ icon, title, value, desc, highlight = false }: { icon: React
 
 function FilterSelect({ label, width = 'w-[140px]' }: { label: string, width?: string }) {
   return (
-    <button className={`flex items-center justify-between px-3 py-2 bg-[#111215] border border-[#2A2E36] hover:bg-[#15161A] rounded-lg text-[14px] text-neutral-300 transition-colors ${width}`}>
+    <button className={`np-control-label flex items-center justify-between border border-[#2A2E36] bg-[#111215] px-3 py-2 text-[14px] text-neutral-300 transition-colors hover:bg-[#15161A] ${width} rounded-lg`}>
       <span>{label}</span>
       <ChevronDown className="w-4 h-4 text-neutral-400" />
     </button>
@@ -1412,7 +1420,7 @@ const ContentCard: React.FC<{ item: ContentItem, isSelected: boolean, onClick: (
       <div className="p-4 flex flex-col flex-1">
         <div className="flex items-start justify-between mb-1.5 gap-2">
           <h3 className="text-[15px] font-medium text-white tracking-tight line-clamp-1 group-hover:text-[#E0A12E] transition-colors">{item.title}</h3>
-          <button className="text-neutral-500 hover:text-white transition-colors shrink-0 pt-0.5">
+          <button aria-label={`${item.title} 작업 더 보기`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:w-8">
             <MoreHorizontal className="w-4 h-4" />
           </button>
         </div>
@@ -1494,7 +1502,7 @@ const ContentListRow: React.FC<{ item: ContentItem, isSelected: boolean, onClick
         </div>
       </div>
       
-      <button className="text-neutral-500 hover:text-white transition-colors p-2 shrink-0 self-center">
+      <button aria-label={`${item.title} 작업 더 보기`} className="flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-lg text-neutral-500 transition-colors hover:bg-white/5 hover:text-white sm:h-9 sm:w-9">
         <MoreHorizontal className="w-5 h-5" />
       </button>
     </div>

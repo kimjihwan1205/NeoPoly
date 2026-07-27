@@ -165,7 +165,7 @@ export default function AIStudioPage({
   };
 
   return (
-    <div className="flex h-[calc(100dvh-60px)] w-full flex-1 flex-col overflow-hidden bg-[#050505] font-sans text-white lg:h-[calc(100dvh-76px)]">
+    <div className="np-workspace-shell flex h-[calc(100dvh-60px)] w-full flex-1 flex-col overflow-hidden bg-[#050505] font-sans text-white lg:h-[calc(100dvh-76px)]">
       <div className="custom-scrollbar flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 2xl:px-8 min-[2200px]:px-10">
         <div className="mx-auto flex w-full max-w-[2560px] flex-col gap-5">
           <div className="flex flex-col gap-5">

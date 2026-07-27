@@ -470,29 +470,34 @@ export default function ProjectPage({
           isPopup ? "h-full pb-24" : "h-[calc(100dvh-60px)] lg:h-[calc(100dvh-76px)]"
         }`}
       >
-        <div className="mb-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide lg:hidden" aria-label="프로젝트 선택">
-          {projects.map((project) => (
+        <div className="relative mb-4 lg:hidden">
+          <div className="flex snap-x gap-2 overflow-x-auto pb-1 pr-10 scrollbar-hide" aria-label="프로젝트 선택">
+            {projects.map((project) => (
+              <button
+                key={`mobile-${project.id}`}
+                type="button"
+                onClick={() => setActiveProject(project.id)}
+                className={`h-11 shrink-0 snap-start rounded-lg border px-4 text-[14px] font-medium transition ${
+                  project.id === activeProject
+                    ? "border-[#E0A12E]/60 bg-[#E0A12E]/10 text-[#E0A12E]"
+                    : "border-[#242832] bg-[#111317] text-neutral-300"
+                }`}
+              >
+                {project.name}
+              </button>
+            ))}
             <button
-              key={`mobile-${project.id}`}
               type="button"
-              onClick={() => setActiveProject(project.id)}
-              className={`h-11 shrink-0 rounded-lg border px-4 text-[14px] font-medium transition ${
-                project.id === activeProject
-                  ? "border-[#E0A12E]/60 bg-[#E0A12E]/10 text-[#E0A12E]"
-                  : "border-[#242832] bg-[#111317] text-neutral-300"
-              }`}
+              onClick={() => setIsNewProjectModalOpen(true)}
+              className="flex h-11 shrink-0 snap-start items-center gap-1.5 rounded-lg border border-[#2A2E36] bg-[#111317] px-4 text-[14px] font-medium text-neutral-300"
             >
-              {project.name}
+              <Plus className="h-4 w-4 text-[#E0A12E]" />
+              새 프로젝트
             </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => setIsNewProjectModalOpen(true)}
-            className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-[#2A2E36] bg-[#111317] px-4 text-[14px] font-medium text-neutral-300"
-          >
-            <Plus className="h-4 w-4 text-[#E0A12E]" />
-            새 프로젝트
-          </button>
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex w-10 items-center justify-end bg-gradient-to-l from-[#050505] via-[#050505]/90 to-transparent pr-1" aria-hidden="true">
+            <ChevronRight className="h-4 w-4 text-[#E0A12E]" />
+          </div>
         </div>
         <div className="w-full space-y-2">
           <section className="overflow-hidden rounded-lg border border-[#181A1F]/80 bg-[#111317]">
@@ -534,7 +539,7 @@ export default function ProjectPage({
                       setDraftName(activeProjData.name);
                       setRenaming(true);
                     }}
-                    className="text-neutral-400 transition hover:text-[#E0A12E]"
+                    className="flex h-11 w-11 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-[#181A1F] hover:text-[#E0A12E] sm:h-8 sm:w-8"
                     title="프로젝트 이름 수정"
                   >
                     <PenLine className="h-5 w-5" />
@@ -563,7 +568,7 @@ export default function ProjectPage({
                   ))}
                   <button
                     onClick={addTag}
-                    className="flex h-[26px] w-[26px] items-center justify-center rounded-md border border-[#22252B] bg-[#181A1F] text-neutral-300 transition hover:text-white"
+                    className="flex h-11 w-11 items-center justify-center rounded-md border border-[#22252B] bg-[#181A1F] text-neutral-300 transition hover:text-white sm:h-[26px] sm:w-[26px]"
                     title="태그 추가"
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -587,13 +592,13 @@ export default function ProjectPage({
                   <div className="flex gap-2">
                     <button
                       onClick={() => setToast("공유 링크를 준비했습니다.")}
-                      className="flex h-8 w-8 items-center justify-center rounded-md border border-[#2A2E36] bg-[#15181D] text-neutral-400 hover:text-white"
+                      className="flex h-11 w-11 items-center justify-center rounded-md border border-[#2A2E36] bg-[#15181D] text-neutral-400 hover:text-white sm:h-8 sm:w-8"
                     >
                       <Share2 className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => setToast("프로젝트 정보를 복사했습니다.")}
-                      className="flex h-8 w-8 items-center justify-center rounded-md border border-[#2A2E36] bg-[#15181D] text-neutral-400 hover:text-white"
+                      className="flex h-11 w-11 items-center justify-center rounded-md border border-[#2A2E36] bg-[#15181D] text-neutral-400 hover:text-white sm:h-8 sm:w-8"
                     >
                       <Link2 className="h-4 w-4" />
                     </button>
@@ -603,46 +608,51 @@ export default function ProjectPage({
             </div>
           </section>
 
-          <section className="overflow-x-auto rounded-lg border border-[#181A1F] bg-[#151618] px-8 py-3">
-            <div className="flex min-w-[900px] items-center justify-between">
-              {WORKFLOW_STEPS.map((step, index) => {
-                const Icon = step.icon;
-                const active = step.title === activeStep;
-                return (
-                  <React.Fragment key={step.title}>
-                    <button
-                      onClick={() => {
-                        setActiveStep(step.title);
-                        onNavigate?.(step.page);
-                      }}
-                      className="group flex min-w-[76px] flex-col items-center text-center"
-                    >
-                      <Icon
-                        className={`h-5 w-5 transition ${
-                          active
-                            ? "text-[#E0A12E]"
-                            : "text-neutral-300 group-hover:text-[#E0A12E]"
-                        }`}
-                      />
-                      <span
-                        className={`mt-2 text-[14px] font-medium ${
-                          active ? "text-[#E0A12E]" : "text-neutral-300"
-                        }`}
+          <div className="relative">
+            <section className="snap-x overflow-x-auto rounded-lg border border-[#181A1F] bg-[#151618] px-4 py-3 pr-10 scrollbar-hide sm:px-6 sm:pr-12 lg:px-8">
+              <div className="flex min-w-[640px] items-center justify-between sm:min-w-[760px] xl:min-w-[900px]">
+                {WORKFLOW_STEPS.map((step, index) => {
+                  const Icon = step.icon;
+                  const active = step.title === activeStep;
+                  return (
+                    <React.Fragment key={step.title}>
+                      <button
+                        onClick={() => {
+                          setActiveStep(step.title);
+                          onNavigate?.(step.page);
+                        }}
+                        className="group flex min-w-[72px] snap-start flex-col items-center rounded-lg py-1 text-center sm:min-w-[76px]"
                       >
-                        {step.title}
-                      </span>
-                      <span className="mt-0.5 text-[14px] text-neutral-500">
-                        {step.label}
-                      </span>
-                    </button>
-                    {index < WORKFLOW_STEPS.length - 1 && (
-                      <div className="mx-2 h-px flex-1 bg-[#2A2E36]" />
-                    )}
-                  </React.Fragment>
-                );
-              })}
+                        <Icon
+                          className={`h-5 w-5 transition ${
+                            active
+                              ? "text-[#E0A12E]"
+                              : "text-neutral-300 group-hover:text-[#E0A12E]"
+                          }`}
+                        />
+                        <span
+                          className={`mt-2 text-[14px] font-medium ${
+                            active ? "text-[#E0A12E]" : "text-neutral-300"
+                          }`}
+                        >
+                          {step.title}
+                        </span>
+                        <span className="mt-0.5 text-[14px] text-neutral-500">
+                          {step.label}
+                        </span>
+                      </button>
+                      {index < WORKFLOW_STEPS.length - 1 && (
+                        <div className="mx-2 h-px flex-1 bg-[#2A2E36]" />
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </section>
+            <div className="pointer-events-none absolute inset-y-px right-px flex w-10 items-center justify-end rounded-r-lg bg-gradient-to-l from-[#151618] via-[#151618]/90 to-transparent pr-1 xl:hidden" aria-hidden="true">
+              <ChevronRight className="h-4 w-4 text-[#E0A12E]" />
             </div>
-          </section>
+          </div>
 
           <div className="grid grid-cols-1 gap-2 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_400px]">
             <div className="flex flex-col gap-2">

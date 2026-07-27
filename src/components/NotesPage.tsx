@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   Check,
@@ -11,6 +11,7 @@ import {
   List,
   PenLine,
   Plus,
+  RotateCcw,
   Search,
   Square,
   Star,
@@ -323,6 +324,12 @@ export default function NotesPage({
   const [newNoteMemo, setNewNoteMemo] = useState("");
   const [newNoteReference, setNewNoteReference] = useState("");
   const [newNoteTags, setNewNoteTags] = useState("");
+  const [expandedTextNoteId, setExpandedTextNoteId] = useState<number | null>(null);
+  const [expandedImagesNoteId, setExpandedImagesNoteId] = useState<number | null>(null);
+  const [truncatedTextIds, setTruncatedTextIds] = useState<Set<number>>(new Set());
+  const popupScrollRef = useRef<HTMLDivElement | null>(null);
+  const expansionScrollOriginRef = useRef(0);
+  const descriptionRefs = useRef<Map<number, HTMLParagraphElement>>(new Map());
 
   useEffect(() => {
     if (boardFilter) setFilter(boardFilter);
@@ -378,16 +385,73 @@ export default function NotesPage({
     return result;
   }, [favoritesFirst, filter, notes, searchQuery, sortMode, trashIds]);
 
-  const handleNoteClick = (e: React.MouseEvent, id: number) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
+  useEffect(() => {
+    const measureTruncatedText = () => {
+      if (!window.matchMedia("(min-width: 1024px)").matches) return;
+
+      const next = new Set<number>();
+      descriptionRefs.current.forEach((element, id) => {
+        if (element.scrollHeight > element.clientHeight + 1) next.add(id);
+      });
+      setTruncatedTextIds((current) => {
+        if (
+          current.size === next.size &&
+          Array.from(current).every((id) => next.has(id))
+        ) {
+          return current;
+        }
+        return next;
+      });
+    };
+
+    const frame = window.requestAnimationFrame(measureTruncatedText);
+    const observer = new ResizeObserver(measureTruncatedText);
+    descriptionRefs.current.forEach((element) => observer.observe(element));
+    window.addEventListener("resize", measureTruncatedText);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", measureTruncatedText);
+    };
+  }, [filteredNotes, isPopup, viewMode]);
+
+  const registerExpansionOrigin = () => {
+    expansionScrollOriginRef.current = popupScrollRef.current?.scrollTop ?? 0;
+  };
+
+  const toggleMobileText = (id: number) => {
+    const willExpand = expandedTextNoteId !== id;
+    if (willExpand) registerExpansionOrigin();
+    setExpandedTextNoteId(willExpand ? id : null);
+  };
+
+  const toggleMobileImages = (id: number) => {
+    const willExpand = expandedImagesNoteId !== id;
+    if (willExpand) registerExpansionOrigin();
+    setExpandedImagesNoteId(willExpand ? id : null);
+  };
+
+  const handlePopupScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    if (expandedTextNoteId === null && expandedImagesNoteId === null) return;
+    if (typeof window !== "undefined" && !window.matchMedia("(max-width: 1023px)").matches) return;
+
+    const distance = event.currentTarget.scrollTop - expansionScrollOriginRef.current;
+    if (distance >= 180) {
+      setExpandedTextNoteId(null);
+      setExpandedImagesNoteId(null);
+    }
+  };
+
+  const selectNote = (id: number, additive = false) => {
+    if (additive) {
       setSelectedNotes((prev) => {
         const next = new Set(prev);
         if (next.has(id)) next.delete(id);
         else next.add(id);
         return next;
       });
-      setActiveNote(id);
+      if (!isPopup) setActiveNote(id);
       return;
     }
 
@@ -400,10 +464,15 @@ export default function NotesPage({
 
     if (isPopup) {
       setSelectedNotes(new Set([id]));
-    } else {
-      setSelectedNotes(new Set());
+      return;
     }
+    setSelectedNotes(new Set());
     setActiveNote(id);
+  };
+
+  const handleNoteClick = (event: React.MouseEvent, id: number) => {
+    if (event.ctrlKey || event.metaKey) event.preventDefault();
+    selectNote(id, event.ctrlKey || event.metaKey);
   };
 
   const toggleStar = (id: number) => {
@@ -517,6 +586,27 @@ export default function NotesPage({
     setToast("노트를 휴지통으로 보냈습니다.");
   };
 
+  const restoreNote = (id: number) => {
+    setTrashIds((current) => {
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
+    setSelectedNotes((current) => {
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
+    setToast("노트를 복원했습니다.");
+  };
+
+  const restoreAllNotes = () => {
+    if (trashIds.size === 0) return;
+    setTrashIds(new Set());
+    setSelectedNotes(new Set());
+    setToast("휴지통의 모든 노트를 복원했습니다.");
+  };
+
   const selectedCount = selectedNotes.size;
 
   return (
@@ -580,6 +670,17 @@ export default function NotesPage({
             </div>
 
             <div className="hidden flex-1 lg:block" />
+
+            {filter === "trash" && trashIds.size > 0 && (
+              <button
+                type="button"
+                onClick={restoreAllNotes}
+                className="flex h-12 items-center justify-center gap-2 rounded-lg border border-brand-primary/35 bg-brand-primary/10 px-4 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-brand-primary/15"
+              >
+                <RotateCcw className="h-4 w-4" />
+                모두 복원
+              </button>
+            )}
 
             <button
               onClick={openCreateNote}
@@ -660,125 +761,249 @@ export default function NotesPage({
             Ctrl 또는 Cmd를 누른 채 클릭하면 여러 노트를 선택할 수 있습니다.
           </div>
 
-          <div className={isPopup ? "min-h-0 flex-1 overflow-y-auto pr-1 pb-28" : ""}>
+          <div className={isPopup ? "min-h-0 flex-1 overflow-hidden" : ""}>
             <div
-              className={
-                viewMode === "grid"
-                  ? "grid grid-cols-1 gap-5 transition md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
-                  : "flex flex-col gap-3"
-              }
+              ref={isPopup ? popupScrollRef : undefined}
+              onScroll={isPopup ? handlePopupScroll : undefined}
+              className={isPopup ? "h-full overflow-y-auto pr-1 pb-6" : ""}
             >
-            {filteredNotes.map((note) => {
-              const isSelected = selectedNotes.has(note.id);
-              return (
-                <button
-                  key={note.id}
-                  onClick={(e) => handleNoteClick(e, note.id)}
-                  className={`group relative flex cursor-pointer flex-col rounded-lg border p-5 text-left shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition ${
-                    viewMode === "list" ? "min-h-[150px]" : ""
-                  } ${
-                    isSelected
-                      ? "border-brand-primary bg-surface-primary shadow-[0_0_20px_rgba(224,161,46,0.15)]"
-                      : "border-border-primary/20 bg-surface-primary/80 hover:border-brand-primary/40 hover:bg-surface-primary"
-                  }`}
-                >
-                  <div className="mb-2 flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <h3
-                        className={`truncate text-[20px] font-bold ${
-                          isSelected ? "text-brand-primary" : "text-white"
-                        }`}
-                      >
-                        {note.title}
-                      </h3>
-                      {isSelected && (
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-primary text-bg-dark">
-                          <Check className="h-3.5 w-3.5 stroke-[3]" />
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-1 gap-5 transition md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+                    : "flex flex-col gap-3"
+                }
+              >
+                {filteredNotes.map((note) => {
+                  const isSelected = selectedNotes.has(note.id);
+                  const isTextExpanded = expandedTextNoteId === note.id;
+                  const areImagesExpanded = expandedImagesNoteId === note.id;
+                  const hasLongText = note.desc.length > 48;
+                  const hasHiddenImages = note.images.length > 3;
+
+                  return (
+                    <article
+                      key={note.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={isSelected}
+                      onClick={(event) => handleNoteClick(event, note.id)}
+                      onKeyDown={(event) => {
+                        if (event.target !== event.currentTarget) return;
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          selectNote(note.id, event.ctrlKey || event.metaKey);
+                        }
+                      }}
+                      className={`group relative flex cursor-pointer flex-col self-start overflow-visible rounded-lg border bg-surface-primary/80 p-5 text-left shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition hover:z-30 focus-within:z-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-primary ${
+                        viewMode === "list" ? "min-h-[150px]" : ""
+                      } ${
+                        isSelected
+                          ? "border-brand-primary bg-surface-primary shadow-[0_0_20px_rgba(224,161,46,0.15)]"
+                          : "border-border-primary/20 hover:border-brand-primary/40 hover:bg-surface-primary"
+                      }`}
+                    >
+                      <div className="mb-2 flex min-w-0 items-center gap-2 pr-12">
+                        <h3
+                          className={`truncate text-[20px] font-bold ${
+                            isSelected ? "text-brand-primary" : "text-white"
+                          }`}
+                        >
+                          {note.title}
+                        </h3>
+                        {isSelected && (
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-primary text-bg-dark">
+                            <Check className="h-3.5 w-3.5 stroke-[3]" />
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="group/note-text relative mb-4">
+                        <p
+                          ref={(element) => {
+                            if (element) descriptionRefs.current.set(note.id, element);
+                            else descriptionRefs.current.delete(note.id);
+                          }}
+                          id={`note-description-${note.id}`}
+                          className={`overflow-hidden pr-7 text-[14px] leading-5 text-neutral-400 transition-[max-height] duration-300 ${
+                            isTextExpanded ? "max-h-48 line-clamp-none" : "max-h-10 line-clamp-2"
+                          } lg:max-h-10 lg:pr-0 lg:line-clamp-2`}
+                        >
+                          {note.desc}
+                        </p>
+                        {truncatedTextIds.has(note.id) && (
+                          <div className="pointer-events-none absolute -left-2 -right-2 -top-1 z-40 hidden rounded-lg bg-[#101114]/98 px-2 py-1 text-[14px] leading-5 text-neutral-300 opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.42)] backdrop-blur-xl transition-opacity duration-100 lg:block lg:group-hover/note-text:pointer-events-auto lg:group-hover/note-text:opacity-100">
+                            {note.desc}
+                          </div>
+                        )}
+                        {hasLongText && (
+                          <button
+                            type="button"
+                            aria-label={`${note.title} 설명 ${isTextExpanded ? "접기" : "펼치기"}`}
+                            aria-expanded={isTextExpanded}
+                            aria-controls={`note-description-${note.id}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              toggleMobileText(note.id);
+                            }}
+                            className="absolute bottom-0 right-0 z-10 flex h-6 w-7 items-center justify-end bg-gradient-to-l from-surface-primary via-surface-primary to-transparent text-neutral-400 transition hover:text-white lg:hidden"
+                          >
+                            <ChevronDown className={`h-4 w-4 transition-transform ${isTextExpanded ? "rotate-180" : ""}`} />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="mb-4 flex flex-wrap gap-1.5">
+                        {note.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded border border-[#252830] bg-[#1A1C20] px-2 py-0.5 text-[14px] font-medium text-neutral-400"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="group/note-images relative mb-5">
+                        <div
+                          className={`flex gap-1.5 ${
+                            viewMode === "list" ? "h-[78px] max-w-[360px]" : "h-[90px]"
+                          }`}
+                        >
+                          {note.images.slice(0, 3).map((img) => (
+                            <div
+                              key={img}
+                              className="flex-1 overflow-hidden rounded-md border border-[#1A1C20] bg-[#0A0B0E]"
+                            >
+                              <img
+                                referrerPolicy="no-referrer"
+                                src={img}
+                                alt={note.title}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
+
+                        {hasHiddenImages && (
+                          <>
+                            <button
+                              type="button"
+                              aria-label={`${note.title} 추가 이미지 ${areImagesExpanded ? "접기" : "펼치기"}`}
+                              aria-expanded={areImagesExpanded}
+                              aria-controls={`note-extra-images-${note.id}`}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                toggleMobileImages(note.id);
+                            }}
+                            className="absolute bottom-2 right-2 z-10 flex h-8 items-center gap-0.5 rounded-md border border-white/15 bg-[#050505]/80 px-2 text-[11px] font-medium text-white shadow-lg backdrop-blur-sm lg:hidden"
+                          >
+                              {!areImagesExpanded && `+${note.images.length - 3}`}
+                              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${areImagesExpanded ? "rotate-180" : ""}`} />
+                            </button>
+                            <span className="pointer-events-none absolute bottom-2 right-2 hidden rounded-md border border-white/15 bg-[#050505]/80 px-2 py-1 text-[11px] font-medium text-white shadow-lg backdrop-blur-sm lg:block">
+                              +{note.images.length - 3}
+                            </span>
+
+                            <AnimatePresence initial={false}>
+                              {areImagesExpanded && (
+                                <motion.div
+                                  id={`note-extra-images-${note.id}`}
+                                  initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                  animate={{ height: "auto", opacity: 1, marginTop: 8 }}
+                                  exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                  transition={{ duration: 0.25, ease: "easeOut" }}
+                                  className="grid grid-cols-2 gap-2 overflow-hidden lg:hidden"
+                                >
+                                  {note.images.slice(3).map((image, index) => (
+                                    <img
+                                      key={`${image}-mobile-${index}`}
+                                      referrerPolicy="no-referrer"
+                                      src={image}
+                                      alt={`${note.title} 추가 레퍼런스 ${index + 4}`}
+                                      className="aspect-[4/3] w-full rounded-md border border-[#1F2329] object-cover"
+                                    />
+                                  ))}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+
+                            <div className="pointer-events-none absolute left-0 top-full z-40 hidden w-max gap-1.5 rounded-lg bg-[#050505] p-1.5 opacity-0 shadow-[0_14px_30px_rgba(0,0,0,0.62)] transition-opacity duration-100 lg:flex lg:group-hover/note-images:pointer-events-auto lg:group-hover/note-images:opacity-100">
+                              {note.images.slice(3).map((image, index) => (
+                                <img
+                                  key={`${image}-desktop-extra-${index}`}
+                                  referrerPolicy="no-referrer"
+                                  src={image}
+                                  alt={`${note.title} 추가 레퍼런스 ${index + 4}`}
+                                  className="h-[90px] w-[90px] shrink-0 rounded-md object-cover shadow-[0_12px_26px_rgba(0,0,0,0.55)]"
+                                />
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="mt-auto flex items-center justify-between border-t border-[#1C1E24] pt-4">
+                        <span className="font-sans text-[14px] text-neutral-400">
+                          {note.date}
                         </span>
-                      )}
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <span
-                        role="button"
-                        tabIndex={0}
+                      </div>
+
+                      <button
+                        type="button"
                         title="즐겨찾기"
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        aria-label={`${note.title} 즐겨찾기 ${note.starred ? "해제" : "추가"}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
                           toggleStar(note.id);
                         }}
-                        className={`transition ${
+                        className={`absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-md transition hover:bg-white/5 sm:h-9 sm:w-9 ${
                           note.starred ? "text-brand-primary" : "text-neutral-400 group-hover:text-white"
                         }`}
                       >
                         <Star className={`h-[18px] w-[18px] ${note.starred ? "fill-brand-primary" : ""}`} />
-                      </span>
-                    </div>
-                  </div>
+                      </button>
 
-                  <p className="mb-4 h-10 text-[14px] leading-relaxed text-neutral-400 line-clamp-2">
-                    {note.desc}
-                  </p>
-
-                  <div className="mb-4 flex flex-wrap gap-1.5">
-                    {note.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded border border-[#252830] bg-[#1A1C20] px-2 py-0.5 text-[14px] font-medium text-neutral-400"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div
-                    className={`mb-5 flex gap-1.5 ${
-                      viewMode === "list" ? "h-[78px] max-w-[360px]" : "h-[90px]"
-                    }`}
-                  >
-                    {note.images.slice(0, 3).map((img) => (
-                      <div
-                        key={img}
-                        className="flex-1 overflow-hidden rounded-md border border-[#1A1C20] bg-[#0A0B0E]"
-                      >
-                        <img
-                          referrerPolicy="no-referrer"
-                          src={img}
-                          alt={note.title}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-auto flex items-center justify-between border-t border-[#1C1E24] pt-4">
-                    <span className="font-sans text-[14px] text-neutral-400">
-                      {note.date}
-                    </span>
-                    {filter !== "trash" && (
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        title="삭제"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          moveNoteToTrash(note.id);
-                        }}
-                        className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-400 opacity-100 transition hover:bg-red-500/10 hover:text-red-300 sm:opacity-0 sm:group-hover:opacity-100"
-                      >
-                        <Trash2 className="h-[18px] w-[18px]" />
-                      </span>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-            {filteredNotes.length === 0 && (
-              <div className="flex h-[280px] items-center justify-center rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-[14px] text-neutral-400">
-                조건에 맞는 노트가 없습니다.
+                      {filter !== "trash" && (
+                        <button
+                          type="button"
+                          title="삭제"
+                          aria-label={`${note.title} 삭제`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            moveNoteToTrash(note.id);
+                          }}
+                          className="absolute bottom-3 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-md text-neutral-400 opacity-100 transition hover:bg-red-500/10 hover:text-red-300 sm:h-9 sm:w-9 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+                        >
+                          <Trash2 className="h-[18px] w-[18px]" />
+                        </button>
+                      )}
+                      {filter === "trash" && (
+                        <button
+                          type="button"
+                          title="복원"
+                          aria-label={`${note.title} 복원`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            restoreNote(note.id);
+                          }}
+                          className="absolute bottom-3 right-3 z-10 flex h-11 items-center justify-center gap-1.5 rounded-md border border-brand-primary/30 bg-[#0A0B0D]/90 px-3 text-[12px] font-medium text-brand-primary shadow-lg transition hover:bg-brand-primary/10 sm:h-9"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          복원
+                        </button>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
-            )}
+
+              {filteredNotes.length === 0 && (
+                <div className="flex h-[280px] items-center justify-center rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-[14px] text-neutral-400">
+                  조건에 맞는 노트가 없습니다.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>

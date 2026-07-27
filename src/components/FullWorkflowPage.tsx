@@ -817,7 +817,7 @@ export default function FullWorkflowPage({
   };
 
   return (
-    <div className="relative flex h-[calc(100dvh-60px)] w-full overflow-hidden bg-[#050505] font-sans text-white antialiased lg:h-[calc(100dvh-76px)]">
+    <div className="np-workspace-shell relative flex h-[calc(100dvh-60px)] w-full overflow-hidden bg-[#050505] font-sans text-white antialiased lg:h-[calc(100dvh-76px)]">
       {showIntroOverlay && (
         <FullWorkflowIntroPage
           onNavigate={onNavigate}
@@ -2080,24 +2080,9 @@ export default function FullWorkflowPage({
                 )}
               </div>
             </div>
-            <div
-              className={`absolute bottom-5 left-1/2 z-[120] flex w-fit max-w-[calc(100%-40px)] -translate-x-1/2 items-center justify-between gap-4 rounded-xl border border-[#2A2E36] bg-[#111317]/95 px-3 py-2.5 shadow-[0_20px_60px_rgba(0,0,0,0.75)] backdrop-blur-xl transition-all duration-200 ${
-                boardSelectedNotes.length + boardSelectedReferences.length > 0
-                  ? "max-w-[520px]"
-                  : "max-w-[360px]"
-              }`}
-            >
-              <button
-                onClick={() => setIsBoardPopupOpen(false)}
-                className="rounded-lg bg-transparent px-3 py-2 text-[14px] font-medium text-neutral-400 transition hover:text-white"
-              >
-                작업으로 돌아가기
-              </button>
-              {boardSelectedNotes.length + boardSelectedReferences.length === 0 ? (
-                <span className="text-[14px] font-medium text-neutral-500">항목 선택 전</span>
-              ) : (
-                <>
-                  <div className="flex min-w-0 items-center justify-center gap-3 text-[14px] font-medium text-neutral-300">
+            {boardSelectedNotes.length + boardSelectedReferences.length > 0 && (
+              <div className="flex shrink-0 items-center justify-end gap-4 border-t border-[#2A2E36] bg-[#111317] px-4 py-3 sm:px-5">
+                  <div className="hidden min-w-0 items-center justify-center gap-3 text-[14px] font-medium text-neutral-300 sm:flex">
                     {boardSelectedNotes.length > 0 && (
                       <span className="rounded-full border border-[#60A5FA]/30 bg-[#60A5FA]/10 px-2.5 py-1 text-[#60A5FA]">
                         노트 {boardSelectedNotes.length}개
@@ -2133,13 +2118,15 @@ export default function FullWorkflowPage({
                       setBoardSelectedReferences([]);
                       setIsBoardPopupOpen(false);
                     }}
-                    className="rounded-lg bg-[#E0A12E] px-4 py-2 text-[14px] font-medium text-[#050505] transition hover:bg-[#F0B43A]"
+                    className="flex min-h-11 w-full items-center justify-center rounded-lg bg-[#E0A12E] px-4 py-2 text-[14px] font-medium text-[#050505] transition hover:bg-[#F0B43A] sm:w-auto"
                   >
-                    가져오기
+                    <span className="sm:hidden">
+                      {boardSelectedNotes.length + boardSelectedReferences.length}개 가져오기
+                    </span>
+                    <span className="hidden sm:inline">가져오기</span>
                   </button>
-                </>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}

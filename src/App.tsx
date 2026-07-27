@@ -20,6 +20,11 @@ import ReferencePage, { REFERENCE_BOARDS, boardMatchesAsset } from './components
 import ProjectPage, { DEFAULT_PROJECTS } from './components/ProjectPage';
 import NotesPage, { NOTES, type NoteItem } from './components/NotesPage';
 import NoteEditorPage from './components/NoteEditorPage';
+import {
+  AIBoardOrganizer,
+  AIOrganizedBoard,
+  type AIBoardPlan,
+} from './components/AIBoardOrganizer';
 import UserProfilePage from './components/UserProfilePage';
 import AIStudioPage from './components/AIStudioPage';
 import FullWorkflowPage from './components/FullWorkflowPage';
@@ -1658,7 +1663,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
     aria-label="프로필 메뉴 열기"
     aria-expanded={isProfileMenuOpen}
     onClick={toggleProfileMenu}
-    className="h-9 w-9 rounded-full bg-surface-secondary border border-border-soft cursor-pointer overflow-hidden hover:border-brand-primary transition-colors sm:h-10 sm:w-10 lg:h-8 lg:w-8"
+    className="h-11 w-11 rounded-full bg-surface-secondary border border-border-soft cursor-pointer overflow-hidden hover:border-brand-primary transition-colors sm:h-10 sm:w-10 lg:h-8 lg:w-8"
   >
     <img src={PROFILE_IMAGE} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
   </button>
@@ -2339,11 +2344,11 @@ function QuickCollectPanel({
       <AnimatePresence>
         {!isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 50, x: "-50%" }}
-            animate={{ opacity: 1, y: 0, x: "-50%" }}
-            exit={{ opacity: 0, y: 50, x: "-50%" }}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-8 left-1/2 z-40 transform"
+            className="fixed bottom-[calc(env(safe-area-inset-bottom)+12px)] right-3 z-40 sm:bottom-8 sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
           >
             <button
               onClick={onOpen}
@@ -2355,7 +2360,7 @@ function QuickCollectPanel({
                 event.preventDefault();
                 onOpenDrop(readDraggedAsset(event));
               }}
-              className="flex items-center gap-2 rounded-[8px] border border-border-primary/80 bg-bg-secondary/95 px-8 py-3 text-[15px] font-medium tracking-wide text-text-primary shadow-[0_15px_40px_rgba(0,0,0,0.9)] backdrop-blur-md transition-all hover:border-brand-primary hover:text-brand-primary"
+              className="flex min-h-11 items-center gap-2 rounded-[8px] border border-border-primary/80 bg-bg-secondary/95 px-4 py-2.5 text-[14px] font-medium tracking-wide text-text-primary shadow-[0_15px_40px_rgba(0,0,0,0.9)] backdrop-blur-md transition-all hover:border-brand-primary hover:text-brand-primary sm:px-8 sm:py-3 sm:text-[15px]"
             >
               <Plus className="h-4 w-4" />
               패널 열기
@@ -2763,7 +2768,7 @@ function ProductDetailPage({
       <div className={PRODUCT_DETAIL_CONTAINER_CLASS}>
         <button
           onClick={onNavigateHome}
-          className="mb-5 inline-flex items-center gap-2 text-[14px] font-medium text-text-tertiary transition hover:text-brand-primary"
+          className="mb-5 inline-flex min-h-11 items-center gap-2 rounded-md text-[14px] font-medium text-text-tertiary transition hover:text-brand-primary"
         >
           <ChevronRight className="h-4 w-4 rotate-180" />
           Discover로 돌아가기
@@ -2786,7 +2791,7 @@ function ProductDetailPage({
                 event.stopPropagation();
                 onQuickCollect?.("references", asset);
               }}
-              className="min-h-9 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:px-3 sm:py-2 sm:text-[14px]"
+              className="min-h-11 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
             >
               레퍼런스
             </button>
@@ -2795,7 +2800,7 @@ function ProductDetailPage({
                 event.stopPropagation();
                 onQuickCollect?.("notes", asset);
               }}
-              className="min-h-9 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:px-3 sm:py-2 sm:text-[14px]"
+              className="min-h-11 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
             >
               메모
             </button>
@@ -2823,7 +2828,7 @@ function ProductDetailPage({
                       event.stopPropagation();
                       onQuickCollect?.("references", asset);
                     }}
-                    className="min-h-9 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:px-3 sm:py-2 sm:text-[14px]"
+                    className="min-h-11 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
                   >
                     레퍼런스
                   </button>
@@ -2832,7 +2837,7 @@ function ProductDetailPage({
                       event.stopPropagation();
                       onQuickCollect?.("notes", asset);
                     }}
-                    className="min-h-9 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:px-3 sm:py-2 sm:text-[14px]"
+                    className="min-h-11 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
                   >
                     메모
                   </button>
@@ -2918,6 +2923,8 @@ function BoardPage({
   const [boardNoteFilter, setBoardNoteFilter] = useState("all");
   const [boardReferenceCategory, setBoardReferenceCategory] = useState("all");
   const [activeBoardNoteId, setActiveBoardNoteId] = useState<number | null>(null);
+  const [isAiOrganizerOpen, setIsAiOrganizerOpen] = useState(false);
+  const [aiBoardPlan, setAiBoardPlan] = useState<AIBoardPlan | null>(null);
   const [boardDeletedNoteIds, setBoardDeletedNoteIds] = useState<Set<number>>(
     () => readStoredIdSet(NOTE_TRASH_STORAGE_KEY),
   );
@@ -2954,6 +2961,7 @@ function BoardPage({
     !boardDeletedReferenceIds.has(asset.id) &&
     REFERENCE_BOARDS.some((board) => boardMatchesAsset(board, asset as any)),
   );
+  const savedReferenceIds = new Set(liveReferences.map((asset) => asset.id));
   const activeBoardNote = activeBoardNoteId
     ? liveNotes.find((note) => note.id === activeBoardNoteId) || null
     : null;
@@ -3006,7 +3014,7 @@ function BoardPage({
         {submenuButton("전체 노트", liveNotes.length, boardNoteFilter === "all", () => setBoardNoteFilter("all"), <LayoutGrid className="h-4 w-4" />)}
         {submenuButton("즐겨찾기", liveNotes.filter((note) => note.starred).length, boardNoteFilter === "starred", () => setBoardNoteFilter("starred"), <Star className="h-4 w-4" />)}
         {submenuButton("최근 수정", liveNotes.length, false, () => setBoardNoteFilter("all"), <Clock className="h-4 w-4" />)}
-        {submenuButton("휴지통", 0, boardNoteFilter === "trash", () => setBoardNoteFilter("trash"), <Trash2 className="h-4 w-4" />)}
+        {submenuButton("휴지통", boardDeletedNoteIds.size, boardNoteFilter === "trash", () => setBoardNoteFilter("trash"), <Trash2 className="h-4 w-4" />)}
       </div>
       <div>
         <p className="mb-2 px-4 text-[14px] font-medium uppercase tracking-[0.08em] text-text-tertiary">폴더</p>
@@ -3153,7 +3161,7 @@ function BoardPage({
               type="button"
               title="닫기"
               onClick={() => setActiveBoardNoteId(null)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#2A2E36] text-text-secondary transition hover:border-brand-primary/45 hover:text-white"
+              className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] text-text-secondary transition hover:border-brand-primary/45 hover:text-white sm:h-9 sm:w-9"
             >
               <X className="h-4 w-4" />
             </button>
@@ -3251,32 +3259,101 @@ function BoardPage({
           </p>
         </div>
         <div className="divide-y divide-[#1C1E24]">{boardItems.map(sidebarButton)}</div>
-        <div className="mt-auto rounded-lg border border-dashed border-[#2A2E36] p-4">
-          <p className="text-[14px] font-medium text-white">연결맵</p>
-          <p className="mt-1 text-[15px] leading-[1.6] text-text-tertiary">
-            노트와 레퍼런스의 직접 연결, AI 추천 연결은 다음 단계에서 붙일 수 있어요.
+        <div className="mt-auto rounded-xl border border-brand-primary/25 bg-[linear-gradient(145deg,rgba(224,161,46,0.10),rgba(224,161,46,0.02))] p-4">
+          <div className="flex items-center gap-2 text-brand-primary">
+            <Sparkles className="h-4 w-4" />
+            <p className="text-[13px] font-semibold">AI 보드 정리</p>
+          </div>
+          <p className="mt-2 text-[13px] leading-5 text-text-tertiary">
+            노트의 맥락을 분석해 프로젝트 그룹, 연결 관계와 레퍼런스를 제안합니다.
           </p>
+          <button
+            type="button"
+            onClick={() => setIsAiOrganizerOpen(true)}
+            className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-brand-primary text-[13px] font-semibold text-[#050505] transition hover:bg-[#EDB33F]"
+          >
+            <Wand2 className="h-4 w-4" />
+            AI 정리 실행
+          </button>
         </div>
       </aside>
 
       <section className="min-w-0 flex-1 overflow-hidden p-4 lg:p-5">
         <div className="mb-4 flex gap-2 lg:hidden">
-          {boardItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setBoardView(item.id)}
-              className={`flex-1 rounded-lg border px-3 py-2 text-[14px] font-medium ${
-                boardView === item.id
-                  ? "border-brand-primary bg-brand-primary text-bg-dark"
-                  : "border-[#2A2E36] bg-[#111317] text-text-secondary"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+          <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto scrollbar-hide">
+            {boardItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setBoardView(item.id)}
+                className={`min-w-[72px] flex-1 rounded-lg border px-3 py-2 text-[14px] font-medium ${
+                  boardView === item.id
+                    ? "border-brand-primary bg-brand-primary text-bg-dark"
+                    : "border-[#2A2E36] bg-[#111317] text-text-secondary"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsAiOrganizerOpen(true)}
+            className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-brand-primary/40 bg-brand-primary/10 px-3 text-[13px] font-semibold text-brand-primary"
+          >
+            <Sparkles className="h-4 w-4" />
+            AI 정리
+          </button>
         </div>
 
         {boardView === "all" ? (
+          aiBoardPlan ? (
+            <AIOrganizedBoard
+              plan={aiBoardPlan}
+              notes={liveNotes}
+              references={ASSETS}
+              onOpenNote={openBoardNoteDetail}
+              onRefine={() => setIsAiOrganizerOpen(true)}
+              onReset={() => setAiBoardPlan(null)}
+              onDissolveGroup={(groupId) => {
+                setAiBoardPlan((current) => {
+                  if (!current) return current;
+                  const targetGroup = current.groups.find((group) => group.id === groupId);
+                  if (!targetGroup) return current;
+                  const existingUngrouped = current.groups.find((group) => group.id === "ungrouped");
+                  const ungroupedNoteIds = Array.from(
+                    new Set([...(existingUngrouped?.noteIds ?? []), ...targetGroup.noteIds]),
+                  );
+                  return {
+                    ...current,
+                    groups: [
+                      ...current.groups.filter(
+                        (group) => group.id !== groupId && group.id !== "ungrouped",
+                      ),
+                      {
+                        id: "ungrouped",
+                        code: "U",
+                        title: "그룹 없음",
+                        rationale: "그룹에서 해제한 노트입니다. 연결 관계와 레퍼런스는 그대로 유지됩니다.",
+                        noteIds: ungroupedNoteIds,
+                      },
+                    ],
+                  };
+                });
+              }}
+              onDisconnectRelation={(relationId) => {
+                setAiBoardPlan((current) =>
+                  current
+                    ? {
+                        ...current,
+                        relations: current.relations.filter(
+                          (relation) => relation.id !== relationId,
+                        ),
+                      }
+                    : current,
+                );
+              }}
+            />
+          ) : (
           <div className="grid h-[calc(100%_-_60px)] min-h-0 grid-cols-1 gap-4 lg:h-full xl:grid-cols-2">
             <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-[#1C1E24] bg-bg-dark">
               <div className="flex shrink-0 items-center justify-between border-b border-[#1C1E24] px-5 py-4">
@@ -3304,6 +3381,7 @@ function BoardPage({
               </div>
             </div>
           </div>
+          )
         ) : boardView === "notes" ? (
           <NotesPage
             onNavigate={onNavigate}
@@ -3332,6 +3410,19 @@ function BoardPage({
       </section>
       </main>
       {renderBoardNoteModal()}
+      {isAiOrganizerOpen && (
+        <AIBoardOrganizer
+          notes={liveNotes}
+          references={ASSETS}
+          savedReferenceIds={savedReferenceIds}
+          onClose={() => setIsAiOrganizerOpen(false)}
+          onApply={(plan) => {
+            setAiBoardPlan(plan);
+            setBoardView("all");
+            setIsAiOrganizerOpen(false);
+          }}
+        />
+      )}
     </>
   );
 }
@@ -3424,7 +3515,7 @@ function ProductPurchasePanel({
           <span>{'\uD314\uB85C\uC6CC'}</span>
           <span className="text-right text-text-secondary">0.3K</span>
         </div>
-        <button className="mt-4 w-full rounded-md bg-[#3A3A3A] py-2.5 text-[14px] font-medium text-white transition hover:bg-[#4A4A4A]">
+        <button className="mt-4 min-h-11 w-full rounded-md bg-[#3A3A3A] py-2.5 text-[14px] font-medium text-white transition hover:bg-[#4A4A4A]">
           {'\uD314\uB85C\uC6B0'}
         </button>
       </div>
@@ -3458,11 +3549,11 @@ function ProductPurchasePanel({
           {isInCart ? '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uB2F4\uAE40' : '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uCD94\uAC00'}
         </button>
         <div className="grid grid-cols-2 gap-2">
-          <button className="flex items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+          <button className="flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
             <Heart className="h-4 w-4 text-brand-primary" />
             568
           </button>
-          <button className="flex items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+          <button className="flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
             <ShoppingBag className="h-4 w-4" />
             {'\uACF5\uC720'}
           </button>
@@ -3857,7 +3948,7 @@ function DiscoverSection({
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                    className={`relative min-h-10 py-2 text-[15px] font-medium transition-all sm:min-h-0 sm:py-1 sm:text-[16px] md:text-[18px] ${
+                    className={`relative min-h-11 min-w-11 py-2 text-[15px] font-medium transition-all sm:min-h-0 sm:min-w-0 sm:py-1 sm:text-[16px] md:text-[18px] ${
                     activeTab === tab ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
                   }`}
                 >
@@ -3873,7 +3964,7 @@ function DiscoverSection({
               onClick={openFilterPanel}
               aria-label="필터 열기"
               aria-expanded={showFilters}
-              className={`mb-[-2px] flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-transparent bg-transparent transition-colors md:hidden ${
+              className={`mb-[-2px] flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-transparent bg-transparent transition-colors md:hidden ${
                 isFilterButtonActive ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
               }`}
             >
@@ -4153,10 +4244,10 @@ function DiscoverSection({
         )}
       </AnimatePresence>
 
-      <div className={`grid grid-cols-1 gap-3 transition-all duration-300 sm:grid-cols-2 md:grid-cols-3 md:gap-2 ${
+      <div className={`grid grid-cols-1 gap-3 transition-all duration-300 sm:grid-cols-2 md:gap-2 ${
         isSidebarOpen 
-          ? "lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
-          : "lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
+          ? "lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 min-[2200px]:grid-cols-5"
+          : "lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 min-[2200px]:grid-cols-6"
       }`}>
         {discoverAssets.map((asset, index) => {
           let displayedAsset = { ...asset };
@@ -4178,7 +4269,7 @@ function DiscoverSection({
         })}
       </div>
       <div className="flex justify-center mt-8 py-6 pb-20">
-        <button className="flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-text-tertiary hover:text-white transition-colors">
+        <button className="flex min-h-11 items-center gap-2 px-4 py-2 text-[14px] font-medium text-text-tertiary transition-colors hover:text-white">
           더보기 <ChevronDown className="w-4 h-4" />
         </button>
       </div>
@@ -4641,11 +4732,11 @@ export default function App() {
         <AnimatePresence>
           {!isAssetDragging && !isPanelDropMode && !isPanelOpen && (
             <motion.div
-              initial={{ opacity: 0, y: 50, x: "-50%" }}
-              animate={{ opacity: 1, y: 0, x: "-50%" }}
-              exit={{ opacity: 0, y: 50, x: "-50%" }}
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed bottom-4 left-1/2 z-40 transform sm:bottom-8"
+              className="fixed bottom-[calc(env(safe-area-inset-bottom)+12px)] right-3 z-40 sm:bottom-8 sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
             >
               <button
                 onClick={() => {
@@ -4912,14 +5003,14 @@ export default function App() {
               <div className="flex items-center gap-6">
                 <a 
                   href="#" 
-                  className="flex items-center justify-center text-text-secondary hover:text-brand-primary transition-all p-1 hover:scale-105" 
+                  className="flex h-11 min-w-11 items-center justify-center text-text-secondary transition-all hover:scale-105 hover:text-brand-primary"
                   aria-label="Instagram"
                 >
                   <Instagram className="w-[24px] h-[24px]" />
                 </a>
                 <a 
                   href="#" 
-                  className="flex items-center justify-center text-text-secondary hover:text-brand-primary transition-all p-1 group hover:scale-105" 
+                  className="group flex h-11 min-w-11 items-center justify-center text-text-secondary transition-all hover:scale-105 hover:text-brand-primary"
                   aria-label="Naver Blog"
                 >
                   <div className="flex items-center font-sans font-medium text-[14px] tracking-tight text-text-secondary group-hover:text-brand-primary whitespace-nowrap">
@@ -4929,7 +5020,7 @@ export default function App() {
                 </a>
                 <a 
                   href="#" 
-                  className="flex items-center justify-center text-text-secondary hover:text-brand-primary transition-all p-1 hover:scale-105" 
+                  className="flex h-11 min-w-11 items-center justify-center text-text-secondary transition-all hover:scale-105 hover:text-brand-primary"
                   aria-label="YouTube"
                 >
                   <Youtube className="w-[26px] h-[26px]" />
