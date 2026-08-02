@@ -98,7 +98,7 @@ export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteE
             <button aria-label="편집 도구 더 보기" className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><MoreHorizontal className="w-4 h-4" /></button>
           </div>
           <div className="pointer-events-none absolute inset-y-0 right-1 flex w-8 items-center justify-end sm:hidden" aria-hidden="true">
-            <ChevronRight className="h-4 w-4 text-[#E0A12E]" />
+            <ChevronRight className="h-4 w-4 text-brand-primary" />
           </div>
         </div>
 
@@ -270,10 +270,10 @@ export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteE
 
         {/* Bottom Save Action */}
         <div className="absolute bottom-0 left-0 right-0 p-5 bg-[#0A0B0D]/90 backdrop-blur-md border-t border-[#1C1E24] flex items-center z-20">
-          <button className="flex-1 py-3 bg-[#E0A12E] hover:bg-[#F0B43A] text-[#0A0B0D] font-bold text-[15px] rounded-l-lg transition-colors shadow-lg">
+          <button className="flex-1 py-3 bg-brand-primary hover:bg-[#F0B43A] text-[#0A0B0D] font-bold text-[15px] rounded-l-lg transition-colors shadow-lg">
             저장
           </button>
-          <button className="px-3 py-3 bg-[#E0A12E] hover:bg-[#F0B43A] text-[#0A0B0D] font-bold rounded-r-lg transition-colors border-l border-[#0A0B0D]/20 shadow-lg">
+          <button className="px-3 py-3 bg-brand-primary hover:bg-[#F0B43A] text-[#0A0B0D] font-bold rounded-r-lg transition-colors border-l border-[#0A0B0D]/20 shadow-lg">
             <ChevronDown className="w-5 h-5" />
           </button>
         </div>

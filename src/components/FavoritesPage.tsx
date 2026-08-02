@@ -58,7 +58,7 @@ export default function FavoritesPage({ favorites, toggleFavorite }: FavoritesPa
                       <Heart className="w-4 h-4 fill-red-500" />
                     </button>
                   </div>
-                  <div className="absolute inset-x-0 bottom-0 z-10 flex h-[82%] translate-y-0 flex-col justify-end bg-gradient-to-t from-black/95 via-black/60 to-transparent p-2.5 opacity-100 transition-all duration-[300ms] ease-out md:h-[75%] md:translate-y-2 md:p-4 md:pb-5 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100">
+                  <div className="np-dark-media absolute inset-x-0 bottom-0 z-10 flex h-[82%] translate-y-0 flex-col justify-end bg-gradient-to-t from-black/95 via-black/60 to-transparent p-2.5 opacity-100 transition-all duration-[300ms] ease-out md:h-[75%] md:translate-y-2 md:p-4 md:pb-5 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100">
                     <h3 className="mb-0.5 line-clamp-2 text-[12px] font-normal leading-[1.3] text-text-primary sm:text-[14px]">
                       {asset.title}
                     </h3>

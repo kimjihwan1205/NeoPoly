@@ -205,7 +205,7 @@ const DEFAULT_MODULAR_PARTS: ModularPart[] = [
     setName: "orc_default",
     image: "/images/orc/orc_default_item04.png",
     generatedImage: "/images/orc/orc_01_item05.png",
-    color: "#E0A12E",
+    color: "var(--color-brand-primary)",
     point: { left: "52%", top: "25%" },
     area: { left: "52%", top: "27%", width: "24%", height: "18%" },
   },
@@ -216,7 +216,7 @@ const DEFAULT_MODULAR_PARTS: ModularPart[] = [
     setName: "orc_default",
     image: "/images/orc/orc_default_item01.png",
     generatedImage: "/images/orc/orc_01_item02.png",
-    color: "#E0A12E",
+    color: "var(--color-brand-primary)",
     point: { left: "64%", top: "46%" },
     area: { left: "67%", top: "52%", width: "22%", height: "28%" },
   },
@@ -227,7 +227,7 @@ const DEFAULT_MODULAR_PARTS: ModularPart[] = [
     setName: "orc_default",
     image: "/images/orc/orc_default_item02.png",
     generatedImage: "/images/orc/orc_01_item03.png",
-    color: "#E0A12E",
+    color: "var(--color-brand-primary)",
     point: { left: "55%", top: "77%" },
     area: { left: "55%", top: "78%", width: "20%", height: "25%" },
   },
@@ -238,7 +238,7 @@ const DEFAULT_MODULAR_PARTS: ModularPart[] = [
     setName: "orc_default",
     image: "/images/orc/orc_default_item05.png",
     generatedImage: "/images/orc/orc_01_item04.png",
-    color: "#E0A12E",
+    color: "var(--color-brand-primary)",
     point: { left: "50%", top: "57%" },
     area: { left: "50%", top: "58%", width: "24%", height: "18%" },
   },
@@ -249,7 +249,7 @@ const DEFAULT_MODULAR_PARTS: ModularPart[] = [
     setName: "orc_default",
     image: "/images/orc/orc_default_item03.png",
     generatedImage: "/images/orc/orc_01_item01.png",
-    color: "#E0A12E",
+    color: "var(--color-brand-primary)",
     point: { left: "22%", top: "41%" },
     area: { left: "22%", top: "37%", width: "15%", height: "55%" },
   },
@@ -298,7 +298,7 @@ const ADDITIONAL_MODULE_SUGGESTIONS: Omit<ModularPart, "id">[] = [
     setName: "orc_custom",
     image: "/images/orc/orc_default_item01.png",
     generatedImage: "/images/orc/orc_01_item02.png",
-    color: "#E0A12E",
+    color: "var(--color-brand-primary)",
     point: { left: "76%", top: "52%" },
     area: { left: "76%", top: "55%", width: "19%", height: "34%" },
   },
@@ -308,7 +308,7 @@ const ADDITIONAL_MODULE_SUGGESTIONS: Omit<ModularPart, "id">[] = [
     setName: "orc_custom",
     image: "/images/orc/orc_default_item05.png",
     generatedImage: "/images/orc/orc_01_item04.png",
-    color: "#E0A12E",
+    color: "var(--color-brand-primary)",
     point: { left: "45%", top: "60%" },
     area: { left: "44%", top: "61%", width: "12%", height: "16%" },
   },
@@ -318,7 +318,7 @@ const ADDITIONAL_MODULE_SUGGESTIONS: Omit<ModularPart, "id">[] = [
     setName: "orc_custom",
     image: "/images/orc/orc_default_item05.png",
     generatedImage: "/images/orc/orc_01_item04.png",
-    color: "#E0A12E",
+    color: "var(--color-brand-primary)",
     point: { left: "50%", top: "45%" },
     area: { left: "50%", top: "45%", width: "18%", height: "18%" },
   },
@@ -960,7 +960,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
           image: "/images/orc/orc_default_item03.png",
           generatedImage: "/images/orc/orc_01_item01.png",
           cropSource: ORC_MODULE_RESULT_IMAGE,
-          color: "#E0A12E",
+          color: "var(--color-brand-primary)",
           point: { left: area.left, top: area.top },
           area,
           path,
@@ -1188,7 +1188,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                   onClick={() => setExpertTab("turnaround")}
                   className={`flex h-9 items-center rounded-md px-4 text-[14px] font-medium transition ${
                     expertTab === "turnaround"
-                      ? "bg-[#E0A12E] text-black"
+                      ? "bg-brand-primary text-black"
                       : "text-neutral-400 hover:bg-[#141518] hover:text-white"
                   }`}
                 >
@@ -1208,7 +1208,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                     }
                     className={`flex h-9 items-center rounded-md px-4 text-[14px] font-medium transition ${
                       expertTab === "modular"
-                        ? "bg-[#E0A12E] text-black"
+                        ? "bg-brand-primary text-black"
                         : "text-neutral-400 hover:bg-[#141518] hover:text-white disabled:cursor-not-allowed disabled:text-neutral-700 disabled:hover:bg-transparent"
                     }`}
                   >
@@ -1251,7 +1251,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.04 }}
                       className={`group relative flex min-h-0 flex-col overflow-hidden rounded-xl border bg-[#101216] p-3 text-left transition ${
-                        isSelected ? "border-[#E0A12E] shadow-[0_0_0_1px_rgba(224,161,46,0.25)]" : "border-[#1F2329] hover:border-[#3A404F]"
+                        isSelected ? "border-brand-primary shadow-[0_0_0_1px_rgba(224,161,46,0.25)]" : "border-[#1F2329] hover:border-[#3A404F]"
                       }`}
                     >
                       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(224,161,46,0.08),transparent_60%)]" />
@@ -1267,7 +1267,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               e.stopPropagation();
                               openViewModifier(view.id);
                             }}
-                            className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#2A2E36] disabled:hover:text-neutral-300 sm:h-8 sm:w-8"
+                            className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-brand-primary/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#2A2E36] disabled:hover:text-neutral-300 sm:h-8 sm:w-8"
                             title={isLocked ? "잠금 해제 후 수정할 수 있습니다" : `${view.label} 수정`}
                           >
                             <Pencil className="h-4 w-4" />
@@ -1279,7 +1279,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               handleRegenerateView(view.id);
                             }}
                             disabled={isLocked || isRegeneratingView}
-                            className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-45 sm:h-8 sm:w-8"
+                            className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-brand-primary/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-45 sm:h-8 sm:w-8"
                             title="뷰 재생성"
                           >
                             {isRegeneratingView ? <LoadingIndicator tone="current" /> : <RotateCcw className="h-4 w-4" />}
@@ -1292,7 +1292,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             }}
                             className={`flex h-11 w-11 items-center justify-center rounded-lg border transition sm:h-8 sm:w-8 ${
                               isLocked
-                                ? "border-[#E0A12E]/45 bg-[#E0A12E]/10 text-[#E0A12E]"
+                                ? "border-brand-primary/45 bg-brand-primary/10 text-brand-primary"
                                 : "border-[#2A2E36] bg-[#141518] text-neutral-300 hover:text-white"
                             }`}
                             title={isLocked ? "잠금 해제" : "뷰 잠금"}
@@ -1315,14 +1315,14 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             className={`pointer-events-none absolute rounded-lg border-2 border-dashed transition ${
                               isSelectedIssueResolved
                                 ? "border-[#4ADE80] bg-[#4ADE80]/12"
-                                : "border-[#E0A12E] bg-[#E0A12E]/14 shadow-[0_0_18px_rgba(224,161,46,0.3)]"
+                                : "border-brand-primary bg-brand-primary/14 shadow-[0_0_18px_rgba(224,161,46,0.3)]"
                             }`}
                             style={consistencyArea}
                           />
                         )}
                         {isRegeneratingView && (
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="rounded-full border border-[#E0A12E]/30 bg-black/55 px-3 py-1.5 text-[14px] font-medium text-[#E0A12E] backdrop-blur-sm">
+                            <span className="rounded-full border border-brand-primary/30 bg-black/55 px-3 py-1.5 text-[14px] font-medium text-brand-primary backdrop-blur-sm">
                               {view.label} 뷰 재생성 중
                             </span>
                           </div>
@@ -1354,10 +1354,10 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                   <section className="rounded-xl border border-[#1F2329] bg-[#111317] p-3">
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <h3 className="flex items-center gap-2 text-[16px] font-medium text-white">
-                        <Eye className="h-4 w-4 text-[#E0A12E]" />
+                        <Eye className="h-4 w-4 text-brand-primary" />
                         일관성 점검
                       </h3>
-                      <span className="text-[18px] font-medium text-[#E0A12E]">{consistencyScore}%</span>
+                      <span className="text-[18px] font-medium text-brand-primary">{consistencyScore}%</span>
                     </div>
 
                     <div className="mb-3 rounded-lg border border-[#2A2E36] bg-[#0A0B0D] p-3">
@@ -1369,7 +1369,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                       </div>
                       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#20232A]">
                         <div
-                          className="h-full rounded-full bg-[#E0A12E] transition-all duration-500"
+                          className="h-full rounded-full bg-brand-primary transition-all duration-500"
                           style={{ width: `${consistencyScore}%` }}
                         />
                       </div>
@@ -1395,7 +1395,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               }}
                               className={`group flex w-full items-center gap-3 rounded-lg border p-3 text-left transition ${
                                 isActive
-                                  ? "border-[#E0A12E] bg-[#E0A12E]/8"
+                                  ? "border-brand-primary bg-brand-primary/8"
                                   : "border-[#2A2E36] bg-[#0A0B0D] hover:border-[#555A64]"
                               }`}
                             >
@@ -1405,7 +1405,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                 ) : (
                                   <AlertTriangle
                                     className={`mt-0.5 h-4 w-4 shrink-0 ${
-                                      issue.severity === "high" ? "text-[#F97316]" : "text-[#E0A12E]"
+                                      issue.severity === "high" ? "text-[#F97316]" : "text-brand-primary"
                                     }`}
                                   />
                                 )}
@@ -1427,10 +1427,10 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                   isResolved
                                     ? "text-[#4ADE80] opacity-100"
                                     : isCorrecting
-                                      ? "text-[#E0A12E] opacity-100"
+                                      ? "text-brand-primary opacity-100"
                                       : isTargetLocked
                                         ? "text-neutral-600 opacity-100 md:opacity-0 md:group-hover:opacity-100"
-                                        : "text-[#E0A12E] opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+                                        : "text-brand-primary opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
                                 } disabled:cursor-not-allowed`}
                               >
                                 {isCorrecting && <LoadingIndicator tone="current" />}
@@ -1447,7 +1447,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             <button
                               type="button"
                               onClick={() => setIsComparisonModalOpen(true)}
-                              className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-white sm:h-8 sm:w-8"
+                              className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] text-neutral-300 transition hover:border-brand-primary/50 hover:text-white sm:h-8 sm:w-8"
                               title="크게 보기"
                               aria-label="크게 보기"
                             >
@@ -1463,7 +1463,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                 onClick={() => handlePreviewViewChange(view.id)}
                                 className={`h-9 rounded-lg border text-[14px] font-medium transition ${
                                   previewViewId === view.id
-                                    ? "border-[#E0A12E] bg-[#E0A12E]/10 text-[#E0A12E]"
+                                    ? "border-brand-primary bg-brand-primary/10 text-brand-primary"
                                     : "border-[#2A2E36] bg-[#141518] text-neutral-400 hover:text-white"
                                 }`}
                               >
@@ -1506,7 +1506,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                   lockedViews.has(selectedConsistencyIssue.targetView) ||
                                   resolvedConsistencyIssues.has(selectedConsistencyIssue.id)
                                 }
-                                className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#E0A12E] px-2 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50"
+                                className="np-primary-action flex h-9 items-center justify-center gap-1.5 rounded-lg bg-brand-primary px-2 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 {correctingConsistencyIssueId === selectedConsistencyIssue.id ? (
                                   <LoadingIndicator tone="current" />
@@ -1566,7 +1566,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                       }
                       onNavigate?.("modeling_generation");
                     }}
-                    className="flex w-[68%] items-center justify-center gap-2 rounded-xl bg-[#E0A12E] py-3.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
+                    className="np-primary-action flex w-[68%] items-center justify-center gap-2 rounded-xl bg-brand-primary py-3.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
                   >
                     {shouldProceedToModular ? "모듈화 진행" : "모델링 진행"}
                     <ChevronLeft className="h-4 w-4 rotate-180" />
@@ -1596,7 +1596,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                   </div>
                   <span className={`rounded-full border px-2.5 py-1 text-[14px] font-medium ${
                     isModularScanActive
-                      ? "border-[#E0A12E]/30 bg-[#E0A12E]/10 text-[#E0A12E]"
+                      ? "border-brand-primary/30 bg-brand-primary/10 text-brand-primary"
                       : "border-[#4ADE80]/30 bg-[#4ADE80]/10 text-[#4ADE80]"
                   }`}>
                     {isAddingModuleScan || isScanningModules ? "AI Scan" : isBuildingModuleSet ? "Set Building" : isModuleListConfirmed ? "Set Ready" : "\ucd94\ucc9c \uc9c0\uc810 \ud45c\uc2dc"}
@@ -1614,13 +1614,13 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                     <div className="pointer-events-none absolute inset-0 overflow-hidden bg-black/[0.06]">
                       <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(224,161,46,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(224,161,46,0.16)_1px,transparent_1px)] [background-size:42px_42px]" />
                       <motion.div
-                        className="absolute left-5 right-5 h-[2px] bg-[#E0A12E] shadow-[0_0_12px_rgba(224,161,46,0.9)]"
+                        className="absolute left-5 right-5 h-[2px] bg-brand-primary shadow-[0_0_12px_rgba(224,161,46,0.9)]"
                         animate={{ top: ["7%", "93%"] }}
                         transition={{ duration: 1.18, repeat: Infinity, ease: "linear" }}
                       >
-                        <div className="absolute -top-[7px] left-0 right-0 h-[16px] bg-gradient-to-b from-transparent via-[#E0A12E]/20 to-transparent" />
-                        <div className="absolute -left-1 -top-1 h-2.5 w-2.5 rounded-full bg-[#E0A12E] shadow-[0_0_10px_rgba(224,161,46,0.9)]" />
-                        <div className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[#E0A12E] shadow-[0_0_10px_rgba(224,161,46,0.9)]" />
+                        <div className="absolute -top-[7px] left-0 right-0 h-[16px] bg-gradient-to-b from-transparent via-brand-primary/20 to-transparent" />
+                        <div className="absolute -left-1 -top-1 h-2.5 w-2.5 rounded-full bg-brand-primary shadow-[0_0_10px_rgba(224,161,46,0.9)]" />
+                        <div className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-brand-primary shadow-[0_0_10px_rgba(224,161,46,0.9)]" />
                       </motion.div>
 
                       {[
@@ -1632,21 +1632,21 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                       ].map(([left, top, delay]) => (
                         <motion.span
                           key={`${left}-${top}`}
-                          className="absolute h-2 w-2 rounded-full border border-[#E0A12E] bg-[#E0A12E]/55 shadow-[0_0_10px_rgba(224,161,46,0.8)]"
+                          className="absolute h-2 w-2 rounded-full border border-brand-primary bg-brand-primary/55 shadow-[0_0_10px_rgba(224,161,46,0.8)]"
                           style={{ left, top }}
                           animate={{ opacity: [0.2, 1, 0.25], scale: [0.75, 1.35, 0.85] }}
                           transition={{ duration: 0.9, repeat: Infinity, delay: Number(delay), ease: "easeInOut" }}
                         />
                       ))}
 
-                      <div className="absolute left-5 top-5 h-10 w-10 border-l-2 border-t-2 border-[#E0A12E]/65" />
-                      <div className="absolute right-5 top-5 h-10 w-10 border-r-2 border-t-2 border-[#E0A12E]/65" />
-                      <div className="absolute bottom-5 left-5 h-10 w-10 border-b-2 border-l-2 border-[#E0A12E]/65" />
-                      <div className="absolute bottom-5 right-5 h-10 w-10 border-b-2 border-r-2 border-[#E0A12E]/65" />
+                      <div className="absolute left-5 top-5 h-10 w-10 border-l-2 border-t-2 border-brand-primary/65" />
+                      <div className="absolute right-5 top-5 h-10 w-10 border-r-2 border-t-2 border-brand-primary/65" />
+                      <div className="absolute bottom-5 left-5 h-10 w-10 border-b-2 border-l-2 border-brand-primary/65" />
+                      <div className="absolute bottom-5 right-5 h-10 w-10 border-b-2 border-r-2 border-brand-primary/65" />
 
                       <div className="absolute inset-x-0 bottom-6 flex justify-center">
-                        <div className="rounded-lg border border-[#E0A12E]/35 bg-black/70 px-4 py-2 text-center backdrop-blur-sm">
-                          <div className="mb-1 flex items-center justify-center gap-2 text-[#E0A12E]">
+                        <div className="rounded-lg border border-brand-primary/35 bg-black/70 px-4 py-2 text-center backdrop-blur-sm">
+                          <div className="mb-1 flex items-center justify-center gap-2 text-brand-primary">
                             <Wand2 className="h-4 w-4 animate-pulse" />
                             <span className="text-[14px] font-medium">AI Scan</span>
                           </div>
@@ -1658,7 +1658,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
 
                   {isBuildingModuleSet && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px]">
-                      <div className="rounded-xl border border-[#E0A12E]/30 bg-black/70 px-5 py-4 text-center shadow-2xl">
+                      <div className="rounded-xl border border-brand-primary/30 bg-black/70 px-5 py-4 text-center shadow-2xl">
                         <LoadingIndicator size="md" label={"\u0041\u0049\uac00 \uc7a5\ube44 \uc138\ud2b8\ub97c \uad6c\uc131 \uc911\uc785\ub2c8\ub2e4"} layout="stacked" />
                       </div>
                     </div>
@@ -1678,7 +1678,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             <polygon
                               points={selectedPartData.path.map((point) => `${point.left},${point.top}`).join(" ")}
                               fill="rgba(224,161,46,0.12)"
-                              stroke="#E0A12E"
+                              stroke="var(--color-brand-primary)"
                               strokeWidth="0.35"
                               strokeDasharray="1.3 0.9"
                               vectorEffect="non-scaling-stroke"
@@ -1688,7 +1688,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             <polyline
                               points={draftPath.map((point) => `${point.left},${point.top}`).join(" ")}
                               fill="none"
-                              stroke="#E0A12E"
+                              stroke="var(--color-brand-primary)"
                               strokeWidth="0.55"
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -1719,8 +1719,8 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               event.stopPropagation();
                               setSelectedPart(part.id);
                             }}
-                            className={`group absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-black/45 bg-[#E0A12E] shadow-[0_0_0_5px_rgba(224,161,46,0.22)] transition hover:scale-125 ${
-                              isSelected ? "scale-125 ring-4 ring-[#E0A12E]/35" : ""
+                            className={`group absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-black/45 bg-brand-primary shadow-[0_0_0_5px_rgba(224,161,46,0.22)] transition hover:scale-125 ${
+                              isSelected ? "scale-125 ring-4 ring-brand-primary/35" : ""
                             }`}
                             style={{ left: part.point.left, top: part.point.top }}
                           >
@@ -1755,7 +1755,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                         onClick={() => startAreaSelection("new")}
                         disabled={isAddingModuleScan || isBuildingModuleSet || !selectedPart}
                         className={`h-9 rounded-lg border px-3 text-[14px] font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                          areaSelectionMode === "new" ? "border-[#E0A12E] bg-[#E0A12E] text-black" : "border-[#2A2E36] bg-[#111317] text-neutral-300 hover:bg-[#171A20]"
+                          areaSelectionMode === "new" ? "border-brand-primary bg-brand-primary text-black" : "border-[#2A2E36] bg-[#111317] text-neutral-300 hover:bg-[#171A20]"
                         }`}
                       >
                         {"\uc601\uc5ed \uc120\ud0dd"}
@@ -1765,7 +1765,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                         onClick={() => startAreaSelection("edit")}
                         disabled={isAddingModuleScan || isBuildingModuleSet}
                         className={`h-9 rounded-lg border px-3 text-[14px] font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                          areaSelectionMode === "edit" ? "border-[#E0A12E] bg-[#E0A12E] text-black" : "border-[#2A2E36] bg-[#111317] text-neutral-300 hover:bg-[#171A20]"
+                          areaSelectionMode === "edit" ? "border-brand-primary bg-brand-primary text-black" : "border-[#2A2E36] bg-[#111317] text-neutral-300 hover:bg-[#171A20]"
                         }`}
                       >
                         {"\uc120\ud0dd \uc218\uc815"}
@@ -1774,7 +1774,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                         type="button"
                         onClick={handleConfirmDrawnArea}
                         disabled={draftPath.length < 3 || isAddingModuleScan || isBuildingModuleSet}
-                        className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[#E0A12E] px-3 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="np-primary-action flex h-9 items-center justify-center gap-1.5 rounded-lg bg-brand-primary px-3 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {isAddingModuleScan ? <LoadingIndicator tone="current" /> : <Wand2 className="h-4 w-4" />}
                         {"\uc120\ud0dd \uc601\uc5ed \ud655\uc778"}
@@ -1819,7 +1819,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                     if (e.key === "Enter" || e.key === " ") setSelectedPart(part.id);
                                   }}
                                   className={`w-full rounded-xl border p-3 text-left transition ${
-                                    isSelected ? "border-[#E0A12E] bg-[#E0A12E]/5" : "border-[#1F2329] bg-[#111317] hover:border-[#3A404F]"
+                                    isSelected ? "border-brand-primary bg-brand-primary/5" : "border-[#1F2329] bg-[#111317] hover:border-[#3A404F]"
                                   }`}
                                 >
                                   <div className="flex items-center gap-3">
@@ -1837,7 +1837,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                               handleRemoveModulePart(part.id);
                                             }}
                                             disabled={moduleParts.length <= 1}
-                                            className="shrink-0 rounded-lg border border-[#2A2E36] px-2.5 py-1 text-[14px] font-medium text-neutral-300 transition hover:border-[#E0A12E]/50 hover:bg-[#171A20] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                                            className="shrink-0 rounded-lg border border-[#2A2E36] px-2.5 py-1 text-[14px] font-medium text-neutral-300 transition hover:border-brand-primary/50 hover:bg-[#171A20] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                                           >
                                             {"\uc0ad\uc81c"}
                                           </button>
@@ -1852,7 +1852,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                       <input
                                         value={moduleNameInputs[part.id] ?? draft.label}
                                         onChange={(e) => updateModuleNameInput(part.id, e.target.value)}
-                                        className="h-9 min-w-0 flex-1 rounded-lg border border-[#2A2E36] bg-[#050505] px-3 text-[14px] text-white outline-none focus:border-[#E0A12E]/60"
+                                        className="h-9 min-w-0 flex-1 rounded-lg border border-[#2A2E36] bg-[#050505] px-3 text-[14px] text-white outline-none focus:border-brand-primary/60"
                                       />
                                       <button
                                         type="button"
@@ -1860,7 +1860,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                           e.stopPropagation();
                                           applyModuleNameChange(part.id);
                                         }}
-                                        className="flex h-9 shrink-0 items-center justify-center rounded-lg bg-[#E0A12E] px-3 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
+                                        className="np-primary-action flex h-9 shrink-0 items-center justify-center rounded-lg bg-brand-primary px-3 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
                                       >
                                         {"\ubcc0\uacbd"}
                                       </button>
@@ -1889,7 +1889,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               type="button"
                               onClick={handleConfirmModuleList}
                               disabled={!isModuleScanComplete || isBuildingModuleSet || moduleParts.length === 0}
-                              className="flex items-center justify-center gap-2 rounded-xl bg-[#E0A12E] py-3.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-60"
+                              className="np-primary-action flex items-center justify-center gap-2 rounded-xl bg-brand-primary py-3.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               {isBuildingModuleSet ? <LoadingIndicator tone="current" /> : <Sparkles className="h-4 w-4" />}
                               {"\ub9ac\uc2a4\ud2b8 \ud655\uc815"}
@@ -1905,9 +1905,9 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                           <button
                             type="button"
                             onClick={() => setIsModuleListDrawerOpen(true)}
-                            className="absolute -left-px top-1/2 z-20 flex -translate-y-1/2 flex-col items-center gap-2 rounded-r-xl border border-l-0 border-[#2A2E36] bg-[#0A0B0D]/95 px-2.5 py-3 text-[14px] font-medium text-neutral-200 shadow-xl backdrop-blur transition hover:border-[#E0A12E]/45 hover:bg-[#111317] hover:text-white"
+                            className="absolute -left-px top-1/2 z-20 flex -translate-y-1/2 flex-col items-center gap-2 rounded-r-xl border border-l-0 border-[#2A2E36] bg-[#0A0B0D]/95 px-2.5 py-3 text-[14px] font-medium text-neutral-200 shadow-xl backdrop-blur transition hover:border-brand-primary/45 hover:bg-[#111317] hover:text-white"
                           >
-                            <ChevronRight className="h-4 w-4 text-[#E0A12E]" />
+                            <ChevronRight className="h-4 w-4 text-brand-primary" />
                             <span className="[writing-mode:vertical-rl]">{"\ubaa8\ub4c8 \ub9ac\uc2a4\ud2b8"}</span>
                           </button>
                         )}
@@ -1923,7 +1923,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             >
                               <div className="flex items-start justify-between gap-3 border-b border-[#1F2329] p-4">
                                 <div>
-                                  <p className="text-[14px] font-medium text-[#E0A12E]">Module List</p>
+                                  <p className="text-[14px] font-medium text-brand-primary">Module List</p>
                                   <h3 className="mt-1 text-[18px] font-medium text-white">{"\uc804\uccb4 \ubaa8\ub4c8 \ub9ac\uc2a4\ud2b8"}</h3>
                                 </div>
                                 <button
@@ -2000,7 +2000,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                           <button
                                             key={`${set.id}-${part.id}`}
                                             type="button"
-                                            className="flex w-full items-center gap-3 rounded-lg border border-[#161A20] bg-[#111317] p-2.5 text-left transition hover:border-[#E0A12E]/50"
+                                            className="flex w-full items-center gap-3 rounded-lg border border-[#161A20] bg-[#111317] p-2.5 text-left transition hover:border-brand-primary/50"
                                           >
                                             <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white">
                                               <img src={setImage} alt="" className="h-full w-full object-contain p-0.5" />
@@ -2017,7 +2017,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             </div>
 
                             <div className={`flex w-[220px] shrink-0 flex-col rounded-xl border bg-[#0A0B0D] p-3 shadow-[-18px_0_28px_rgba(0,0,0,0.2)] transition ${
-                              isAddingModuleSet ? "border-[#E0A12E]/55" : "border-[#1F2329]"
+                              isAddingModuleSet ? "border-brand-primary/55" : "border-[#1F2329]"
                             }`}>
                               <div className="mb-3 flex items-center justify-between">
                                 <h4 className="text-[16px] font-medium text-white">{isAddingModuleSet ? "AI Set" : "\uc0c8 \uc138\ud2b8"}</h4>
@@ -2030,8 +2030,8 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="flex flex-col items-center justify-center"
                                   >
-                                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-[#E0A12E]/40 bg-[#E0A12E]/10">
-                                      <Sparkles className="h-5 w-5 animate-pulse text-[#E0A12E]" />
+                                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/40 bg-brand-primary/10">
+                                      <Sparkles className="h-5 w-5 animate-pulse text-brand-primary" />
                                     </div>
                                     <p className="text-[14px] font-medium text-white">{"AI\uac00 \uc0c8 \uc138\ud2b8\ub97c \uad6c\uc131 \uc911\uc785\ub2c8\ub2e4"}</p>
                                     <p className="mt-1 text-[14px] text-neutral-500">{newSetTag}</p>
@@ -2043,14 +2043,14 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                       data-module-set-drag-lock
                                       value={newSetTag}
                                       onChange={(e) => setNewSetTag(e.target.value)}
-                                      className="mt-3 h-9 rounded-lg border border-[#2A2E36] bg-[#050505] px-3 text-center text-[14px] font-medium text-[#E0A12E] outline-none focus:border-[#E0A12E]/60"
+                                      className="mt-3 h-9 rounded-lg border border-[#2A2E36] bg-[#050505] px-3 text-center text-[14px] font-medium text-brand-primary outline-none focus:border-brand-primary/60"
                                     />
                                     <button
                                       type="button"
                                       data-module-set-drag-lock
                                       onClick={handleAddModuleSet}
                                       disabled={isAddingModuleSet}
-                                      className="mt-3 flex h-10 items-center justify-center gap-2 rounded-lg bg-[#E0A12E] text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-70"
+                                      className="np-primary-action mt-3 flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-primary text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-70"
                                     >
                                       <Sparkles className="h-4 w-4" /> {"\uc138\ud2b8 \ucd94\uac00"}
                                     </button>
@@ -2073,7 +2073,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             <button
                               type="button"
                               onClick={handleCompleteModular}
-                              className="flex items-center justify-center rounded-xl bg-[#E0A12E] py-3.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
+                              className="np-primary-action flex items-center justify-center rounded-xl bg-brand-primary py-3.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
                             >
                               {"\uc644\ub8cc"}
                             </button>
@@ -2107,7 +2107,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
               >
                 <div className="flex shrink-0 items-center justify-between gap-5 border-b border-[#1F2329] px-5 py-4">
                   <div>
-                    <p className="text-[14px] font-medium text-[#E0A12E]">턴어라운드 크게 보기</p>
+                    <p className="text-[14px] font-medium text-brand-primary">턴어라운드 크게 보기</p>
                     <h3 className="mt-0.5 text-[18px] font-medium text-white">{previewView.label}</h3>
                   </div>
                   <button
@@ -2131,7 +2131,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                           onClick={() => handlePreviewViewChange(view.id)}
                           className={`grid grid-cols-[96px_1fr] items-center overflow-hidden rounded-lg border text-left transition ${
                             isActive
-                              ? "border-[#E0A12E] bg-[#E0A12E]/8"
+                              ? "border-brand-primary bg-brand-primary/8"
                               : "border-[#2A2E36] bg-[#111317] hover:border-[#555A64]"
                           }`}
                         >
@@ -2142,7 +2142,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               className="h-full w-full object-contain p-1"
                             />
                           </div>
-                          <span className={`px-3 text-[15px] font-medium ${isActive ? "text-[#E0A12E]" : "text-white"}`}>
+                          <span className={`px-3 text-[15px] font-medium ${isActive ? "text-brand-primary" : "text-white"}`}>
                             {view.label}
                           </span>
                         </button>
@@ -2198,7 +2198,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
               >
                 <div className="flex shrink-0 items-center justify-between border-b border-[#1F2329] px-5 py-4">
                   <div>
-                    <p className="text-[14px] font-medium text-[#E0A12E]">턴어라운드 수정</p>
+                    <p className="text-[14px] font-medium text-brand-primary">턴어라운드 수정</p>
                     <h3 className="mt-0.5 text-[18px] font-medium text-white">{editingView.label}</h3>
                   </div>
                   <button
@@ -2227,7 +2227,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                       onPointerCancel={handleViewEditPointerUp}
                       className={`relative h-[clamp(360px,55vh,620px)] touch-none overflow-hidden rounded-lg border bg-white ${
                         isViewAreaSelectionEnabled
-                          ? "cursor-crosshair border-[#E0A12E]"
+                          ? "cursor-crosshair border-brand-primary"
                           : "border-[#2A2E36]"
                       }`}
                     >
@@ -2245,7 +2245,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                         onClick={() => setIsViewAreaSelectionEnabled((current) => !current)}
                         className={`absolute left-4 top-4 z-20 flex items-center gap-2 rounded-lg border px-3 py-2 text-[14px] font-medium shadow-lg backdrop-blur-md transition ${
                           isViewAreaSelectionEnabled
-                            ? "border-[#E0A12E] bg-[#E0A12E] text-black"
+                            ? "border-brand-primary bg-brand-primary text-black"
                             : "border-white/15 bg-black/65 text-white hover:bg-black/80"
                         }`}
                       >
@@ -2272,7 +2272,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             <polygon
                               points={viewEditSelection.map((point) => `${point.left},${point.top}`).join(" ")}
                               fill="rgba(224,161,46,0.22)"
-                              stroke="#E0A12E"
+                              stroke="var(--color-brand-primary)"
                               strokeWidth="0.6"
                               strokeDasharray="1.5 1"
                               vectorEffect="non-scaling-stroke"
@@ -2281,7 +2281,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                             <polyline
                               points={viewEditSelection.map((point) => `${point.left},${point.top}`).join(" ")}
                               fill="none"
-                              stroke="#E0A12E"
+                              stroke="var(--color-brand-primary)"
                               strokeWidth="0.8"
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -2308,7 +2308,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                         value={viewEditDraft}
                         onChange={(event) => setViewEditDraft(event.target.value)}
                         placeholder="예: 어깨 갑옷 크기를 정면과 동일하게 맞춰줘"
-                        className="mt-2 h-24 w-full resize-none rounded-lg border border-[#343842] bg-[#111317] px-3.5 py-3 text-[14px] leading-6 text-white outline-none transition placeholder:text-neutral-500 focus:border-[#E0A12E]"
+                        className="mt-2 h-24 w-full resize-none rounded-lg border border-[#343842] bg-[#111317] px-3.5 py-3 text-[14px] leading-6 text-white outline-none transition placeholder:text-neutral-500 focus:border-brand-primary"
                       />
                     </div>
                   </div>
@@ -2325,7 +2325,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                               onClick={() => handleSelectViewVersion(version)}
                               aria-label={`${editingView.label} 버전 ${version.id + 1} 선택`}
                               className={`w-full overflow-hidden rounded-lg border transition ${
-                                isActive ? "border-[#E0A12E]" : "border-[#2A2E36] hover:border-[#555A64]"
+                                isActive ? "border-brand-primary" : "border-[#2A2E36] hover:border-[#555A64]"
                               }`}
                             >
                               <div className="relative aspect-[4/3] overflow-hidden bg-white">
@@ -2335,7 +2335,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                                   className="h-full w-full object-contain"
                                 />
                                 {isActive && (
-                                  <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#E0A12E] text-black shadow-lg">
+                                  <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand-primary text-black shadow-lg">
                                     <CheckCircle2 className="h-4 w-4" />
                                   </span>
                                 )}
@@ -2376,7 +2376,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                         viewEditDraft.trim() &&
                         !lockedViews.has(editingViewId) &&
                         !regeneratingViews.has(editingViewId)
-                          ? "bg-[#E0A12E] text-black hover:bg-[#F0B43A]"
+                          ? "bg-brand-primary text-black hover:bg-[#F0B43A]"
                           : "cursor-not-allowed bg-[#202126] text-neutral-500"
                       }`}
                     >

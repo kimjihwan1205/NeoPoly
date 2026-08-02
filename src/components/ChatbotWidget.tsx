@@ -73,7 +73,7 @@ export default function ChatbotWidget() {
       {/* Floating Chat Button */}
       <button 
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-4 right-4 z-[100] flex h-12 w-12 items-center justify-center rounded-full border border-[#E0A12E]/60 bg-[#141518] text-[#E0A12E] shadow-[0_8px_24px_rgba(0,0,0,0.6)] transition-all hover:scale-110 hover:border-[#E0A12E] hover:bg-[#1A1C21] sm:bottom-6 sm:right-6 sm:h-[52px] sm:w-[52px] lg:bottom-10 lg:right-10 ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
+        className={`fixed bottom-4 right-4 z-[100] flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/60 bg-[#141518] text-brand-primary shadow-[0_8px_24px_rgba(0,0,0,0.6)] transition-all hover:scale-110 hover:border-brand-primary hover:bg-[#1A1C21] sm:bottom-6 sm:right-6 sm:h-[52px] sm:w-[52px] lg:bottom-10 lg:right-10 ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
         aria-label="AI 도우미 열기"
       >
         <BotMessageSquare className="w-6 h-6 stroke-[1.5px]" />
@@ -86,12 +86,12 @@ export default function ChatbotWidget() {
         {/* Header */}
         <div className="flex justify-between items-center px-5 py-4 bg-[#141518] border-b border-[#1F2329] shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#E0A12E] flex items-center justify-center border border-[#E0A12E]/30 shadow-[0_0_12px_rgba(224,161,46,0.2)]">
+            <div className="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center border border-brand-primary/30 shadow-[0_0_12px_rgba(224,161,46,0.2)]">
               <BotMessageSquare className="w-4 h-4 text-[#050505]" />
             </div>
             <div>
               <h3 className="text-[15px] font-bold text-white leading-none mb-1">AI 도우미</h3>
-              <p className="text-[11px] font-medium text-[#E0A12E]">온라인</p>
+              <p className="text-[11px] font-medium text-brand-primary">온라인</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -111,13 +111,13 @@ export default function ChatbotWidget() {
             <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
               {msg.role === 'bot' && (
                 <div className="w-8 h-8 rounded-full bg-[#141518] border border-[#2A2E36] shrink-0 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-[#E0A12E]" />
+                  <Bot className="w-4 h-4 text-brand-primary" />
                 </div>
               )}
               <div 
                 className={`max-w-[85%] px-4 py-3 rounded-2xl text-[13px] leading-relaxed whitespace-pre-wrap ${
                   msg.role === 'user' 
-                    ? 'bg-[#E0A12E] text-[#050505] rounded-tr-sm font-medium' 
+                    ? 'bg-brand-primary text-[#050505] rounded-tr-sm font-medium'
                     : 'bg-[#141518] border border-[#2A2E36] text-text-primary rounded-tl-sm'
                 }`}
               >
@@ -130,7 +130,7 @@ export default function ChatbotWidget() {
 
         {/* Input Area */}
         <div className="p-4 bg-[#141518] border-t border-[#1F2329] shrink-0">
-          <div className="flex items-center gap-2 bg-[#0A0B0D] border border-[#2A2E36] rounded-xl p-1.5 focus-within:border-[#E0A12E]/50 transition-colors">
+          <div className="flex items-center gap-2 bg-[#0A0B0D] border border-[#2A2E36] rounded-xl p-1.5 focus-within:border-brand-primary/50 transition-colors">
             <input 
               type="text" 
               value={inputValue}
@@ -142,7 +142,7 @@ export default function ChatbotWidget() {
             <button 
               onClick={handleSend}
               disabled={!inputValue.trim()}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#E0A12E] text-[#050505] transition-opacity disabled:cursor-not-allowed disabled:opacity-50 sm:h-8 sm:w-8"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-primary text-[#050505] transition-opacity disabled:cursor-not-allowed disabled:opacity-50 sm:h-8 sm:w-8"
             >
               <Send className="w-3.5 h-3.5" />
             </button>

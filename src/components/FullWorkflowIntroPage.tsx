@@ -22,13 +22,13 @@ export default function FullWorkflowIntroPage({ onNavigate, onClose }: { onNavig
   }
 
   return (
-    <div className="absolute inset-0 z-[100] flex items-start justify-center overflow-x-hidden overflow-y-auto bg-[#050505]/60 font-sans text-white antialiased backdrop-blur-sm md:items-center">
+    <div className="np-full-workflow-intro absolute inset-0 z-[100] flex items-start justify-center overflow-x-hidden overflow-y-auto bg-[#050505]/60 font-sans text-white antialiased backdrop-blur-sm md:items-center">
       
       {/* Close Button Top Right */}
       <button 
         onClick={handleClose}
         aria-label="풀 워크플로우 소개 닫기"
-        className="absolute right-4 top-4 z-20 cursor-pointer rounded-full border border-[#2A2E36] bg-[#141518] p-2.5 text-neutral-400 transition-all hover:border-[#E0A12E]/50 hover:text-white sm:right-6 sm:top-6 sm:p-3"
+        className="absolute right-4 top-4 z-20 cursor-pointer rounded-full border border-[#2A2E36] bg-[#141518] p-2.5 text-neutral-400 transition-all hover:border-brand-primary/50 hover:text-white sm:right-6 sm:top-6 sm:p-3"
       >
         <X className="w-5 h-5" />
       </button>
@@ -38,26 +38,26 @@ export default function FullWorkflowIntroPage({ onNavigate, onClose }: { onNavig
 
       <div className="relative z-10 flex w-full max-w-7xl flex-col items-center px-5 pb-8 pt-20 sm:px-8 sm:pb-10 sm:pt-24 md:py-10">
         
-        <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#E0A12E]/30 bg-[#E0A12E]/10 text-[#E0A12E] text-[14px] font-medium tracking-wide shadow-[0_0_15px_rgba(224,161,46,0.15)]">
+        <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-brand-primary/30 bg-brand-primary/10 text-brand-primary text-[14px] font-medium tracking-wide shadow-[0_0_15px_rgba(224,161,46,0.15)]">
           <Sparkles className="w-4 h-4" /> NeoPoly AI Studio
         </div>
         
-        <h1 className="mb-4 text-center text-[28px] font-bold leading-[1.3] text-[#F5F5F5] sm:mb-6 sm:text-[32px]">
-          가장 완벽한 <span className="text-[#E0A12E]">풀 워크플로우</span> 경험
+        <h1 className="np-full-workflow-intro-title mb-4 text-center text-[28px] font-bold leading-[1.3] text-[#F5F5F5] sm:mb-6 sm:text-[32px]">
+          가장 완벽한 <span className="text-brand-primary">풀 워크플로우</span> 경험
         </h1>
         
-        <p className="mb-8 max-w-3xl text-center text-[14px] leading-[1.65] text-neutral-400 sm:text-[16px] md:mb-10 xl:mb-14">
+        <p className="np-full-workflow-intro-copy mb-8 max-w-3xl text-center text-[14px] leading-[1.65] text-neutral-400 sm:text-[16px] md:mb-10 xl:mb-14">
           아이디어를 구체화하는 프롬프트 작성부터, 고품질 레퍼런스 이미지 생성, 
           그리고 최종 3D 모델링까지 플랫폼 이동 없이 한 곳에서 매끄럽게 완성하세요.
         </p>
 
         <div className="mb-8 grid w-full grid-cols-1 gap-3 px-0 sm:gap-5 sm:px-4 md:mb-10 md:grid-cols-3 md:gap-5 xl:mb-14 xl:gap-10">
           {/* Step 1 */}
-          <div className="relative overflow-hidden rounded-[18px] border border-[#1F2329] bg-[#0A0B0D] p-5 transition-all duration-300 sm:rounded-[24px] sm:p-8 md:p-5 xl:p-9">
-            <div className="absolute top-0 right-0 p-6 text-[80px] font-bold text-[#141518] leading-none pointer-events-none transition-colors">
+          <div className="np-full-workflow-step-card relative overflow-hidden rounded-[18px] border border-[#1F2329] bg-[#0A0B0D] p-5 transition-all duration-300 sm:rounded-[24px] sm:p-8 md:p-5 xl:p-9">
+            <div className="np-full-workflow-step-number absolute top-0 right-0 p-6 text-[80px] font-bold text-[#141518] leading-none pointer-events-none transition-colors">
               1
             </div>
-            <div className="relative z-10 mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#2A2E36] bg-[#141518] text-[#E0A12E] shadow-sm transition-transform sm:mb-8 sm:h-14 sm:w-14 md:mb-5 xl:mb-8">
+            <div className="relative z-10 mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#2A2E36] bg-[#141518] text-brand-primary shadow-sm transition-transform sm:mb-8 sm:h-14 sm:w-14 md:mb-5 xl:mb-8">
               <MessageSquare className="w-6 h-6" />
             </div>
             <h3 className="relative z-10 mb-3 text-[18px] font-semibold text-[#F5F5F5] sm:mb-4 sm:text-[20px]">프롬프트 구체화</h3>
@@ -67,8 +67,8 @@ export default function FullWorkflowIntroPage({ onNavigate, onClose }: { onNavig
           </div>
 
           {/* Step 2 */}
-          <div className="relative overflow-hidden rounded-[18px] border border-[#1F2329] bg-[#0A0B0D] p-5 transition-all duration-300 sm:rounded-[24px] sm:p-8 md:p-5 xl:p-9">
-            <div className="absolute top-0 right-0 p-6 text-[80px] font-bold text-[#141518] leading-none pointer-events-none transition-colors">
+          <div className="np-full-workflow-step-card relative overflow-hidden rounded-[18px] border border-[#1F2329] bg-[#0A0B0D] p-5 transition-all duration-300 sm:rounded-[24px] sm:p-8 md:p-5 xl:p-9">
+            <div className="np-full-workflow-step-number absolute top-0 right-0 p-6 text-[80px] font-bold text-[#141518] leading-none pointer-events-none transition-colors">
               2
             </div>
             <div className="relative z-10 mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#2A2E36] bg-[#141518] text-[#60A5FA] shadow-sm transition-transform sm:mb-8 sm:h-14 sm:w-14 md:mb-5 xl:mb-8">
@@ -81,8 +81,8 @@ export default function FullWorkflowIntroPage({ onNavigate, onClose }: { onNavig
           </div>
 
           {/* Step 3 */}
-          <div className="relative overflow-hidden rounded-[18px] border border-[#1F2329] bg-[#0A0B0D] p-5 transition-all duration-300 sm:rounded-[24px] sm:p-8 md:p-5 xl:p-9">
-            <div className="absolute top-0 right-0 p-6 text-[80px] font-bold text-[#141518] leading-none pointer-events-none transition-colors">
+          <div className="np-full-workflow-step-card relative overflow-hidden rounded-[18px] border border-[#1F2329] bg-[#0A0B0D] p-5 transition-all duration-300 sm:rounded-[24px] sm:p-8 md:p-5 xl:p-9">
+            <div className="np-full-workflow-step-number absolute top-0 right-0 p-6 text-[80px] font-bold text-[#141518] leading-none pointer-events-none transition-colors">
               3
             </div>
             <div className="relative z-10 mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#2A2E36] bg-[#141518] text-[#4ADE80] shadow-sm transition-transform sm:mb-8 sm:h-14 sm:w-14 md:mb-5 xl:mb-8">
@@ -101,7 +101,7 @@ export default function FullWorkflowIntroPage({ onNavigate, onClose }: { onNavig
               type="checkbox" 
               checked={dontShowAgain}
               onChange={(e) => setDontShowAgain(e.target.checked)}
-              className="w-4 h-4 rounded border-[#2A2E36] bg-[#141518] text-[#E0A12E] focus:ring-[#E0A12E]/50 focus:ring-offset-0 cursor-pointer"
+              className="w-4 h-4 rounded border-[#2A2E36] bg-[#141518] text-brand-primary focus:ring-brand-primary/50 focus:ring-offset-0 cursor-pointer"
             />
             <span className="text-[14px] select-none">다시 보지 않기</span>
           </label>

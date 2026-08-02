@@ -338,7 +338,7 @@ export function AIBoardOrganizer({
       className="fixed inset-0 z-[110] flex items-center justify-center bg-black/75 p-0 backdrop-blur-md sm:p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="AI 보드 정리"
+      aria-label="AI 노트 정리"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.985, y: 10 }}
@@ -353,14 +353,14 @@ export function AIBoardOrganizer({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h2 className="truncate text-[18px] font-semibold text-white sm:text-[20px]">
-                  AI 보드 정리
+                  AI 노트 정리
                 </h2>
                 <span className="hidden rounded-full border border-[#343842] px-2 py-0.5 text-[11px] text-text-tertiary sm:inline">
                   BETA
                 </span>
               </div>
               <p className="mt-0.5 truncate text-[12px] text-text-tertiary sm:text-[13px]">
-                노트의 내용과 레퍼런스를 바탕으로 정리 방법을 제안합니다.
+                노트 내용을 비교해 함께 묶을 작업 그룹을 제안합니다.
               </p>
             </div>
           </div>
@@ -368,7 +368,7 @@ export function AIBoardOrganizer({
             type="button"
             onClick={onClose}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-text-tertiary transition hover:bg-white/5 hover:text-white"
-            aria-label="AI 보드 정리 닫기"
+            aria-label="AI 노트 정리 닫기"
           >
             <X className="h-5 w-5" />
           </button>
@@ -395,10 +395,10 @@ export function AIBoardOrganizer({
                   </span>
                 </div>
                 <p className="text-center text-[13px] font-medium uppercase tracking-[0.16em] text-brand-primary">
-                  Board intelligence
+                  Note intelligence
                 </p>
                 <h3 className="mt-3 text-center text-[24px] font-semibold text-white sm:text-[28px]">
-                  작업 맥락을 읽고 있습니다
+                  노트 내용을 읽고 있습니다
                 </h3>
                 <div className="mt-8 overflow-hidden rounded-full bg-[#1C1F25]">
                   <motion.div
@@ -553,7 +553,7 @@ export function AIBoardOrganizer({
                     type="button"
                     onClick={applyPlan}
                     disabled={selectedGroupIds.size === 0}
-                    className="flex h-12 items-center justify-center gap-2 rounded-lg bg-brand-primary px-6 text-[14px] font-semibold text-[#050505] transition hover:bg-[#EDB33F] disabled:cursor-not-allowed disabled:opacity-40"
+                    className="np-primary-action flex h-12 items-center justify-center gap-2 rounded-lg bg-brand-primary px-6 text-[14px] font-semibold text-[#050505] transition hover:bg-[#EDB33F] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     선택한 정리 적용
                     <ArrowRight className="h-4 w-4" />
@@ -739,7 +739,7 @@ function RelationReview({
                     key={relation.id}
                     d={`M 35 50 C 50 50, 50 ${targetY}, 65 ${targetY}`}
                     fill="none"
-                    stroke="#E0A12E"
+                    stroke="var(--color-brand-primary)"
                     strokeWidth="0.42"
                     strokeDasharray="1.4 1.2"
                     initial={{ pathLength: 0, opacity: 0 }}
@@ -1004,30 +1004,28 @@ function ReferenceReview({
 interface AIOrganizedBoardProps {
   plan: AIBoardPlan;
   notes: NoteItem[];
-  references: BoardReferenceCandidate[];
   onOpenNote: (noteId: number) => void;
   onRefine: () => void;
   onReset: () => void;
   onDissolveGroup: (groupId: string) => void;
   onDisconnectRelation: (relationId: string) => void;
+  focusedGroupCode?: string | null;
+  onFocusedGroupChange?: (groupCode: string | null) => void;
 }
 
 export function AIOrganizedBoard({
   plan,
   notes,
-  references,
   onOpenNote,
   onRefine,
   onReset,
   onDissolveGroup,
   onDisconnectRelation,
+  focusedGroupCode = null,
+  onFocusedGroupChange,
 }: AIOrganizedBoardProps) {
   const [focusedNoteId, setFocusedNoteId] = useState<number | null>(null);
   const noteById = useMemo(() => new Map(notes.map((note) => [note.id, note])), [notes]);
-  const referenceById = useMemo(
-    () => new Map(references.map((reference) => [reference.id, reference])),
-    [references],
-  );
   const focusedRelations = focusedNoteId
     ? plan.relations.filter(
         (relation) => relation.fromId === focusedNoteId || relation.toId === focusedNoteId,
@@ -1043,7 +1041,7 @@ export function AIOrganizedBoard({
       ? "min-w-0 max-w-[560px] grid-cols-1"
       : plan.groups.length === 2
         ? "min-w-[620px] grid-cols-2"
-        : "min-w-[920px] grid-cols-3";
+        : "min-w-[760px] grid-cols-3";
   const activeGroupCount = plan.groups.filter((group) => group.id !== "ungrouped").length;
 
   return (
@@ -1155,27 +1153,41 @@ export function AIOrganizedBoard({
         <div className={`grid h-full gap-4 ${boardGridClass}`}>
           {plan.groups.map((group) => {
             const isUngrouped = group.id === "ungrouped";
-            const groupRecommendations = plan.recommendations.filter((recommendation) =>
-              group.noteIds.includes(recommendation.noteId),
-            );
+            const isGroupFocused = !isUngrouped && focusedGroupCode === group.code;
             return (
               <section
                 key={group.id}
                 className={`flex min-h-0 flex-col overflow-hidden rounded-xl border bg-[#0D0F12] ${
-                  isUngrouped ? "border-dashed border-[#343842]" : "border-[#252932]"
+                  isUngrouped
+                    ? "border-dashed border-[#343842]"
+                    : isGroupFocused
+                      ? "border-brand-primary/55 shadow-[0_0_24px_rgba(224,161,46,0.08)]"
+                      : "border-[#252932]"
                 }`}
               >
                 <div className="shrink-0 border-b border-[#252932] px-4 py-4">
                   <div className="flex items-center justify-between">
-                    <span
-                      className={`rounded px-2 py-1 text-[10px] font-semibold ${
-                        isUngrouped
-                          ? "bg-[#22262D] text-text-tertiary"
-                          : "bg-brand-primary/10 text-brand-primary"
-                      }`}
-                    >
-                      {isUngrouped ? "UNGROUPED" : `PROJECT ${group.code}`}
-                    </span>
+                    {isUngrouped ? (
+                      <span className="rounded bg-[#22262D] px-2 py-1 text-[10px] font-semibold text-text-tertiary">
+                        UNGROUPED
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onFocusedGroupChange?.(isGroupFocused ? null : group.code)
+                        }
+                        className={`rounded px-2 py-1 text-[10px] font-semibold transition ${
+                          isGroupFocused
+                            ? "bg-brand-primary text-[#050505]"
+                            : "bg-brand-primary/10 text-brand-primary hover:bg-brand-primary/20"
+                        }`}
+                        aria-pressed={isGroupFocused}
+                        title="관련 레퍼런스 컬렉션 보기"
+                      >
+                        PROJECT {group.code}
+                      </button>
+                    )}
                     <div className="flex items-center gap-2">
                       <span className="text-[11px] text-text-tertiary">{group.noteIds.length} NOTES</span>
                       {!isUngrouped && (
@@ -1272,33 +1284,6 @@ export function AIOrganizedBoard({
                     );
                   })}
 
-                  {groupRecommendations.length > 0 && (
-                    <div className="rounded-lg border border-dashed border-[#343842] bg-[#0A0C0F] p-3">
-                      <div className="mb-2 flex items-center gap-2">
-                        <ImagePlus className="h-3.5 w-3.5 text-brand-primary" />
-                        <p className="text-[11px] font-medium text-white">AI 추천 레퍼런스</p>
-                      </div>
-                      <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-                        {groupRecommendations.map((recommendation) => {
-                          const reference = referenceById.get(recommendation.assetId);
-                          if (!reference) return null;
-                          return (
-                            <div key={recommendation.id} className="w-[92px] shrink-0">
-                              <img
-                                src={reference.image}
-                                alt={reference.title}
-                                className="h-16 w-full rounded-md object-cover"
-                                referrerPolicy="no-referrer"
-                              />
-                              <p className="mt-1 truncate text-[9px] text-text-tertiary">
-                                {recommendation.source}
-                              </p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </section>
             );

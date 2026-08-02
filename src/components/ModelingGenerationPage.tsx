@@ -221,7 +221,7 @@ function ViewportTools({
           onClick={() => onToolSelect(label as string)}
           className={`flex h-12 min-w-[52px] flex-1 flex-col items-center justify-center gap-0.5 border-r border-[#1F2329] text-[12px] transition-colors last:border-r-0 sm:h-[58px] sm:min-w-0 sm:flex-none sm:gap-1 sm:border-b sm:border-r-0 sm:text-[14px] sm:last:border-b-0 ${
             activeTool === label || (label === "그리드" && gridEnabled)
-              ? "bg-[#E0A12E]/10 text-[#E0A12E]"
+              ? "bg-brand-primary/10 text-brand-primary"
               : "text-neutral-400 hover:bg-[#141518] hover:text-white"
           }`}
           title={label as string}
@@ -686,7 +686,7 @@ function ThreeModelPreview({
       <div className="group absolute bottom-3 right-3 z-30 sm:bottom-24 sm:left-5 sm:right-auto">
         <button
           type="button"
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-[#2A2E36] bg-[#080A0D]/90 text-neutral-400 shadow-lg backdrop-blur transition hover:border-[#E0A12E]/60 hover:text-[#E0A12E] sm:h-9 sm:w-9"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-[#2A2E36] bg-[#080A0D]/90 text-neutral-400 shadow-lg backdrop-blur transition hover:border-brand-primary/60 hover:text-brand-primary sm:h-9 sm:w-9"
           aria-label="뷰포트 조작 안내"
         >
           <CircleHelp className="h-4 w-4" />
@@ -739,7 +739,7 @@ function ModuleSetBrowser({
           {stage === "detail" && (
             <>
               <ArrowRight className="h-3.5 w-3.5 shrink-0 text-neutral-600" />
-              <span className="truncate text-[#E0A12E]">{selectedSet.title}</span>
+              <span className="truncate text-brand-primary">{selectedSet.title}</span>
             </>
           )}
         </div>
@@ -768,7 +768,7 @@ function ModuleSetBrowser({
                   setSelectedViewIndex(0);
                   setStage("detail");
                 }}
-                className="group overflow-hidden rounded-lg border border-[#1F2329] bg-[#111317] text-left transition hover:border-[#E0A12E]/60"
+                className="group overflow-hidden rounded-lg border border-[#1F2329] bg-[#111317] text-left transition hover:border-brand-primary/60"
               >
                 <div className="aspect-[4/3] bg-[#15171B] p-2">
                   <img
@@ -778,7 +778,7 @@ function ModuleSetBrowser({
                   />
                 </div>
                 <div className="border-t border-[#1F2329] p-3">
-                  <p className="truncate text-[15px] font-medium text-white group-hover:text-[#E0A12E]">{set.title}</p>
+                  <p className="truncate text-[15px] font-medium text-white group-hover:text-brand-primary">{set.title}</p>
                 </div>
               </button>
             ))}
@@ -793,7 +793,7 @@ function ModuleSetBrowser({
               <div>
                 <h2 className="text-[18px] font-medium text-white">{selectedSet.title}</h2>
               </div>
-              <span className="rounded-md border border-[#E0A12E]/25 bg-[#E0A12E]/10 px-2.5 py-1 text-[14px] text-[#E0A12E]">장비 {MODULES.length}개</span>
+              <span className="rounded-md border border-brand-primary/25 bg-brand-primary/10 px-2.5 py-1 text-[14px] text-brand-primary">장비 {MODULES.length}개</span>
             </div>
             <div className="min-h-[180px] flex-1 overflow-hidden rounded-lg border border-[#1F2329] bg-[#15171B] md:min-h-0">
               <img
@@ -808,13 +808,13 @@ function ModuleSetBrowser({
                   key={label}
                   onClick={() => setSelectedViewIndex(index)}
                   className={`overflow-hidden rounded-lg border text-left transition ${
-                    selectedViewIndex === index ? "border-[#E0A12E] bg-[#E0A12E]/8" : "border-[#1F2329] bg-[#111317] hover:border-[#555A64]"
+                    selectedViewIndex === index ? "border-brand-primary bg-brand-primary/8" : "border-[#1F2329] bg-[#111317] hover:border-[#555A64]"
                   }`}
                 >
                   <div className="aspect-[4/3] overflow-hidden bg-[#15171B]">
                     <img src={getModuleSetPreviewImage(selectedSet.id, index)} alt="" className="h-full w-full object-contain" />
                   </div>
-                  <p className={`border-t border-[#1F2329] px-2 py-1.5 text-center text-[14px] ${selectedViewIndex === index ? "text-[#E0A12E]" : "text-neutral-400"}`}>{label}</p>
+                  <p className={`border-t border-[#1F2329] px-2 py-1.5 text-center text-[14px] ${selectedViewIndex === index ? "text-brand-primary" : "text-neutral-400"}`}>{label}</p>
                 </button>
               ))}
             </div>
@@ -832,14 +832,14 @@ function ModuleSetBrowser({
                   <button
                     key={module.id}
                     onClick={() => setSelectedEquipmentId(module.id)}
-                    className={`overflow-hidden rounded-lg border bg-[#111317] text-left transition ${selected ? "border-[#E0A12E]" : "border-[#1F2329] hover:border-[#555A64]"}`}
+                    className={`overflow-hidden rounded-lg border bg-[#111317] text-left transition ${selected ? "border-brand-primary" : "border-[#1F2329] hover:border-[#555A64]"}`}
                   >
                     <div className="aspect-square bg-[#15171B] p-2">
                       <img src={getModuleSetItemImage(selectedSet.id, module.itemNumber)} alt="" className="h-full w-full object-contain" />
                     </div>
                     <div className="flex items-center justify-between gap-2 border-t border-[#1F2329] px-2.5 py-2">
-                      <span className={`truncate text-[14px] font-medium ${selected ? "text-[#E0A12E]" : "text-neutral-300"}`}>{module.label}</span>
-                      {selected && <Check className="h-3.5 w-3.5 shrink-0 text-[#E0A12E]" />}
+                      <span className={`truncate text-[14px] font-medium ${selected ? "text-brand-primary" : "text-neutral-300"}`}>{module.label}</span>
+                      {selected && <Check className="h-3.5 w-3.5 shrink-0 text-brand-primary" />}
                     </div>
                   </button>
                 );
@@ -913,7 +913,7 @@ function ModelViewport({
               onClick={() => setViewMode(mode)}
               className={`rounded-md border px-3 py-1.5 text-[14px] font-medium transition-colors ${
                 viewMode === mode
-                  ? "border-[#E0A12E] bg-[#E0A12E]/10 text-[#E0A12E]"
+                  ? "border-brand-primary bg-brand-primary/10 text-brand-primary"
                   : "border-[#1F2329] bg-[#0A0B0D] text-neutral-400 hover:text-white"
               }`}
             >
@@ -932,13 +932,13 @@ function ModelViewport({
         disabled={isGeneratingModel}
         className={`absolute right-3 top-[130px] z-30 flex min-h-11 items-center gap-2 rounded-lg border px-3 py-2.5 text-[14px] font-medium shadow-xl backdrop-blur transition sm:right-5 sm:top-20 sm:min-h-0 sm:px-3.5 ${
           isModuleBrowserOpen
-            ? "border-[#E0A12E] bg-[#E0A12E]/15 text-[#E0A12E]"
-            : "border-[#2A2E36] bg-[#080A0D]/90 text-neutral-300 hover:border-[#E0A12E]/60 hover:text-white"
+            ? "border-brand-primary bg-brand-primary/15 text-brand-primary"
+            : "border-[#2A2E36] bg-[#080A0D]/90 text-neutral-300 hover:border-brand-primary/60 hover:text-white"
         }`}
       >
         <Layers3 className="h-4 w-4" />
         <span className="hidden sm:inline">모듈 세트</span>
-        <span className={isModuleBrowserOpen ? "text-[#E0A12E]" : "text-neutral-500"}>{moduleSetCount}</span>
+        <span className={isModuleBrowserOpen ? "text-brand-primary" : "text-neutral-500"}>{moduleSetCount}</span>
       </button>
 
       <AnimatePresence>
@@ -954,13 +954,13 @@ function ModelViewport({
       <div className="relative z-10 flex flex-1 items-center justify-center overflow-hidden p-3 pb-16 pt-20 sm:p-8">
         {isGeneratingModel ? (
           <div className="flex h-full w-full flex-col items-center justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-[#E0A12E]/30 bg-[#E0A12E]/10">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-brand-primary/30 bg-brand-primary/10">
               <LoadingIndicator size="md" />
             </div>
             <h2 className="mt-5 text-[20px] font-medium text-white">3D 모델링 생성 중</h2>
             <div className="mt-5 h-1.5 w-56 overflow-hidden rounded-full bg-[#1F2329]">
               <motion.div
-                className="h-full rounded-full bg-[#E0A12E]"
+                className="h-full rounded-full bg-brand-primary"
                 initial={{ width: "8%" }}
                 animate={{ width: "92%" }}
                 transition={{ duration: 1.6, ease: "easeInOut" }}
@@ -1146,7 +1146,7 @@ function RightPanel({
             <div className="rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4">
               <SectionTitle title="AI 프롬프트 수정" />
               <textarea
-                className="mt-3 h-24 w-full resize-none rounded-lg border border-[#2A2E36] bg-[#111419] p-3 text-[14px] text-neutral-200 outline-none placeholder:text-neutral-600 focus:border-[#E0A12E]"
+                className="mt-3 h-24 w-full resize-none rounded-lg border border-[#2A2E36] bg-[#111419] p-3 text-[14px] text-neutral-200 outline-none placeholder:text-neutral-600 focus:border-brand-primary"
                 placeholder={panelCopy.prompt}
                 value={promptDrafts.generate}
                 onChange={(event) =>
@@ -1158,7 +1158,7 @@ function RightPanel({
               />
               <div className="mt-3 grid grid-cols-2 gap-2">
                 {["어깨 갑옷 더 날카롭게", "무기 스파이크 크게", "허리 벨트 정리", "피부 주름 강조"].map((item) => (
-                  <button key={item} className="rounded-md border border-[#1F2329] bg-[#141518] px-2 py-2 text-[14px] text-neutral-400 hover:border-[#E0A12E] hover:text-white">
+                  <button key={item} className="rounded-md border border-[#1F2329] bg-[#141518] px-2 py-2 text-[14px] text-neutral-400 hover:border-brand-primary hover:text-white">
                     {item}
                   </button>
                 ))}
@@ -1166,7 +1166,7 @@ function RightPanel({
               <button
                 onClick={() => runAction()}
                 disabled={isGeneratingModel}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-3 text-[14px] font-medium text-black transition-colors hover:bg-[#F0B43A]"
+                className="np-primary-action mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-primary py-3 text-[14px] font-medium text-black transition-colors hover:bg-[#F0B43A]"
               >
                 {isProcessing ? <LoadingIndicator tone="current" /> : <Sparkles className="h-4 w-4" />}
                 {panelCopy.button}
@@ -1185,7 +1185,7 @@ function RightPanel({
                     key={id}
                     onClick={() => setScope(id)}
                     className={`rounded-lg border py-2 text-[14px] font-medium ${
-                      scope === id ? "border-[#E0A12E] bg-[#E0A12E]/10 text-[#E0A12E]" : "border-[#1F2329] bg-[#141518] text-neutral-400"
+                      scope === id ? "border-brand-primary bg-brand-primary/10 text-brand-primary" : "border-[#1F2329] bg-[#141518] text-neutral-400"
                     }`}
                   >
                     {label}
@@ -1198,7 +1198,7 @@ function RightPanel({
                   <button
                     key={module.id}
                     className={`group overflow-hidden rounded-lg border bg-[#111419] ${
-                      index === 3 ? "border-[#E0A12E]" : "border-[#1F2329] hover:border-[#555A64]"
+                      index === 3 ? "border-brand-primary" : "border-[#1F2329] hover:border-[#555A64]"
                     }`}
                   >
                     <div className="aspect-square overflow-hidden">
@@ -1214,9 +1214,9 @@ function RightPanel({
               <SectionTitle title="참조 이미지" />
               <div className="mt-3 grid grid-cols-5 gap-2">
                 {SOURCE_IMAGES.map((image, index) => (
-                  <button key={image} className={`relative overflow-hidden rounded-lg border ${index === 0 ? "border-[#E0A12E]" : "border-[#1F2329]"}`}>
+                  <button key={image} className={`relative overflow-hidden rounded-lg border ${index === 0 ? "border-brand-primary" : "border-[#1F2329]"}`}>
                     <img src={image} alt="" className="aspect-square w-full object-cover" />
-                    {index === 0 && <Check className="absolute right-1.5 top-1.5 h-4 w-4 rounded-full bg-[#E0A12E] p-0.5 text-black" />}
+                    {index === 0 && <Check className="absolute right-1.5 top-1.5 h-4 w-4 rounded-full bg-brand-primary p-0.5 text-black" />}
                   </button>
                 ))}
               </div>
@@ -1239,12 +1239,12 @@ function RightPanel({
                     key={label as string}
                     onClick={() => setQuality(count as string)}
                     className={`rounded-xl border p-4 text-left transition-colors ${
-                      quality === count ? "border-[#E0A12E] bg-[#E0A12E]/10" : "border-[#1F2329] bg-[#141518] hover:border-[#555A64]"
+                      quality === count ? "border-brand-primary bg-brand-primary/10" : "border-[#1F2329] bg-[#141518] hover:border-[#555A64]"
                     }`}
                   >
-                    <Icon className={`h-5 w-5 ${quality === count ? "text-[#E0A12E]" : "text-neutral-400"}`} />
+                    <Icon className={`h-5 w-5 ${quality === count ? "text-brand-primary" : "text-neutral-400"}`} />
                     <p className="mt-3 text-[14px] font-medium text-white">{label as string}</p>
-                    <p className="mt-1 text-[18px] font-semibold text-[#E0A12E]">{count as string}</p>
+                    <p className="mt-1 text-[18px] font-semibold text-brand-primary">{count as string}</p>
                   </button>
                 ))}
               </div>
@@ -1257,12 +1257,12 @@ function RightPanel({
                   <span>목표 폴리곤</span>
                   <span className="text-[18px] font-semibold text-white">{quality === "500K" ? "500,000" : quality}</span>
                 </div>
-                <input type="range" min="1" max="100" defaultValue="48" className="w-full accent-[#E0A12E]" />
+                <input type="range" min="1" max="100" defaultValue="48" className="w-full accent-brand-primary" />
               </div>
               <div className="mt-5 grid grid-cols-2 gap-2 text-[14px] text-neutral-300">
                 {["실루엣 유지", "하드 엣지 유지", "UV 경계 유지", "쿼드 기반"].map((item) => (
                   <label key={item} className="flex items-center gap-2 rounded-lg border border-[#1F2329] bg-[#141518] px-3 py-2">
-                    <input type="checkbox" defaultChecked className="accent-[#E0A12E]" />
+                    <input type="checkbox" defaultChecked className="accent-brand-primary" />
                     {item}
                   </label>
                 ))}
@@ -1275,7 +1275,7 @@ function RightPanel({
           <button
             onClick={() => runAction()}
             disabled={isGeneratingModel}
-            className="mb-5 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-3 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
+            className="np-primary-action mb-5 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-primary py-3 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
           >
             {isProcessing ? <LoadingIndicator tone="current" /> : <Workflow className="h-4 w-4" />}
             {isProcessing ? "리메시 처리 중" : "리메시 적용"}
@@ -1294,14 +1294,14 @@ function RightPanel({
                 ].map(([label, level]) => (
                   <div key={label} className="flex items-center justify-between rounded-lg border border-[#1F2329] bg-[#141518] px-3 py-2.5">
                     <span className="flex items-center gap-2 text-[14px] text-neutral-300">
-                      <Zap className="h-3.5 w-3.5 text-[#E0A12E]" />
+                      <Zap className="h-3.5 w-3.5 text-brand-primary" />
                       {label}
                     </span>
                     <span className="text-[14px] text-[#4ADE80]">{level}</span>
                   </div>
                 ))}
               </div>
-              <button onClick={() => runAction()} disabled={isGeneratingModel} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#E0A12E] py-2.5 text-[14px] font-medium text-black hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50">
+              <button onClick={() => runAction()} disabled={isGeneratingModel} className="np-primary-action mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-primary py-2.5 text-[14px] font-medium text-black hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50">
                 {isProcessing ? <LoadingIndicator tone="current" /> : <Zap className="h-4 w-4" />}
                 {isProcessing ? "텍스처 최적화 중" : "텍스처 최적화"}
               </button>
@@ -1339,13 +1339,13 @@ function RightPanel({
                       onClick={() => setSelectedTextureMapId(map.id)}
                       className={`flex min-w-0 items-center gap-1.5 rounded-lg border p-1.5 text-left transition ${
                         isSelected
-                          ? "border-[#E0A12E] bg-[#E0A12E]/10"
+                          ? "border-brand-primary bg-brand-primary/10"
                           : "border-[#1F2329] bg-[#141518] hover:border-[#555A64]"
                       }`}
                     >
                       <TgaTexturePreview map={map} className="h-10 w-10 shrink-0 rounded-md border border-white/10" />
                       <span className="min-w-0">
-                        <span className={`block truncate text-[13px] font-medium ${isSelected ? "text-[#E0A12E]" : "text-neutral-300"}`}>
+                        <span className={`block truncate text-[13px] font-medium ${isSelected ? "text-brand-primary" : "text-neutral-300"}`}>
                           {map.channel}
                         </span>
                         <span className="block text-[12px] leading-[16px] text-neutral-500">{map.part}</span>
@@ -1388,7 +1388,7 @@ function RightPanel({
               }
               runAction(onRequestSave);
             }}
-            className="flex w-[68%] items-center justify-center gap-2 rounded-xl bg-[#E0A12E] py-3.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50"
+            className="np-primary-action flex w-[68%] items-center justify-center gap-2 rounded-xl bg-brand-primary py-3.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {nextStep
               ? `다음 단계: ${STEPS[activeIndex + 1].title}`
@@ -1614,7 +1614,7 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
                     onKeyDown={(event) => {
                       if (event.key === "Enter") handleSaveProject();
                     }}
-                    className="mt-2 h-12 w-full rounded-lg border border-[#2A2E36] bg-[#111317] px-4 text-[15px] text-white outline-none transition focus:border-[#E0A12E]"
+                    className="mt-2 h-12 w-full rounded-lg border border-[#2A2E36] bg-[#111317] px-4 text-[15px] text-white outline-none transition focus:border-brand-primary"
                   />
 
                   <div className="mb-3 mt-5 flex items-center justify-between gap-3">
@@ -1625,9 +1625,9 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
                       type="button"
                       disabled={isGeneratingEnvironmentRender}
                       onClick={() => setIsRenderPromptOpen(true)}
-                      className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-[#2A2E36] bg-[#111317] px-3 text-[14px] font-medium text-neutral-200 transition hover:border-[#E0A12E]/60 hover:text-white disabled:cursor-wait disabled:opacity-70"
+                      className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border border-[#2A2E36] bg-[#111317] px-3 text-[14px] font-medium text-neutral-200 transition hover:border-brand-primary/60 hover:text-white disabled:cursor-wait disabled:opacity-70"
                     >
-                      <Sparkles className="h-4 w-4 text-[#E0A12E]" />
+                      <Sparkles className="h-4 w-4 text-brand-primary" />
                       {environmentRenderImage ? "다시 렌더" : "렌더 이미지 생성"}
                     </button>
                   </div>
@@ -1651,14 +1651,14 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
                         id="environment-render-prompt"
                         value={renderPrompt}
                         onChange={(event) => setRenderPrompt(event.target.value)}
-                        className="min-h-[90px] w-full resize-none rounded-lg border border-[#2A2E36] bg-[#080A0D] px-3 py-3 text-[14px] leading-6 text-white outline-none transition focus:border-[#E0A12E]"
+                        className="min-h-[90px] w-full resize-none rounded-lg border border-[#2A2E36] bg-[#080A0D] px-3 py-3 text-[14px] leading-6 text-white outline-none transition focus:border-brand-primary"
                       />
                       <div className="mt-3 flex justify-end">
                         <button
                           type="button"
                           disabled={isGeneratingEnvironmentRender}
                           onClick={handleGenerateEnvironmentRender}
-                          className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#E0A12E] px-4 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-wait disabled:opacity-70"
+                          className="np-primary-action inline-flex h-10 items-center gap-2 rounded-lg bg-brand-primary px-4 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-wait disabled:opacity-70"
                         >
                           {isGeneratingEnvironmentRender ? <LoadingIndicator tone="current" /> : <Sparkles className="h-4 w-4" />}
                           생성
@@ -1693,7 +1693,7 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
                     <button
                       type="button"
                       onClick={() => setRepresentativeImageSource("render")}
-                      className="mt-3 h-10 w-full rounded-lg border border-[#2A2E36] bg-[#111317] text-[14px] font-medium text-neutral-200 transition hover:border-[#E0A12E]/60 hover:text-white"
+                      className="mt-3 h-10 w-full rounded-lg border border-[#2A2E36] bg-[#111317] text-[14px] font-medium text-neutral-200 transition hover:border-brand-primary/60 hover:text-white"
                     >
                       대표 이미지로 설정
                     </button>
@@ -1703,7 +1703,7 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
                 <section className="border-b border-[#1F2329] p-5 lg:border-b-0 lg:border-r">
                   <div className="mb-3 flex items-center justify-between gap-4">
                     <p className="text-[15px] font-medium text-white">3D 모델링 미리보기</p>
-                    <span className="rounded-md border border-[#E0A12E]/25 bg-[#E0A12E]/10 px-2.5 py-1 text-[14px] text-[#E0A12E]">
+                    <span className="rounded-md border border-brand-primary/25 bg-brand-primary/10 px-2.5 py-1 text-[14px] text-brand-primary">
                       {MODULE_PREVIEW_LABELS[selectedSaveViewIndex]}
                     </span>
                   </div>
@@ -1729,14 +1729,14 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
                           }}
                           className={`overflow-hidden rounded-lg border text-left transition ${
                             isSelected
-                              ? "border-[#E0A12E] bg-[#E0A12E]/8"
+                              ? "border-brand-primary bg-brand-primary/8"
                               : "border-[#1F2329] bg-[#111317] hover:border-[#555A64]"
                           }`}
                         >
                           <div className="aspect-[4/3] bg-[#15171B]">
                             <img src={image} alt="" className="h-full w-full object-contain" />
                           </div>
-                          <p className={`border-t border-[#1F2329] py-1.5 text-center text-[14px] ${isSelected ? "text-[#E0A12E]" : "text-neutral-400"}`}>
+                          <p className={`border-t border-[#1F2329] py-1.5 text-center text-[14px] ${isSelected ? "text-brand-primary" : "text-neutral-400"}`}>
                             {MODULE_PREVIEW_LABELS[index]}
                           </p>
                         </button>
@@ -1814,7 +1814,7 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
                     <div className="mt-3 space-y-2 text-[14px] text-neutral-300">
                       {["3D 모델", "환경 렌더 및 3D 모델링 미리보기", "모듈 세트 정보"].map((item) => (
                         <div key={item} className="flex items-center gap-2.5">
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E0A12E]/12 text-[#E0A12E]">
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary/12 text-brand-primary">
                             <Check className="h-3.5 w-3.5" />
                           </span>
                           {item}
@@ -1836,7 +1836,7 @@ export default function ModelingGenerationPage({ onNavigate }: { onNavigate?: (p
                   type="button"
                   disabled={!projectName.trim()}
                   onClick={handleSaveProject}
-                  className="h-11 rounded-lg bg-[#E0A12E] px-5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="np-primary-action h-11 rounded-lg bg-brand-primary px-5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   프로젝트 저장
                 </button>

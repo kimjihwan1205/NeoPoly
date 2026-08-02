@@ -304,7 +304,7 @@ export default function ContentManagementPage() {
         <div className="p-6">
           <h2 className="text-[18px] font-semibold text-white tracking-tight">콘텐츠 관리</h2>
           <p className="text-[14px] text-text-secondary mt-2 mb-6">마켓과 아트에 업로드한 작업물을 확인합니다.</p>
-          <button className="flex items-center justify-center gap-1.5 w-full py-3 rounded-xl border border-[#3A404F]/60 bg-[#15161A] hover:bg-[#22252B] hover:border-[#E0A12E]/50 text-[#E0A12E] shadow-sm transition-all font-medium text-[15px] tracking-wide">
+          <button className="flex items-center justify-center gap-1.5 w-full py-3 rounded-xl border border-[#3A404F]/60 bg-[#15161A] hover:bg-[#22252B] hover:border-brand-primary/50 text-brand-primary shadow-sm transition-all font-medium text-[15px] tracking-wide">
             <Plus className="w-[18px] h-[18px]" />
             <span>새 콘텐츠 업로드</span>
           </button>
@@ -318,7 +318,7 @@ export default function ContentManagementPage() {
             }`}
           >
             <div className="flex items-center gap-3">
-              <LayoutGrid className="w-[18px] h-[18px] text-[#E0A12E]" />
+              <LayoutGrid className="w-[18px] h-[18px] text-brand-primary" />
               <span className="tracking-tight">전체 콘텐츠</span>
             </div>
             <span className="text-[14px] font-sans text-text-secondary">42</span>
@@ -354,7 +354,7 @@ export default function ContentManagementPage() {
               <li key={idx}>
                 <button className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight transition-colors border border-transparent ${item.active ? 'bg-[#15161A] text-white' : 'text-text-secondary hover:text-white hover:bg-[#111215]'}`}>
                   <div className="flex items-center gap-3">
-                    <item.icon className={`w-[18px] h-[18px] ${item.active ? 'text-[#E0A12E]' : 'text-neutral-400'}`} />
+                    <item.icon className={`w-[18px] h-[18px] ${item.active ? 'text-brand-primary' : 'text-neutral-400'}`} />
                     {item.label}
                   </div>
                   <span className="text-[14px] font-sans text-neutral-500">{item.count}</span>
@@ -377,7 +377,7 @@ export default function ContentManagementPage() {
               }`}
             >
               <div className="flex items-center gap-3">
-                <BarChart3 className={`w-[18px] h-[18px] ${activeSection === 'revenue' ? 'text-[#E0A12E]' : 'text-neutral-400'}`} />
+                <BarChart3 className={`w-[18px] h-[18px] ${activeSection === 'revenue' ? 'text-brand-primary' : 'text-neutral-400'}`} />
                 수익 관리
               </div>
             </button>
@@ -412,7 +412,7 @@ export default function ContentManagementPage() {
             }}
             className={`flex min-h-11 items-center justify-center gap-1.5 rounded-lg text-[13px] font-medium transition ${
               activeSection === 'content'
-                ? 'bg-[#E0A12E] text-black'
+                ? 'bg-brand-primary text-black'
                 : 'border border-[#2A2E36] bg-[#111215] text-neutral-300'
             }`}
           >
@@ -427,7 +427,7 @@ export default function ContentManagementPage() {
             }}
             className={`flex min-h-11 items-center justify-center gap-1.5 rounded-lg text-[13px] font-medium transition ${
               activeSection === 'revenue'
-                ? 'bg-[#E0A12E] text-black'
+                ? 'bg-brand-primary text-black'
                 : 'border border-[#2A2E36] bg-[#111215] text-neutral-300'
             }`}
           >
@@ -436,7 +436,7 @@ export default function ContentManagementPage() {
           </button>
           <button
             type="button"
-            className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[#2A2E36] bg-[#111215] text-[13px] font-medium text-neutral-300 transition hover:border-[#E0A12E]/50 hover:text-[#E0A12E]"
+            className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[#2A2E36] bg-[#111215] text-[13px] font-medium text-neutral-300 transition hover:border-brand-primary/50 hover:text-brand-primary"
           >
             <Plus className="h-4 w-4" />
             업로드
@@ -455,7 +455,7 @@ export default function ContentManagementPage() {
                   <select
                     value={revenuePeriod}
                     onChange={(event) => setRevenuePeriod(event.target.value as RevenuePeriod)}
-                    className="h-10 min-w-[150px] appearance-none rounded-lg border border-[#2A2E36] bg-[#111215] pl-3 pr-9 text-[14px] text-neutral-300 outline-none transition hover:bg-[#15161A] focus:border-[#E0A12E]"
+                    className="h-10 min-w-[150px] appearance-none rounded-lg border border-[#2A2E36] bg-[#111215] pl-3 pr-9 text-[14px] text-neutral-300 outline-none transition hover:bg-[#15161A] focus:border-brand-primary"
                   >
                     <option value="30d">최근 30일</option>
                     <option value="3m">최근 3개월</option>
@@ -551,7 +551,7 @@ export default function ContentManagementPage() {
                         </div>
                         <div className="text-right sm:hidden">
                           <p className="text-[12px] text-neutral-400">{sales}건</p>
-                          <p className="mt-1 text-[14px] font-medium text-[#E0A12E]">{formatCompactWon(revenue)}</p>
+                          <p className="mt-1 text-[14px] font-medium text-brand-primary">{formatCompactWon(revenue)}</p>
                         </div>
                         <span className="hidden text-right text-[14px] text-neutral-400 sm:block">{sales}건</span>
                         <div className="hidden min-w-0 sm:block">
@@ -561,12 +561,12 @@ export default function ContentManagementPage() {
                           </div>
                           <div className="h-1.5 overflow-hidden rounded-full bg-[#252830]">
                             <div
-                              className="h-full rounded-full bg-[#E0A12E]"
+                              className="h-full rounded-full bg-brand-primary"
                               style={{ width: `${Math.min(100, (revenue / Math.max(1, revenueSummary.totalRevenue)) * 100)}%` }}
                             />
                           </div>
                         </div>
-                        <span className="hidden text-right text-[16px] font-medium text-[#E0A12E] sm:block">{formatCompactWon(revenue)}</span>
+                        <span className="hidden text-right text-[16px] font-medium text-brand-primary sm:block">{formatCompactWon(revenue)}</span>
                       </div>
                     ))}
                 </div>
@@ -583,7 +583,7 @@ export default function ContentManagementPage() {
             <StatCard icon={<Box className="w-5 h-5 text-neutral-400" />} title="전체 업로드" value="42" desc="전체 작품 수" />
             <StatCard icon={<ShoppingCart className="w-5 h-5 text-neutral-400" />} title="판매 중" value="18" desc="마켓 판매 중" />
             <StatCard icon={<ImageIcon className="w-5 h-5 text-neutral-400" />} title="아트 공개" value="16" desc="아트 공개 중" />
-            <StatCard icon={<Clock className="w-5 h-5 text-[#E0A12E]" />} title="심사 중" value="3" desc="검토 대기 중" />
+            <StatCard icon={<Clock className="w-5 h-5 text-brand-primary" />} title="심사 중" value="3" desc="검토 대기 중" />
             <StatCard icon={<AlertCircle className="w-5 h-5 text-[#E46B6B]" />} title="수정 필요" value="2" desc="수정 요청" />
           </div>
 
@@ -624,14 +624,14 @@ export default function ContentManagementPage() {
                 <button 
                   onClick={() => setViewMode('grid')}
                   aria-label="그리드 보기"
-                  className={`flex h-11 w-11 items-center justify-center rounded transition-colors sm:h-8 sm:w-8 ${viewMode === 'grid' ? 'bg-[#E0A12E]/20 text-[#E0A12E]' : 'text-text-secondary hover:text-white'}`}
+                  className={`flex h-11 w-11 items-center justify-center rounded transition-colors sm:h-8 sm:w-8 ${viewMode === 'grid' ? 'bg-brand-primary/20 text-brand-primary' : 'text-text-secondary hover:text-white'}`}
                 >
                   <LayoutGrid className="w-[18px] h-[18px]" />
                 </button>
                 <button 
                   onClick={() => setViewMode('list')}
                   aria-label="목록 보기"
-                  className={`flex h-11 w-11 items-center justify-center rounded transition-colors sm:h-8 sm:w-8 ${viewMode === 'list' ? 'bg-[#E0A12E]/20 text-[#E0A12E]' : 'text-text-secondary hover:text-white'}`}
+                  className={`flex h-11 w-11 items-center justify-center rounded transition-colors sm:h-8 sm:w-8 ${viewMode === 'list' ? 'bg-brand-primary/20 text-brand-primary' : 'text-text-secondary hover:text-white'}`}
                 >
                   <List className="w-[18px] h-[18px]" />
                 </button>
@@ -675,7 +675,7 @@ export default function ContentManagementPage() {
             <span className="text-[14px] text-text-secondary font-medium shrink-0">총 42개 항목</span>
             <div className="flex items-center gap-1.5 sm:gap-2">
               <button aria-label="이전 페이지" className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#111215] text-text-secondary transition-colors hover:text-white sm:h-8 sm:w-8">&lt;</button>
-              <button className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#E0A12E] bg-[#E0A12E] text-[14px] font-medium text-black sm:h-8 sm:w-8">1</button>
+              <button className="flex h-11 w-11 items-center justify-center rounded-lg border border-brand-primary bg-brand-primary text-[14px] font-medium text-black sm:h-8 sm:w-8">1</button>
               <button className="flex h-11 w-11 items-center justify-center rounded-lg text-[14px] font-medium text-text-secondary transition-colors hover:bg-[#111215] hover:text-white sm:h-8 sm:w-8">2</button>
               <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">3</button>
               <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">4</button>
@@ -715,7 +715,7 @@ export default function ContentManagementPage() {
               <div className="relative aspect-auto px-5 pb-0">
                  <div className="relative rounded-lg overflow-hidden border border-[#1C1E24]">
                    {selectedItem.type === 'MARKET' ? (
-                     <span className="absolute top-3 right-3 h-7 min-w-7 px-1 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#E0A12E] text-[#E0A12E] text-[14px] font-medium rounded shadow-sm z-10">M</span>
+                     <span className="absolute top-3 right-3 h-7 min-w-7 px-1 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-brand-primary text-brand-primary text-[14px] font-medium rounded shadow-sm z-10">M</span>
                    ) : (
                      <span className="absolute top-3 right-3 h-7 min-w-7 px-1 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#4A90E2] text-[#4A90E2] text-[14px] font-medium rounded shadow-sm z-10">A</span>
                    )}
@@ -808,10 +808,10 @@ export default function ContentManagementPage() {
             {/* Actions Footer */}
             <div className="absolute bottom-0 left-0 right-0 p-4 bg-[#0A0B0D]/95 backdrop-blur border-t border-[#1C1E24] flex flex-col gap-2 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
                <div className="grid grid-cols-2 gap-2">
-                 <button className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-[#E0A12E] bg-transparent border border-[#E0A12E] hover:bg-[#E0A12E]/10 rounded-lg transition-colors">
+                 <button className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-brand-primary bg-transparent border border-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors">
                    상세 보기 <ArrowUpRight className="w-3.5 h-3.5" />
                  </button>
-                 <button className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-[#0A0B0D] bg-[#E0A12E] hover:bg-[#F0B43A] rounded-lg transition-colors shadow-md">
+                 <button className="np-primary-action py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-[#0A0B0D] bg-brand-primary hover:bg-[#F0B43A] rounded-lg transition-colors shadow-md">
                    <Edit className="w-3.5 h-3.5" /> 수정하기
                  </button>
                </div>
@@ -878,7 +878,7 @@ export default function ContentManagementPage() {
                       step="1000"
                       value={originalPriceDraft}
                       onChange={(event) => setOriginalPriceDraft(Number(event.target.value))}
-                      className="h-12 w-full rounded-lg border border-[#2A2E36] bg-[#111317] pl-9 pr-4 text-[15px] text-white outline-none transition focus:border-[#E0A12E]"
+                      className="h-12 w-full rounded-lg border border-[#2A2E36] bg-[#111317] pl-9 pr-4 text-[15px] text-white outline-none transition focus:border-brand-primary"
                     />
                   </div>
                 </label>
@@ -893,7 +893,7 @@ export default function ContentManagementPage() {
                     role="switch"
                     aria-checked={saleEnabledDraft}
                     onClick={() => setSaleEnabledDraft((current) => !current)}
-                    className={`relative h-6 w-11 rounded-full transition ${saleEnabledDraft ? 'bg-[#E0A12E]' : 'bg-[#2A2E36]'}`}
+                    className={`relative h-6 w-11 rounded-full transition ${saleEnabledDraft ? 'bg-brand-primary' : 'bg-[#2A2E36]'}`}
                   >
                     <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${saleEnabledDraft ? 'left-6' : 'left-1'}`} />
                   </button>
@@ -910,7 +910,7 @@ export default function ContentManagementPage() {
                         step="1000"
                         value={discountPriceDraft}
                         onChange={(event) => setDiscountPriceDraft(Number(event.target.value))}
-                        className="h-12 w-full rounded-lg border border-[#2A2E36] bg-[#111317] pl-9 pr-4 text-[15px] text-white outline-none transition focus:border-[#E0A12E]"
+                        className="h-12 w-full rounded-lg border border-[#2A2E36] bg-[#111317] pl-9 pr-4 text-[15px] text-white outline-none transition focus:border-brand-primary"
                       />
                     </div>
                   </label>
@@ -918,7 +918,7 @@ export default function ContentManagementPage() {
 
                 <div className="flex items-center justify-between border-t border-[#1F2329] pt-4">
                   <span className="text-[14px] text-neutral-400">최종 표시 가격</span>
-                  <span className="text-[20px] font-medium text-[#E0A12E]">
+                  <span className="text-[20px] font-medium text-brand-primary">
                     {formatCompactWon(
                       applyPricing(originalPriceDraft, discountPriceDraft, saleEnabledDraft).price,
                     )}
@@ -937,7 +937,7 @@ export default function ContentManagementPage() {
                 <button
                   type="button"
                   onClick={savePricing}
-                  className="h-11 rounded-lg bg-[#E0A12E] px-5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
+                  className="np-primary-action h-11 rounded-lg bg-brand-primary px-5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
                 >
                   가격 저장
                 </button>
@@ -977,7 +977,7 @@ function RevenueSummaryDisclosure({
         className="flex w-full items-center justify-between gap-5 px-5 py-4 text-left transition hover:bg-white/[0.025]"
       >
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#E0A12E]/10 text-[#E0A12E]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary">
             <TrendingUp className="h-5 w-5" />
           </span>
           <div className="min-w-0">
@@ -988,7 +988,7 @@ function RevenueSummaryDisclosure({
         <div className="flex shrink-0 items-center gap-5">
           <div className="hidden text-right sm:block">
             <p className="text-[14px] text-neutral-500">이번 달</p>
-            <p className="mt-0.5 text-[18px] font-medium text-[#E0A12E]">{formatCompactWon(value)}</p>
+            <p className="mt-0.5 text-[18px] font-medium text-brand-primary">{formatCompactWon(value)}</p>
           </div>
           <span className={`hidden rounded-full px-2.5 py-1 text-[14px] font-medium md:inline-flex ${
             growthRate >= 0 ? 'bg-[#4ADE80]/10 text-[#4ADE80]' : 'bg-[#E46B6B]/10 text-[#E46B6B]'
@@ -1005,7 +1005,7 @@ function RevenueSummaryDisclosure({
             <div className="flex flex-col justify-between rounded-lg bg-[#111215] p-4">
               <div>
                 <p className="text-[14px] text-neutral-400">이번 달 수익</p>
-                <p className="mt-2 truncate text-[clamp(26px,3vw,36px)] font-medium text-[#E0A12E]">
+                <p className="mt-2 truncate text-[clamp(26px,3vw,36px)] font-medium text-brand-primary">
                   {formatCompactWon(value)}
                 </p>
               </div>
@@ -1041,14 +1041,14 @@ function MonthlyRevenueCard({
   growthRate: number;
 }) {
   return (
-    <section className="min-w-0 overflow-hidden rounded-xl border border-[#E0A12E]/25 bg-[#E0A12E]/[0.06] p-6">
+    <section className="min-w-0 overflow-hidden rounded-xl border border-brand-primary/25 bg-brand-primary/[0.06] p-6">
       <div className="flex h-full flex-col justify-between">
         <div className="flex items-center gap-2.5">
-          <TrendingUp className="h-5 w-5 shrink-0 text-[#E0A12E]" />
+          <TrendingUp className="h-5 w-5 shrink-0 text-brand-primary" />
           <span className="text-[14px] font-medium text-neutral-300">이번 달 수익</span>
         </div>
         <div className="mt-8">
-          <p className="max-w-full truncate text-[clamp(30px,4vw,48px)] font-medium tracking-tight text-[#E0A12E]">
+          <p className="max-w-full truncate text-[clamp(30px,4vw,48px)] font-medium tracking-tight text-brand-primary">
             {formatCompactWon(value)}
           </p>
           <p className="mt-1 text-[14px] text-neutral-400">
@@ -1091,7 +1091,7 @@ function RevenueTrendChart({
                 <div
                   className={`relative w-full max-w-[54px] rounded-t-md transition ${
                     isCurrentMonth
-                      ? 'bg-[#E0A12E]'
+                      ? 'bg-brand-primary'
                       : 'bg-[#343842] group-hover:bg-[#555A64]'
                   }`}
                   style={{ height: `${Math.max(point.height, point.revenue > 0 ? 8 : 2)}%` }}
@@ -1101,7 +1101,7 @@ function RevenueTrendChart({
                   </span>
                 </div>
               </div>
-              <span className={`mt-2 text-center text-[14px] ${isCurrentMonth ? 'font-medium text-[#E0A12E]' : 'text-neutral-500'}`}>
+              <span className={`mt-2 text-center text-[14px] ${isCurrentMonth ? 'font-medium text-brand-primary' : 'text-neutral-500'}`}>
                 {point.month}
               </span>
             </div>
@@ -1178,8 +1178,8 @@ function RevenueAnalyticsChart({
         >
           <defs>
             <linearGradient id="revenue-area-gradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#E0A12E" stopOpacity="0.32" />
-              <stop offset="100%" stopColor="#E0A12E" stopOpacity="0" />
+              <stop offset="0%" stopColor="var(--color-brand-primary)" stopOpacity="0.32" />
+              <stop offset="100%" stopColor="var(--color-brand-primary)" stopOpacity="0" />
             </linearGradient>
           </defs>
           {areaPoints && (
@@ -1189,7 +1189,7 @@ function RevenueAnalyticsChart({
             <polyline
               points={linePoints}
               fill="none"
-              stroke="#E0A12E"
+              stroke="var(--color-brand-primary)"
               strokeWidth="4"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -1205,7 +1205,7 @@ function RevenueAnalyticsChart({
           >
             <span
               data-revenue-point={point.month}
-              className="absolute z-10 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-[#E0A12E] bg-[#0A0B0D]"
+              className="absolute z-10 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-brand-primary bg-[#0A0B0D]"
               style={{ top: `${point.yPercent}%` }}
             />
             <span
@@ -1232,7 +1232,7 @@ function RevenueCategoryShare({
 }: {
   shares: Array<{ label: string; revenue: number; share: number }>;
 }) {
-  const colors = ['#E0A12E', '#4F7CFF', '#4ADE80'];
+  const colors = ['var(--color-brand-primary)', '#4F7CFF', '#4ADE80'];
   const firstEnd = shares[0]?.share ?? 0;
   const secondEnd = firstEnd + (shares[1]?.share ?? 0);
 
@@ -1346,14 +1346,14 @@ function RevenueMetric({
   return (
     <div className={`min-w-0 rounded-lg border p-5 ${
       accent
-        ? 'border-[#E0A12E]/35 bg-[#E0A12E]/[0.06]'
+        ? 'border-brand-primary/35 bg-brand-primary/[0.06]'
         : 'border-[#1C1E24] bg-[#111215]'
     }`}>
-      <div className={`flex items-center gap-2 ${accent ? 'text-[#E0A12E]' : 'text-neutral-400'}`}>
+      <div className={`flex items-center gap-2 ${accent ? 'text-brand-primary' : 'text-neutral-400'}`}>
         {icon}
         <span className="text-[14px] font-medium">{label}</span>
       </div>
-      <p className={`mt-5 truncate text-[clamp(20px,2vw,28px)] font-medium ${accent ? 'text-[#E0A12E]' : 'text-white'}`}>
+      <p className={`mt-5 truncate text-[clamp(20px,2vw,28px)] font-medium ${accent ? 'text-brand-primary' : 'text-white'}`}>
         {value}
       </p>
     </div>
@@ -1362,14 +1362,14 @@ function RevenueMetric({
 
 function StatCard({ icon, title, value, desc, highlight = false }: { icon: React.ReactNode, title: string, value: string, desc: string, highlight?: boolean }) {
   return (
-    <div className={`p-5 rounded-xl border ${highlight ? 'bg-[#E0A12E]/5 border-[#E0A12E]/20' : 'bg-[#111215] border-[#1C1E24]'} flex flex-col justify-between min-h-[120px]`}>
+    <div className={`p-5 rounded-xl border ${highlight ? 'bg-brand-primary/5 border-brand-primary/20' : 'bg-[#111215] border-[#1C1E24]'} flex flex-col justify-between min-h-[120px]`}>
       <div className="flex items-center gap-2.5 mb-3">
         {icon}
         <span className="text-[14px] font-medium text-text-secondary tracking-tight">{title}</span>
       </div>
       <div>
-        <div className={`text-[24px] font-bold font-sans tracking-tight leading-none mb-1.5 ${highlight ? 'text-[#E0A12E]' : 'text-white'}`}>{value}</div>
-        <div className={`text-[14px] ${highlight ? 'text-[#E0A12E]/80' : 'text-neutral-400'}`}>{desc}</div>
+        <div className={`text-[24px] font-bold font-sans tracking-tight leading-none mb-1.5 ${highlight ? 'text-brand-primary' : 'text-white'}`}>{value}</div>
+        <div className={`text-[14px] ${highlight ? 'text-brand-primary/80' : 'text-neutral-400'}`}>{desc}</div>
       </div>
     </div>
   )
@@ -1388,12 +1388,12 @@ const ContentCard: React.FC<{ item: ContentItem, isSelected: boolean, onClick: (
   return (
     <div 
       onClick={onClick}
-      className={`bg-[#0A0B0D] border rounded-xl overflow-hidden flex flex-col group cursor-pointer transition-all duration-200 ${isSelected ? 'border-[#E0A12E] shadow-[0_0_15px_rgba(224,161,46,0.15)] ring-1 ring-[#E0A12E]' : 'border-[#1C1E24] hover:border-[#3A404F]'}`}
+      className={`bg-[#0A0B0D] border rounded-xl overflow-hidden flex flex-col group cursor-pointer transition-all duration-200 ${isSelected ? 'border-brand-primary shadow-[0_0_15px_rgba(224,161,46,0.15)] ring-1 ring-brand-primary' : 'border-[#1C1E24] hover:border-[#3A404F]'}`}
     >
       {/* Image Container */}
       <div className="relative aspect-[4/3] w-full bg-[#111215] overflow-hidden">
         {item.type === 'MARKET' ? (
-          <span className="absolute top-3 right-3 h-7 min-w-7 px-1 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#E0A12E] text-[#E0A12E] text-[14px] font-medium rounded shadow-sm z-10">M</span>
+          <span className="absolute top-3 right-3 h-7 min-w-7 px-1 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-brand-primary text-brand-primary text-[14px] font-medium rounded shadow-sm z-10">M</span>
         ) : (
           <span className="absolute top-3 right-3 h-7 min-w-7 px-1 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#4A90E2] text-[#4A90E2] text-[14px] font-medium rounded shadow-sm z-10">A</span>
         )}
@@ -1419,7 +1419,7 @@ const ContentCard: React.FC<{ item: ContentItem, isSelected: boolean, onClick: (
       {/* Content Container */}
       <div className="p-4 flex flex-col flex-1">
         <div className="flex items-start justify-between mb-1.5 gap-2">
-          <h3 className="text-[15px] font-medium text-white tracking-tight line-clamp-1 group-hover:text-[#E0A12E] transition-colors">{item.title}</h3>
+          <h3 className="text-[15px] font-medium text-white tracking-tight line-clamp-1 group-hover:text-brand-primary transition-colors">{item.title}</h3>
           <button aria-label={`${item.title} 작업 더 보기`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:w-8">
             <MoreHorizontal className="w-4 h-4" />
           </button>
@@ -1440,7 +1440,7 @@ const ContentCard: React.FC<{ item: ContentItem, isSelected: boolean, onClick: (
               {item.type === 'MARKET' ? item.stats.sales : item.stats.saves}
             </span>
             <span className="flex items-center gap-1.5 ml-auto text-neutral-400">
-              {item.stats.revenue ? <span className="font-medium font-sans flex items-center gap-1"><span className="text-[#E0A12E] text-[14px]">₩</span> {item.stats.revenue.replace('₩', '')}</span> : '-'}
+              {item.stats.revenue ? <span className="font-medium font-sans flex items-center gap-1"><span className="text-brand-primary text-[14px]">₩</span> {item.stats.revenue.replace('₩', '')}</span> : '-'}
             </span>
           </div>
         </div>
@@ -1453,12 +1453,12 @@ const ContentListRow: React.FC<{ item: ContentItem, isSelected: boolean, onClick
   return (
     <div 
       onClick={onClick}
-      className={`bg-[#0A0B0D] border rounded-xl overflow-hidden flex items-center p-3 gap-4 group cursor-pointer transition-all duration-200 ${isSelected ? 'border-[#E0A12E] bg-[#E0A12E]/5 shadow-[0_0_15px_rgba(224,161,46,0.15)] ring-1 ring-[#E0A12E]' : 'border-[#1C1E24] hover:border-[#3A404F]'}`}
+      className={`bg-[#0A0B0D] border rounded-xl overflow-hidden flex items-center p-3 gap-4 group cursor-pointer transition-all duration-200 ${isSelected ? 'border-brand-primary bg-brand-primary/5 shadow-[0_0_15px_rgba(224,161,46,0.15)] ring-1 ring-brand-primary' : 'border-[#1C1E24] hover:border-[#3A404F]'}`}
     >
       {/* Image Container */}
       <div className="relative w-24 h-16 shrink-0 rounded-lg overflow-hidden bg-[#111215]">
         {item.type === 'MARKET' ? (
-          <span className="absolute top-1.5 right-1.5 h-7 min-w-7 px-2 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#E0A12E] text-[#E0A12E] text-[14px] font-medium rounded shadow-sm z-10">M</span>
+          <span className="absolute top-1.5 right-1.5 h-7 min-w-7 px-2 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-brand-primary text-brand-primary text-[14px] font-medium rounded shadow-sm z-10">M</span>
         ) : (
           <span className="absolute top-1.5 right-1.5 h-7 min-w-7 px-2 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#4A90E2] text-[#4A90E2] text-[14px] font-medium rounded shadow-sm z-10">A</span>
         )}
@@ -1483,7 +1483,7 @@ const ContentListRow: React.FC<{ item: ContentItem, isSelected: boolean, onClick
             <span className={`px-2 py-0.5 text-[14px] font-medium rounded flex-shrink-0 ${item.status === '판매 중' || item.status === '공개 중' ? 'bg-[#0A0B0D] text-[#4ADE80] border border-[#14532D]' : item.status === '수정 필요' ? 'bg-[#0A0B0D] text-[#E46B6B] border border-[#7F1D1D]' : 'bg-[#0A0B0D] text-[#F97316] border border-[#C2410C]'}`}>
               {item.status}
             </span>
-            <h3 className="text-[15px] font-medium text-white tracking-tight truncate group-hover:text-[#E0A12E] transition-colors">{item.title}</h3>
+            <h3 className="text-[15px] font-medium text-white tracking-tight truncate group-hover:text-brand-primary transition-colors">{item.title}</h3>
           </div>
           <p className="text-[14px] text-neutral-400 font-medium tracking-tight truncate">{item.category}</p>
         </div>
@@ -1516,7 +1516,7 @@ function StatMini({ icon, label, value, isRevenue = false }: { icon: React.React
         {icon}
         <span className="text-[14px] font-medium tracking-tight">{label}</span>
       </div>
-      <div className={`text-[14px] font-medium font-sans tracking-tight mt-0.5 ${isRevenue ? 'text-[#E0A12E]' : 'text-neutral-300'}`}>
+      <div className={`text-[14px] font-medium font-sans tracking-tight mt-0.5 ${isRevenue ? 'text-brand-primary' : 'text-neutral-300'}`}>
         {value}
       </div>
     </div>
@@ -1535,7 +1535,7 @@ function PriceDisplay({ item, align = 'left' }: { item: ContentItem, align?: 'le
           ₩{item.originalPrice.toLocaleString()}
         </span>
       )}
-      <span className="text-[15px] font-medium text-[#E0A12E]">
+      <span className="text-[15px] font-medium text-brand-primary">
         ₩{item.price?.toLocaleString()}
       </span>
     </div>

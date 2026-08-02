@@ -133,7 +133,7 @@ export default function NewProjectModal({
       />
 
       <div className="relative flex max-h-[calc(100dvh-24px)] w-full max-w-[640px] flex-col overflow-hidden rounded-lg border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.8)] sm:max-h-[calc(100dvh-32px)]">
-        <div className="absolute right-0 top-0 h-[280px] w-[280px] translate-x-1/2 -translate-y-1/2 rounded-full bg-[#E0A12E]/5 blur-[90px]" />
+        <div className="absolute right-0 top-0 h-[280px] w-[280px] translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-primary/5 blur-[90px]" />
 
         <div className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-[#1F2329] px-4 py-4 sm:px-8 sm:py-6">
           <div>
@@ -148,7 +148,7 @@ export default function NewProjectModal({
             type="button"
             onClick={onClose}
             aria-label="새 프로젝트 창 닫기"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2A2E36] bg-[#141518] text-neutral-400 transition hover:border-[#E0A12E]/50 hover:text-white"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2A2E36] bg-[#141518] text-neutral-400 transition hover:border-brand-primary/50 hover:text-white"
           >
             <X className="h-5 w-5" />
           </button>
@@ -167,7 +167,7 @@ export default function NewProjectModal({
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleCreate();
               }}
-              className="h-[52px] rounded-lg border border-[#2A2E36] bg-[#141518] px-5 text-[15px] text-white outline-none transition placeholder:text-neutral-500 focus:border-[#E0A12E]/60"
+              className="h-[52px] rounded-lg border border-[#2A2E36] bg-[#141518] px-5 text-[15px] text-white outline-none transition placeholder:text-neutral-500 focus:border-brand-primary/60"
               autoFocus
             />
           </label>
@@ -180,7 +180,7 @@ export default function NewProjectModal({
               placeholder="작업 방향이나 참고할 내용을 적어두세요."
               value={projectDesc}
               onChange={(e) => setProjectDesc(e.target.value)}
-              className="h-24 resize-none rounded-lg border border-[#2A2E36] bg-[#141518] px-5 py-4 text-[15px] text-white outline-none transition placeholder:text-neutral-500 focus:border-[#E0A12E]/60"
+              className="h-24 resize-none rounded-lg border border-[#2A2E36] bg-[#141518] px-5 py-4 text-[15px] text-white outline-none transition placeholder:text-neutral-500 focus:border-brand-primary/60"
             />
           </label>
 
@@ -197,14 +197,14 @@ export default function NewProjectModal({
                     onClick={() => setSelectedTemplate(template.id)}
                     className={`flex flex-col items-start rounded-lg border p-4 text-left transition ${
                       active
-                        ? "border-[#E0A12E] bg-[#E0A12E]/10"
+                        ? "border-brand-primary bg-brand-primary/10"
                         : "border-[#2A2E36] bg-[#141518] hover:border-[#3A404F]"
                     }`}
                   >
                     <span
                       className={`mb-3 flex h-10 w-10 items-center justify-center rounded-lg ${
                         active
-                          ? "bg-[#E0A12E] text-[#050505]"
+                          ? "bg-brand-primary text-[#050505]"
                           : "bg-[#1C1F26] text-neutral-400"
                       }`}
                     >
@@ -212,7 +212,7 @@ export default function NewProjectModal({
                     </span>
                     <span
                       className={`mb-1 text-[14px] font-medium ${
-                        active ? "text-[#E0A12E]" : "text-white"
+                        active ? "text-brand-primary" : "text-white"
                       }`}
                     >
                       {template.title}
@@ -295,7 +295,7 @@ export default function NewProjectModal({
                         }
                         className={`relative overflow-hidden rounded-lg border text-left transition ${
                           active
-                            ? "border-[#E0A12E]"
+                            ? "border-brand-primary"
                             : "border-[#2A2E36] hover:border-[#555A64]"
                         }`}
                       >
@@ -309,7 +309,7 @@ export default function NewProjectModal({
                           {item.title}
                         </span>
                         {active && (
-                          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#E0A12E] text-black">
+                          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary text-black">
                             <Check className="h-3.5 w-3.5" />
                           </span>
                         )}
@@ -334,7 +334,7 @@ export default function NewProjectModal({
             disabled={!projectName.trim()}
             className={`flex items-center gap-2 rounded-lg px-5 py-3 text-[14px] font-medium transition sm:px-8 ${
               projectName.trim()
-                ? "bg-[#E0A12E] text-[#050505] hover:bg-[#F0B43A]"
+                ? "bg-brand-primary text-[#050505] hover:bg-[#F0B43A]"
                 : "cursor-not-allowed bg-[#1A1C21] text-neutral-500"
             }`}
           >

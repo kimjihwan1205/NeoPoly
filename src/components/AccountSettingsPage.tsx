@@ -1,13 +1,25 @@
 import React, { useState } from 'react';
-import { User, Lock, Bell, Globe, Settings2, Store, CreditCard, ExternalLink, Camera, ChevronDown, ChevronRight, X, Plus, MapPin, Link2 } from 'lucide-react';
-import { UserProfile } from '../types';
+import { User, Lock, Bell, Globe, Settings2, Store, CreditCard, ExternalLink, Camera, ChevronDown, ChevronRight, X, Plus, MapPin, Link2, Moon, Sun, Check } from 'lucide-react';
+import { type ThemeMode, UserProfile } from '../types';
 
 interface AccountSettingsPageProps {
   userProfile: UserProfile;
   setUserProfile: React.Dispatch<React.SetStateAction<UserProfile>>;
+  theme: ThemeMode;
+  onThemeChange: (theme: ThemeMode) => void;
 }
 
-export default function AccountSettingsPage({ userProfile, setUserProfile }: AccountSettingsPageProps) {
+const THEME_OPTIONS = [
+  { id: 'dark' as const, label: '다크 모드', icon: Moon },
+  { id: 'light' as const, label: '라이트 모드', icon: Sun },
+];
+
+export default function AccountSettingsPage({
+  userProfile,
+  setUserProfile,
+  theme,
+  onThemeChange,
+}: AccountSettingsPageProps) {
   const [nickname, setNickname] = useState('Hwan');
   const [name, setName] = useState('김지환');
   const [bio, setBio] = useState('3D 캐릭터와 판타지 세계관을 중심으로 작업하고 있습니다.\n게임과 영화 스타일의 퀄리티 높은 에셋을 제작합니다.');
@@ -38,29 +50,29 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
                 onClick={() => setActiveTab(item.id)}
                 className={`flex h-11 shrink-0 snap-start items-center gap-2 rounded-lg border px-3 text-left transition-all lg:h-auto lg:w-full lg:gap-4 lg:rounded-xl lg:px-4 lg:py-4 ${
                   activeTab === item.id
-                    ? 'border-[#E0A12E]/30 bg-[#16140D] relative after:absolute after:left-0 after:top-1/2 after:-translate-y-1/2 after:w-1 after:h-[60%] after:bg-[#E0A12E] after:rounded-r-full shadow-sm'
+                    ? 'relative border-brand-primary/30 bg-brand-primary/10 shadow-sm after:absolute after:left-0 after:top-1/2 after:h-[60%] after:w-1 after:-translate-y-1/2 after:rounded-r-full after:bg-brand-primary'
                     : 'border-transparent hover:bg-[#141518]'
                 }`}
               >
-                <div className={`w-[22px] flex justify-center ${activeTab === item.id ? 'text-[#E0A12E]' : 'text-neutral-400'}`}>
+                <div className={`w-[22px] flex justify-center ${activeTab === item.id ? 'text-brand-primary' : 'text-neutral-400'}`}>
                   <item.icon className="w-5 h-5" strokeWidth={2} />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  <span className={`text-[14px] font-medium ${activeTab === item.id ? 'text-[#E0A12E]' : 'text-neutral-300'}`}>{item.title}</span>
+                  <span className={`text-[14px] font-medium ${activeTab === item.id ? 'text-brand-primary' : 'text-neutral-300'}`}>{item.title}</span>
                   <span className={`hidden text-[14px] opacity-80 lg:block ${activeTab === item.id ? 'text-neutral-400' : 'text-neutral-400'}`}>{item.desc}</span>
                 </div>
               </button>
             ))}
           </div>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex w-10 items-center justify-end bg-gradient-to-l from-[#050505] via-[#050505]/90 to-transparent pr-1 lg:hidden" aria-hidden="true">
-            <ChevronRight className="h-4 w-4 text-[#E0A12E]" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex w-10 items-center justify-end bg-gradient-to-l from-bg-dark via-bg-dark/90 to-transparent pr-1 lg:hidden" aria-hidden="true">
+            <ChevronRight className="h-4 w-4 text-brand-primary" />
           </div>
         </div>
 
         <div className="mt-auto hidden rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-5 lg:block">
           <h3 className="font-medium text-[14px] text-neutral-200 mb-2">도움이 필요하신가요?</h3>
           <p className="text-[14px] text-neutral-400 leading-relaxed mb-5">고객센터에서 계정 관련<br/>도움을 받아보세요.</p>
-          <button className="flex items-center justify-center w-full gap-2 text-[14px] font-medium text-[#E0A12E] border border-[#E0A12E]/40 rounded-lg px-4 py-2.5 hover:bg-[#E0A12E]/10 transition-colors">
+          <button className="flex items-center justify-center w-full gap-2 text-[14px] font-medium text-brand-primary border border-brand-primary/40 rounded-lg px-4 py-2.5 hover:bg-brand-primary/10 transition-colors">
             고객센터 바로가기 <ExternalLink className="w-3.5 h-3.5 gap-1 shrink-0" />
           </button>
         </div>
@@ -112,18 +124,18 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
               <div className="space-y-5">
                 <div className="space-y-2.5">
                   <label className="text-[14px] font-medium text-neutral-300">닉네임 <span className="text-[#E46B6B]">*</span></label>
-                  <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} className="w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium text-neutral-100 focus:border-[#E0A12E] hover:border-[#2A2E36] outline-none transition-colors" />
+                  <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} className="w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium text-neutral-100 focus:border-brand-primary hover:border-[#2A2E36] outline-none transition-colors" />
                 </div>
                 
                 <div className="space-y-2.5">
                   <label className="text-[14px] font-medium text-neutral-300">이름</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium text-neutral-100 focus:border-[#E0A12E] hover:border-[#2A2E36] outline-none transition-colors" />
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium text-neutral-100 focus:border-brand-primary hover:border-[#2A2E36] outline-none transition-colors" />
                 </div>
 
                 <div className="space-y-2.5">
                   <label className="text-[14px] font-medium text-neutral-300">소개 문구</label>
                   <div className="relative flex flex-col">
-                    <textarea value={bio} onChange={(e) => setBio(e.target.value)} className="w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium leading-[1.6] text-neutral-300 focus:border-[#E0A12E] hover:border-[#2A2E36] outline-none transition-colors min-h-[120px] resize-none" />
+                    <textarea value={bio} onChange={(e) => setBio(e.target.value)} className="w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium leading-[1.6] text-neutral-300 focus:border-brand-primary hover:border-[#2A2E36] outline-none transition-colors min-h-[120px] resize-none" />
                     <span className="text-[14px] text-neutral-400 font-medium text-right mt-1.5">{bio.length} / 200</span>
                   </div>
                 </div>
@@ -131,7 +143,7 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
                 <div className="space-y-2.5">
                   <label className="text-[14px] font-medium text-neutral-300">위치</label>
                   <div className="relative">
-                    <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} readOnly className="w-full bg-[#050505] border border-[#1F2329] rounded-lg pl-4 pr-10 py-3 text-[14px] font-medium text-neutral-100 focus:border-[#E0A12E] hover:border-[#2A2E36] outline-none transition-colors cursor-pointer" />
+                    <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} readOnly className="w-full bg-[#050505] border border-[#1F2329] rounded-lg pl-4 pr-10 py-3 text-[14px] font-medium text-neutral-100 focus:border-brand-primary hover:border-[#2A2E36] outline-none transition-colors cursor-pointer" />
                     <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                   </div>
                 </div>
@@ -146,7 +158,7 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
                 <div className="space-y-2.5">
                   <label className="text-[14px] font-medium text-neutral-300">직군</label>
                   <div className="relative">
-                    <input type="text" value={role} onChange={(e) => setRole(e.target.value)} readOnly className="w-full bg-[#050505] border border-[#1F2329] rounded-lg pl-4 pr-10 py-3 text-[14px] font-medium text-neutral-100 focus:border-[#E0A12E] hover:border-[#2A2E36] outline-none transition-colors cursor-pointer" />
+                    <input type="text" value={role} onChange={(e) => setRole(e.target.value)} readOnly className="w-full bg-[#050505] border border-[#1F2329] rounded-lg pl-4 pr-10 py-3 text-[14px] font-medium text-neutral-100 focus:border-brand-primary hover:border-[#2A2E36] outline-none transition-colors cursor-pointer" />
                     <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                   </div>
                 </div>
@@ -232,7 +244,7 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
             <button className="px-8 py-3 rounded-lg border border-[#1F2329] bg-[#141518] hover:bg-[#1F2329] text-[14px] font-medium transition-colors text-white">
               취소
             </button>
-            <button className="px-6 py-3 rounded-lg bg-[#E0A12E] hover:bg-[#F0B43A] text-[#050505] text-[14px] font-medium transition-colors shadow-sm">
+            <button className="np-primary-action px-6 py-3 rounded-lg bg-brand-primary hover:bg-[#F0B43A] text-[#050505] text-[14px] font-medium transition-colors shadow-sm">
               변경사항 저장
             </button>
           </div>
@@ -259,7 +271,7 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
                 <div>
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <h3 className="text-[20px] font-bold tracking-tight text-white">{nickname}</h3>
-                    <div className="flex items-center justify-center text-[#050505] bg-[#E0A12E] rounded border border-[#E0A12E] w-[18px] h-[18px] shadow-sm">
+                    <div className="flex items-center justify-center text-[#050505] bg-brand-primary rounded border border-brand-primary w-[18px] h-[18px] shadow-sm">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
                     </div>
                   </div>
@@ -269,8 +281,8 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
 
               <div className="flex items-center gap-4 text-[14px] text-neutral-400 font-medium mb-5">
                 <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> <span className="leading-none pt-0.5">{location}</span></div>
-                <div className="flex items-center gap-1.5 hover:text-[#E0A12E] cursor-pointer transition-colors group">
-                  <Link2 className="w-3.5 h-3.5 group-hover:text-[#E0A12E]" /> <span className="leading-none pt-0.5">artstation.com/jisu</span> <ChevronDown className="w-3.5 h-3.5 ml-px" />
+                <div className="flex items-center gap-1.5 hover:text-brand-primary cursor-pointer transition-colors group">
+                  <Link2 className="w-3.5 h-3.5 group-hover:text-brand-primary" /> <span className="leading-none pt-0.5">artstation.com/jisu</span> <ChevronDown className="w-3.5 h-3.5 ml-px" />
                 </div>
               </div>
 
@@ -301,7 +313,7 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[14px] font-medium text-neutral-100">대표 작업물</span>
-                  <span className="text-[14px] font-medium text-[#E0A12E] flex items-center gap-1 cursor-pointer transition-colors hover:text-[#F0B43A]">전체 보기 <ExternalLink className="w-3.5 h-3.5" /></span>
+                  <span className="text-[14px] font-medium text-brand-primary flex items-center gap-1 cursor-pointer transition-colors hover:text-[#F0B43A]">전체 보기 <ExternalLink className="w-3.5 h-3.5" /></span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="aspect-[4/5] rounded-xl bg-[#141518] overflow-hidden border border-[#1F2329] group cursor-pointer shadow-sm">
@@ -356,9 +368,9 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
               <div className="border-b border-[#1F2329] pb-8">
                 <h3 className="text-[17px] font-semibold text-neutral-100 mb-6">비밀번호 변경</h3>
                 <div className="space-y-4 max-w-md">
-                  <input type="password" placeholder="현재 비밀번호" className="w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium text-neutral-100 focus:border-[#E0A12E] hover:border-[#2A2E36] outline-none" />
-                  <input type="password" placeholder="새 비밀번호" className="w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium text-neutral-100 focus:border-[#E0A12E] hover:border-[#2A2E36] outline-none" />
-                  <input type="password" placeholder="새 비밀번호 확인" className="w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium text-neutral-100 focus:border-[#E0A12E] hover:border-[#2A2E36] outline-none" />
+                  <input type="password" placeholder="현재 비밀번호" className="w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium text-neutral-100 focus:border-brand-primary hover:border-[#2A2E36] outline-none" />
+                  <input type="password" placeholder="새 비밀번호" className="w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium text-neutral-100 focus:border-brand-primary hover:border-[#2A2E36] outline-none" />
+                  <input type="password" placeholder="새 비밀번호 확인" className="w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium text-neutral-100 focus:border-brand-primary hover:border-[#2A2E36] outline-none" />
                   <button className="px-6 py-2.5 rounded-lg bg-[#141518] hover:bg-[#1F2329] border border-[#1F2329] text-[14px] font-medium transition-colors text-white mt-2">비밀번호 업데이트</button>
                 </div>
               </div>
@@ -369,7 +381,7 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
                     <span className="text-[14px] font-medium text-neutral-100">인증기 앱 사용</span>
                     <span className="text-[14px] font-medium text-neutral-400 mt-1">로그인 시 OTP 코드를 요청하여 보안을 강화합니다.</span>
                   </div>
-                  <button className="px-5 py-2 rounded-lg bg-[#E0A12E] hover:bg-[#F0B43A] text-[#050505] text-[14px] font-medium transition-colors shadow-sm">설정하기</button>
+                  <button className="np-primary-action px-5 py-2 rounded-lg bg-brand-primary hover:bg-[#F0B43A] text-[#050505] text-[14px] font-medium transition-colors shadow-sm">설정하기</button>
                 </div>
               </div>
             </div>
@@ -392,7 +404,7 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
                     <span className="text-[14px] font-medium text-neutral-100">{item.title}</span>
                     <span className="text-[14px] font-medium text-neutral-400">{item.desc}</span>
                   </div>
-                  <div className="w-11 h-6 rounded-full bg-[#E0A12E] relative cursor-pointer flex items-center px-1">
+                  <div className="w-11 h-6 rounded-full bg-brand-primary relative cursor-pointer flex items-center px-1">
                      <div className="w-4 h-4 rounded-full bg-[#050505] absolute right-1 shadow-sm"></div>
                   </div>
                 </div>
@@ -408,21 +420,74 @@ export default function AccountSettingsPage({ userProfile, setUserProfile }: Acc
             <div className="space-y-8">
               <div className="space-y-4">
                 <h3 className="text-[15px] font-medium text-neutral-100">테마</h3>
-                <div className="flex gap-4">
-                  <button className="flex-1 p-4 rounded-xl border-2 border-[#E0A12E] bg-[#141518] flex flex-col items-center justify-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-[#050505] border border-[#2A2E36] shadow-inner"></div>
-                    <span className="text-[14px] font-medium text-[#E0A12E]">다크 모드</span>
-                  </button>
-                  <button className="flex-1 p-4 rounded-xl border border-[#1F2329] bg-[#141518] flex flex-col items-center justify-center gap-3 opacity-50 hover:opacity-100 transition-opacity">
-                    <div className="w-12 h-12 rounded-full bg-white border border-[#E5E7EB] shadow-sm"></div>
-                    <span className="text-[14px] font-medium text-neutral-400">라이트 모드 (준비중)</span>
-                  </button>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                  {THEME_OPTIONS.map((option) => {
+                    const selected = theme === option.id;
+                    const Icon = option.icon;
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => onThemeChange(option.id)}
+                        className={`relative flex min-h-[150px] flex-col rounded-xl border p-4 text-left transition ${
+                          selected
+                            ? 'border-brand-primary bg-brand-primary/[0.06] ring-1 ring-brand-primary/35'
+                            : 'border-border-primary bg-surface-primary hover:border-brand-primary/40'
+                        }`}
+                      >
+                        <div
+                          className="mb-4 flex h-[70px] w-full overflow-hidden rounded-lg border"
+                          style={{
+                            backgroundColor: option.id === 'dark' ? '#0A0B0D' : '#F4F5F7',
+                            borderColor: option.id === 'dark' ? '#2A2E36' : '#D9DDE5',
+                          }}
+                        >
+                          <span
+                            className="w-[28%] border-r"
+                            style={{
+                              backgroundColor: option.id === 'dark' ? '#111317' : '#FFFFFF',
+                              borderColor: option.id === 'dark' ? '#2A2E36' : '#D9DDE5',
+                            }}
+                          />
+                          <span className="flex flex-1 flex-col gap-2 p-2.5">
+                            <span
+                              className="h-2 w-[56%] rounded-full"
+                              style={{ backgroundColor: option.id === 'dark' ? '#E0A12E' : '#FFB83D' }}
+                            />
+                            <span
+                              className="h-2 w-full rounded-full"
+                              style={{ backgroundColor: option.id === 'dark' ? '#252932' : '#D9DDE5' }}
+                            />
+                            <span
+                              className="h-2 w-[78%] rounded-full"
+                              style={{ backgroundColor: option.id === 'dark' ? '#252932' : '#E5E8ED' }}
+                            />
+                          </span>
+                        </div>
+                        <div className="flex w-full items-center gap-2">
+                          <Icon className={`h-4 w-4 ${selected ? 'text-brand-primary' : 'text-text-tertiary'}`} />
+                          <span className={`text-[14px] font-semibold ${selected ? 'text-brand-primary' : 'text-text-primary'}`}>
+                            {option.label}
+                          </span>
+                          {selected && (
+                            <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary text-[#050505]">
+                              <Check className="h-3 w-3 stroke-[3]" />
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
+                <p className="text-[12px] leading-5 text-text-tertiary">
+                  선택한 테마는 이 기기에 저장되며 NeoPoly 전체 화면에 바로 적용됩니다.
+                </p>
               </div>
               <div className="space-y-4">
                 <h3 className="text-[15px] font-medium text-neutral-100">언어 및 지역</h3>
                 <div className="relative max-w-sm">
-                  <select className="appearance-none w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium text-neutral-100 focus:border-[#E0A12E] outline-none pr-10">
+                  <select className="appearance-none w-full bg-[#050505] border border-[#1F2329] rounded-lg px-4 py-3 text-[14px] font-medium text-neutral-100 focus:border-brand-primary outline-none pr-10">
                     <option>한국어 (Korean)</option>
                     <option>English (US)</option>
                     <option>日本語 (Japanese)</option>

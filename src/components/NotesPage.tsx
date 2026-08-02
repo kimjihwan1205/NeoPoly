@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronRight,
   Folder,
+  FolderPlus,
   LayoutGrid,
   Link as LinkIcon,
   List,
@@ -16,10 +17,12 @@ import {
   Square,
   Star,
   Trash2,
+  Unlink,
   Wand2,
   X,
 } from "lucide-react";
 import NoteSidebar from "./NoteSidebar";
+import ManualGroupDialog from "./ManualGroupDialog";
 
 interface NotesPageProps {
   onNavigate: (page: string) => void;
@@ -35,6 +38,15 @@ interface NotesPageProps {
   onCreateNote?: () => void;
   initialTrashIds?: Set<number>;
   onTrashChange?: (trashIds: Set<number>) => void;
+  aiGroups?: Array<{
+    id: string;
+    code: string;
+    title: string;
+    rationale: string;
+    noteIds: number[];
+  }>;
+  onDissolveAIGroup?: (groupId: string) => void;
+  onCreateManualGroup?: (name: string, noteIds: number[]) => void;
 }
 
 export type NoteItem = {
@@ -302,10 +314,15 @@ export default function NotesPage({
   onCreateNote,
   initialTrashIds,
   onTrashChange,
+  aiGroups = [],
+  onDissolveAIGroup,
+  onCreateManualGroup,
 }: NotesPageProps) {
   const [notes, setNotes] = useState<NoteItem[]>(loadNotes);
   const [activeNote, setActiveNote] = useState<number | null>(() => hideDetailPanel || isPopup ? null : notes[0]?.id ?? null);
   const [selectedNotes, setSelectedNotes] = useState<Set<number>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [isManualGroupOpen, setIsManualGroupOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filter, setFilter] = useState("all");
@@ -472,7 +489,7 @@ export default function NotesPage({
 
   const handleNoteClick = (event: React.MouseEvent, id: number) => {
     if (event.ctrlKey || event.metaKey) event.preventDefault();
-    selectNote(id, event.ctrlKey || event.metaKey);
+    selectNote(id, isSelectionMode || event.ctrlKey || event.metaKey);
   };
 
   const toggleStar = (id: number) => {
@@ -608,6 +625,21 @@ export default function NotesPage({
   };
 
   const selectedCount = selectedNotes.size;
+  const groupedNoteIds = new Set(aiGroups.flatMap((group) => group.noteIds));
+  const selectionHasGroupedNotes = Array.from(selectedNotes).some((id) => groupedNoteIds.has(id));
+  const visibleAIGroups = filter === "trash"
+    ? []
+    : aiGroups
+        .map((group) => ({
+          ...group,
+          notes: group.noteIds
+            .map((noteId) => filteredNotes.find((note) => note.id === noteId))
+            .filter((note): note is NoteItem => Boolean(note)),
+        }))
+        .filter((group) => group.notes.length > 0);
+  const displayedNotes = visibleAIGroups.length > 0
+    ? filteredNotes.filter((note) => !groupedNoteIds.has(note.id))
+    : filteredNotes;
 
   return (
     <div
@@ -684,17 +716,36 @@ export default function NotesPage({
 
             <button
               onClick={openCreateNote}
-              className="flex h-12 w-12 shrink-0 items-center justify-center gap-2 rounded-lg border border-[#E0A12E]/35 bg-[#E0A12E]/10 px-0 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-[#E0A12E]/15 sm:w-auto sm:px-4"
+              className="flex h-12 w-12 shrink-0 items-center justify-center gap-2 rounded-lg border border-brand-primary/35 bg-brand-primary/10 px-0 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-brand-primary/15 sm:w-auto sm:px-4"
               aria-label="노트 추가"
             >
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">노트 추가</span>
             </button>
+            {onCreateManualGroup && !onAcceptSelection && !onSelectNote && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSelectionMode((current) => {
+                    if (current) setSelectedNotes(new Set());
+                    return !current;
+                  });
+                }}
+                className={`flex h-12 items-center justify-center gap-2 rounded-lg border px-3 text-[14px] font-medium transition ${
+                  isSelectionMode
+                    ? "border-brand-primary/55 bg-brand-primary/10 text-brand-primary"
+                    : "border-[#1C1E24] bg-[#121417] text-text-secondary hover:bg-surface-primary hover:text-white"
+                }`}
+              >
+                {isSelectionMode ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                선택
+              </button>
+            )}
             <button
               onClick={() => setFavoritesFirst((value) => !value)}
               className={`flex h-12 w-12 items-center justify-center gap-2 rounded-lg border px-0 text-[14px] font-medium transition sm:w-auto sm:px-4 ${
                 favoritesFirst
-                  ? "border-[#E0A12E]/45 bg-[#E0A12E]/10 text-brand-primary"
+                  ? "border-brand-primary/45 bg-brand-primary/10 text-brand-primary"
                   : "border-[#1C1E24] bg-[#121417] text-text-secondary hover:bg-surface-primary hover:text-white"
               }`}
               aria-label="즐겨찾기 우선 보기"
@@ -724,7 +775,7 @@ export default function NotesPage({
                         setIsSortMenuOpen(false);
                       }}
                       className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[14px] font-medium transition ${
-                        sortMode === value ? "bg-[#E0A12E]/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
+                        sortMode === value ? "bg-brand-primary/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
                       }`}
                     >
                       {label}
@@ -767,6 +818,95 @@ export default function NotesPage({
               onScroll={isPopup ? handlePopupScroll : undefined}
               className={isPopup ? "h-full overflow-y-auto pr-1 pb-6" : ""}
             >
+              {visibleAIGroups.length > 0 && (
+                <section className="mb-8">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-brand-primary">
+                        Grouped
+                      </p>
+                      <h2 className="mt-1 text-[20px] font-semibold text-white">묶인 그룹</h2>
+                    </div>
+                    <span className="text-[12px] text-text-tertiary">{visibleAIGroups.length}개</span>
+                  </div>
+                  <div className="grid gap-3 xl:grid-cols-2">
+                    {visibleAIGroups.map((group) => (
+                      <article
+                        key={group.id}
+                        className="overflow-hidden rounded-xl border border-brand-primary/25 bg-[linear-gradient(145deg,rgba(224,161,46,0.06),rgba(18,20,25,0.96))]"
+                      >
+                        <div className="flex items-start justify-between gap-3 border-b border-[#2A2E36] px-4 py-3.5">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="rounded bg-brand-primary/10 px-2 py-1 text-[10px] font-semibold text-brand-primary">
+                                {group.code}
+                              </span>
+                              <h3 className="truncate text-[16px] font-semibold text-white">{group.title}</h3>
+                            </div>
+                            <p className="mt-1.5 line-clamp-1 text-[12px] text-text-tertiary">
+                              {group.rationale}
+                            </p>
+                          </div>
+                          {onDissolveAIGroup && (
+                            <button
+                              type="button"
+                              onClick={() => onDissolveAIGroup(group.id)}
+                              className="flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-[#343842] px-2.5 text-[11px] text-text-tertiary transition hover:border-brand-primary/45 hover:text-brand-primary"
+                            >
+                              <Unlink className="h-3.5 w-3.5" />
+                              그룹 해제
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid gap-2 p-3 sm:grid-cols-2">
+                          {group.notes.map((note) => (
+                            <button
+                              key={note.id}
+                              type="button"
+                              onClick={() => {
+                                if (isSelectionMode) {
+                                  selectNote(note.id, true);
+                                } else if (onOpenNote) {
+                                  onOpenNote(note.id);
+                                } else {
+                                  setActiveNote(note.id);
+                                }
+                              }}
+                              className={`flex min-w-0 items-center gap-3 rounded-lg border bg-[#111318] p-2.5 text-left transition ${
+                                selectedNotes.has(note.id)
+                                  ? "border-brand-primary ring-1 ring-brand-primary/30"
+                                  : "border-[#292D35] hover:border-brand-primary/40"
+                              }`}
+                            >
+                              <img
+                                src={note.images[0]}
+                                alt=""
+                                className="h-12 w-12 shrink-0 rounded-md object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                              <span className="min-w-0">
+                                <span className="block truncate text-[13px] font-medium text-white">{note.title}</span>
+                                <span className="mt-1 block truncate text-[11px] text-text-tertiary">
+                                  {note.tags.slice(0, 2).join(" · ")}
+                                </span>
+                              </span>
+                              <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-text-tertiary" />
+                            </button>
+                          ))}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {visibleAIGroups.length > 0 && (
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-[18px] font-semibold text-white">미분류 노트</h2>
+                  <span className="text-[12px] text-text-tertiary">{displayedNotes.length}개</span>
+                </div>
+              )}
+
               <div
                 className={
                   viewMode === "grid"
@@ -774,7 +914,7 @@ export default function NotesPage({
                     : "flex flex-col gap-3"
                 }
               >
-                {filteredNotes.map((note) => {
+                {displayedNotes.map((note) => {
                   const isSelected = selectedNotes.has(note.id);
                   const isTextExpanded = expandedTextNoteId === note.id;
                   const areImagesExpanded = expandedImagesNoteId === note.id;
@@ -832,7 +972,7 @@ export default function NotesPage({
                           {note.desc}
                         </p>
                         {truncatedTextIds.has(note.id) && (
-                          <div className="pointer-events-none absolute -left-2 -right-2 -top-1 z-40 hidden rounded-lg bg-[#101114]/98 px-2 py-1 text-[14px] leading-5 text-neutral-300 opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.42)] backdrop-blur-xl transition-opacity duration-100 lg:block lg:group-hover/note-text:pointer-events-auto lg:group-hover/note-text:opacity-100">
+                          <div className="np-note-text-preview pointer-events-none absolute -left-2 -right-2 -top-1 z-40 hidden rounded-lg bg-[#101114]/98 px-2 py-1 text-[14px] leading-5 text-neutral-300 opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.42)] backdrop-blur-xl transition-opacity duration-100 lg:block lg:group-hover/note-text:pointer-events-auto lg:group-hover/note-text:opacity-100">
                             {note.desc}
                           </div>
                         )}
@@ -998,9 +1138,9 @@ export default function NotesPage({
                 })}
               </div>
 
-              {filteredNotes.length === 0 && (
+              {displayedNotes.length === 0 && (
                 <div className="flex h-[280px] items-center justify-center rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-[14px] text-neutral-400">
-                  조건에 맞는 노트가 없습니다.
+                  {visibleAIGroups.length > 0 ? "모든 노트가 그룹에 정리되었습니다." : "조건에 맞는 노트가 없습니다."}
                 </div>
               )}
             </div>
@@ -1115,8 +1255,8 @@ export default function NotesPage({
                     <h4 className="mb-1.5 text-[16px] font-bold text-white">
                       {activeNoteData.title} 프로젝트
                     </h4>
-                    <span className="flex w-fit items-center gap-1.5 rounded border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-2 py-0.5 text-[11px] font-bold uppercase text-[#E0A12E]">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#E0A12E]" />
+                    <span className="flex w-fit items-center gap-1.5 rounded border border-brand-primary/30 bg-brand-primary/10 px-2 py-0.5 text-[11px] font-bold uppercase text-brand-primary">
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-primary" />
                       In Progress
                     </span>
                   </div>
@@ -1242,7 +1382,7 @@ export default function NotesPage({
                 <button
                   onClick={createNote}
                   disabled={!newNoteTitle.trim()}
-                  className="rounded-lg bg-brand-primary px-5 py-2 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
+                  className="np-primary-action rounded-lg bg-brand-primary px-5 py-2 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   노트 저장
                 </button>
@@ -1257,9 +1397,9 @@ export default function NotesPage({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 30 }}
-            className="fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-lg border border-[#2A2E36] bg-[#1A1C20] p-2 px-4 shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
+            className="fixed bottom-4 left-1/2 z-50 flex max-w-[calc(100vw-24px)] -translate-x-1/2 items-center gap-2 overflow-x-auto rounded-lg border border-[#2A2E36] bg-[#1A1C20] p-2 px-3 shadow-[0_20px_40px_rgba(0,0,0,0.6)] sm:bottom-8 sm:gap-4 sm:px-4"
           >
-            <div className="flex items-center gap-2 border-r border-[#2A2E36] pr-4">
+            <div className="flex shrink-0 items-center gap-2 border-r border-[#2A2E36] pr-3 sm:pr-4">
               <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary text-[11px] font-bold text-bg-dark">
                 {selectedCount}
               </div>
@@ -1268,16 +1408,28 @@ export default function NotesPage({
 
             <div className="flex items-center gap-2">
               {isPopup ? (
-                <button
-                  onClick={() => {
-                    if (onAcceptSelection) onAcceptSelection(Array.from(selectedNotes));
-                    else if (onSelectNote) onSelectNote(Array.from(selectedNotes)[0]);
-                  }}
-                  className="flex items-center gap-2 rounded-md bg-[#E0A12E] px-6 py-1.5 text-[13px] font-bold text-bg-dark transition hover:bg-[#E0A12E]/90"
-                >
-                  노트 가져오기
-                  <ChevronRight className="h-4 w-4" />
-                </button>
+                onCreateManualGroup && !onAcceptSelection && !onSelectNote ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsManualGroupOpen(true)}
+                    disabled={selectedCount < 2}
+                    className="np-primary-action flex items-center gap-2 rounded-md bg-brand-primary px-4 py-1.5 text-[13px] font-bold text-bg-dark transition hover:bg-brand-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <FolderPlus className="h-4 w-4" />
+                    그룹 만들기
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (onAcceptSelection) onAcceptSelection(Array.from(selectedNotes));
+                      else if (onSelectNote) onSelectNote(Array.from(selectedNotes)[0]);
+                    }}
+                    className="np-primary-action flex items-center gap-2 rounded-md bg-brand-primary px-6 py-1.5 text-[13px] font-bold text-bg-dark transition hover:bg-brand-primary/90"
+                  >
+                    노트 가져오기
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                )
               ) : (
                 <>
                   <button
@@ -1299,7 +1451,7 @@ export default function NotesPage({
                   </button>
                   <button
                     onClick={() => onNavigate("studio")}
-                    className="flex items-center gap-2 rounded-md border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-4 py-1.5 text-[13px] font-bold text-brand-primary transition hover:bg-[#E0A12E]/20"
+                    className="flex items-center gap-2 rounded-md border border-brand-primary/30 bg-brand-primary/10 px-4 py-1.5 text-[13px] font-bold text-brand-primary transition hover:bg-brand-primary/20"
                   >
                     <Wand2 className="h-4 w-4" />
                     AI Studio 보내기
@@ -1318,6 +1470,23 @@ export default function NotesPage({
               </button>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isManualGroupOpen && onCreateManualGroup && (
+          <ManualGroupDialog
+            targetLabel="노트"
+            selectedCount={selectedCount}
+            hasGroupedItems={selectionHasGroupedNotes}
+            onClose={() => setIsManualGroupOpen(false)}
+            onCreate={(name) => {
+              onCreateManualGroup(name, Array.from(selectedNotes));
+              setSelectedNotes(new Set());
+              setIsSelectionMode(false);
+              setIsManualGroupOpen(false);
+              setToast("선택한 노트를 새 그룹으로 묶었습니다.");
+            }}
+          />
         )}
       </AnimatePresence>
 
