@@ -28,38 +28,38 @@ export default function AccountSettingsPage({
   const [activeTab, setActiveTab] = useState('profile');
 
   const navItems = [
-    { icon: User, title: '프로필', desc: '공개 프로필 및 기본 정보', id: 'profile' },
-    { icon: Lock, title: '계정 / 보안', desc: '이메일, 비밀번호, 2단계 인증', id: 'security' },
-    { icon: Bell, title: '알림', desc: '이메일, 푸시 알림 설정', id: 'notifications' },
-    { icon: Globe, title: '공개 범위', desc: '프로필 및 콘텐츠 공개 설정', id: 'visibility' },
-    { icon: Settings2, title: '작업 환경', desc: 'UI, 기본 설정, 파일 옵션', id: 'workspace' },
-    { icon: Store, title: '마켓 / 판매자', desc: '판매자 정보 및 라이선스', id: 'seller' },
-    { icon: CreditCard, title: '결제 / 구독', desc: '플랜, 결제 수단, 구독 관리', id: 'billing' },
+    { icon: User, title: '프로필', id: 'profile' },
+    { icon: Lock, title: '계정 / 보안', id: 'security' },
+    { icon: Bell, title: '알림', id: 'notifications' },
+    { icon: Globe, title: '공개 범위', id: 'visibility' },
+    { icon: Settings2, title: '작업 환경', id: 'workspace' },
+    { icon: Store, title: '마켓 / 판매자', id: 'seller' },
+    { icon: CreditCard, title: '결제 / 구독', id: 'billing' },
   ];
 
   return (
     <div className="flex h-[calc(100dvh-60px)] w-full flex-col overflow-hidden bg-[#050505] font-sans text-white lg:h-[calc(100dvh-76px)] lg:flex-row">
       {/* Left Nav (Sidebar) */}
-      <aside className="shrink-0 border-b border-[#1F2329] px-4 py-4 lg:flex lg:h-full lg:w-[240px] lg:flex-col lg:overflow-y-auto lg:border-b-0 lg:border-r lg:px-6 lg:py-6 custom-scrollbar xl:w-[260px]">
-        <h2 className="mb-3 px-1 text-[20px] font-bold tracking-tight text-neutral-100 lg:mb-6 lg:text-[24px]">계정 설정</h2>
-        <div className="relative -mx-1 lg:mb-12">
-          <div className="flex snap-x gap-2 overflow-x-auto px-1 pb-1 pr-10 scrollbar-hide lg:block lg:space-y-1.5 lg:overflow-visible lg:pr-1 lg:pb-0">
+      <aside className="np-primary-sidebar-surface shrink-0 border-b border-[#1F2329] px-4 py-4 lg:flex lg:h-full lg:w-[240px] lg:flex-col lg:overflow-hidden lg:border-b-0 lg:border-r lg:px-6 lg:py-6 xl:w-[260px]">
+        <h2 className="np-primary-sidebar-title mb-3 px-1 tracking-tight text-neutral-100 lg:mb-4">계정 설정</h2>
+        <div className="relative -mx-1 lg:mb-6">
+          <div className="flex snap-x gap-2 overflow-x-auto px-1 pb-1 pr-10 scrollbar-hide lg:block lg:space-y-1 lg:overflow-visible lg:pr-1 lg:pb-0">
             {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex h-11 shrink-0 snap-start items-center gap-2 rounded-lg border px-3 text-left transition-all lg:h-auto lg:w-full lg:gap-4 lg:rounded-xl lg:px-4 lg:py-4 ${
+                aria-current={activeTab === item.id ? 'page' : undefined}
+                className={`flex h-11 shrink-0 snap-start items-center gap-2 rounded-lg border px-3 text-left transition-all lg:w-full lg:gap-3 ${
                   activeTab === item.id
                     ? 'relative border-brand-primary/30 bg-brand-primary/10 shadow-sm after:absolute after:left-0 after:top-1/2 after:h-[60%] after:w-1 after:-translate-y-1/2 after:rounded-r-full after:bg-brand-primary'
                     : 'border-transparent hover:bg-[#141518]'
                 }`}
               >
-                <div className={`w-[22px] flex justify-center ${activeTab === item.id ? 'text-brand-primary' : 'text-neutral-400'}`}>
+                <div className={`flex w-[22px] justify-center ${activeTab === item.id ? 'text-brand-primary' : 'text-neutral-400'}`}>
                   <item.icon className="w-5 h-5" strokeWidth={2} />
                 </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className={`text-[14px] font-medium ${activeTab === item.id ? 'text-brand-primary' : 'text-neutral-300'}`}>{item.title}</span>
-                  <span className={`hidden text-[14px] opacity-80 lg:block ${activeTab === item.id ? 'text-neutral-400' : 'text-neutral-400'}`}>{item.desc}</span>
+                <div className="min-w-0">
+                  <span className={`truncate text-[14px] leading-5 ${activeTab === item.id ? 'np-settings-nav-label-active font-semibold text-brand-primary' : 'font-medium text-neutral-300'}`}>{item.title}</span>
                 </div>
               </button>
             ))}
@@ -69,11 +69,12 @@ export default function AccountSettingsPage({
           </div>
         </div>
 
-        <div className="mt-auto hidden rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-5 lg:block">
-          <h3 className="font-medium text-[14px] text-neutral-200 mb-2">도움이 필요하신가요?</h3>
-          <p className="text-[14px] text-neutral-400 leading-relaxed mb-5">고객센터에서 계정 관련<br/>도움을 받아보세요.</p>
-          <button className="flex items-center justify-center w-full gap-2 text-[14px] font-medium text-brand-primary border border-brand-primary/40 rounded-lg px-4 py-2.5 hover:bg-brand-primary/10 transition-colors">
-            고객센터 바로가기 <ExternalLink className="w-3.5 h-3.5 gap-1 shrink-0" />
+        <div className="np-settings-help-panel mt-auto hidden rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4 lg:block">
+          <h3 className="mb-1 text-[14px] font-medium text-neutral-200">도움이 필요하신가요?</h3>
+          <p className="mb-3 text-[12px] leading-[18px] text-neutral-500">고객센터에서 계정 관련 도움을 받아보세요.</p>
+          <button className="flex w-full items-center justify-center gap-2 rounded-lg border border-brand-primary/40 px-3 py-2 text-[13px] font-medium text-brand-primary transition-colors hover:bg-brand-primary/10">
+            <span className="np-settings-support-link-label">고객센터 바로가기</span>
+            <ExternalLink className="h-3.5 w-3.5 shrink-0 text-brand-primary" />
           </button>
         </div>
       </aside>

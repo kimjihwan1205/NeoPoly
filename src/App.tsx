@@ -1778,7 +1778,7 @@ function Header({
         {/* Menu Items */}
         <div className="flex flex-col mt-3 px-2">
           <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('uploads'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
-            <Upload className="w-[20px] h-[20px]" /> 업로드한 작업물 관리
+            <Upload className="w-[20px] h-[20px]" /> 콘텐츠 관리
           </button>
           <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('projects'); }} className="hidden lg:flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
             <Folder className="w-[20px] h-[20px]" /> 내 프로젝트
@@ -3484,13 +3484,10 @@ function BoardPage({
   return (
     <>
       <main className="flex h-[calc(100dvh-60px)] overflow-hidden bg-bg-dark text-text-primary lg:h-[calc(100dvh-76px)]">
-      <aside className="hidden w-[300px] shrink-0 overflow-hidden border-r border-[#1C1E24] bg-[#0B0D10] p-5 lg:flex lg:flex-col">
+      <aside className="np-primary-sidebar-surface hidden w-[300px] shrink-0 overflow-hidden border-r border-[#1C1E24] bg-[#0B0D10] p-5 lg:flex lg:flex-col">
         <div className="mb-6 shrink-0">
           <p className="text-[14px] font-medium uppercase tracking-[0.18em] text-brand-primary">Board</p>
-          <h1 className="mt-2 text-[24px] font-bold text-white">작업 보드</h1>
-          <p className="mt-2 text-[15px] font-medium leading-[1.6] text-text-tertiary">
-            노트와 레퍼런스를 같은 공간에서 정리합니다.
-          </p>
+          <h1 className="np-primary-sidebar-title mt-2 text-white">작업 보드</h1>
         </div>
         <nav
           aria-label="보드 메뉴"

@@ -366,6 +366,14 @@ html[data-theme="light"] [role="button"][class*="bg-[#E0A12E]"]:active {
   filter: none;
 }
 
+html[data-theme="light"] .np-settings-nav-label-active {
+  color: #111318 !important;
+}
+
+html[data-theme="light"] .np-settings-support-link-label {
+  color: #111318 !important;
+}
+
 /* Semantic primary actions: keep the light-mode gold while separating
    important next-step buttons from pale surfaces without adding movement. */
 html[data-theme="light"] .np-primary-action {
@@ -1215,6 +1223,22 @@ html[data-theme="light"] .glass-morphism {
     white-space: nowrap;
   }
 
+  .np-primary-sidebar-title {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 30px;
+  }
+
+  /* Semantic surfaces keep light mode hierarchy consistent while preserving
+     each workspace's original dark-theme treatment. */
+  html[data-theme="light"] .np-page-canvas {
+    background-color: var(--color-bg-dark) !important;
+  }
+
+  html[data-theme="light"] .np-primary-sidebar-surface {
+    background-color: var(--color-surface-primary) !important;
+  }
+
   .np-copy-safe {
     word-break: keep-all;
     overflow-wrap: break-word;
@@ -1224,6 +1248,16 @@ html[data-theme="light"] .glass-morphism {
 @media (hover: hover) and (pointer: fine) and (max-width: 1023px) {
   .np-workspace-shell {
     min-width: 960px;
+  }
+
+  .np-workspace-shell.np-content-management-shell {
+    min-width: 0;
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 760px) {
+  .np-settings-help-panel {
+    display: none;
   }
 }
 

@@ -526,17 +526,14 @@ export default function ReferencePage({
     >
       {!hideSidebar && (
         <aside
-          className={`hidden w-[300px] shrink-0 flex-col border-r border-[#161618] bg-[#08090B] p-5 lg:flex ${
+          className={`np-primary-sidebar-surface hidden w-[300px] shrink-0 flex-col border-r border-[#161618] bg-[#08090B] p-5 lg:flex ${
             isPopup ? "h-full overflow-y-auto" : "sticky top-[76px] h-[calc(100dvh-76px)]"
           }`}
         >
         <div className="mb-8 mt-2">
           {!isPopup && (
             <>
-              <h2 className="mb-2 text-[20px] font-bold text-white">레퍼런스</h2>
-              <p className="mb-6 text-[14px] leading-relaxed text-text-secondary">
-                필요한 이미지를 모으고 프로젝트에 연결하세요.
-              </p>
+              <h2 className="np-primary-sidebar-title mb-5 text-white">레퍼런스</h2>
             </>
           )}
           <button

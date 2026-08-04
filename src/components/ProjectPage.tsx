@@ -470,12 +470,12 @@ export default function ProjectPage({
       }`}
     >
       <aside
-        className={`hidden w-[350px] shrink-0 overflow-y-auto border-r border-[#181A1F] bg-bg-dark px-5 py-6 lg:block ${
+        className={`np-primary-sidebar-surface hidden w-[350px] shrink-0 overflow-y-auto border-r border-[#181A1F] bg-bg-dark px-5 py-6 lg:block ${
           isPopup ? "h-full" : "sticky top-[76px] h-[calc(100dvh-76px)]"
         }`}
       >
         <div className="mb-6">
-          <h2 className="mb-5 text-[24px] font-bold text-[#F5F5F5]">
+          <h2 className="np-primary-sidebar-title mb-5 text-[#F5F5F5]">
             내 프로젝트
           </h2>
           <button

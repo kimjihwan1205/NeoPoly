@@ -181,6 +181,7 @@ export default function ContentManagementPage() {
   const [discountPriceDraft, setDiscountPriceDraft] = useState(0);
   const [saleEnabledDraft, setSaleEnabledDraft] = useState(false);
   const [isRevenueSummaryOpen, setIsRevenueSummaryOpen] = useState(false);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [revenuePeriod, setRevenuePeriod] = useState<RevenuePeriod>('6m');
   const [revenueChannel, setRevenueChannel] = useState<RevenueChannel>('all');
   const [revenueSort, setRevenueSort] = useState<RevenueSort>('revenue');
@@ -297,13 +298,12 @@ export default function ContentManagementPage() {
   };
 
   return (
-    <div className="np-workspace-shell flex h-[calc(100dvh-60px)] w-full overflow-hidden bg-[#0A0B0D] font-sans text-text-primary lg:h-[calc(100dvh-76px)]">
+    <div className="np-workspace-shell np-content-management-shell flex h-[calc(100dvh-60px)] w-full overflow-hidden bg-[#0A0B0D] font-sans text-text-primary lg:h-[calc(100dvh-76px)]">
       
       {/* Left Sidebar Menu */}
-      <aside className="z-10 hidden h-full w-[240px] shrink-0 flex-col overflow-y-auto border-r border-[#1C1E24] bg-[#050505] custom-scrollbar lg:flex xl:w-[300px]">
+      <aside className="np-primary-sidebar-surface z-10 hidden h-full w-[240px] shrink-0 flex-col overflow-y-auto border-r border-[#1C1E24] bg-[#050505] custom-scrollbar lg:flex xl:w-[300px]">
         <div className="p-6">
-          <h2 className="text-[18px] font-semibold text-white tracking-tight">콘텐츠 관리</h2>
-          <p className="text-[14px] text-text-secondary mt-2 mb-6">마켓과 아트에 업로드한 작업물을 확인합니다.</p>
+          <h2 className="np-primary-sidebar-title mb-5 tracking-tight text-white">콘텐츠 관리</h2>
           <button className="flex items-center justify-center gap-1.5 w-full py-3 rounded-xl border border-[#3A404F]/60 bg-[#15161A] hover:bg-[#22252B] hover:border-brand-primary/50 text-brand-primary shadow-sm transition-all font-medium text-[15px] tracking-wide">
             <Plus className="w-[18px] h-[18px]" />
             <span>새 콘텐츠 업로드</span>
@@ -399,10 +399,10 @@ export default function ContentManagementPage() {
       </aside>
 
       {/* Main Content */}
-      <main className="relative flex min-w-0 flex-1 flex-col overflow-y-auto bg-[#0A0B0D] custom-scrollbar">
+      <main className="np-page-canvas relative flex min-w-0 flex-1 flex-col overflow-y-auto bg-[#0A0B0D] custom-scrollbar">
         <nav
           aria-label="콘텐츠 관리 메뉴"
-          className="grid shrink-0 grid-cols-3 gap-1.5 border-b border-[#1C1E24] bg-[#08090B] p-2 lg:hidden"
+          className="sticky top-0 z-20 grid shrink-0 grid-cols-3 gap-1.5 border-b border-[#1C1E24] bg-[#08090B]/95 p-2 backdrop-blur-lg lg:hidden"
         >
           <button
             type="button"
@@ -442,7 +442,7 @@ export default function ContentManagementPage() {
             업로드
           </button>
         </nav>
-        <div className="px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 w-full flex-1">
+        <div className="w-full flex-1 px-3 py-5 min-[380px]:px-4 sm:px-6 sm:py-6 2xl:px-8 min-[2200px]:px-10">
           {activeSection === 'revenue' ? (
             <div className="mx-auto w-full max-w-[1500px]">
               <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -574,12 +574,30 @@ export default function ContentManagementPage() {
             </div>
           ) : (
           <>
-          <div className="mb-6">
-            <h1 className="text-[28px] font-bold text-white">전체 콘텐츠</h1>
+          <div className="mb-5 sm:mb-6">
+            <h1 className="text-[24px] font-bold text-white sm:text-[28px]">전체 콘텐츠</h1>
             <p className="mt-2 text-[14px] text-neutral-400">업로드한 작품의 상태와 판매 정보를 관리합니다.</p>
           </div>
 
-          <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3 min-[1600px]:grid-cols-5">
+          <div className="mb-4 grid grid-cols-5 overflow-hidden rounded-xl border border-[#1C1E24] bg-[#111215] sm:hidden">
+            {[
+              { label: '전체', value: '42', tone: 'text-white' },
+              { label: '판매', value: '18', tone: 'text-white' },
+              { label: '공개', value: '16', tone: 'text-white' },
+              { label: '심사', value: '3', tone: 'text-brand-primary' },
+              { label: '수정', value: '2', tone: 'text-[#E46B6B]' },
+            ].map((stat, index) => (
+              <div
+                key={stat.label}
+                className={`flex min-w-0 flex-col items-center justify-center py-3 ${index > 0 ? 'border-l border-[#1C1E24]' : ''}`}
+              >
+                <span className={`font-sans text-[18px] font-bold leading-none ${stat.tone}`}>{stat.value}</span>
+                <span className="mt-1.5 text-[11px] font-medium text-neutral-500">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mb-4 hidden grid-cols-2 gap-2.5 sm:grid sm:grid-cols-3 sm:gap-3 min-[1600px]:grid-cols-5">
             <StatCard icon={<Box className="w-5 h-5 text-neutral-400" />} title="전체 업로드" value="42" desc="전체 작품 수" />
             <StatCard icon={<ShoppingCart className="w-5 h-5 text-neutral-400" />} title="판매 중" value="18" desc="마켓 판매 중" />
             <StatCard icon={<ImageIcon className="w-5 h-5 text-neutral-400" />} title="아트 공개" value="16" desc="아트 공개 중" />
@@ -600,26 +618,93 @@ export default function ContentManagementPage() {
             points={monthlyRevenueTrend}
           />
 
-          <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 mb-6">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full xl:w-auto">
-              <div className="relative">
+          <div className="mb-4 sm:hidden">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                aria-expanded={isMobileFiltersOpen}
+                onClick={() => setIsMobileFiltersOpen((current) => !current)}
+                className={`flex h-11 min-w-0 flex-1 items-center justify-between rounded-lg border px-3 text-[14px] font-medium transition-colors ${
+                  isMobileFiltersOpen
+                    ? 'border-brand-primary/50 bg-brand-primary/10 text-brand-primary'
+                    : 'border-[#2A2E36] bg-[#111215] text-neutral-300'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  검색·필터
+                </span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isMobileFiltersOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              <div className="flex shrink-0 items-center gap-1 rounded-lg border border-[#2A2E36] bg-[#111215] p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  aria-label="그리드 보기"
+                  className={`flex h-9 w-9 items-center justify-center rounded transition-colors ${viewMode === 'grid' ? 'bg-brand-primary/20 text-brand-primary' : 'text-text-secondary hover:text-white'}`}
+                >
+                  <LayoutGrid className="h-[18px] w-[18px]" />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  aria-label="목록 보기"
+                  className={`flex h-9 w-9 items-center justify-center rounded transition-colors ${viewMode === 'list' ? 'bg-brand-primary/20 text-brand-primary' : 'text-text-secondary hover:text-white'}`}
+                >
+                  <List className="h-[18px] w-[18px]" />
+                </button>
+              </div>
+            </div>
+
+            <AnimatePresence initial={false}>
+              {isMobileFiltersOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.18, ease: 'easeOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-2.5 space-y-2.5 rounded-xl border border-[#1C1E24] bg-[#0D0E11] p-3">
+                    <div className="relative w-full">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
+                      <input
+                        type="text"
+                        placeholder="콘텐츠 제목, 태그 검색"
+                        className="h-11 w-full rounded-lg border border-[#2A2E36] bg-[#111215] pl-9 pr-4 text-[14px] text-white transition-colors focus:border-brand-primary/50 focus:outline-none"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <FilterSelect label="유형 전체" width="w-full" />
+                      <FilterSelect label="상태 전체" width="w-full" />
+                      <FilterSelect label="카테고리 전체" width="w-full" />
+                      <FilterSelect label="최근 수정순" width="w-full" />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="mb-6 hidden flex-col items-stretch justify-between gap-3 sm:flex xl:flex-row xl:items-center xl:gap-4">
+            <div className="flex w-full flex-col items-stretch gap-2.5 sm:gap-3 xl:w-auto xl:flex-row xl:items-center">
+              <div className="relative w-full xl:w-auto">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
                 <input 
                   type="text" 
                   placeholder="콘텐츠 제목, 태그 검색" 
-                  className="bg-[#111215] border border-[#2A2E36] rounded-lg pl-9 pr-4 py-2 text-[14px] text-white focus:outline-none focus:border-brand-primary/50 transition-colors w-full sm:w-[220px]"
+                  className="h-11 w-full rounded-lg border border-[#2A2E36] bg-[#111215] pl-9 pr-4 text-[14px] text-white transition-colors focus:border-brand-primary/50 focus:outline-none xl:h-10 xl:w-[220px]"
                 />
               </div>
               
-              <div className="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-2 sm:pb-0">
-                <FilterSelect label="유형 전체" />
-                <FilterSelect label="상태 전체" />
-                <FilterSelect label="카테고리 전체" />
+              <div className="grid w-full grid-cols-2 gap-2 xl:flex xl:w-auto xl:items-center">
+                <FilterSelect label="유형 전체" width="w-full xl:w-[140px]" />
+                <FilterSelect label="상태 전체" width="w-full xl:w-[140px]" />
+                <FilterSelect className="col-span-2 xl:col-span-1" label="카테고리 전체" width="w-full xl:w-[140px]" />
               </div>
             </div>
 
-            <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-              <FilterSelect label="최근 수정순" />
+            <div className="flex shrink-0 items-center gap-2 sm:justify-end sm:gap-3">
+              <FilterSelect label="최근 수정순" width="min-w-0 flex-1 sm:flex-none sm:w-[140px]" />
               <div className="flex items-center bg-[#111215] border border-[#2A2E36] rounded-lg p-1 gap-1">
                 <button 
                   onClick={() => setViewMode('grid')}
@@ -642,7 +727,7 @@ export default function ContentManagementPage() {
           {/* Grid/List Area */}
           {viewMode === 'grid' ? (
             <div
-              className={`grid grid-cols-1 gap-4 pb-12 sm:grid-cols-2 sm:gap-5 lg:grid-cols-2 min-[1280px]:grid-cols-3 ${
+              className={`grid grid-cols-1 gap-3 pb-10 sm:grid-cols-2 sm:gap-5 sm:pb-12 lg:grid-cols-2 min-[1280px]:grid-cols-3 ${
                 selectedItem
                   ? 'min-[1440px]:grid-cols-2 min-[1600px]:grid-cols-3 min-[2000px]:grid-cols-4'
                   : 'min-[1600px]:grid-cols-4'
@@ -671,18 +756,18 @@ export default function ContentManagementPage() {
           )}
           
           {/* Pagination Area */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-20 border-t border-[#1C1E24] pt-6">
+          <div className="flex flex-col items-center justify-between gap-4 border-t border-[#1C1E24] pb-20 pt-5 md:flex-row md:pt-6">
             <span className="text-[14px] text-text-secondary font-medium shrink-0">총 42개 항목</span>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <button aria-label="이전 페이지" className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#111215] text-text-secondary transition-colors hover:text-white sm:h-8 sm:w-8">&lt;</button>
-              <button className="flex h-11 w-11 items-center justify-center rounded-lg border border-brand-primary bg-brand-primary text-[14px] font-medium text-black sm:h-8 sm:w-8">1</button>
-              <button className="flex h-11 w-11 items-center justify-center rounded-lg text-[14px] font-medium text-text-secondary transition-colors hover:bg-[#111215] hover:text-white sm:h-8 sm:w-8">2</button>
+            <div className="flex max-w-full items-center justify-center gap-1 min-[380px]:gap-1.5 sm:gap-2">
+              <button aria-label="이전 페이지" className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#111215] text-text-secondary transition-colors hover:text-white sm:h-8 sm:w-8">&lt;</button>
+              <button className="flex h-10 w-10 items-center justify-center rounded-lg border border-brand-primary bg-brand-primary text-[14px] font-medium text-black sm:h-8 sm:w-8">1</button>
+              <button className="flex h-10 w-10 items-center justify-center rounded-lg text-[14px] font-medium text-text-secondary transition-colors hover:bg-[#111215] hover:text-white sm:h-8 sm:w-8">2</button>
               <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">3</button>
               <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">4</button>
               <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">5</button>
-              <span className="text-text-secondary px-1 sm:px-2">...</span>
-              <button className="flex h-11 w-11 items-center justify-center rounded-lg text-[14px] font-medium text-text-secondary transition-colors hover:bg-[#111215] hover:text-white sm:h-8 sm:w-8">9</button>
-              <button aria-label="다음 페이지" className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#111215] text-text-secondary transition-colors hover:text-white sm:h-8 sm:w-8">&gt;</button>
+              <span className="hidden px-1 text-text-secondary min-[360px]:inline sm:px-2">...</span>
+              <button className="hidden h-10 w-10 items-center justify-center rounded-lg text-[14px] font-medium text-text-secondary transition-colors hover:bg-[#111215] hover:text-white min-[360px]:flex sm:h-8 sm:w-8">9</button>
+              <button aria-label="다음 페이지" className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#111215] text-text-secondary transition-colors hover:text-white sm:h-8 sm:w-8">&gt;</button>
             </div>
             <div className="w-full md:w-auto flex justify-center md:justify-end">
               <FilterSelect label="8개씩 보기" width="w-[120px]" />
@@ -705,14 +790,15 @@ export default function ContentManagementPage() {
           >
             <button 
               onClick={() => setSelectedItem(null)}
+              aria-label="작품 상세 닫기"
               className="absolute right-4 top-4 z-30 flex h-11 w-11 items-center justify-center rounded-lg bg-transparent text-neutral-400 transition-colors hover:bg-[#111215] hover:text-white sm:h-8 sm:w-8"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar pb-24 pt-4 mt-8">
+            <div className="mt-8 flex-1 overflow-y-auto pb-[228px] pt-4 custom-scrollbar">
               {/* Header Box */}
-              <div className="relative aspect-auto px-5 pb-0">
+              <div className="relative aspect-auto px-4 pb-0 sm:px-5">
                  <div className="relative rounded-lg overflow-hidden border border-[#1C1E24]">
                    {selectedItem.type === 'MARKET' ? (
                      <span className="absolute top-3 right-3 h-7 min-w-7 px-1 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-brand-primary text-brand-primary text-[14px] font-medium rounded shadow-sm z-10">M</span>
@@ -720,7 +806,7 @@ export default function ContentManagementPage() {
                      <span className="absolute top-3 right-3 h-7 min-w-7 px-1 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#4A90E2] text-[#4A90E2] text-[14px] font-medium rounded shadow-sm z-10">A</span>
                    )}
                    {selectedItem.image ? (
-                     <img referrerPolicy="no-referrer" src={selectedItem.image} alt={selectedItem.title} className="w-full aspect-[4/3] object-cover" />
+                     <img referrerPolicy="no-referrer" src={selectedItem.image} alt={selectedItem.title} className="aspect-[16/10] w-full object-cover sm:aspect-[4/3]" />
                    ) : (
                      <div className="w-full aspect-[4/3] bg-[#111215] flex flex-col items-center justify-center text-neutral-400">
                        <ImageIcon className="w-12 h-12 mb-3 opacity-50" />
@@ -731,7 +817,7 @@ export default function ContentManagementPage() {
               </div>
 
               {/* Title & Status */}
-              <div className="px-5 py-5 border-b border-[#1C1E24]">
+              <div className="border-b border-[#1C1E24] px-4 py-5 sm:px-5">
                 <h2 className="text-[20px] font-bold text-white mb-2 tracking-tight">{selectedItem.title}</h2>
                 <div className="flex items-center gap-2 text-[14px]">
                   <span className="text-neutral-400">{selectedItem.type === 'MARKET' ? 'Market 상품' : 'Art 게시물'}</span>
@@ -743,22 +829,24 @@ export default function ContentManagementPage() {
               </div>
 
               {/* Performance */}
-              <div className="p-5 border-b border-[#1C1E24]">
+              <div className="border-b border-[#1C1E24] p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-[14px] font-medium text-text-primary tracking-tight">성과 요약</h3>
                   <span className="text-[14px] text-neutral-500">최근 30일 기준</span>
                 </div>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-2 gap-2 min-[480px]:grid-cols-5">
                   <StatMini icon={<Eye className="w-4 h-4" />} label="조회수" value={selectedItem.stats.views} />
                   <StatMini icon={<Heart className="w-4 h-4" />} label="좋아요" value={selectedItem.stats.likes} />
                   <StatMini icon={<Bookmark className="w-4 h-4" />} label="저장" value={selectedItem.stats.saves} />
                   <StatMini icon={<ShoppingCart className="w-4 h-4" />} label="판매수" value={selectedItem.stats.sales || '-'} />
-                  <StatMini icon={<CreditCard className="w-4 h-4" />} label="수익" value={selectedItem.stats.revenue || '-'} isRevenue />
+                  <div className="col-span-2 min-[480px]:col-span-1">
+                    <StatMini icon={<CreditCard className="w-4 h-4" />} label="수익" value={selectedItem.stats.revenue || '-'} isRevenue />
+                  </div>
                 </div>
               </div>
 
               {/* Meta Info */}
-              <div className="p-5 border-b border-[#1C1E24]">
+              <div className="border-b border-[#1C1E24] p-4 sm:p-5">
                 <h3 className="text-[14px] font-medium text-text-primary tracking-tight mb-4">등록 정보</h3>
                 <div className="space-y-3">
                   <MetaRow label="카테고리" value={selectedItem.category.replace('·', '>')} />
@@ -784,7 +872,7 @@ export default function ContentManagementPage() {
 
               {/* Review Status */}
               {selectedItem.reviewStatus && (
-                <div className="p-5">
+                <div className="p-4 sm:p-5">
                   <h3 className="text-[14px] font-medium text-text-primary tracking-tight mb-4">심사 상태</h3>
                   <div className={`p-4 rounded-lg border ${selectedItem.status === '수정 필요' ? 'bg-[#E46B6B]/10 border-[#E46B6B]/20' : 'bg-[#4ADE80]/10 border-[#4ADE80]/20'}`}>
                     <div className="flex items-center gap-2 mb-2">
@@ -806,7 +894,7 @@ export default function ContentManagementPage() {
             </div>
 
             {/* Actions Footer */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-[#0A0B0D]/95 backdrop-blur border-t border-[#1C1E24] flex flex-col gap-2 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+            <div className="absolute bottom-0 left-0 right-0 flex flex-col gap-2 border-t border-[#1C1E24] bg-[#0A0B0D]/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-10px_30px_rgba(0,0,0,0.5)] backdrop-blur sm:p-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom))]">
                <div className="grid grid-cols-2 gap-2">
                  <button className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-brand-primary bg-transparent border border-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors">
                    상세 보기 <ArrowUpRight className="w-3.5 h-3.5" />
@@ -843,14 +931,14 @@ export default function ContentManagementPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onMouseDown={() => setPricingItem(null)}
-            className="fixed inset-0 z-[180] flex items-center justify-center bg-black/60 p-5 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[180] flex items-center justify-center bg-black/60 p-3 backdrop-blur-[2px] sm:p-5"
           >
             <motion.div
               initial={{ opacity: 0, y: 12, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 12, scale: 0.98 }}
               onMouseDown={(event) => event.stopPropagation()}
-              className="w-full max-w-[520px] overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.72)]"
+              className="max-h-[calc(100dvh-1.5rem)] w-full max-w-[520px] overflow-y-auto rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.72)] custom-scrollbar sm:max-h-[calc(100dvh-2.5rem)]"
             >
               <div className="flex h-16 items-center justify-between border-b border-[#1F2329] px-5">
                 <div>
@@ -969,20 +1057,21 @@ function RevenueSummaryDisclosure({
   points: Array<{ month: string; revenue: number; height: number }>;
 }) {
   return (
-    <section className="mb-6 overflow-hidden rounded-xl border border-[#1C1E24] bg-[#0A0B0D]">
+    <section className="mb-4 overflow-hidden rounded-xl border border-[#1C1E24] bg-[#0A0B0D] sm:mb-6">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
-        className="flex w-full items-center justify-between gap-5 px-5 py-4 text-left transition hover:bg-white/[0.025]"
+        className="flex w-full items-center justify-between gap-3 px-3.5 py-3 text-left transition hover:bg-white/[0.025] sm:gap-5 sm:px-5 sm:py-4"
       >
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary">
-            <TrendingUp className="h-5 w-5" />
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-primary/10 text-brand-primary sm:h-10 sm:w-10">
+            <TrendingUp className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
           </span>
           <div className="min-w-0">
-            <h2 className="text-[17px] font-medium text-white">수익 요약</h2>
-            <p className="mt-0.5 text-[14px] text-neutral-500">최근 판매 흐름을 간단히 확인합니다.</p>
+            <h2 className="text-[15px] font-medium text-white sm:text-[17px]">수익 요약</h2>
+            <p className="mt-0.5 hidden text-[14px] text-neutral-500 sm:block">최근 판매 흐름을 간단히 확인합니다.</p>
+            <p className="mt-0.5 text-[14px] font-medium text-brand-primary sm:hidden">{formatCompactWon(value)}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-5">
@@ -1360,24 +1449,24 @@ function RevenueMetric({
   );
 }
 
-function StatCard({ icon, title, value, desc, highlight = false }: { icon: React.ReactNode, title: string, value: string, desc: string, highlight?: boolean }) {
+function StatCard({ icon, title, value, desc, highlight = false, className = '' }: { icon: React.ReactNode, title: string, value: string, desc: string, highlight?: boolean, className?: string }) {
   return (
-    <div className={`p-5 rounded-xl border ${highlight ? 'bg-brand-primary/5 border-brand-primary/20' : 'bg-[#111215] border-[#1C1E24]'} flex flex-col justify-between min-h-[120px]`}>
-      <div className="flex items-center gap-2.5 mb-3">
+    <div className={`flex min-h-[104px] flex-col justify-between rounded-xl border p-4 sm:min-h-[120px] sm:p-5 ${highlight ? 'bg-brand-primary/5 border-brand-primary/20' : 'bg-[#111215] border-[#1C1E24]'} ${className}`}>
+      <div className="mb-3 flex items-center gap-2.5">
         {icon}
         <span className="text-[14px] font-medium text-text-secondary tracking-tight">{title}</span>
       </div>
       <div>
-        <div className={`text-[24px] font-bold font-sans tracking-tight leading-none mb-1.5 ${highlight ? 'text-brand-primary' : 'text-white'}`}>{value}</div>
+        <div className={`mb-1.5 font-sans text-[22px] font-bold leading-none tracking-tight sm:text-[24px] ${highlight ? 'text-brand-primary' : 'text-white'}`}>{value}</div>
         <div className={`text-[14px] ${highlight ? 'text-brand-primary/80' : 'text-neutral-400'}`}>{desc}</div>
       </div>
     </div>
   )
 }
 
-function FilterSelect({ label, width = 'w-[140px]' }: { label: string, width?: string }) {
+function FilterSelect({ label, width = 'w-[140px]', className = '' }: { label: string, width?: string, className?: string }) {
   return (
-    <button className={`np-control-label flex items-center justify-between border border-[#2A2E36] bg-[#111215] px-3 py-2 text-[14px] text-neutral-300 transition-colors hover:bg-[#15161A] ${width} rounded-lg`}>
+    <button className={`np-control-label flex h-11 items-center justify-between rounded-lg border border-[#2A2E36] bg-[#111215] px-3 text-[14px] text-neutral-300 transition-colors hover:bg-[#15161A] xl:h-10 ${width} ${className}`}>
       <span>{label}</span>
       <ChevronDown className="w-4 h-4 text-neutral-400" />
     </button>
@@ -1391,7 +1480,7 @@ const ContentCard: React.FC<{ item: ContentItem, isSelected: boolean, onClick: (
       className={`bg-[#0A0B0D] border rounded-xl overflow-hidden flex flex-col group cursor-pointer transition-all duration-200 ${isSelected ? 'border-brand-primary shadow-[0_0_15px_rgba(224,161,46,0.15)] ring-1 ring-brand-primary' : 'border-[#1C1E24] hover:border-[#3A404F]'}`}
     >
       {/* Image Container */}
-      <div className="relative aspect-[4/3] w-full bg-[#111215] overflow-hidden">
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#111215] sm:aspect-[4/3]">
         {item.type === 'MARKET' ? (
           <span className="absolute top-3 right-3 h-7 min-w-7 px-1 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-brand-primary text-brand-primary text-[14px] font-medium rounded shadow-sm z-10">M</span>
         ) : (
@@ -1417,30 +1506,30 @@ const ContentCard: React.FC<{ item: ContentItem, isSelected: boolean, onClick: (
       </div>
 
       {/* Content Container */}
-      <div className="p-4 flex flex-col flex-1">
-        <div className="flex items-start justify-between mb-1.5 gap-2">
-          <h3 className="text-[15px] font-medium text-white tracking-tight line-clamp-1 group-hover:text-brand-primary transition-colors">{item.title}</h3>
-          <button aria-label={`${item.title} 작업 더 보기`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:w-8">
+      <div className="flex flex-1 flex-col p-3.5 sm:p-4">
+        <div className="mb-1 flex items-center justify-between gap-2 sm:mb-1.5">
+          <h3 className="line-clamp-1 text-[15px] font-medium leading-6 tracking-tight text-white transition-colors group-hover:text-brand-primary">{item.title}</h3>
+          <button aria-label={`${item.title} 작업 더 보기`} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-white/5 hover:text-white">
             <MoreHorizontal className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-[14px] text-neutral-400 font-medium tracking-tight mb-2.5">{item.category}</p>
+        <p className="text-[13px] font-medium leading-5 tracking-tight text-neutral-400 sm:text-[14px]">{item.category}</p>
         
         <div className="mt-auto">
-          <div className="mb-4">
+          <div className="mt-2.5 sm:mt-3">
             <PriceDisplay item={item} />
           </div>
 
           {/* Stats Bar */}
-          <div className="flex items-center gap-3.5 text-[14px] font-sans text-neutral-500">
-            <span className="flex items-center gap-1.5"><Eye className="w-3.5 h-3.5" /> {item.stats.views}</span>
-            <span className="flex items-center gap-1.5"><Heart className="w-3.5 h-3.5" /> {item.stats.likes}</span>
-            <span className="flex items-center gap-1.5">
+          <div className="mt-3 flex min-w-0 items-center justify-between gap-2 border-t border-[#1C1E24] pt-3 font-sans text-[12px] text-neutral-500 min-[380px]:text-[14px] sm:mt-3.5 sm:justify-start sm:gap-3.5 sm:pt-3.5">
+            <span className="flex min-w-0 items-center gap-1"><Eye className="h-3.5 w-3.5 shrink-0" /> {item.stats.views}</span>
+            <span className="flex min-w-0 items-center gap-1"><Heart className="h-3.5 w-3.5 shrink-0" /> {item.stats.likes}</span>
+            <span className="flex min-w-0 items-center gap-1">
               {item.type === 'MARKET' ? <ShoppingCart className="w-[14px] h-[14px]" /> : <Bookmark className="w-[14px] h-[14px]" />} 
               {item.type === 'MARKET' ? item.stats.sales : item.stats.saves}
             </span>
-            <span className="flex items-center gap-1.5 ml-auto text-neutral-400">
-              {item.stats.revenue ? <span className="font-medium font-sans flex items-center gap-1"><span className="text-brand-primary text-[14px]">₩</span> {item.stats.revenue.replace('₩', '')}</span> : '-'}
+            <span className="ml-auto flex min-w-0 items-center gap-1 text-neutral-400">
+              {item.stats.revenue ? <span className="flex min-w-0 items-center gap-1 truncate font-sans font-medium"><span className="text-[13px] text-brand-primary min-[380px]:text-[14px]">₩</span> {item.stats.revenue.replace('₩', '')}</span> : '-'}
             </span>
           </div>
         </div>
@@ -1453,46 +1542,42 @@ const ContentListRow: React.FC<{ item: ContentItem, isSelected: boolean, onClick
   return (
     <div 
       onClick={onClick}
-      className={`bg-[#0A0B0D] border rounded-xl overflow-hidden flex items-center p-3 gap-4 group cursor-pointer transition-all duration-200 ${isSelected ? 'border-brand-primary bg-brand-primary/5 shadow-[0_0_15px_rgba(224,161,46,0.15)] ring-1 ring-brand-primary' : 'border-[#1C1E24] hover:border-[#3A404F]'}`}
+      className={`group flex cursor-pointer flex-col overflow-hidden rounded-xl border bg-[#0A0B0D] p-3 transition-all duration-200 ${isSelected ? 'border-brand-primary bg-brand-primary/5 shadow-[0_0_15px_rgba(224,161,46,0.15)] ring-1 ring-brand-primary' : 'border-[#1C1E24] hover:border-[#3A404F]'}`}
     >
-      {/* Image Container */}
-      <div className="relative w-24 h-16 shrink-0 rounded-lg overflow-hidden bg-[#111215]">
-        {item.type === 'MARKET' ? (
-          <span className="absolute top-1.5 right-1.5 h-7 min-w-7 px-2 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-brand-primary text-brand-primary text-[14px] font-medium rounded shadow-sm z-10">M</span>
-        ) : (
-          <span className="absolute top-1.5 right-1.5 h-7 min-w-7 px-2 flex items-center justify-center bg-[#0A0B0D]/80 backdrop-blur border border-[#4A90E2] text-[#4A90E2] text-[14px] font-medium rounded shadow-sm z-10">A</span>
-        )}
-        
-        {item.image ? (
-          <img referrerPolicy="no-referrer" 
-            src={item.image} 
-            alt={item.title} 
-            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-neutral-400">
-            <ImageIcon className="w-6 h-6 opacity-50" />
-          </div>
-        )}
-      </div>
-
-      {/* Content Container */}
-      <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <div className="flex items-center gap-2 mb-1">
-            <span className={`px-2 py-0.5 text-[14px] font-medium rounded flex-shrink-0 ${item.status === '판매 중' || item.status === '공개 중' ? 'bg-[#0A0B0D] text-[#4ADE80] border border-[#14532D]' : item.status === '수정 필요' ? 'bg-[#0A0B0D] text-[#E46B6B] border border-[#7F1D1D]' : 'bg-[#0A0B0D] text-[#F97316] border border-[#C2410C]'}`}>
-              {item.status}
-            </span>
-            <h3 className="text-[15px] font-medium text-white tracking-tight truncate group-hover:text-brand-primary transition-colors">{item.title}</h3>
-          </div>
-          <p className="text-[14px] text-neutral-400 font-medium tracking-tight truncate">{item.category}</p>
+      <div className="flex w-full items-center gap-3 sm:gap-4">
+        <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-lg bg-[#111215] sm:w-24">
+          {item.type === 'MARKET' ? (
+            <span className="absolute right-1.5 top-1.5 z-10 flex h-6 min-w-6 items-center justify-center rounded border border-brand-primary bg-[#0A0B0D]/80 px-1 text-[12px] font-medium text-brand-primary shadow-sm backdrop-blur sm:h-7 sm:min-w-7 sm:px-2 sm:text-[14px]">M</span>
+          ) : (
+            <span className="absolute right-1.5 top-1.5 z-10 flex h-6 min-w-6 items-center justify-center rounded border border-[#4A90E2] bg-[#0A0B0D]/80 px-1 text-[12px] font-medium text-[#4A90E2] shadow-sm backdrop-blur sm:h-7 sm:min-w-7 sm:px-2 sm:text-[14px]">A</span>
+          )}
+          {item.image ? (
+            <img referrerPolicy="no-referrer" src={item.image} alt={item.title} className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-neutral-400">
+              <ImageIcon className="h-6 w-6 opacity-50" />
+            </div>
+          )}
         </div>
 
-        <div className="hidden lg:flex w-32 shrink-0">
+        <div className="flex min-w-0 flex-1 flex-col justify-center">
+          <div className="mb-0.5 flex min-w-0 items-center gap-1.5 sm:mb-1 sm:gap-2">
+            <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[12px] font-medium sm:px-2 sm:text-[14px] ${item.status === '판매 중' || item.status === '공개 중' ? 'bg-[#0A0B0D] text-[#4ADE80] border-[#14532D]' : item.status === '수정 필요' ? 'bg-[#0A0B0D] text-[#E46B6B] border-[#7F1D1D]' : 'bg-[#0A0B0D] text-[#F97316] border-[#C2410C]'}`}>
+              {item.status}
+            </span>
+            <h3 className="truncate text-[15px] font-medium tracking-tight text-white transition-colors group-hover:text-brand-primary">{item.title}</h3>
+          </div>
+          <p className="truncate text-[13px] font-medium tracking-tight text-neutral-400 sm:text-[14px]">{item.category}</p>
+          <div className="mt-0.5 lg:hidden">
+            <PriceDisplay item={item} />
+          </div>
+        </div>
+
+        <div className="hidden w-32 shrink-0 lg:flex">
           <PriceDisplay item={item} />
         </div>
 
-        <div className="flex lg:w-48 xl:w-64 items-center gap-4 text-[14px] font-sans text-neutral-500 shrink-0">
+        <div className="hidden shrink-0 items-center gap-4 font-sans text-[14px] text-neutral-500 sm:flex lg:w-48 xl:w-64">
           <span className="flex items-center gap-1.5 whitespace-nowrap"><Eye className="w-[14px] h-[14px]" /> <span className="w-6">{item.stats.views}</span></span>
           <span className="flex items-center gap-1.5 whitespace-nowrap"><Heart className="w-[14px] h-[14px]" /> <span className="w-6">{item.stats.likes}</span></span>
           <span className="flex items-center gap-1.5 whitespace-nowrap">
@@ -1500,18 +1585,27 @@ const ContentListRow: React.FC<{ item: ContentItem, isSelected: boolean, onClick
             <span className="w-6">{item.type === 'MARKET' ? item.stats.sales : item.stats.saves}</span>
           </span>
         </div>
+
+        <button aria-label={`${item.title} 작업 더 보기`} className="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg text-neutral-500 transition-colors hover:bg-white/5 hover:text-white">
+          <MoreHorizontal className="w-5 h-5" />
+        </button>
       </div>
-      
-      <button aria-label={`${item.title} 작업 더 보기`} className="flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-lg text-neutral-500 transition-colors hover:bg-white/5 hover:text-white sm:h-9 sm:w-9">
-        <MoreHorizontal className="w-5 h-5" />
-      </button>
+
+      <div className="mt-2.5 grid grid-cols-3 divide-x divide-[#1C1E24] border-t border-[#1C1E24] pt-2.5 font-sans text-[12px] text-neutral-500 sm:hidden">
+        <span className="flex items-center justify-center gap-1.5"><Eye className="h-3.5 w-3.5" /> {item.stats.views}</span>
+        <span className="flex items-center justify-center gap-1.5"><Heart className="h-3.5 w-3.5" /> {item.stats.likes}</span>
+        <span className="flex items-center justify-center gap-1.5">
+          {item.type === 'MARKET' ? <ShoppingCart className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />}
+          {item.type === 'MARKET' ? item.stats.sales : item.stats.saves}
+        </span>
+      </div>
     </div>
   )
 }
 
 function StatMini({ icon, label, value, isRevenue = false }: { icon: React.ReactNode, label: string, value: string | number, isRevenue?: boolean }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-1.5 py-4 bg-[#111215] border border-[#1C1E24] rounded-lg">
+    <div className="flex h-full min-h-[92px] flex-col items-center justify-center gap-1.5 rounded-lg border border-[#1C1E24] bg-[#111215] py-3 sm:min-h-0 sm:py-4">
       <div className="text-neutral-400 flex flex-col items-center gap-1">
         {icon}
         <span className="text-[14px] font-medium tracking-tight">{label}</span>
