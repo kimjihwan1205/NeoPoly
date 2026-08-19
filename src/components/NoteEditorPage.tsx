@@ -210,7 +210,7 @@ export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteE
                  <ChevronDown className="w-4 h-4 transform -rotate-45" />
               </div>
             </div>
-            <button className="w-full py-2.5 rounded-lg border border-brand-primary/40 bg-brand-primary/5 hover:bg-brand-primary/10 text-brand-primary text-[14px] font-bold transition-colors flex items-center justify-center gap-2 shadow-sm">
+            <button className="np-light-brand-action w-full py-2.5 rounded-lg border border-brand-primary/40 bg-brand-primary/5 hover:bg-brand-primary/10 text-brand-primary text-[14px] font-bold transition-colors flex items-center justify-center gap-2 shadow-sm">
               아이디어 확장 받기 <Sparkles className="w-3.5 h-3.5" />
             </button>
           </div>

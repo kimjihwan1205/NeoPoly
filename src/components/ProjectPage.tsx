@@ -480,7 +480,7 @@ export default function ProjectPage({
           </h2>
           <button
             onClick={() => setIsNewProjectModalOpen(true)}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-medium text-brand-primary transition hover:border-brand-primary/50 hover:bg-[#22252B]"
+            className="np-light-brand-action flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-medium text-brand-primary transition hover:border-brand-primary/50 hover:bg-[#22252B]"
           >
             <Plus className="h-[18px] w-[18px]" />
             새 프로젝트

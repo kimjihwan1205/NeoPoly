@@ -1623,7 +1623,7 @@ function Header({
                       <div className="flex gap-4">
                         <button 
                           onClick={handleMarkAllRead} 
-                          className="text-[14px] text-brand-primary hover:text-[#f3ba4b] font-medium font-sans border-0 bg-transparent cursor-pointer transition-colors"
+                          className="np-light-brand-text-action text-[14px] text-brand-primary hover:text-[#f3ba4b] font-medium font-sans border-0 bg-transparent cursor-pointer transition-colors"
                         >
                           모두 읽음
                         </button>
@@ -1884,12 +1884,12 @@ function Header({
 
 function Hero({ onNavigate }: { onNavigate?: (page: any) => void }) {
   return (
-    <section className="relative h-[360px] w-full overflow-hidden sm:h-[400px] md:h-[420px]">
+    <section className="relative h-[300px] w-full overflow-hidden">
       <div className="absolute inset-0">
         <img 
           src={HERO_IMAGE} 
           alt="Hero" 
-          className="h-[calc(100%+20px)] w-full -translate-y-5 object-cover object-[62%_top] sm:object-[58%_top] md:object-top"
+          className="h-[calc(100%+20px)] w-full -translate-y-2 object-cover object-[62%_top] sm:object-[58%_top] md:object-top"
           referrerPolicy="no-referrer"
         />
         {/* Adjusted cinematic overlays (reduced opacity) */}
@@ -2412,7 +2412,7 @@ function QuickCollectPanel({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-[calc(env(safe-area-inset-bottom)+12px)] right-3 z-40 sm:bottom-8 sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
+            className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+12px)] z-40 flex justify-center sm:bottom-8"
           >
             <button
               onClick={onOpen}
@@ -2534,10 +2534,10 @@ function AssetCard({
         />
 
         {/* Badge - M or A */}
-        <div className={`absolute right-1.5 top-1.5 z-20 flex h-6 min-w-6 items-center justify-center rounded-[5px] px-1 text-[12px] font-medium backdrop-blur-[8px] transition-all duration-200 sm:right-2 sm:top-2 sm:h-7 sm:min-w-7 sm:rounded-[6px] sm:text-[14px] ${
+        <div className={`np-asset-type-badge absolute right-1.5 top-1.5 z-20 flex h-6 min-w-6 items-center justify-center rounded-[5px] px-1 text-[12px] font-medium backdrop-blur-[8px] transition-all duration-200 sm:right-2 sm:top-2 sm:h-7 sm:min-w-7 sm:rounded-[6px] sm:text-[14px] ${
           isMarket 
-            ? 'bg-brand-primary/40 text-[#F0B43A] group-hover:bg-brand-primary/50'
-            : 'bg-[#4C88D9]/40 text-[#A0C5FF] group-hover:bg-[#4C88D9]/50'
+            ? 'np-asset-type-badge-market bg-brand-primary/40 text-[#F0B43A] group-hover:bg-brand-primary/50'
+            : 'np-asset-type-badge-art bg-[#4C88D9]/40 text-[#A0C5FF] group-hover:bg-[#4C88D9]/50'
         }`}>
           {asset.badge}
         </div>
@@ -2779,11 +2779,15 @@ function SmartProductImage({
   fallback,
   alt,
   className,
+  draggable,
+  onLoad,
 }: {
   candidates: string[];
   fallback: string;
   alt: string;
   className: string;
+  draggable?: boolean;
+  onLoad?: React.ReactEventHandler<HTMLImageElement>;
 }) {
   const sources = [...candidates, fallback];
   const [sourceIndex, setSourceIndex] = useState(0);
@@ -2795,6 +2799,8 @@ function SmartProductImage({
       alt={alt}
       referrerPolicy="no-referrer"
       className={className}
+      draggable={draggable}
+      onLoad={onLoad}
       onError={() => {
         setSourceIndex((prev) => Math.min(prev + 1, sources.length - 1));
       }}
@@ -2826,9 +2832,89 @@ function ProductDetailPage({
 
   const gallery = PRODUCT_IMAGE_ORDER[asset.id] ?? Array.from({ length: product.galleryCount }, (_, index) => index + 1);
   const [heroOrder, ...detailOrders] = gallery;
+  const [activeMobileSlide, setActiveMobileSlide] = useState(0);
+  const [mobileIndicatorTones, setMobileIndicatorTones] = useState<Record<number, "light" | "dark">>({});
+  const mobileGalleryRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setActiveMobileSlide(0);
+    setMobileIndicatorTones({});
+    mobileGalleryRef.current?.scrollTo({ left: 0 });
+  }, [asset.id]);
+
+  const analyzeMobileIndicatorTone = (image: HTMLImageElement, index: number) => {
+    if (!image.naturalWidth || !image.naturalHeight || !image.clientWidth || !image.clientHeight) return;
+
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 64;
+      canvas.height = 16;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context) return;
+
+      const imageRatio = image.naturalWidth / image.naturalHeight;
+      const frameRatio = image.clientWidth / image.clientHeight;
+      let visibleX = 0;
+      let visibleY = 0;
+      let visibleWidth = image.naturalWidth;
+      let visibleHeight = image.naturalHeight;
+
+      if (imageRatio > frameRatio) {
+        visibleWidth = image.naturalHeight * frameRatio;
+        visibleX = (image.naturalWidth - visibleWidth) / 2;
+      } else {
+        visibleHeight = image.naturalWidth / frameRatio;
+        visibleY = (image.naturalHeight - visibleHeight) / 2;
+      }
+
+      context.drawImage(
+        image,
+        visibleX + visibleWidth * 0.28,
+        visibleY + visibleHeight * 0.72,
+        visibleWidth * 0.44,
+        visibleHeight * 0.2,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
+
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+      let luminanceTotal = 0;
+      let opaquePixelCount = 0;
+
+      for (let offset = 0; offset < pixels.length; offset += 4) {
+        if (pixels[offset + 3] < 32) continue;
+        luminanceTotal += 0.2126 * pixels[offset] + 0.7152 * pixels[offset + 1] + 0.0722 * pixels[offset + 2];
+        opaquePixelCount += 1;
+      }
+
+      if (!opaquePixelCount) return;
+      const tone = luminanceTotal / opaquePixelCount >= 154 ? "dark" : "light";
+      setMobileIndicatorTones((currentTones) =>
+        currentTones[index] === tone ? currentTones : { ...currentTones, [index]: tone },
+      );
+    } catch {
+      setMobileIndicatorTones((currentTones) =>
+        currentTones[index] === "light" ? currentTones : { ...currentTones, [index]: "light" },
+      );
+    }
+  };
+
+  const moveMobileGallery = (nextIndex: number) => {
+    const galleryElement = mobileGalleryRef.current;
+    if (!galleryElement) return;
+
+    const boundedIndex = Math.min(Math.max(nextIndex, 0), gallery.length - 1);
+    galleryElement.scrollTo({
+      left: boundedIndex * galleryElement.clientWidth,
+      behavior: "smooth",
+    });
+    setActiveMobileSlide(boundedIndex);
+  };
 
   return (
-    <main className="flex-1 bg-[#08090B]">
+    <main className="np-product-detail flex-1 bg-[#08090B]">
       <div className={PRODUCT_DETAIL_CONTAINER_CLASS}>
         <button
           onClick={onNavigateHome}
@@ -2841,7 +2927,7 @@ function ProductDetailPage({
         <div
           draggable
           onDragStart={(event) => onAssetDragStart?.(asset, event)}
-          className="group relative mb-6 aspect-[1456/744] overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D] md:aspect-auto"
+          className="np-product-media group relative mb-6 hidden aspect-[1456/744] overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D] md:block md:aspect-auto"
         >
           <SmartProductImage
             candidates={detailImageCandidates(product, asset.id, heroOrder)}
@@ -2855,7 +2941,7 @@ function ProductDetailPage({
                 event.stopPropagation();
                 onQuickCollect?.("references", asset);
               }}
-              className="min-h-11 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
+              className="np-product-media-action min-h-11 rounded-md border px-2.5 py-1.5 text-[12px] font-medium backdrop-blur transition sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
             >
               레퍼런스
             </button>
@@ -2864,21 +2950,130 @@ function ProductDetailPage({
                 event.stopPropagation();
                 onQuickCollect?.("notes", asset);
               }}
-              className="min-h-11 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
+              className="np-product-media-action min-h-11 rounded-md border px-2.5 py-1.5 text-[12px] font-medium backdrop-blur transition sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
             >
               메모
             </button>
           </div>
         </div>
 
+        <section className="relative -mx-4 mb-5 w-[calc(100%+2rem)] md:hidden" aria-label={`${displayTitle} 이미지 갤러리`}>
+          <div
+            ref={mobileGalleryRef}
+            onScroll={(event) => {
+              const slideWidth = event.currentTarget.clientWidth;
+              if (!slideWidth) return;
+              const nextIndex = Math.round(event.currentTarget.scrollLeft / slideWidth);
+              setActiveMobileSlide((currentIndex) => currentIndex === nextIndex ? currentIndex : nextIndex);
+            }}
+            className="scrollbar-hide flex aspect-video w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth"
+          >
+            {gallery.map((order, index) => (
+              <div
+                key={order}
+                className="np-product-media np-product-carousel-slide group relative h-full w-full shrink-0 snap-center overflow-hidden bg-[#0A0B0D]"
+                aria-label={`${gallery.length}개 중 ${index + 1}번째 이미지`}
+              >
+                <SmartProductImage
+                  candidates={detailImageCandidates(product, asset.id, order)}
+                  fallback={productFallbackImage(asset.id, order, asset.image)}
+                  alt={index === 0 ? displayTitle : `${displayTitle} detail ${order}`}
+                  className="h-full w-full object-cover"
+                  draggable={false}
+                  onLoad={(event) => analyzeMobileIndicatorTone(event.currentTarget, index)}
+                />
+                <div className="absolute right-2 top-2 flex gap-1.5">
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onQuickCollect?.("references", asset);
+                    }}
+                    className="np-product-media-action np-product-mobile-media-action min-h-8 rounded-md border px-2.5 py-1 text-[12px] font-medium backdrop-blur transition"
+                  >
+                    레퍼런스
+                  </button>
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onQuickCollect?.("notes", asset);
+                    }}
+                    className="np-product-media-action np-product-mobile-media-action min-h-8 rounded-md border px-2.5 py-1 text-[12px] font-medium backdrop-blur transition"
+                  >
+                    메모
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {gallery.length > 1 && (
+            <div
+              className="absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-2"
+              data-control-tone={mobileIndicatorTones[activeMobileSlide] ?? "light"}
+            >
+              <button
+                type="button"
+                onClick={() => moveMobileGallery(activeMobileSlide - 1)}
+                disabled={activeMobileSlide === 0}
+                className={`np-product-gallery-control flex h-8 w-8 items-center justify-center rounded-full bg-black/15 backdrop-blur-sm transition disabled:opacity-20 ${
+                  mobileIndicatorTones[activeMobileSlide] === "dark"
+                    ? "np-product-gallery-control-dark"
+                    : "np-product-gallery-control-light"
+                }`}
+                aria-label="이전 이미지"
+              >
+                <ChevronRight className="h-4 w-4 rotate-180" />
+              </button>
+              <div
+                className="pointer-events-none flex w-[min(34vw,132px)] items-center gap-1"
+                role="progressbar"
+                aria-label="이미지 슬라이드 진행 상태"
+                aria-valuemin={1}
+                aria-valuemax={gallery.length}
+                aria-valuenow={activeMobileSlide + 1}
+                data-indicator-tone={mobileIndicatorTones[activeMobileSlide] ?? "light"}
+              >
+                {gallery.map((order, index) => (
+                  <span
+                    key={order}
+                    className={`flex-1 rounded-full transition-[height,background-color] duration-200 ${
+                      mobileIndicatorTones[activeMobileSlide] === "dark"
+                        ? index === activeMobileSlide
+                          ? "np-product-gallery-progress-dark-active"
+                          : "np-product-gallery-progress-dark-idle"
+                        : index === activeMobileSlide
+                          ? "np-product-gallery-progress-light-active"
+                          : "np-product-gallery-progress-light-idle"
+                    }`}
+                    aria-hidden="true"
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => moveMobileGallery(activeMobileSlide + 1)}
+                disabled={activeMobileSlide === gallery.length - 1}
+                className={`np-product-gallery-control flex h-8 w-8 items-center justify-center rounded-full bg-black/15 backdrop-blur-sm transition disabled:opacity-20 ${
+                  mobileIndicatorTones[activeMobileSlide] === "dark"
+                    ? "np-product-gallery-control-dark"
+                    : "np-product-gallery-control-light"
+                }`}
+                aria-label="다음 이미지"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </section>
+
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_360px] min-[2200px]:grid-cols-[minmax(0,1fr)_420px]">
-          <section className="min-w-0 space-y-3">
+          <section className="hidden min-w-0 space-y-3 md:block">
             {detailOrders.map((order) => (
               <div
                 key={order}
                 draggable
                 onDragStart={(event) => onAssetDragStart?.(asset, event)}
-                className="group relative overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D]"
+                className="np-product-media group relative overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D]"
               >
                 <SmartProductImage
                   candidates={detailImageCandidates(product, asset.id, order)}
@@ -2892,7 +3087,7 @@ function ProductDetailPage({
                       event.stopPropagation();
                       onQuickCollect?.("references", asset);
                     }}
-                    className="min-h-11 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
+                    className="np-product-media-action min-h-11 rounded-md border px-2.5 py-1.5 text-[12px] font-medium backdrop-blur transition sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
                   >
                     레퍼런스
                   </button>
@@ -2901,7 +3096,7 @@ function ProductDetailPage({
                       event.stopPropagation();
                       onQuickCollect?.("notes", asset);
                     }}
-                    className="min-h-11 rounded-md border border-white/15 bg-black/60 px-2.5 py-1.5 text-[12px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
+                    className="np-product-media-action min-h-11 rounded-md border px-2.5 py-1.5 text-[12px] font-medium backdrop-blur transition sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
                   >
                     메모
                   </button>
@@ -2921,7 +3116,7 @@ function ProductDetailPage({
         </div>
       </div>
 
-      <section className="border-t border-[#1F2329] px-4 py-14 sm:px-6 sm:py-16">
+      <section className="np-product-recommend-section border-t border-[#1F2329] px-4 py-14 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-[2560px]">
           <h2 className="mb-8 text-[24px] font-bold text-white">추천 모델링</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
@@ -2931,10 +3126,10 @@ function ProductDetailPage({
                 onClick={() => onOpenProduct(item.id)}
                 draggable
                 onDragStart={(event) => onAssetDragStart?.(item, event)}
-                className="overflow-hidden rounded-lg border border-[#242832] bg-[#101215] text-left transition hover:border-brand-primary/50"
+                className="np-product-recommend-card overflow-hidden rounded-lg border border-[#242832] bg-[#101215] text-left transition hover:border-brand-primary/50"
               >
                 <img src={item.image} alt={item.title} className="aspect-[16/10] w-full object-cover" referrerPolicy="no-referrer" />
-                <div className="border-t border-[#262A31] bg-[#15171D] p-4">
+                <div className="np-product-recommend-info border-t border-[#262A31] bg-[#15171D] p-4">
                   <span className="mb-2.5 inline-flex rounded-sm bg-brand-primary px-2 py-0.5 text-[14px] font-medium text-bg-dark">
                     Market
                   </span>
@@ -3518,7 +3713,7 @@ function BoardPage({
             <button
               type="button"
               onClick={() => openAIOrganizer(boardView)}
-              className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-brand-primary/40 bg-brand-primary/10 px-3 text-[13px] font-semibold text-brand-primary"
+              className="np-light-brand-action flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-brand-primary/40 bg-brand-primary/10 px-3 text-[13px] font-semibold text-brand-primary"
             >
               <Sparkles className="h-4 w-4" />
               AI 정리
@@ -3782,7 +3977,7 @@ function ProductPurchasePanel({
         <h1 className="text-[24px] font-bold text-white">{displayTitle}</h1>
       </div>
 
-      <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-4">
+      <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-4">
         <p className="mb-4 text-[14px] font-medium text-white">Artist</p>
         <div className="flex items-center gap-3">
           <img src={PROFILE_IMAGE} alt="" className="h-10 w-10 rounded-full bg-white object-cover" />
@@ -3797,12 +3992,12 @@ function ProductPurchasePanel({
           <span>{'\uD314\uB85C\uC6CC'}</span>
           <span className="text-right text-text-secondary">0.3K</span>
         </div>
-        <button className="mt-4 min-h-11 w-full rounded-md bg-[#3A3A3A] py-2.5 text-[14px] font-medium text-white transition hover:bg-[#4A4A4A]">
+        <button className="np-product-secondary-action mt-4 min-h-11 w-full rounded-md bg-[#3A3A3A] py-2.5 text-[14px] font-medium text-white transition hover:bg-[#4A4A4A]">
           {'\uD314\uB85C\uC6B0'}
         </button>
       </div>
 
-      <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-4">
+      <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-4">
         <div className="mb-4 flex items-end gap-3">
           <span className="text-[24px] font-bold text-brand-primary">{product.price}</span>
           {product.originalPrice && <span className="pb-1 text-[14px] text-text-tertiary line-through">{product.originalPrice}</span>}
@@ -3822,20 +4017,20 @@ function ProductPurchasePanel({
         <button
           onClick={handleAddToCart}
           disabled={isInCart}
-          className={`mb-3 w-full rounded-md py-3 text-[14px] font-medium transition ${
+          className={`np-product-cart-action mb-3 w-full rounded-md py-3 text-[14px] font-medium transition ${
             isInCart
-              ? 'cursor-default bg-[#262A31] text-brand-primary'
+              ? 'np-product-cart-action-active cursor-default bg-[#262A31] text-brand-primary'
               : 'bg-[#333] text-white hover:bg-[#444]'
           }`}
         >
           {isInCart ? '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uB2F4\uAE40' : '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uCD94\uAC00'}
         </button>
         <div className="grid grid-cols-2 gap-2">
-          <button className="flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+          <button className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
             <Heart className="h-4 w-4 text-brand-primary" />
             568
           </button>
-          <button className="flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+          <button className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
             <ShoppingBag className="h-4 w-4" />
             {'\uACF5\uC720'}
           </button>
@@ -3869,8 +4064,8 @@ function ProductPurchasePanel({
 
 function ProductLicensePanel() {
   return (
-    <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-5">
-      <h2 className="mb-4 text-[15px] font-medium text-white">라이센스</h2>
+    <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-5">
+      <h2 className="mb-4 text-[15px] font-medium text-white">라이선스</h2>
       {['상업적 사용 가능', '무제한 다운로드', 'AI 변환 가능'].map((item) => (
         <div key={item} className="mb-4 last:mb-0">
           <p className="text-[14px] font-medium text-white">{item}</p>
@@ -3883,7 +4078,7 @@ function ProductLicensePanel() {
 
 function ProductStatsPanel({ stats }: { stats: [string, string, string] }) {
   return (
-    <div className="grid grid-cols-3 rounded-lg border border-[#1F2329] bg-[#141518] p-5 text-center">
+    <div className="np-product-panel grid grid-cols-3 rounded-lg border border-[#1F2329] bg-[#141518] p-5 text-center">
       {[
         ['조회수', stats[0]],
         ['구매', stats[1]],
@@ -3900,7 +4095,7 @@ function ProductStatsPanel({ stats }: { stats: [string, string, string] }) {
 
 function ProductInfoPanel({ product }: { product: typeof PRODUCT_DETAIL_DATA[number] }) {
   return (
-    <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-5">
+    <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-5">
       <h2 className="mb-4 text-[15px] font-medium text-white">파일 정보</h2>
       <div className="space-y-3 border-b border-[#2A2E36] pb-5">
         {product.fileInfo.map(([label, value]) => (
@@ -3915,7 +4110,7 @@ function ProductInfoPanel({ product }: { product: typeof PRODUCT_DETAIL_DATA[num
       <h2 className="mb-3 mt-5 text-[15px] font-medium text-white">태그</h2>
       <div className="flex flex-wrap gap-2">
         {product.tags.map((tag) => (
-          <span key={tag} className="rounded-full border border-[#3A404F] px-2.5 py-1 text-[14px] font-medium text-text-secondary">
+          <span key={tag} className="np-product-tag rounded-full border border-[#3A404F] px-2.5 py-1 text-[14px] font-medium text-text-secondary">
             {tag}
           </span>
         ))}
@@ -4645,7 +4840,7 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
             </div>
           ))}
         </div>
-        <button className="w-full mt-4 flex items-center gap-2 px-4 py-3 bg-surface-primary/30 hover:bg-surface-primary rounded-[8px] text-[14px] font-medium text-brand-primary border border-dashed border-brand-primary/20 hover:border-border-primary/60 transition-all justify-center group">
+        <button className="np-light-brand-action w-full mt-4 flex items-center gap-2 px-4 py-3 bg-surface-primary/30 hover:bg-surface-primary rounded-[8px] text-[14px] font-medium text-brand-primary border border-dashed border-brand-primary/20 hover:border-border-primary/60 transition-all justify-center group">
             <Plus className="w-3.5 h-3.5" /> 새 보드 만들기
         </button>
       </section>
@@ -5076,7 +5271,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 50 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed bottom-[calc(env(safe-area-inset-bottom)+12px)] right-3 z-40 sm:bottom-8 sm:left-1/2 sm:right-auto sm:-translate-x-1/2"
+              className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+12px)] z-40 flex justify-center sm:bottom-8"
             >
               <button
                 onClick={() => {
@@ -5210,24 +5405,24 @@ export default function App() {
                         key={board.id}
                         type="button"
                         onClick={() => { setIsPanelOpen(false); openBoardPage('references'); }}
-                        className="relative h-[82px] rounded-[10px] border border-border-primary/20 overflow-hidden transition-all hover:scale-[1.005] hover:border-brand-primary/45 shadow-[0_4px_15px_rgba(0,0,0,0.3)] cursor-pointer group text-left"
+                        className="np-panel-reference-card relative h-[82px] rounded-[10px] border border-border-primary/20 overflow-hidden transition-all hover:scale-[1.005] hover:border-brand-primary/45 shadow-[0_4px_15px_rgba(0,0,0,0.3)] cursor-pointer group text-left"
                       >
                         <div className="absolute inset-0 z-0">
                           <img 
                             src={board.image} 
                             alt="" 
-                            className="w-full h-full object-cover opacity-[0.32] transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" 
+                            className="np-panel-reference-image w-full h-full object-cover opacity-[0.32] transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90"
                             referrerPolicy="no-referrer" 
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#0e1011] via-[#0e1011]/80 to-transparent" />
-                          <div className="absolute inset-0 bg-gradient-to-r from-[#0e1011] via-[#0e1011]/60 to-[#0e1011]/20" />
+                          <div className="np-panel-reference-gradient-vertical absolute inset-0 bg-gradient-to-t from-[#0e1011] via-[#0e1011]/80 to-transparent" />
+                          <div className="np-panel-reference-gradient-horizontal absolute inset-0 bg-gradient-to-r from-[#0e1011] via-[#0e1011]/60 to-[#0e1011]/20" />
                         </div>
                         
                         <div className="relative z-10 flex flex-col justify-end h-full p-3.5">
                           <h4 className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">{board.label}</h4>
                           <div className="flex gap-1.5 mt-2">
-                            <span className="text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter">{board.count}개</span>
-                            <span className="text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter truncate">{board.keyword}</span>
+                            <span className="np-panel-reference-meta text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter">{board.count}개</span>
+                            <span className="np-panel-reference-meta text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter truncate">{board.keyword}</span>
                           </div>
                         </div>
                       </button>

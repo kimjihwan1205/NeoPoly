@@ -1275,7 +1275,7 @@ function RightPanel({
           <button
             onClick={() => runAction()}
             disabled={isGeneratingModel}
-            className="np-primary-action mb-5 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-primary py-3 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
+            className="np-primary-action mb-5 mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-primary py-3 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
           >
             {isProcessing ? <LoadingIndicator tone="current" /> : <Workflow className="h-4 w-4" />}
             {isProcessing ? "리메시 처리 중" : "리메시 적용"}

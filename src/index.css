@@ -377,32 +377,124 @@ html[data-theme="light"] .np-settings-support-link-label {
 /* Semantic primary actions: keep the light-mode gold while separating
    important next-step buttons from pale surfaces without adding movement. */
 html[data-theme="light"] .np-primary-action {
+  appearance: none;
+  border: 1px solid #E69B13 !important;
   background-color: #FFB83D !important;
+  background-clip: border-box !important;
   color: #16110A !important;
-  box-shadow:
-    0 0 0 1px #E69B13,
-    0 5px 12px rgb(146 88 0 / 16%),
-    inset 0 1px 0 rgb(255 255 255 / 42%) !important;
+  box-shadow: 0 4px 10px rgb(146 88 0 / 14%) !important;
 }
 
 html[data-theme="light"] .np-primary-action:not(:disabled):hover {
+  border-color: #D98D0B !important;
   background-color: #FFB83D !important;
-  box-shadow:
-    0 0 0 1px #D98D0B,
-    0 7px 16px rgb(146 88 0 / 22%),
-    inset 0 1px 0 rgb(255 255 255 / 36%) !important;
+  box-shadow: 0 6px 14px rgb(146 88 0 / 18%) !important;
 }
 
 html[data-theme="light"] .np-primary-action:not(:disabled):active {
+  border-color: #D98D0B !important;
   filter: none !important;
-  box-shadow:
-    0 0 0 1px #D98D0B,
-    0 3px 7px rgb(146 88 0 / 15%),
-    inset 0 2px 4px rgb(89 51 0 / 14%) !important;
+  box-shadow: 0 2px 5px rgb(146 88 0 / 13%) !important;
 }
 
 html[data-theme="light"] .np-primary-action:disabled {
+  border-color: rgb(230 155 19 / 54%) !important;
   box-shadow: none !important;
+}
+
+/* On pale surfaces, light gold remains the visual accent while a deeper gold
+   carries interactive text and icons at a readable contrast. */
+html[data-theme="light"] .np-light-brand-action {
+  border-color: rgb(230 155 19 / 48%) !important;
+  background-color: rgb(255 184 61 / 8%) !important;
+  color: #8A5700 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="light"] .np-light-brand-action:not(:disabled):hover {
+  border-color: rgb(230 155 19 / 68%) !important;
+  background-color: rgb(255 184 61 / 14%) !important;
+  color: #6F4500 !important;
+}
+
+html[data-theme="light"] .np-light-brand-text-action {
+  color: #8A5700 !important;
+}
+
+html[data-theme="light"] .np-light-brand-text-action:hover {
+  color: #6F4500 !important;
+}
+
+html[data-theme="light"] .np-chatbot-trigger {
+  border: 1px solid #E69B13 !important;
+  background-color: #FFB83D !important;
+  color: #16110A !important;
+  box-shadow: 0 4px 12px rgb(146 88 0 / 18%) !important;
+}
+
+html[data-theme="light"] .np-chatbot-trigger:hover {
+  border-color: #D98D0B !important;
+  background-color: #FFB83D !important;
+  color: #16110A !important;
+  box-shadow: 0 6px 16px rgb(146 88 0 / 22%) !important;
+}
+
+html[data-theme="light"] .np-chatbot-online {
+  color: #8A5700 !important;
+}
+
+.np-chatbot-window {
+  box-shadow: 0 12px 40px rgb(0 0 0 / 80%);
+}
+
+html[data-theme="light"] .np-chatbot-window {
+  border-color: #AAB4C0 !important;
+  background-color: #FFFFFF !important;
+  box-shadow: 0 10px 28px rgb(31 36 44 / 10%) !important;
+}
+
+html[data-theme="light"] .np-chatbot-header,
+html[data-theme="light"] .np-chatbot-footer {
+  border-color: #D5DAE2 !important;
+  background-color: #F7F8FA !important;
+}
+
+html[data-theme="light"] .np-chatbot-messages {
+  background-color: #E8EBF0 !important;
+}
+
+html[data-theme="light"] .np-chatbot-bot-avatar,
+html[data-theme="light"] .np-chatbot-bot-bubble,
+html[data-theme="light"] .np-chatbot-input {
+  border-color: #C8CFD8 !important;
+  background-color: #FFFFFF !important;
+}
+
+/* Asset type badges sit on imagery, so Market and Art keep the exact same
+   media-overlay colors in both display modes. */
+.np-asset-type-badge-market {
+  background-color: rgb(224 161 46 / 40%) !important;
+  color: #F0B43A !important;
+}
+
+.group:hover .np-asset-type-badge-market {
+  background-color: rgb(224 161 46 / 50%) !important;
+  color: #F0B43A !important;
+}
+
+html[data-theme="light"] .np-asset-type-badge-market,
+html[data-theme="light"] .group:hover .np-asset-type-badge-market {
+  color: #F0B43A !important;
+}
+
+.np-asset-type-badge-art {
+  background-color: rgb(76 136 217 / 40%) !important;
+  color: #A0C5FF !important;
+}
+
+.group:hover .np-asset-type-badge-art {
+  background-color: rgb(76 136 217 / 50%) !important;
+  color: #A0C5FF !important;
 }
 
 html[data-theme="light"] button:not([class*="focus-visible:ring"]):focus-visible,
@@ -451,7 +543,7 @@ html[data-theme="light"] .np-full-workflow-intro-title {
 }
 
 html[data-theme="light"] .np-full-workflow-intro-copy {
-  color: #A7ADB7 !important;
+  color: #C8CDD5 !important;
 }
 
 html[data-theme="light"] .np-full-workflow-intro .bg-\[\#141518\] {
@@ -475,7 +567,7 @@ html[data-theme="light"] .np-full-workflow-intro .text-neutral-300 {
 }
 
 html[data-theme="light"] .np-full-workflow-intro .text-neutral-400 {
-  color: #A7ADB7 !important;
+  color: #BBC1CB !important;
 }
 
 html[data-theme="light"] .np-full-workflow-intro .hover\:text-white:hover,
@@ -520,6 +612,41 @@ html[data-theme="light"] .np-panel-trigger:hover {
 html[data-theme="light"] .np-main-panel {
   background-color: rgb(238 240 243 / 96%) !important;
   box-shadow: 0 6px 16px rgb(31 36 44 / 5%) !important;
+}
+
+html[data-theme="light"] .np-panel-reference-card {
+  border-color: #D5DAE2 !important;
+  background-color: #FFFFFF !important;
+  box-shadow: 0 2px 7px rgb(31 36 44 / 5%) !important;
+}
+
+html[data-theme="light"] .np-panel-reference-card:hover {
+  border-color: rgb(255 184 61 / 58%) !important;
+  box-shadow: 0 3px 9px rgb(31 36 44 / 7%) !important;
+}
+
+html[data-theme="light"] .np-panel-reference-image {
+  opacity: 0.48 !important;
+  filter: brightness(1.04) saturate(0.84) contrast(0.94);
+}
+
+html[data-theme="light"] .np-panel-reference-card:hover .np-panel-reference-image {
+  opacity: 0.62 !important;
+  filter: brightness(1.03) saturate(0.94) contrast(0.98);
+}
+
+html[data-theme="light"] .np-panel-reference-gradient-vertical {
+  background: linear-gradient(to top, rgb(255 255 255 / 98%) 0%, rgb(255 255 255 / 82%) 54%, rgb(255 255 255 / 10%) 100%) !important;
+}
+
+html[data-theme="light"] .np-panel-reference-gradient-horizontal {
+  background: linear-gradient(to right, rgb(255 255 255 / 96%) 0%, rgb(255 255 255 / 58%) 54%, rgb(255 255 255 / 8%) 100%) !important;
+}
+
+html[data-theme="light"] .np-panel-reference-meta {
+  border-color: rgb(186 195 206 / 72%) !important;
+  background-color: rgb(255 255 255 / 76%) !important;
+  color: #303640 !important;
 }
 
 html[data-theme="light"] .np-header-popover {
@@ -851,6 +978,130 @@ html[data-theme="light"] .np-note-text-preview {
   box-shadow:
     0 0 0 1px #D5DAE2,
     0 2px 6px rgb(31 36 44 / 5%) !important;
+}
+
+/* Product-detail media actions stay dark because they sit directly on imagery,
+   while information and commerce controls follow the light surface hierarchy. */
+.np-product-media-action {
+  border-color: rgb(255 255 255 / 16%) !important;
+  background-color: rgb(5 5 5 / 62%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 7px rgb(0 0 0 / 12%);
+}
+
+.np-product-media-action:hover {
+  border-color: var(--color-brand-primary) !important;
+  background-color: rgb(5 5 5 / 78%) !important;
+  color: var(--color-brand-primary) !important;
+}
+
+.np-product-mobile-media-action {
+  background-color: rgb(5 5 5 / 42%) !important;
+}
+
+.np-product-mobile-media-action:hover {
+  background-color: rgb(5 5 5 / 56%) !important;
+}
+
+.np-product-gallery-control-light {
+  color: #FFFFFF !important;
+}
+
+.np-product-gallery-control-dark {
+  color: #111318 !important;
+}
+
+html[data-theme="light"] .np-product-gallery-control-light {
+  color: #FFFFFF !important;
+}
+
+html[data-theme="light"] .np-product-gallery-control-dark {
+  color: #111318 !important;
+}
+
+.np-product-gallery-progress-light-active {
+  height: 4px;
+  background-color: rgb(255 255 255 / 92%);
+}
+
+.np-product-gallery-progress-light-idle {
+  height: 2px;
+  background-color: rgb(255 255 255 / 24%);
+}
+
+.np-product-gallery-progress-dark-active {
+  height: 4px;
+  background-color: rgb(17 19 24 / 82%);
+}
+
+.np-product-gallery-progress-dark-idle {
+  height: 2px;
+  background-color: rgb(17 19 24 / 26%);
+}
+
+html[data-theme="light"] .np-product-media.np-product-carousel-slide {
+  border-color: #181A1F !important;
+  background-color: #0A0B0D !important;
+}
+
+html[data-theme="light"] .np-product-media {
+  border-color: #C8CFD8 !important;
+  background-color: #FFFFFF !important;
+}
+
+html[data-theme="light"] .np-product-panel {
+  border-color: #D5DAE2 !important;
+  background-color: #FFFFFF !important;
+  box-shadow: 0 1px 4px rgb(31 36 44 / 4%) !important;
+}
+
+html[data-theme="light"] .np-product-secondary-action,
+html[data-theme="light"] .np-product-cart-action,
+html[data-theme="light"] .np-product-icon-action {
+  border: 1px solid #C8CFD8 !important;
+  background-color: #F7F8FA !important;
+  color: #303640 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="light"] .np-product-secondary-action:hover,
+html[data-theme="light"] .np-product-cart-action:hover,
+html[data-theme="light"] .np-product-icon-action:hover {
+  border-color: rgb(255 184 61 / 58%) !important;
+  background-color: rgb(255 184 61 / 10%) !important;
+  color: #111318 !important;
+}
+
+html[data-theme="light"] .np-product-cart-action-active {
+  border-color: rgb(255 184 61 / 42%) !important;
+  background-color: rgb(255 184 61 / 12%) !important;
+  color: #9A6200 !important;
+}
+
+html[data-theme="light"] .np-product-tag {
+  border-color: #D5DAE2 !important;
+  background-color: #F7F8FA !important;
+  color: #303640 !important;
+}
+
+html[data-theme="light"] .np-product-recommend-section {
+  border-color: #D5DAE2 !important;
+}
+
+html[data-theme="light"] .np-product-recommend-card {
+  border-color: #C8CFD8 !important;
+  background-color: #FFFFFF !important;
+  box-shadow: 0 2px 7px rgb(31 36 44 / 4%) !important;
+}
+
+html[data-theme="light"] .np-product-recommend-card:hover {
+  border-color: rgb(255 184 61 / 58%) !important;
+  box-shadow: 0 3px 9px rgb(31 36 44 / 6%) !important;
+}
+
+html[data-theme="light"] .np-product-recommend-info {
+  border-color: #D5DAE2 !important;
+  background-color: #FFFFFF !important;
 }
 
 html[data-theme="light"] .np-viewer-media {

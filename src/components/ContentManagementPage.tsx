@@ -304,7 +304,7 @@ export default function ContentManagementPage() {
       <aside className="np-primary-sidebar-surface z-10 hidden h-full w-[240px] shrink-0 flex-col overflow-y-auto border-r border-[#1C1E24] bg-[#050505] custom-scrollbar lg:flex xl:w-[300px]">
         <div className="p-6">
           <h2 className="np-primary-sidebar-title mb-5 tracking-tight text-white">콘텐츠 관리</h2>
-          <button className="flex items-center justify-center gap-1.5 w-full py-3 rounded-xl border border-[#3A404F]/60 bg-[#15161A] hover:bg-[#22252B] hover:border-brand-primary/50 text-brand-primary shadow-sm transition-all font-medium text-[15px] tracking-wide">
+          <button className="np-light-brand-action flex items-center justify-center gap-1.5 w-full py-3 rounded-xl border border-[#3A404F]/60 bg-[#15161A] hover:bg-[#22252B] hover:border-brand-primary/50 text-brand-primary shadow-sm transition-all font-medium text-[15px] tracking-wide">
             <Plus className="w-[18px] h-[18px]" />
             <span>새 콘텐츠 업로드</span>
           </button>

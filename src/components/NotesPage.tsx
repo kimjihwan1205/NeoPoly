@@ -707,7 +707,7 @@ export default function NotesPage({
               <button
                 type="button"
                 onClick={restoreAllNotes}
-                className="flex h-12 items-center justify-center gap-2 rounded-lg border border-brand-primary/35 bg-brand-primary/10 px-4 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-brand-primary/15"
+                className="np-light-brand-action flex h-12 items-center justify-center gap-2 rounded-lg border border-brand-primary/35 bg-brand-primary/10 px-4 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-brand-primary/15"
               >
                 <RotateCcw className="h-4 w-4" />
                 모두 복원
@@ -716,7 +716,7 @@ export default function NotesPage({
 
             <button
               onClick={openCreateNote}
-              className="flex h-12 w-12 shrink-0 items-center justify-center gap-2 rounded-lg border border-brand-primary/35 bg-brand-primary/10 px-0 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-brand-primary/15 sm:w-auto sm:px-4"
+              className="np-light-brand-action flex h-12 w-12 shrink-0 items-center justify-center gap-2 rounded-lg border border-brand-primary/35 bg-brand-primary/10 px-0 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-brand-primary/15 sm:w-auto sm:px-4"
               aria-label="노트 추가"
             >
               <Plus className="h-4 w-4" />

@@ -73,7 +73,7 @@ export default function ChatbotWidget() {
       {/* Floating Chat Button */}
       <button 
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-4 right-4 z-[100] flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/60 bg-[#141518] text-brand-primary shadow-[0_8px_24px_rgba(0,0,0,0.6)] transition-all hover:scale-110 hover:border-brand-primary hover:bg-[#1A1C21] sm:bottom-6 sm:right-6 sm:h-[52px] sm:w-[52px] lg:bottom-10 lg:right-10 ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
+        className={`np-chatbot-trigger fixed bottom-4 right-4 z-[100] flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/60 bg-[#141518] text-brand-primary shadow-[0_8px_24px_rgba(0,0,0,0.6)] transition-all hover:scale-110 hover:border-brand-primary hover:bg-[#1A1C21] sm:bottom-6 sm:right-6 sm:h-[52px] sm:w-[52px] lg:bottom-10 lg:right-10 ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
         aria-label="AI 도우미 열기"
       >
         <BotMessageSquare className="w-6 h-6 stroke-[1.5px]" />
@@ -81,17 +81,17 @@ export default function ChatbotWidget() {
 
       {/* Chat Window */}
       <div 
-        className={`fixed inset-x-3 bottom-3 z-[110] flex h-[min(620px,calc(100dvh-84px))] flex-col overflow-hidden rounded-2xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_12px_40px_rgba(0,0,0,0.8)] transition-all duration-300 origin-bottom-right sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[520px] sm:w-[360px] lg:bottom-10 lg:right-10 ${isOpen ? 'scale-100 opacity-100' : 'scale-75 opacity-0 pointer-events-none'}`}
+        className={`np-chatbot-window fixed inset-x-3 bottom-3 z-[110] flex h-[min(620px,calc(100dvh-84px))] flex-col overflow-hidden rounded-2xl border border-[#2A2E36] bg-[#0A0B0D] transition-all duration-300 origin-bottom-right sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[520px] sm:w-[360px] lg:bottom-10 lg:right-10 ${isOpen ? 'scale-100 opacity-100' : 'scale-75 opacity-0 pointer-events-none'}`}
       >
         {/* Header */}
-        <div className="flex justify-between items-center px-5 py-4 bg-[#141518] border-b border-[#1F2329] shrink-0">
+        <div className="np-chatbot-header flex justify-between items-center px-5 py-4 bg-[#141518] border-b border-[#1F2329] shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center border border-brand-primary/30 shadow-[0_0_12px_rgba(224,161,46,0.2)]">
               <BotMessageSquare className="w-4 h-4 text-[#050505]" />
             </div>
             <div>
               <h3 className="text-[15px] font-bold text-white leading-none mb-1">AI 도우미</h3>
-              <p className="text-[11px] font-medium text-brand-primary">온라인</p>
+              <p className="np-chatbot-online text-[11px] font-medium text-brand-primary">온라인</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -106,11 +106,11 @@ export default function ChatbotWidget() {
         </div>
 
         {/* Message List */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar bg-bg-dark">
+        <div className="np-chatbot-messages flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar bg-bg-dark">
           {messages.map((msg) => (
             <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
               {msg.role === 'bot' && (
-                <div className="w-8 h-8 rounded-full bg-[#141518] border border-[#2A2E36] shrink-0 flex items-center justify-center">
+                <div className="np-chatbot-bot-avatar w-8 h-8 rounded-full bg-[#141518] border border-[#2A2E36] shrink-0 flex items-center justify-center">
                   <Bot className="w-4 h-4 text-brand-primary" />
                 </div>
               )}
@@ -118,7 +118,7 @@ export default function ChatbotWidget() {
                 className={`max-w-[85%] px-4 py-3 rounded-2xl text-[13px] leading-relaxed whitespace-pre-wrap ${
                   msg.role === 'user' 
                     ? 'bg-brand-primary text-[#050505] rounded-tr-sm font-medium'
-                    : 'bg-[#141518] border border-[#2A2E36] text-text-primary rounded-tl-sm'
+                    : 'np-chatbot-bot-bubble bg-[#141518] border border-[#2A2E36] text-text-primary rounded-tl-sm'
                 }`}
               >
                 {msg.content}
@@ -129,8 +129,8 @@ export default function ChatbotWidget() {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-[#141518] border-t border-[#1F2329] shrink-0">
-          <div className="flex items-center gap-2 bg-[#0A0B0D] border border-[#2A2E36] rounded-xl p-1.5 focus-within:border-brand-primary/50 transition-colors">
+        <div className="np-chatbot-footer p-4 bg-[#141518] border-t border-[#1F2329] shrink-0">
+          <div className="np-chatbot-input flex items-center gap-2 bg-[#0A0B0D] border border-[#2A2E36] rounded-xl p-1.5 focus-within:border-brand-primary/50 transition-colors">
             <input 
               type="text" 
               value={inputValue}

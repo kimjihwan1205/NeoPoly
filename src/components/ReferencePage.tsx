@@ -538,7 +538,7 @@ export default function ReferencePage({
           )}
           <button
             onClick={openCreateBoard}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-bold text-brand-primary transition hover:border-brand-primary/50 hover:bg-[#22252B]"
+            className="np-light-brand-action flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-bold text-brand-primary transition hover:border-brand-primary/50 hover:bg-[#22252B]"
           >
             <Plus className="h-[18px] w-[18px]" />
             새 보드 만들기
@@ -714,7 +714,7 @@ export default function ReferencePage({
 
               <button
                 onClick={openCreateBoard}
-                className="flex h-12 w-12 items-center justify-center gap-2 rounded-lg border border-brand-primary/35 bg-brand-primary/10 px-0 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-brand-primary/15 sm:w-auto sm:px-4"
+                className="np-light-brand-action flex h-12 w-12 items-center justify-center gap-2 rounded-lg border border-brand-primary/35 bg-brand-primary/10 px-0 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-brand-primary/15 sm:w-auto sm:px-4"
                 aria-label="새 보드 추가"
               >
                 <Plus className="h-4 w-4" />
