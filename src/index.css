@@ -1003,40 +1003,69 @@ html[data-theme="light"] .np-note-text-preview {
   background-color: rgb(5 5 5 / 56%) !important;
 }
 
-.np-product-gallery-control-light {
-  color: #FFFFFF !important;
+.np-product-thumbnail-rail {
+  border-block: 1px solid #1F2329;
+  background-color: #0F1013;
 }
 
-.np-product-gallery-control-dark {
-  color: #111318 !important;
+.np-product-gallery-thumbnail {
+  border-color: rgb(255 255 255 / 12%);
+  background-color: #050505;
+  opacity: 0.62;
+  transition:
+    border-color 160ms ease,
+    opacity 160ms ease,
+    box-shadow 160ms ease;
 }
 
-html[data-theme="light"] .np-product-gallery-control-light {
-  color: #FFFFFF !important;
+.np-product-gallery-thumbnail:hover {
+  border-color: rgb(255 255 255 / 32%);
+  opacity: 0.88;
 }
 
-html[data-theme="light"] .np-product-gallery-control-dark {
-  color: #111318 !important;
+.np-product-gallery-thumbnail:focus-visible {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 1px;
 }
 
-.np-product-gallery-progress-light-active {
-  height: 4px;
-  background-color: rgb(255 255 255 / 92%);
+.np-product-gallery-thumbnail[data-active="true"] {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 1px rgb(224 161 46 / 22%);
+  opacity: 1;
 }
 
-.np-product-gallery-progress-light-idle {
-  height: 2px;
-  background-color: rgb(255 255 255 / 24%);
+.np-product-gallery-thumbnail-veil {
+  background-color: rgb(0 0 0 / 12%);
+  transition: background-color 160ms ease;
 }
 
-.np-product-gallery-progress-dark-active {
-  height: 4px;
-  background-color: rgb(17 19 24 / 82%);
+.np-product-gallery-thumbnail[data-active="true"] .np-product-gallery-thumbnail-veil,
+.np-product-gallery-thumbnail:hover .np-product-gallery-thumbnail-veil {
+  background-color: transparent;
 }
 
-.np-product-gallery-progress-dark-idle {
-  height: 2px;
-  background-color: rgb(17 19 24 / 26%);
+html[data-theme="light"] .np-product-thumbnail-rail {
+  border-color: #D5DAE2;
+  background-color: #F7F8FA;
+}
+
+html[data-theme="light"] .np-product-gallery-thumbnail {
+  border-color: #C8CFD8;
+  background-color: #FFFFFF;
+  box-shadow: 0 1px 3px rgb(31 36 44 / 4%);
+}
+
+html[data-theme="light"] .np-product-gallery-thumbnail:hover {
+  border-color: rgb(255 184 61 / 56%);
+}
+
+html[data-theme="light"] .np-product-gallery-thumbnail[data-active="true"] {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 1px rgb(255 184 61 / 20%);
+}
+
+html[data-theme="light"] .np-product-gallery-thumbnail-veil {
+  background-color: rgb(255 255 255 / 16%);
 }
 
 html[data-theme="light"] .np-product-media.np-product-carousel-slide {

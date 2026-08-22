@@ -2780,14 +2780,14 @@ function SmartProductImage({
   alt,
   className,
   draggable,
-  onLoad,
+  ariaHidden,
 }: {
   candidates: string[];
   fallback: string;
   alt: string;
   className: string;
   draggable?: boolean;
-  onLoad?: React.ReactEventHandler<HTMLImageElement>;
+  ariaHidden?: boolean;
 }) {
   const sources = [...candidates, fallback];
   const [sourceIndex, setSourceIndex] = useState(0);
@@ -2800,7 +2800,7 @@ function SmartProductImage({
       referrerPolicy="no-referrer"
       className={className}
       draggable={draggable}
-      onLoad={onLoad}
+      aria-hidden={ariaHidden}
       onError={() => {
         setSourceIndex((prev) => Math.min(prev + 1, sources.length - 1));
       }}
@@ -2833,73 +2833,14 @@ function ProductDetailPage({
   const gallery = PRODUCT_IMAGE_ORDER[asset.id] ?? Array.from({ length: product.galleryCount }, (_, index) => index + 1);
   const [heroOrder, ...detailOrders] = gallery;
   const [activeMobileSlide, setActiveMobileSlide] = useState(0);
-  const [mobileIndicatorTones, setMobileIndicatorTones] = useState<Record<number, "light" | "dark">>({});
   const mobileGalleryRef = useRef<HTMLDivElement>(null);
+  const mobileThumbnailRailRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setActiveMobileSlide(0);
-    setMobileIndicatorTones({});
     mobileGalleryRef.current?.scrollTo({ left: 0 });
+    mobileThumbnailRailRef.current?.scrollTo({ left: 0 });
   }, [asset.id]);
-
-  const analyzeMobileIndicatorTone = (image: HTMLImageElement, index: number) => {
-    if (!image.naturalWidth || !image.naturalHeight || !image.clientWidth || !image.clientHeight) return;
-
-    try {
-      const canvas = document.createElement("canvas");
-      canvas.width = 64;
-      canvas.height = 16;
-      const context = canvas.getContext("2d", { willReadFrequently: true });
-      if (!context) return;
-
-      const imageRatio = image.naturalWidth / image.naturalHeight;
-      const frameRatio = image.clientWidth / image.clientHeight;
-      let visibleX = 0;
-      let visibleY = 0;
-      let visibleWidth = image.naturalWidth;
-      let visibleHeight = image.naturalHeight;
-
-      if (imageRatio > frameRatio) {
-        visibleWidth = image.naturalHeight * frameRatio;
-        visibleX = (image.naturalWidth - visibleWidth) / 2;
-      } else {
-        visibleHeight = image.naturalWidth / frameRatio;
-        visibleY = (image.naturalHeight - visibleHeight) / 2;
-      }
-
-      context.drawImage(
-        image,
-        visibleX + visibleWidth * 0.28,
-        visibleY + visibleHeight * 0.72,
-        visibleWidth * 0.44,
-        visibleHeight * 0.2,
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-      );
-
-      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
-      let luminanceTotal = 0;
-      let opaquePixelCount = 0;
-
-      for (let offset = 0; offset < pixels.length; offset += 4) {
-        if (pixels[offset + 3] < 32) continue;
-        luminanceTotal += 0.2126 * pixels[offset] + 0.7152 * pixels[offset + 1] + 0.0722 * pixels[offset + 2];
-        opaquePixelCount += 1;
-      }
-
-      if (!opaquePixelCount) return;
-      const tone = luminanceTotal / opaquePixelCount >= 154 ? "dark" : "light";
-      setMobileIndicatorTones((currentTones) =>
-        currentTones[index] === tone ? currentTones : { ...currentTones, [index]: tone },
-      );
-    } catch {
-      setMobileIndicatorTones((currentTones) =>
-        currentTones[index] === "light" ? currentTones : { ...currentTones, [index]: "light" },
-      );
-    }
-  };
 
   const moveMobileGallery = (nextIndex: number) => {
     const galleryElement = mobileGalleryRef.current;
@@ -2912,6 +2853,21 @@ function ProductDetailPage({
     });
     setActiveMobileSlide(boundedIndex);
   };
+
+  useEffect(() => {
+    const thumbnailRail = mobileThumbnailRailRef.current;
+    const activeThumbnail = thumbnailRail?.querySelector<HTMLElement>(
+      `[data-thumbnail-index="${activeMobileSlide}"]`,
+    );
+    if (!thumbnailRail || !activeThumbnail) return;
+
+    const centeredScrollPosition =
+      activeThumbnail.offsetLeft - (thumbnailRail.clientWidth - activeThumbnail.clientWidth) / 2;
+    thumbnailRail.scrollTo({
+      left: Math.max(0, centeredScrollPosition),
+      behavior: "smooth",
+    });
+  }, [activeMobileSlide]);
 
   return (
     <main className="np-product-detail flex-1 bg-[#08090B]">
@@ -2966,7 +2922,7 @@ function ProductDetailPage({
               const nextIndex = Math.round(event.currentTarget.scrollLeft / slideWidth);
               setActiveMobileSlide((currentIndex) => currentIndex === nextIndex ? currentIndex : nextIndex);
             }}
-            className="scrollbar-hide flex aspect-video w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth"
+            className="scrollbar-hide flex h-[clamp(280px,36vh,360px)] w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth"
           >
             {gallery.map((order, index) => (
               <div
@@ -2977,12 +2933,23 @@ function ProductDetailPage({
                 <SmartProductImage
                   candidates={detailImageCandidates(product, asset.id, order)}
                   fallback={productFallbackImage(asset.id, order, asset.image)}
-                  alt={index === 0 ? displayTitle : `${displayTitle} detail ${order}`}
-                  className="h-full w-full object-cover"
+                  alt=""
+                  className="absolute inset-0 h-full w-full scale-110 object-cover opacity-55 blur-xl"
                   draggable={false}
-                  onLoad={(event) => analyzeMobileIndicatorTone(event.currentTarget, index)}
+                  ariaHidden
                 />
-                <div className="absolute right-2 top-2 flex gap-1.5">
+                <span
+                  className="pointer-events-none absolute inset-0 bg-black/25"
+                  aria-hidden="true"
+                />
+                <SmartProductImage
+                  candidates={detailImageCandidates(product, asset.id, order)}
+                  fallback={productFallbackImage(asset.id, order, asset.image)}
+                  alt={index === 0 ? displayTitle : `${displayTitle} detail ${order}`}
+                  className="relative z-[1] h-full w-full object-contain"
+                  draggable={false}
+                />
+                <div className="absolute right-2 top-2 z-[2] flex gap-1.5">
                   <button
                     onClick={(event) => {
                       event.stopPropagation();
@@ -3008,60 +2975,33 @@ function ProductDetailPage({
 
           {gallery.length > 1 && (
             <div
-              className="absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-2"
-              data-control-tone={mobileIndicatorTones[activeMobileSlide] ?? "light"}
+              ref={mobileThumbnailRailRef}
+              className="np-product-thumbnail-rail scrollbar-hide flex touch-pan-x snap-x snap-proximity gap-1.5 overflow-x-auto overscroll-x-contain px-4 py-2.5 scroll-smooth"
+              role="tablist"
+              aria-label="상세 이미지 선택"
             >
-              <button
-                type="button"
-                onClick={() => moveMobileGallery(activeMobileSlide - 1)}
-                disabled={activeMobileSlide === 0}
-                className={`np-product-gallery-control flex h-8 w-8 items-center justify-center rounded-full bg-black/15 backdrop-blur-sm transition disabled:opacity-20 ${
-                  mobileIndicatorTones[activeMobileSlide] === "dark"
-                    ? "np-product-gallery-control-dark"
-                    : "np-product-gallery-control-light"
-                }`}
-                aria-label="이전 이미지"
-              >
-                <ChevronRight className="h-4 w-4 rotate-180" />
-              </button>
-              <div
-                className="pointer-events-none flex w-[min(34vw,132px)] items-center gap-1"
-                role="progressbar"
-                aria-label="이미지 슬라이드 진행 상태"
-                aria-valuemin={1}
-                aria-valuemax={gallery.length}
-                aria-valuenow={activeMobileSlide + 1}
-                data-indicator-tone={mobileIndicatorTones[activeMobileSlide] ?? "light"}
-              >
-                {gallery.map((order, index) => (
-                  <span
-                    key={order}
-                    className={`flex-1 rounded-full transition-[height,background-color] duration-200 ${
-                      mobileIndicatorTones[activeMobileSlide] === "dark"
-                        ? index === activeMobileSlide
-                          ? "np-product-gallery-progress-dark-active"
-                          : "np-product-gallery-progress-dark-idle"
-                        : index === activeMobileSlide
-                          ? "np-product-gallery-progress-light-active"
-                          : "np-product-gallery-progress-light-idle"
-                    }`}
-                    aria-hidden="true"
+              {gallery.map((order, index) => (
+                <button
+                  key={order}
+                  type="button"
+                  role="tab"
+                  aria-selected={index === activeMobileSlide}
+                  aria-label={`${gallery.length}개 중 ${index + 1}번째 이미지 보기`}
+                  data-active={index === activeMobileSlide}
+                  data-thumbnail-index={index}
+                  onClick={() => moveMobileGallery(index)}
+                  className="np-product-gallery-thumbnail relative h-11 w-14 shrink-0 snap-center overflow-hidden rounded-md border-2"
+                >
+                  <SmartProductImage
+                    candidates={detailImageCandidates(product, asset.id, order)}
+                    fallback={productFallbackImage(asset.id, order, asset.image)}
+                    alt={`${displayTitle} ${index + 1}번째 이미지 썸네일`}
+                    className="h-full w-full object-cover"
+                    draggable={false}
                   />
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => moveMobileGallery(activeMobileSlide + 1)}
-                disabled={activeMobileSlide === gallery.length - 1}
-                className={`np-product-gallery-control flex h-8 w-8 items-center justify-center rounded-full bg-black/15 backdrop-blur-sm transition disabled:opacity-20 ${
-                  mobileIndicatorTones[activeMobileSlide] === "dark"
-                    ? "np-product-gallery-control-dark"
-                    : "np-product-gallery-control-light"
-                }`}
-                aria-label="다음 이미지"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+                  <span className="np-product-gallery-thumbnail-veil absolute inset-0" aria-hidden="true" />
+                </button>
+              ))}
             </div>
           )}
         </section>
