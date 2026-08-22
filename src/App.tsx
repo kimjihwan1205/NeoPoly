@@ -2922,7 +2922,7 @@ function ProductDetailPage({
               const nextIndex = Math.round(event.currentTarget.scrollLeft / slideWidth);
               setActiveMobileSlide((currentIndex) => currentIndex === nextIndex ? currentIndex : nextIndex);
             }}
-            className="scrollbar-hide flex h-[clamp(280px,36vh,360px)] w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth"
+            className="scrollbar-hide flex aspect-video w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth"
           >
             {gallery.map((order, index) => (
               <div
