@@ -325,13 +325,15 @@ export default function UserProfilePage({
               referrerPolicy="no-referrer"
             />
             {/* Hover Camera overlay */}
-            <div 
+            <button
+              type="button"
+              aria-label="프로필 이미지 업로드"
               onClick={() => avatarInputRef.current?.click()}
-              className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-1 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              className="absolute bottom-1 right-1 flex h-10 w-10 cursor-pointer flex-col items-center justify-center gap-1 rounded-full bg-black/70 opacity-100 transition-opacity duration-200 md:inset-0 md:h-auto md:w-auto md:rounded-none md:bg-black/60 md:opacity-0 md:group-hover:opacity-100"
             >
-              <Upload className="w-5 h-5 text-brand-primary animate-pulse" />
-              <span className="text-[14px] font-medium text-text-primary tracking-widest uppercase">UPLOAD</span>
-            </div>
+              <Upload className="h-4 w-4 text-brand-primary md:h-5 md:w-5" />
+              <span className="hidden text-[14px] font-medium uppercase tracking-widest text-text-primary md:block">UPLOAD</span>
+            </button>
             <input 
               type="file" 
               ref={avatarInputRef} 
@@ -394,7 +396,7 @@ export default function UserProfilePage({
             {isEditingBio ? (
               <div className="space-y-4 font-sans animate-in fade-in duration-200">
                 <div className="space-y-1.5">
-                  <label className="text-[14px] font-medium text-text-tertiary">닉네임</label>
+                  <label className="text-[14px] font-medium text-text-secondary">닉네임</label>
                   <input
                     type="text"
                     value={editedNickname}
@@ -404,7 +406,7 @@ export default function UserProfilePage({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[14px] font-medium text-text-tertiary">크리에이터 약력 (Bio)</label>
+                  <label className="text-[14px] font-medium text-text-secondary">크리에이터 약력 (Bio)</label>
                   <textarea
                     value={editedBio}
                     onChange={(e) => setEditedBio(e.target.value)}
@@ -534,7 +536,7 @@ export default function UserProfilePage({
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center justify-center gap-2 px-5 py-3 text-[14px] leading-relaxed font-medium rounded-md transition-all cursor-pointer flex-1 md:flex-initial text-center ${
                   activeTab === tab.id
-                    ? 'bg-[#181A1F] text-[#E0A12E] border border-[#2A2E36] shadow-sm'
+                    ? 'bg-[#181A1F] text-brand-primary border border-[#2A2E36] shadow-sm'
                     : 'text-neutral-400 hover:text-white hover:bg-[#181A1F]'
                 }`}
               >
@@ -558,7 +560,7 @@ export default function UserProfilePage({
                   </div>
                   <button
                     onClick={() => handleOpenProjectModal()}
-                    className="flex items-center gap-1.5 px-4 py-2.5 bg-brand-primary hover:bg-brand-hover text-bg-dark text-[15px] leading-relaxed font-medium rounded-sm transition-all cursor-pointer border-0 shadow-lg"
+                    className="np-primary-action flex items-center gap-1.5 px-4 py-2.5 bg-brand-primary hover:bg-brand-hover text-bg-dark text-[15px] leading-relaxed font-medium rounded-sm transition-all cursor-pointer border-0 shadow-lg"
                   >
                     <Plus className="w-4 h-4" />
                     <span>새 프로젝트 등록</span>
@@ -680,7 +682,7 @@ export default function UserProfilePage({
                   </div>
                   <button
                     onClick={onOpenCreationsModal}
-                    className="flex items-center gap-1.5 px-4 py-2.5 bg-brand-primary hover:bg-brand-hover text-bg-dark text-[15px] leading-relaxed font-medium rounded-sm transition-all cursor-pointer border-0 shadow-lg"
+                    className="np-primary-action flex items-center gap-1.5 px-4 py-2.5 bg-brand-primary hover:bg-brand-hover text-bg-dark text-[15px] leading-relaxed font-medium rounded-sm transition-all cursor-pointer border-0 shadow-lg"
                   >
                     <Plus className="w-4 h-4" />
                     <span>새 에셋 올리기</span>
@@ -702,13 +704,13 @@ export default function UserProfilePage({
                           <div className="relative flex-1 overflow-hidden">
                             <img src={asset.image} alt={asset.title} className="w-full h-full object-cover transition-all duration-300 ease-in-out group-hover:scale-[1.007] group-hover:brightness-[0.82]" referrerPolicy="no-referrer" />
                             <div className={`absolute top-2 right-2 h-7 min-w-7 px-1 rounded-[6px] flex items-center justify-center text-[14px] font-medium backdrop-blur-[8px] z-20 ${
-                              isM ? 'bg-[#E0A12E]/40 text-[#F0B43A]' : 'bg-[#4C88D9]/40 text-[#A0C5FF]'
+                              isM ? 'bg-brand-primary/40 text-[#F0B43A]' : 'bg-[#4C88D9]/40 text-[#A0C5FF]'
                             }`}>
                               {asset.badge}
                             </div>
-                            <div className="absolute inset-x-0 bottom-0 h-[80%] bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3 opacity-0 group-hover:opacity-100 translate-y-1.5 group-hover:translate-y-0 transition-all duration-[300ms] ease-out z-10">
-                              <h3 className="text-[15px] font-medium text-text-primary line-clamp-2 leading-tight mb-1">{asset.title}</h3>
-                              <div className="flex items-center gap-2.5 text-[14px] text-text-secondary">
+                            <div className="np-dark-media absolute inset-x-0 bottom-0 z-10 flex h-[88%] translate-y-0 flex-col justify-end bg-gradient-to-t from-black/95 via-black/40 to-transparent p-2.5 opacity-100 transition-all duration-[300ms] ease-out md:h-[80%] md:translate-y-1.5 md:p-3 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100">
+                              <h3 className="mb-1 line-clamp-2 text-[12px] font-medium leading-tight text-text-primary sm:text-[14px]">{asset.title}</h3>
+                              <div className="flex items-center gap-2 text-[11px] text-text-secondary sm:text-[13px]">
                                 <span className="flex items-center gap-1"><Heart className="w-3 h-3 fill-red-500/10 text-red-500/80" /> {asset.likes}</span>
                                 <span className="flex items-center gap-1"><Eye className="w-3 h-3 text-text-tertiary" /> {asset.views}</span>
                               </div>
@@ -757,12 +759,12 @@ export default function UserProfilePage({
                             </button>
 
                             <div className={`absolute top-2 right-2 h-7 min-w-7 px-1 rounded-[6px] flex items-center justify-center text-[14px] font-medium backdrop-blur-[8px] z-20 ${
-                              isM ? 'bg-[#E0A12E]/40 text-[#F0B43A]' : 'bg-[#4C88D9]/40 text-[#A0C5FF]'
+                              isM ? 'bg-brand-primary/40 text-[#F0B43A]' : 'bg-[#4C88D9]/40 text-[#A0C5FF]'
                             }`}>
                               {asset.badge}
                             </div>
 
-                            <div className="absolute inset-x-0 bottom-0 h-[80%] bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3 z-10">
+                            <div className="np-dark-media absolute inset-x-0 bottom-0 h-[80%] bg-gradient-to-t from-black/95 via-black/40 to-transparent flex flex-col justify-end p-3 z-10">
                               <h3 className="text-[15px] font-medium text-text-primary line-clamp-1 leading-tight mb-1">{asset.title}</h3>
                               <p className="text-[14px] text-text-secondary truncate">by {asset.author}</p>
                               <div className="flex items-center gap-2.5 text-[14px] text-text-secondary mt-1.5">
@@ -809,7 +811,7 @@ export default function UserProfilePage({
               <form onSubmit={handleSaveProject} className="p-6 space-y-4 font-sans">
                 {/* Title */}
                 <div className="space-y-1.5">
-                  <label className="text-[15px] leading-relaxed font-medium text-text-tertiary">프로젝트 명칭</label>
+                  <label className="text-[15px] font-medium leading-relaxed text-text-secondary">프로젝트 명칭</label>
                   <input
                     type="text"
                     required
@@ -822,7 +824,7 @@ export default function UserProfilePage({
 
                 {/* Description */}
                 <div className="space-y-1.5">
-                  <label className="text-[15px] leading-relaxed font-medium text-text-tertiary">세부 설명</label>
+                  <label className="text-[15px] font-medium leading-relaxed text-text-secondary">세부 설명</label>
                   <textarea
                     required
                     rows={3}
@@ -836,7 +838,7 @@ export default function UserProfilePage({
                 {/* Grid Progress & Status */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[15px] leading-relaxed font-medium text-text-tertiary">상태 (Status)</label>
+                    <label className="text-[15px] font-medium leading-relaxed text-text-secondary">상태 (Status)</label>
                     <select
                       value={projectStatus}
                       onChange={(e) => setProjectStatus(e.target.value)}
@@ -850,7 +852,7 @@ export default function UserProfilePage({
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[15px] leading-relaxed font-medium text-text-tertiary">진척도 (Progress): {projectProgress}%</label>
+                    <label className="text-[15px] font-medium leading-relaxed text-text-secondary">진척도 (Progress): {projectProgress}%</label>
                     <input
                       type="range"
                       min="0"
@@ -864,7 +866,7 @@ export default function UserProfilePage({
 
                 {/* Tags manager */}
                 <div className="space-y-2">
-                  <label className="text-[15px] leading-relaxed font-medium text-text-tertiary">기술 스택 또는 태그</label>
+                  <label className="text-[15px] font-medium leading-relaxed text-text-secondary">기술 스택 또는 태그</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -906,7 +908,7 @@ export default function UserProfilePage({
 
                 {/* Artwork selection */}
                 <div className="space-y-2">
-                  <label className="text-[15px] leading-relaxed font-medium text-text-tertiary">프로젝트 대표 이미지 업로드 / 무작위 매칭</label>
+                  <label className="text-[15px] font-medium leading-relaxed text-text-secondary">프로젝트 대표 이미지 업로드 / 무작위 매칭</label>
                   <div className="flex gap-4">
                     <button
                       type="button"
@@ -961,7 +963,7 @@ export default function UserProfilePage({
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-3 bg-brand-primary hover:bg-brand-hover text-bg-dark rounded-[6px] text-[15px] leading-relaxed font-medium transition-all cursor-pointer border-0 text-center shadow-lg"
+                    className="np-primary-action flex-1 py-3 bg-brand-primary hover:bg-brand-hover text-bg-dark rounded-[6px] text-[15px] leading-relaxed font-medium transition-all cursor-pointer border-0 text-center shadow-lg"
                   >
                     {editingProject ? '변경 사항 적용하기' : '포트폴리오 등재 완료'}
                   </button>

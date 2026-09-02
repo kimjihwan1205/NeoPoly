@@ -38,3 +38,5 @@ export interface UserProfile {
   youtubeUrl?: string;
   completedProjects: CompletedProject[];
 }
+
+export type ThemeMode = 'dark' | 'light';

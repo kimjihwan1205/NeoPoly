@@ -20,8 +20,8 @@ export default function FavoritesPage({ favorites, toggleFavorite }: FavoritesPa
   return (
     <main className="flex-1 bg-bg-dark font-sans text-text-primary px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 max-w-[2560px] mx-auto w-full">
       <div className="flex flex-col mb-10">
-        <h1 className="text-[32px] md:text-[32px] font-bold tracking-tight text-white mb-2 flex items-center gap-3">
-          <Heart className="w-8 h-8 md:w-10 md:h-10 text-red-500 fill-red-500" />
+        <h1 className="mb-2 flex items-center gap-3 text-[28px] font-bold tracking-tight text-white sm:text-[32px]">
+          <Heart className="h-8 w-8 fill-red-500 text-red-500 sm:h-10 sm:w-10" />
           관심 목록
         </h1>
         <p className="text-text-secondary text-[15px] font-medium max-w-xl">
@@ -30,7 +30,7 @@ export default function FavoritesPage({ favorites, toggleFavorite }: FavoritesPa
       </div>
 
       {favoriteAssets.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 min-[2200px]:grid-cols-6">
           <AnimatePresence>
             {favoriteAssets.map(asset => (
               <motion.div
@@ -52,16 +52,17 @@ export default function FavoritesPage({ favorites, toggleFavorite }: FavoritesPa
                   <div className="absolute top-2 right-2 z-20">
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleFavorite(asset.id); }}
-                      className="p-1.5 bg-black/40 hover:bg-black/80 rounded-full text-red-500 backdrop-blur-md transition-all"
+                      aria-label={`${asset.title} 즐겨찾기 해제`}
+                      className="flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-red-500 backdrop-blur-md transition-all hover:bg-black/80 sm:h-8 sm:w-8"
                     >
                       <Heart className="w-4 h-4 fill-red-500" />
                     </button>
                   </div>
-                  <div className="absolute inset-x-0 bottom-0 h-[75%] bg-gradient-to-t from-black/95 via-black/60 to-transparent flex flex-col justify-end p-4 pb-5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-[300ms] ease-out z-10">
-                    <h3 className="text-[15px] font-normal text-text-primary line-clamp-2 leading-[1.3] mb-0.5">
+                  <div className="np-dark-media absolute inset-x-0 bottom-0 z-10 flex h-[82%] translate-y-0 flex-col justify-end bg-gradient-to-t from-black/95 via-black/60 to-transparent p-2.5 opacity-100 transition-all duration-[300ms] ease-out md:h-[75%] md:translate-y-2 md:p-4 md:pb-5 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100">
+                    <h3 className="mb-0.5 line-clamp-2 text-[12px] font-normal leading-[1.3] text-text-primary sm:text-[14px]">
                       {asset.title}
                     </h3>
-                    <p className="text-[14px] text-text-secondary font-medium">
+                    <p className="truncate text-[11px] font-medium text-text-secondary sm:text-[13px]">
                       {asset.author}
                     </p>
                   </div>

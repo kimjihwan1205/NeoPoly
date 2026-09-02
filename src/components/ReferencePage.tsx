@@ -14,6 +14,7 @@ import {
   Clock,
   Download,
   Folder,
+  FolderPlus,
   LayoutGrid,
   Link as LinkIcon,
   List,
@@ -21,11 +22,13 @@ import {
   Plus,
   Search,
   Trash2,
+  Unlink,
   Wand2,
   X,
 } from "lucide-react";
 import { ASSETS } from "../App";
 import LoadingIndicator from "./LoadingIndicator";
+import ManualGroupDialog from "./ManualGroupDialog";
 
 interface ReferencePageProps {
   favorites: number[];
@@ -39,11 +42,22 @@ interface ReferencePageProps {
   hideSelectionActionBar?: boolean;
   initialTrashIds?: Set<number>;
   onTrashChange?: (trashIds: Set<number>) => void;
+  aiGroups?: ReferenceAIGroup[];
+  onDissolveAIGroup?: (groupId: string) => void;
+  onCreateManualGroup?: (name: string, assetIds: number[]) => void;
 }
 
 export type ReferenceAsset = (typeof ASSETS)[number] & {
   type?: string;
   category?: string;
+};
+
+export type ReferenceAIGroup = {
+  id: string;
+  code: string;
+  title: string;
+  rationale: string;
+  assetIds: number[];
 };
 
 const LOCAL_LOAD_IMAGES = [
@@ -257,6 +271,9 @@ export default function ReferencePage({
   hideSelectionActionBar = false,
   initialTrashIds,
   onTrashChange,
+  aiGroups = [],
+  onDissolveAIGroup,
+  onCreateManualGroup,
 }: ReferencePageProps) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [activeBadge, setActiveBadge] = useState("전체");
@@ -285,6 +302,7 @@ export default function ReferencePage({
   const [newBoardMemo, setNewBoardMemo] = useState("");
   const [newBoardImage, setNewBoardImage] = useState("");
   const [newBoardAssetIds, setNewBoardAssetIds] = useState<number[]>([]);
+  const [isManualGroupOpen, setIsManualGroupOpen] = useState(false);
 
   useEffect(() => {
     if (boardCategory) setActiveCategory(boardCategory);
@@ -384,6 +402,22 @@ export default function ReferencePage({
     return counts;
   }, [allAssets, boards, trashIds]);
 
+  const groupedAssetIds = new Set(aiGroups.flatMap((group) => group.assetIds));
+  const selectionHasGroupedAssets = Array.from(selectedIds).some((id) => groupedAssetIds.has(id));
+  const visibleAIGroups = activeCategory === "trash"
+    ? []
+    : aiGroups
+        .map((group) => ({
+          ...group,
+          assets: group.assetIds
+            .map((assetId) => displayedAssets.find((asset) => asset.id === assetId))
+            .filter((asset): asset is ReferenceAsset => Boolean(asset)),
+        }))
+        .filter((group) => group.assets.length > 0);
+  const ungroupedAssets = visibleAIGroups.length > 0
+    ? displayedAssets.filter((asset) => !groupedAssetIds.has(asset.id))
+    : displayedAssets;
+
   const toggleRefFavorite = (id: number) => {
     setRefFavorites((prev) =>
       prev.includes(id) ? prev.filter((favorite) => favorite !== id) : [...prev, id],
@@ -400,8 +434,7 @@ export default function ReferencePage({
     });
   };
 
-  const handleCardClick = (e: React.MouseEvent, asset: ReferenceAsset) => {
-    e.preventDefault();
+  const handleCardClick = (asset: ReferenceAsset) => {
     toggleAssetSelection(asset.id);
   };
 
@@ -488,27 +521,24 @@ export default function ReferencePage({
   return (
     <div
       className={`relative flex bg-bg-dark font-sans text-text-primary ${
-        isPopup ? "h-full min-h-0" : "min-h-[calc(100vh-76px)]"
+        isPopup ? "h-full min-h-0" : "min-h-[calc(100dvh-60px)] lg:min-h-[calc(100dvh-76px)]"
       }`}
     >
       {!hideSidebar && (
         <aside
-          className={`hidden w-[300px] shrink-0 flex-col border-r border-[#161618] bg-[#08090B] p-5 lg:flex ${
-            isPopup ? "h-full overflow-y-auto" : "sticky top-[76px] h-[calc(100vh-76px)]"
+          className={`np-primary-sidebar-surface hidden w-[300px] shrink-0 flex-col border-r border-[#161618] bg-[#08090B] p-5 lg:flex ${
+            isPopup ? "h-full overflow-y-auto" : "sticky top-[76px] h-[calc(100dvh-76px)]"
           }`}
         >
         <div className="mb-8 mt-2">
           {!isPopup && (
             <>
-              <h2 className="mb-2 text-[20px] font-bold text-white">레퍼런스</h2>
-              <p className="mb-6 text-[14px] leading-relaxed text-text-secondary">
-                필요한 이미지를 모으고 프로젝트에 연결하세요.
-              </p>
+              <h2 className="np-primary-sidebar-title mb-5 text-white">레퍼런스</h2>
             </>
           )}
           <button
             onClick={openCreateBoard}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-bold text-[#E0A12E] transition hover:border-[#E0A12E]/50 hover:bg-[#22252B]"
+            className="np-light-brand-action flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-bold text-brand-primary transition hover:border-brand-primary/50 hover:bg-[#22252B]"
           >
             <Plus className="h-[18px] w-[18px]" />
             새 보드 만들기
@@ -576,9 +606,33 @@ export default function ReferencePage({
             : "px-4 py-6 overscroll-y-auto sm:px-6 2xl:px-8 min-[2200px]:px-10"
         }`}
       >
+        {!hideSidebar && (
+          <div className="mb-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide lg:hidden" aria-label="레퍼런스 보기">
+            {[
+              ["all", "전체"],
+              ["favorites", "즐겨찾기"],
+              ["recent", "최근 추가"],
+              ["trash", "휴지통"],
+            ].map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setActiveCategory(id)}
+                className={`h-10 shrink-0 rounded-lg border px-4 text-[14px] font-medium transition ${
+                  activeCategory === id
+                    ? "border-brand-primary/60 bg-brand-primary/10 text-brand-primary"
+                    : "border-[#242832] bg-[#111317] text-text-secondary"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {!["favorites", "recent", "trash"].includes(activeCategory) && (
           <>
-            <div className="mb-6 flex items-center gap-4">
+            <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
               <div className="relative">
                 <button
                   onClick={() => setIsBoardMenuOpen((open) => !open)}
@@ -595,7 +649,7 @@ export default function ReferencePage({
                         setIsBoardMenuOpen(false);
                       }}
                       className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[14px] font-medium transition ${
-                        activeCategory === "all" ? "bg-[#E0A12E]/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
+                        activeCategory === "all" ? "bg-brand-primary/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
                       }`}
                     >
                       전체 보드
@@ -608,7 +662,7 @@ export default function ReferencePage({
                           setIsBoardMenuOpen(false);
                         }}
                         className={`flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-[14px] font-medium transition ${
-                          activeCategory === board.id ? "bg-[#E0A12E]/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
+                          activeCategory === board.id ? "bg-brand-primary/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
                         }`}
                       >
                         <span className="truncate">{board.label}</span>
@@ -636,7 +690,7 @@ export default function ReferencePage({
                           setIsBadgeMenuOpen(false);
                         }}
                         className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[14px] font-medium transition ${
-                          activeBadge === badge ? "bg-[#E0A12E]/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
+                          activeBadge === badge ? "bg-brand-primary/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
                         }`}
                       >
                         {BADGE_LABELS[badge] ?? badge}
@@ -645,7 +699,7 @@ export default function ReferencePage({
                   </div>
                 )}
               </div>
-              <div className={`relative w-full ${isPopup ? "max-w-[400px] flex-[0_1_400px]" : "max-w-[560px] flex-[0_1_560px]"}`}>
+              <div className={`relative order-first basis-full sm:order-none sm:basis-auto ${isPopup ? "sm:max-w-[400px] sm:flex-[0_1_400px]" : "sm:max-w-[560px] sm:flex-[1_1_360px]"}`}>
                 <Search className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-400" />
                 <input
                   type="text"
@@ -656,25 +710,27 @@ export default function ReferencePage({
                 />
               </div>
 
-              <div className="flex-1" />
+              <div className="hidden flex-1 xl:block" />
 
               <button
                 onClick={openCreateBoard}
-                className="flex h-12 items-center gap-2 rounded-lg border border-[#E0A12E]/35 bg-[#E0A12E]/10 px-4 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-[#E0A12E]/15"
+                className="np-light-brand-action flex h-12 w-12 items-center justify-center gap-2 rounded-lg border border-brand-primary/35 bg-brand-primary/10 px-0 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-brand-primary/15 sm:w-auto sm:px-4"
+                aria-label="새 보드 추가"
               >
                 <Plus className="h-4 w-4" />
-                새 보드 추가
+                <span className="hidden sm:inline">새 보드 추가</span>
               </button>
               <button
                 onClick={() => setFavoritesFirst((value) => !value)}
-                className={`flex h-12 items-center gap-2 rounded-lg border px-4 text-[14px] font-medium transition ${
+                className={`flex h-12 w-12 items-center justify-center gap-2 rounded-lg border px-0 text-[14px] font-medium transition sm:w-auto sm:px-4 ${
                   favoritesFirst
-                    ? "border-[#E0A12E]/45 bg-[#E0A12E]/10 text-brand-primary"
+                    ? "border-brand-primary/45 bg-brand-primary/10 text-brand-primary"
                     : "border-[#1C1E24] bg-[#121417] text-text-secondary hover:bg-surface-primary hover:text-white"
                 }`}
+                aria-label="즐겨찾기 우선 보기"
               >
                 <Star className={`h-4 w-4 ${favoritesFirst ? "fill-brand-primary" : ""}`} />
-                즐겨찾기
+                <span className="hidden sm:inline">즐겨찾기</span>
               </button>
 
               <div className="relative">
@@ -683,7 +739,7 @@ export default function ReferencePage({
                   className="flex h-12 cursor-pointer items-center rounded-lg border border-[#1C1E24] bg-[#121417] px-3 text-[14px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
                 >
                   {sortMode === "recent" ? "최신순" : "이름순"}
-                  <ChevronDown className="ml-6 h-4 w-4" />
+                  <ChevronDown className="ml-2 h-4 w-4 sm:ml-6" />
                 </button>
                 {isSortMenuOpen && (
                   <div className="absolute right-0 top-[calc(100%+8px)] z-40 w-[132px] rounded-lg border border-[#2A2E36] bg-[#111317] p-1 shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
@@ -698,7 +754,7 @@ export default function ReferencePage({
                           setIsSortMenuOpen(false);
                         }}
                         className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[14px] font-medium transition ${
-                          sortMode === value ? "bg-[#E0A12E]/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
+                          sortMode === value ? "bg-brand-primary/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
                         }`}
                       >
                         {label}
@@ -773,14 +829,90 @@ export default function ReferencePage({
           </div>
         )}
 
-          <div className="mb-4 flex items-center gap-2 px-1 text-[13px] text-neutral-400">
+          <div className="mb-4 hidden items-center gap-2 px-1 text-[13px] text-neutral-400 sm:flex">
             <CheckSquare className="h-4 w-4 text-neutral-400" />
             이미지를 클릭해서 여러 항목을 선택할 수 있습니다. 선택 후 아래 작업바에서 보드로 묶거나 연결하세요.
           </div>
 
+          {visibleAIGroups.length > 0 && (
+            <section className="mb-8">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-brand-primary">
+                    Grouped
+                  </p>
+                  <h2 className="mt-1 text-[20px] font-semibold text-white">묶인 그룹</h2>
+                </div>
+                <span className="text-[12px] text-text-tertiary">{visibleAIGroups.length}개</span>
+              </div>
+              <div className="grid gap-3 xl:grid-cols-2">
+                {visibleAIGroups.map((group) => (
+                  <article
+                    key={group.id}
+                    className="overflow-hidden rounded-xl border border-brand-primary/25 bg-[linear-gradient(145deg,rgba(224,161,46,0.06),rgba(18,20,25,0.96))]"
+                  >
+                    <div className="flex items-start justify-between gap-3 border-b border-[#2A2E36] px-4 py-3.5">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="rounded bg-brand-primary/10 px-2 py-1 text-[10px] font-semibold text-brand-primary">
+                            {group.code}
+                          </span>
+                          <h3 className="truncate text-[16px] font-semibold text-white">{group.title}</h3>
+                        </div>
+                        <p className="mt-1.5 line-clamp-1 text-[12px] text-text-tertiary">
+                          {group.rationale}
+                        </p>
+                      </div>
+                      {onDissolveAIGroup && (
+                        <button
+                          type="button"
+                          onClick={() => onDissolveAIGroup(group.id)}
+                          className="flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-[#343842] px-2.5 text-[11px] text-text-secondary transition hover:border-brand-primary/45 hover:text-brand-primary"
+                        >
+                          <Unlink className="h-3.5 w-3.5" />
+                          그룹 해제
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5 p-3">
+                      {group.assets.slice(0, 4).map((asset) => (
+                        <button
+                          key={asset.id}
+                          type="button"
+                          onClick={() => toggleAssetSelection(asset.id)}
+                          className={`np-reference-thumbnail group/image relative overflow-hidden rounded-md border bg-[#08090B] ${
+                            selectedIds.has(asset.id)
+                              ? "border-brand-primary ring-1 ring-brand-primary/30"
+                              : "border-transparent"
+                          }`}
+                          aria-label={`${asset.title} 선택`}
+                        >
+                          <img
+                            src={asset.image}
+                            alt=""
+                            className="np-reference-image aspect-square w-full object-cover transition group-hover/image:scale-[1.04]"
+                            referrerPolicy="no-referrer"
+                          />
+                          <span aria-hidden="true" className="np-reference-light-veil pointer-events-none absolute inset-0" />
+                        </button>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {visibleAIGroups.length > 0 && (
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-[18px] font-semibold text-white">미분류 레퍼런스</h2>
+              <span className="text-[12px] text-text-tertiary">{ungroupedAssets.length}개</span>
+            </div>
+          )}
+
           {viewMode === "grid" ? (
-          <div className="grid grid-cols-2 gap-4 [grid-auto-flow:dense] [grid-auto-rows:8px] md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-            {displayedAssets.map((asset, index) => {
+          <div className="grid grid-cols-1 gap-4 [grid-auto-flow:dense] [grid-auto-rows:8px] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            {ungroupedAssets.map((asset, index) => {
               const profile = MASONRY_PROFILES[(asset.id * 3 + index * 7) % MASONRY_PROFILES.length];
               return (
                 <ReferenceCard
@@ -792,7 +924,7 @@ export default function ReferencePage({
                   isFavorite={refFavorites.includes(asset.id)}
                   isPopup={isPopup}
                   isBoardDepth={isPopup && !onAcceptSelection}
-                  onClick={(e) => handleCardClick(e, asset)}
+                  onClick={() => handleCardClick(asset)}
                   onPreview={(e) => {
                     e.stopPropagation();
                     setPreviewImage(asset);
@@ -824,53 +956,75 @@ export default function ReferencePage({
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3">
-            {displayedAssets.map((asset) => (
-              <button
+            {ungroupedAssets.map((asset) => (
+              <div
                 key={asset.id}
-                onClick={(e) => handleCardClick(e, asset)}
-                className={`grid grid-cols-[120px_1fr_auto] items-center gap-4 rounded-lg border bg-[#0A0B0D] p-3 text-left transition ${
+                role="button"
+                tabIndex={0}
+                onClick={() => handleCardClick(asset)}
+                onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
+                  event.preventDefault();
+                  handleCardClick(asset);
+                }}
+                className={`grid grid-cols-[88px_minmax(0,1fr)_auto_auto] items-center gap-2 rounded-lg border bg-[#0A0B0D] p-2.5 text-left transition sm:grid-cols-[120px_minmax(0,1fr)_auto_auto] sm:gap-4 sm:p-3 ${
                   selectedIds.has(asset.id)
                     ? "border-brand-primary"
                     : "border-[#1F2329] hover:border-brand-primary/40"
                 }`}
               >
-                <img
-                  referrerPolicy="no-referrer"
-                  src={asset.image}
-                  alt={asset.title}
-                  className="h-[90px] w-[120px] rounded-lg object-cover"
-                />
-                <div>
-                  <h3 className="text-[16px] font-bold text-white">{asset.title}</h3>
-                  <p className="mt-1 text-[13px] text-neutral-400">{asset.author}</p>
-                  <p className="mt-2 text-[12px] text-neutral-500">{asset.type ?? asset.badge}</p>
+                <div className="np-reference-thumbnail relative h-[72px] w-[88px] overflow-hidden rounded-lg sm:h-[90px] sm:w-[120px]">
+                  <img
+                    referrerPolicy="no-referrer"
+                    src={asset.image}
+                    alt={asset.title}
+                    className="np-reference-image h-full w-full object-cover"
+                  />
+                  <span aria-hidden="true" className="np-reference-light-veil pointer-events-none absolute inset-0" />
                 </div>
-                <Star
-                  onClick={(e) => {
-                    e.stopPropagation();
+                <div className="min-w-0">
+                  <h3 className="truncate text-[14px] font-bold text-white sm:text-[16px]">{asset.title}</h3>
+                  <p className="mt-1 truncate text-[12px] text-neutral-400 sm:text-[13px]">{asset.author}</p>
+                  <p className="mt-1 truncate text-[11px] text-neutral-500 sm:mt-2 sm:text-[12px]">{asset.type ?? asset.badge}</p>
+                </div>
+                <button
+                  type="button"
+                  aria-label={`${asset.title} 즐겨찾기`}
+                  onClick={(event) => {
+                    event.stopPropagation();
                     toggleRefFavorite(asset.id);
                   }}
-                  className={`h-5 w-5 ${
-                    refFavorites.includes(asset.id) ? "fill-brand-primary text-brand-primary" : "text-neutral-400"
-                  }`}
-                />
+                  className="flex h-9 w-9 items-center justify-center rounded-md transition hover:bg-white/5"
+                >
+                  <Star
+                    className={`h-5 w-5 ${
+                      refFavorites.includes(asset.id) ? "fill-brand-primary text-brand-primary" : "text-neutral-400"
+                    }`}
+                  />
+                </button>
                 {activeCategory !== "trash" && (
-                  <Trash2
-                    onClick={(e) => {
-                      e.stopPropagation();
+                  <button
+                    type="button"
+                    aria-label={`${asset.title} 삭제`}
+                    onClick={(event) => {
+                      event.stopPropagation();
                       sendAssetToTrash(asset.id);
                     }}
-                    className="h-5 w-5 text-neutral-500 transition hover:text-red-300"
-                  />
+                    className="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 transition hover:bg-red-500/10 hover:text-red-300"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
                 )}
-              </button>
+              </div>
             ))}
           </div>
         )}
 
-          {displayedAssets.length === 0 && (
+          {ungroupedAssets.length === 0 && (
             <div className="flex h-[260px] items-center justify-center rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-[14px] text-neutral-400">
-              조건에 맞는 레퍼런스가 없습니다.
+              {visibleAIGroups.length > 0
+                ? "모든 레퍼런스가 그룹에 정리되었습니다."
+                : "조건에 맞는 레퍼런스가 없습니다."}
             </div>
           )}
 
@@ -879,7 +1033,7 @@ export default function ReferencePage({
             <button
               onClick={handleLoadMore}
               disabled={isLoadingMore}
-              className="flex items-center gap-2 rounded-full border border-[#2A2E36] bg-surface-primary px-6 py-2.5 text-[14px] font-bold text-text-tertiary transition hover:bg-[#111215] hover:text-white"
+              className="flex items-center gap-2 rounded-full border border-[#2A2E36] bg-surface-primary px-6 py-2.5 text-[14px] font-bold text-text-secondary transition hover:bg-[#111215] hover:text-white"
             >
               {isLoadingMore ? (
                 <>
@@ -971,7 +1125,7 @@ export default function ReferencePage({
                 <button
                   onClick={createBoard}
                   disabled={!newBoardName.trim()}
-                  className="rounded-lg bg-brand-primary px-5 py-2 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
+                  className="np-primary-action rounded-lg bg-brand-primary px-5 py-2 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {newBoardAssetIds.length > 0 ? "보드로 묶기" : "보드 저장"}
                 </button>
@@ -986,9 +1140,9 @@ export default function ReferencePage({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 30 }}
-            className="fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-lg border border-[#2A2E36] bg-[#1A1C20] p-2 px-4 shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
+            className="fixed bottom-4 left-1/2 z-50 flex max-w-[calc(100vw-24px)] -translate-x-1/2 items-center gap-2 overflow-x-auto rounded-lg border border-[#2A2E36] bg-[#1A1C20] p-2 px-3 shadow-[0_20px_40px_rgba(0,0,0,0.6)] sm:bottom-8 sm:gap-4 sm:px-4"
           >
-            <div className="flex items-center gap-2 border-r border-[#2A2E36] pr-4">
+            <div className="flex shrink-0 items-center gap-2 border-r border-[#2A2E36] pr-3 sm:pr-4">
               <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary text-[11px] font-bold text-bg-dark">
                 {selectedIds.size}
               </div>
@@ -1000,14 +1154,14 @@ export default function ReferencePage({
                 <>
                   <button
                     onClick={() => onAcceptSelection?.(Array.from(selectedIds))}
-                    className="flex items-center gap-2 rounded-md bg-[#E0A12E] px-6 py-1.5 text-[13px] font-bold text-bg-dark transition hover:bg-[#E0A12E]/90"
+                    className="np-primary-action flex items-center gap-2 rounded-md bg-brand-primary px-6 py-1.5 text-[13px] font-bold text-bg-dark transition hover:bg-brand-primary/90"
                   >
                     선택 항목 가져오기
                     <ChevronRight className="h-4 w-4" />
                   </button>
                   <button
                     onClick={openCreateBoardFromSelection}
-                    className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
+                    className="hidden items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white sm:flex"
                   >
                     <Folder className="h-4 w-4" />
                     보드로 묶기
@@ -1015,9 +1169,20 @@ export default function ReferencePage({
                 </>
               ) : (
                 <>
+                  {onCreateManualGroup && (
+                    <button
+                      type="button"
+                      onClick={() => setIsManualGroupOpen(true)}
+                      disabled={selectedIds.size < 2}
+                      className="np-primary-action flex items-center gap-2 rounded-md bg-brand-primary px-3 py-1.5 text-[13px] font-semibold text-[#050505] transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <FolderPlus className="h-4 w-4" />
+                      그룹 만들기
+                    </button>
+                  )}
                   <button
                     onClick={openCreateBoardFromSelection}
-                    className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
+                    className="hidden items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white sm:flex"
                   >
                     <Folder className="h-4 w-4" />
                     보드로 묶기
@@ -1027,14 +1192,14 @@ export default function ReferencePage({
                       setToast("선택 항목을 프로젝트와 연결했습니다.");
                       onNavigate("projects");
                     }}
-                    className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
+                    className="hidden items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white md:flex"
                   >
                     <LinkIcon className="h-4 w-4" />
                     프로젝트 연결
                   </button>
                   <button
                     onClick={() => onNavigate("studio")}
-                    className="flex items-center gap-2 rounded-md border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-4 py-1.5 text-[13px] font-bold text-brand-primary transition hover:bg-[#E0A12E]/20"
+                    className="hidden items-center gap-2 rounded-md border border-brand-primary/30 bg-brand-primary/10 px-4 py-1.5 text-[13px] font-bold text-brand-primary transition hover:bg-brand-primary/20 lg:flex"
                   >
                     <Wand2 className="h-4 w-4" />
                     AI Studio 보내기
@@ -1052,6 +1217,22 @@ export default function ReferencePage({
           </motion.div>
         )}
       </AnimatePresence>
+      <AnimatePresence>
+        {isManualGroupOpen && onCreateManualGroup && (
+          <ManualGroupDialog
+            targetLabel="레퍼런스"
+            selectedCount={selectedIds.size}
+            hasGroupedItems={selectionHasGroupedAssets}
+            onClose={() => setIsManualGroupOpen(false)}
+            onCreate={(name) => {
+              onCreateManualGroup(name, Array.from(selectedIds));
+              setSelectedIds(new Set());
+              setIsManualGroupOpen(false);
+              setToast("선택한 레퍼런스를 새 그룹으로 묶었습니다.");
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {previewImage && (
@@ -1059,7 +1240,7 @@ export default function ReferencePage({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#050505]/95 p-8 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#050505]/95 p-3 backdrop-blur-sm sm:p-8"
             onClick={() => setPreviewImage(null)}
           >
             <motion.div
@@ -1079,7 +1260,7 @@ export default function ReferencePage({
                 referrerPolicy="no-referrer"
                 src={previewImage.image}
                 alt={previewImage.title}
-                className="max-h-[85vh] max-w-[90vw] rounded-lg border border-[#1F2329] object-contain shadow-[0_20px_60px_rgba(0,0,0,0.8)]"
+                className="max-h-[85dvh] max-w-[94vw] rounded-lg border border-[#1F2329] object-contain shadow-[0_20px_60px_rgba(0,0,0,0.8)] sm:max-w-[90vw]"
               />
               <div className="mt-4 flex items-center justify-between px-2">
                 <div>
@@ -1167,7 +1348,7 @@ function MenuBtn({
       }`}
     >
       <span className="flex items-center gap-3">
-        <span className={active ? "text-[#E0A12E]" : "text-neutral-400"}>{icon}</span>
+        <span className={active ? "text-brand-primary" : "text-neutral-400"}>{icon}</span>
         {label}
       </span>
       <span className={active ? "text-[13px] text-text-secondary" : "text-[13px] text-neutral-500"}>
@@ -1195,7 +1376,7 @@ function BoardBtn({
       onClick={onClick}
       className={`flex w-full items-center justify-between rounded-lg border border-transparent px-3 py-3 text-[16px] font-semibold transition ${
         active
-          ? "bg-[#15161A] text-[#E0A12E]"
+          ? "bg-[#15161A] text-brand-primary"
           : "text-text-secondary hover:bg-[#111215] hover:text-white"
       }`}
     >
@@ -1233,7 +1414,7 @@ function ReferenceCard({
   isFavorite: boolean;
   isPopup?: boolean;
   isBoardDepth?: boolean;
-  onClick: (e: React.MouseEvent) => void;
+  onClick: () => void;
   onPreview: (e: React.MouseEvent) => void;
   onFavorite: (e: React.MouseEvent) => void;
   onDownload: (e: React.MouseEvent) => void;
@@ -1242,26 +1423,34 @@ function ReferenceCard({
   onDelete: (e: React.MouseEvent) => void;
 }) {
   return (
-    <motion.button
+    <motion.div
+      role="button"
+      tabIndex={0}
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
+        event.preventDefault();
+        onClick();
+      }}
       style={{ gridRowEnd: `span ${rowSpan}` }}
-      className={`group relative h-full min-h-[180px] w-full cursor-pointer overflow-hidden rounded-lg text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition ${
+      className={`np-dark-media np-reference-card group relative h-full min-h-[180px] w-full cursor-pointer overflow-hidden rounded-lg text-left shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition ${
         isSelected
-          ? "border-2 border-brand-primary shadow-[0_0_20px_rgba(224,161,46,0.15)]"
-          : "border border-[#1F2329] hover:border-brand-primary/40"
+          ? "np-reference-card-selected border-2 border-brand-primary shadow-[0_0_20px_rgba(224,161,46,0.15)]"
+          : "np-reference-card-idle border border-[#1F2329] hover:border-brand-primary/40"
       }`}
     >
-      <div className="h-full w-full overflow-hidden bg-surface-secondary">
+      <div className="relative h-full w-full overflow-hidden bg-surface-secondary">
         <img
           referrerPolicy="no-referrer"
           src={asset.image}
           alt={asset.title}
-          className="h-full w-full object-cover"
+          className="np-reference-image h-full w-full object-cover"
           style={{ objectPosition }}
         />
+        <span aria-hidden="true" className="np-reference-light-veil pointer-events-none absolute inset-0" />
       </div>
 
       {isSelected && (
@@ -1276,7 +1465,7 @@ function ReferenceCard({
             type="button"
             title="크게보기"
             onClick={onPreview}
-            className={`absolute top-3 z-20 flex h-9 items-center gap-1.5 rounded-full border border-white/10 bg-[#0A0B0D]/75 px-3 text-[14px] font-medium text-white opacity-0 shadow-lg backdrop-blur-md transition hover:bg-[#171A20] group-hover:opacity-100 ${
+            className={`np-reference-overlay-action absolute top-3 z-20 flex h-9 items-center gap-1.5 rounded-full border px-3 text-[12px] font-medium text-white opacity-100 backdrop-blur-md transition md:text-[14px] md:opacity-0 md:group-hover:opacity-100 ${
               isSelected ? "left-10" : "left-3"
             }`}
           >
@@ -1287,52 +1476,78 @@ function ReferenceCard({
             type="button"
             title="즐겨찾기"
             onClick={onFavorite}
-            className={`absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur-md transition hover:bg-[#171A20] ${
+            className={`np-reference-favorite-action absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full transition ${
               isFavorite
-                ? "border-[#E0A12E]/35 bg-[#0A0B0D]/85 text-brand-primary opacity-100"
-                : "border-white/10 bg-[#0A0B0D]/70 text-white opacity-0 group-hover:opacity-100"
+                ? "text-brand-primary opacity-100"
+                : "text-brand-primary opacity-100 md:opacity-0 md:group-hover:opacity-100"
             }`}
           >
-            <Star className={`h-4 w-4 ${isFavorite ? "fill-brand-primary" : ""}`} />
+            <Star className={`np-reference-favorite-icon h-[18px] w-[18px] ${isFavorite ? "fill-brand-primary" : ""}`} />
           </button>
           <button
             type="button"
             title="삭제"
             onClick={onDelete}
-            className="absolute bottom-3 right-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-[#0A0B0D]/70 text-white opacity-0 backdrop-blur-md transition hover:bg-red-500/15 hover:text-red-200 group-hover:opacity-100"
+            className="np-reference-overlay-action np-reference-overlay-delete absolute bottom-3 right-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border text-white opacity-100 backdrop-blur-md transition md:opacity-0 md:group-hover:opacity-100"
           >
             <Trash2 className="h-4 w-4" />
           </button>
         </>
       ) : isFavorite && !isSelected ? (
-        <div className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[#E0A12E]/30 bg-[#0A0B0D]/85 text-brand-primary backdrop-blur-sm">
-          <Star className="h-4 w-4 fill-brand-primary" />
+        <div className="np-reference-favorite-action absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full text-brand-primary">
+          <Star className="np-reference-favorite-icon h-[18px] w-[18px] fill-brand-primary" />
         </div>
       ) : null}
 
       {!isBoardDepth && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex translate-y-2 justify-center opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100">
-          <div className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-[#2A2E36]/80 bg-[#1A1C20]/90 p-1.5 shadow-xl backdrop-blur-md">
-            {isPopup ? (
-              <ActionButton icon={<Maximize2 className="h-3.5 w-3.5" />} title="\uD06C\uAC8C\uBCF4\uAE30" onClick={onPreview} />
-            ) : (
-              <>
-                <ActionButton icon={<LinkIcon className="h-3.5 w-3.5" />} title="\uD504\uB85C\uC81D\uD2B8 \uC5F0\uACB0" onClick={onLink} />
-                <ActionButton icon={<Folder className="h-3.5 w-3.5" />} title={isSelected ? "\uBCF4\uB4DC \uC120\uD0DD \uD574\uC81C" : "\uBCF4\uB4DC\uC5D0 \uCD94\uAC00"} onClick={onAdd} />
-                <ActionButton
-                  icon={<Star className={`h-3.5 w-3.5 ${isFavorite ? "fill-brand-primary text-brand-primary" : ""}`} />}
-                  title="\uC990\uACA8\uCC3E\uAE30"
-                  onClick={onFavorite}
-                />
-                <ActionButton icon={<Maximize2 className="h-3.5 w-3.5" />} title="\uD06C\uAC8C\uBCF4\uAE30" onClick={onPreview} />
-                <span className="mx-1 h-4 w-px bg-[#2A2E36]" />
-                <ActionButton icon={<Trash2 className="h-3.5 w-3.5" />} title="삭제" onClick={onDelete} />
-              </>
-            )}
+        <>
+          <div className="absolute inset-x-2 bottom-2 z-20 flex items-center justify-between md:hidden">
+            <button
+              type="button"
+              title="크게보기"
+              aria-label={`${asset.title} 크게보기`}
+              onClick={onPreview}
+              className="np-reference-overlay-action flex h-9 w-9 items-center justify-center rounded-full border text-white backdrop-blur-md"
+            >
+              <Maximize2 className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              title="즐겨찾기"
+              aria-label={`${asset.title} 즐겨찾기`}
+              onClick={onFavorite}
+              className={`np-reference-favorite-action flex h-9 w-9 items-center justify-center rounded-full ${
+                isFavorite
+                  ? "text-brand-primary"
+                  : "text-brand-primary"
+              }`}
+            >
+              <Star className={`np-reference-favorite-icon h-[18px] w-[18px] ${isFavorite ? "fill-brand-primary" : ""}`} />
+            </button>
           </div>
-        </div>
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 hidden translate-y-2 justify-center opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 md:flex">
+            <div className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-[#2A2E36]/80 bg-[#1A1C20]/90 p-1.5 shadow-xl backdrop-blur-md">
+              {isPopup ? (
+                <ActionButton icon={<Maximize2 className="h-3.5 w-3.5" />} title="\uD06C\uAC8C\uBCF4\uAE30" onClick={onPreview} />
+              ) : (
+                <>
+                  <ActionButton icon={<LinkIcon className="h-3.5 w-3.5" />} title="\uD504\uB85C\uC81D\uD2B8 \uC5F0\uACB0" onClick={onLink} />
+                  <ActionButton icon={<Folder className="h-3.5 w-3.5" />} title={isSelected ? "\uBCF4\uB4DC \uC120\uD0DD \uD574\uC81C" : "\uBCF4\uB4DC\uC5D0 \uCD94\uAC00"} onClick={onAdd} />
+                  <ActionButton
+                    icon={<Star className={`h-3.5 w-3.5 ${isFavorite ? "fill-brand-primary text-brand-primary" : ""}`} />}
+                    title="\uC990\uACA8\uCC3E\uAE30"
+                    onClick={onFavorite}
+                  />
+                  <ActionButton icon={<Maximize2 className="h-3.5 w-3.5" />} title="\uD06C\uAC8C\uBCF4\uAE30" onClick={onPreview} />
+                  <span className="mx-1 h-4 w-px bg-[#2A2E36]" />
+                  <ActionButton icon={<Trash2 className="h-3.5 w-3.5" />} title="삭제" onClick={onDelete} />
+                </>
+              )}
+            </div>
+          </div>
+        </>
       )}
-    </motion.button>
+    </motion.div>
   );
 }
 

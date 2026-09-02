@@ -14,11 +14,13 @@ import {
   Paintbrush,
   Palette,
   PenLine,
+  Pin,
   Plus,
   Rotate3D,
   RotateCcw,
   Share2,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import { motion } from "motion/react";
 import NewProjectModal from "./NewProjectModal";
@@ -45,10 +47,13 @@ type Project = {
   linkedReferenceIds?: number[];
   viewerImages?: string[];
   referenceImages?: string[];
+  pinned?: boolean;
 };
 
+const DELETED_PROJECTS_STORAGE_KEY = "neopoly_deleted_project_ids";
+
 const COLORS = {
-  gold: "#E0A12E",
+  gold: "var(--color-brand-primary)",
   blue: "#4C88D9",
   green: "#6FAF52",
   purple: "#A36BFF",
@@ -193,18 +198,25 @@ function today() {
 
 function loadProjects() {
   try {
+    const deletedIds = new Set<number>(
+      JSON.parse(localStorage.getItem(DELETED_PROJECTS_STORAGE_KEY) || "[]") as number[],
+    );
+    const availableDefaults = DEFAULT_PROJECTS.filter(
+      (project) => !deletedIds.has(project.id),
+    );
     const saved = localStorage.getItem(PROJECT_STORAGE_KEY);
-    if (!saved) return DEFAULT_PROJECTS;
+    if (!saved) return availableDefaults.length > 0 ? availableDefaults : DEFAULT_PROJECTS;
     const parsed = JSON.parse(saved) as Project[];
-    if (!Array.isArray(parsed)) return DEFAULT_PROJECTS;
+    if (!Array.isArray(parsed)) return availableDefaults.length > 0 ? availableDefaults : DEFAULT_PROJECTS;
 
-    const mergedDefaults = DEFAULT_PROJECTS.map((defaultProject) => {
+    const mergedDefaults = availableDefaults.map((defaultProject) => {
       const savedProject = parsed.find((project) => project.id === defaultProject.id);
       return savedProject
         ? {
             ...defaultProject,
             linkedNoteIds: savedProject.linkedNoteIds,
             linkedReferenceIds: savedProject.linkedReferenceIds,
+            pinned: savedProject.pinned,
           }
         : defaultProject;
     });
@@ -270,6 +282,8 @@ export default function ProjectPage({
   const [renaming, setRenaming] = useState(false);
   const [draftName, setDraftName] = useState("");
   const [toast, setToast] = useState("");
+  const [openProjectMenuId, setOpenProjectMenuId] = useState<number | null>(null);
+  const [pendingDeleteProjectId, setPendingDeleteProjectId] = useState<number | null>(null);
   const boardScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -294,8 +308,36 @@ export default function ProjectPage({
     return () => window.clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    if (openProjectMenuId === null) return;
+
+    const closeMenu = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Element && target.closest("[data-project-context]")) return;
+      setOpenProjectMenuId(null);
+    };
+    const closeMenuWithEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenProjectMenuId(null);
+    };
+
+    document.addEventListener("pointerdown", closeMenu);
+    document.addEventListener("keydown", closeMenuWithEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeMenu);
+      document.removeEventListener("keydown", closeMenuWithEscape);
+    };
+  }, [openProjectMenuId]);
+
+  const orderedProjects = useMemo(
+    () => [...projects].sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned))),
+    [projects],
+  );
+
   const activeProjData =
     projects.find((project) => project.id === activeProject) || projects[0];
+  const pendingDeleteProject = projects.find(
+    (project) => project.id === pendingDeleteProjectId,
+  );
 
   const linkedImages = useMemo(() => {
     const noteImages =
@@ -375,24 +417,70 @@ export default function ProjectPage({
     setToast("태그를 추가했습니다.");
   };
 
+  const toggleProjectPin = (projectId: number) => {
+    const project = projects.find((item) => item.id === projectId);
+    if (!project) return;
+
+    setProjects((current) =>
+      current.map((item) =>
+        item.id === projectId ? { ...item, pinned: !item.pinned } : item,
+      ),
+    );
+    setOpenProjectMenuId(null);
+    setToast(project.pinned ? "상단 고정을 해제했습니다." : "프로젝트를 상단에 고정했습니다.");
+  };
+
+  const deleteProject = (projectId: number) => {
+    if (projects.length <= 1) {
+      setPendingDeleteProjectId(null);
+      setToast("마지막 프로젝트는 삭제할 수 없습니다.");
+      return;
+    }
+
+    const remainingProjects = projects.filter((project) => project.id !== projectId);
+    setProjects(remainingProjects);
+    if (activeProject === projectId) {
+      const nextProject = [...remainingProjects].sort(
+        (a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)),
+      )[0];
+      setActiveProject(nextProject.id);
+    }
+
+    if (DEFAULT_PROJECTS.some((project) => project.id === projectId)) {
+      try {
+        const deletedIds = new Set<number>(
+          JSON.parse(localStorage.getItem(DELETED_PROJECTS_STORAGE_KEY) || "[]") as number[],
+        );
+        deletedIds.add(projectId);
+        localStorage.setItem(DELETED_PROJECTS_STORAGE_KEY, JSON.stringify([...deletedIds]));
+      } catch {
+        // The current session still reflects the deletion if storage is unavailable.
+      }
+    }
+
+    setPendingDeleteProjectId(null);
+    setOpenProjectMenuId(null);
+    setToast("프로젝트를 삭제했습니다.");
+  };
+
   return (
     <div
       className={`flex bg-bg-dark text-[#F5F5F5] font-sans antialiased ${
-        isPopup ? "h-full" : "min-h-[calc(100vh-76px)]"
+        isPopup ? "h-full" : "min-h-[calc(100dvh-60px)] lg:min-h-[calc(100dvh-76px)]"
       }`}
     >
       <aside
-        className={`hidden w-[350px] shrink-0 overflow-y-auto border-r border-[#181A1F] bg-bg-dark px-5 py-6 lg:block ${
-          isPopup ? "h-full" : "sticky top-[76px] h-[calc(100vh-76px)]"
+        className={`np-primary-sidebar-surface hidden w-[350px] shrink-0 overflow-y-auto border-r border-[#181A1F] bg-bg-dark px-5 py-6 lg:block ${
+          isPopup ? "h-full" : "sticky top-[76px] h-[calc(100dvh-76px)]"
         }`}
       >
         <div className="mb-6">
-          <h2 className="mb-5 text-[24px] font-bold text-[#F5F5F5]">
+          <h2 className="np-primary-sidebar-title mb-5 text-[#F5F5F5]">
             내 프로젝트
           </h2>
           <button
             onClick={() => setIsNewProjectModalOpen(true)}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-medium text-[#E0A12E] transition hover:border-[#E0A12E]/50 hover:bg-[#22252B]"
+            className="np-light-brand-action flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-medium text-brand-primary transition hover:border-brand-primary/50 hover:bg-[#22252B]"
           >
             <Plus className="h-[18px] w-[18px]" />
             새 프로젝트
@@ -400,28 +488,45 @@ export default function ProjectPage({
         </div>
 
         <div className="flex flex-col gap-3 pb-2">
-          {projects.map((project) => {
+          {orderedProjects.map((project) => {
             const active = project.id === activeProject;
             const sidebarImage = project.listImage || project.image;
             return (
-              <button
+              <div
                 key={project.id}
+                role="button"
+                tabIndex={0}
+                aria-pressed={active}
                 onClick={() => setActiveProject(project.id)}
-                className={`group relative flex h-[118px] w-full items-center overflow-hidden rounded-lg border text-left transition ${
+                onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget) return;
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setActiveProject(project.id);
+                  }
+                }}
+                className={`np-project-list-card group relative flex h-[118px] w-full items-center rounded-lg border text-left transition ${
+                  openProjectMenuId === project.id ? "z-30" : ""
+                } ${
                   active
-                    ? "border-[#E0A12E] bg-[#E0A12E]/10"
-                    : "border-transparent bg-white/[0.035] hover:border-[#2A2E36] hover:bg-white/[0.06]"
+                    ? "np-project-list-card-active border-brand-primary bg-brand-primary/10"
+                    : "np-project-list-card-idle border-transparent bg-white/[0.035] hover:border-[#2A2E36] hover:bg-white/[0.06]"
                 }`}
               >
                 <span
-                  className="absolute bottom-0 left-0 top-0 z-20 w-[6px]"
+                  className="absolute bottom-0 left-0 top-0 z-20 w-[6px] rounded-l-lg"
                   style={{
                     backgroundColor: active ? COLORS.gold : project.statusColor,
                   }}
                 />
                 <div className="relative z-10 min-w-0 flex-1 pl-6 pr-[100px]">
-                  <div className="truncate text-[18px] font-semibold text-[#F5F5F5]">
-                    {project.name}
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <div className="np-project-list-title truncate text-[18px] font-semibold text-[#F5F5F5]">
+                      {project.name}
+                    </div>
+                    {project.pinned && (
+                      <Pin className="h-3.5 w-3.5 shrink-0 fill-brand-primary text-brand-primary" />
+                    )}
                   </div>
                   <div
                     className="mt-1.5 flex items-center gap-1.5 text-[14px] font-medium"
@@ -435,7 +540,7 @@ export default function ProjectPage({
                   </div>
                 </div>
                 <div
-                  className="absolute bottom-0 right-0 top-0 z-0 w-[140px]"
+                  className="np-project-list-media absolute bottom-0 right-0 top-0 z-0 w-[140px] overflow-hidden rounded-r-lg"
                   style={{
                     WebkitMaskImage:
                       "linear-gradient(to right, transparent 0%, black 45%)",
@@ -448,18 +553,74 @@ export default function ProjectPage({
                       referrerPolicy="no-referrer"
                       src={sidebarImage}
                       alt={project.name}
-                      className={`h-full w-full object-cover transition ${
+                      className={`np-project-list-image h-full w-full object-cover transition ${
                         active
-                          ? ""
-                          : "brightness-[0.45] grayscale-[45%] group-hover:brightness-[0.75]"
+                          ? "np-project-list-image-active"
+                          : "np-project-list-image-idle brightness-[0.45] grayscale-[45%] group-hover:brightness-[0.75]"
                       }`}
                     />
                   ) : (
                     <EmptyProjectImage compact />
                   )}
+                  <span
+                    aria-hidden="true"
+                    className={`np-project-list-light-veil absolute inset-0 transition-colors ${
+                      active ? "np-project-list-light-veil-active" : "np-project-list-light-veil-idle"
+                    }`}
+                  />
                 </div>
-                <MoreHorizontal className="absolute right-2.5 top-2.5 z-20 h-6 w-6 rounded-md bg-black/40 p-1 text-neutral-300 opacity-0 transition group-hover:opacity-100" />
-              </button>
+                <button
+                  type="button"
+                  data-project-context
+                  aria-label={`${project.name} 메뉴`}
+                  aria-haspopup="menu"
+                  aria-expanded={openProjectMenuId === project.id}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setOpenProjectMenuId((current) =>
+                      current === project.id ? null : project.id,
+                    );
+                  }}
+                  className={`np-project-list-menu absolute right-2.5 top-2.5 z-40 flex h-7 w-7 items-center justify-center rounded-md bg-black/40 text-neutral-300 transition focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100 ${
+                    openProjectMenuId === project.id ? "opacity-100" : "opacity-0"
+                  }`}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+
+                {openProjectMenuId === project.id && (
+                  <div
+                    data-project-context
+                    role="menu"
+                    className="np-project-context-menu absolute right-2.5 top-10 z-50 w-[172px] rounded-lg border border-[#2A2E36] bg-surface-primary p-1.5 shadow-[0_14px_34px_rgba(0,0,0,0.38)]"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => toggleProjectPin(project.id)}
+                      className="flex h-10 w-full items-center gap-2.5 rounded-md px-3 text-[14px] font-medium text-text-secondary transition hover:bg-white/5 hover:text-text-primary"
+                    >
+                      <Pin className={`h-4 w-4 ${project.pinned ? "fill-brand-primary text-brand-primary" : ""}`} />
+                      {project.pinned ? "고정 해제" : "상단에 고정"}
+                    </button>
+                    <div className="my-1 border-t border-border-soft" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      disabled={projects.length <= 1}
+                      onClick={() => {
+                        setOpenProjectMenuId(null);
+                        setPendingDeleteProjectId(project.id);
+                      }}
+                      className="flex h-10 w-full items-center gap-2.5 rounded-md px-3 text-[14px] font-medium text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-35"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      프로젝트 삭제
+                    </button>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -467,9 +628,38 @@ export default function ProjectPage({
 
       <main
         className={`min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10 ${
-          isPopup ? "h-full pb-24" : "h-[calc(100vh-76px)]"
+          isPopup ? "h-full pb-24" : "h-[calc(100dvh-60px)] lg:h-[calc(100dvh-76px)]"
         }`}
       >
+        <div className="relative mb-4 lg:hidden">
+          <div className="flex snap-x gap-2 overflow-x-auto pb-1 pr-10 scrollbar-hide" aria-label="프로젝트 선택">
+            {orderedProjects.map((project) => (
+              <button
+                key={`mobile-${project.id}`}
+                type="button"
+                onClick={() => setActiveProject(project.id)}
+                className={`h-11 shrink-0 snap-start rounded-lg border px-4 text-[14px] font-medium transition ${
+                  project.id === activeProject
+                    ? "border-brand-primary/60 bg-brand-primary/10 text-brand-primary"
+                    : "border-[#242832] bg-[#111317] text-neutral-300"
+                }`}
+              >
+                {project.name}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setIsNewProjectModalOpen(true)}
+              className="flex h-11 shrink-0 snap-start items-center gap-1.5 rounded-lg border border-[#2A2E36] bg-[#111317] px-4 text-[14px] font-medium text-neutral-300"
+            >
+              <Plus className="h-4 w-4 text-brand-primary" />
+              새 프로젝트
+            </button>
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex w-10 items-center justify-end bg-gradient-to-l from-[#050505] via-[#050505]/90 to-transparent pr-1" aria-hidden="true">
+            <ChevronRight className="h-4 w-4 text-brand-primary" />
+          </div>
+        </div>
         <div className="w-full space-y-2">
           <section className="overflow-hidden rounded-lg border border-[#181A1F]/80 bg-[#111317]">
             <div className="grid min-h-[140px] grid-cols-1 xl:grid-cols-[220px_1fr_320px]">
@@ -497,7 +687,7 @@ export default function ProjectPage({
                         if (e.key === "Enter") commitRename();
                         if (e.key === "Escape") setRenaming(false);
                       }}
-                      className="h-11 min-w-[260px] rounded-lg border border-[#E0A12E]/50 bg-[#08090B] px-3 text-[24px] font-bold text-white outline-none"
+                      className="h-11 min-w-[260px] rounded-lg border border-brand-primary/50 bg-[#08090B] px-3 text-[24px] font-bold text-white outline-none"
                       autoFocus
                     />
                   ) : (
@@ -510,7 +700,7 @@ export default function ProjectPage({
                       setDraftName(activeProjData.name);
                       setRenaming(true);
                     }}
-                    className="text-neutral-400 transition hover:text-[#E0A12E]"
+                    className="flex h-11 w-11 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-[#181A1F] hover:text-brand-primary sm:h-8 sm:w-8"
                     title="프로젝트 이름 수정"
                   >
                     <PenLine className="h-5 w-5" />
@@ -539,7 +729,7 @@ export default function ProjectPage({
                   ))}
                   <button
                     onClick={addTag}
-                    className="flex h-[26px] w-[26px] items-center justify-center rounded-md border border-[#22252B] bg-[#181A1F] text-neutral-300 transition hover:text-white"
+                    className="flex h-11 w-11 items-center justify-center rounded-md border border-[#22252B] bg-[#181A1F] text-neutral-300 transition hover:text-white sm:h-[26px] sm:w-[26px]"
                     title="태그 추가"
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -563,13 +753,13 @@ export default function ProjectPage({
                   <div className="flex gap-2">
                     <button
                       onClick={() => setToast("공유 링크를 준비했습니다.")}
-                      className="flex h-8 w-8 items-center justify-center rounded-md border border-[#2A2E36] bg-[#15181D] text-neutral-400 hover:text-white"
+                      className="flex h-11 w-11 items-center justify-center rounded-md border border-[#2A2E36] bg-[#15181D] text-neutral-400 hover:text-white sm:h-8 sm:w-8"
                     >
                       <Share2 className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => setToast("프로젝트 정보를 복사했습니다.")}
-                      className="flex h-8 w-8 items-center justify-center rounded-md border border-[#2A2E36] bg-[#15181D] text-neutral-400 hover:text-white"
+                      className="flex h-11 w-11 items-center justify-center rounded-md border border-[#2A2E36] bg-[#15181D] text-neutral-400 hover:text-white sm:h-8 sm:w-8"
                     >
                       <Link2 className="h-4 w-4" />
                     </button>
@@ -579,46 +769,51 @@ export default function ProjectPage({
             </div>
           </section>
 
-          <section className="overflow-x-auto rounded-lg border border-[#181A1F] bg-[#151618] px-8 py-3">
-            <div className="flex min-w-[900px] items-center justify-between">
-              {WORKFLOW_STEPS.map((step, index) => {
-                const Icon = step.icon;
-                const active = step.title === activeStep;
-                return (
-                  <React.Fragment key={step.title}>
-                    <button
-                      onClick={() => {
-                        setActiveStep(step.title);
-                        onNavigate?.(step.page);
-                      }}
-                      className="group flex min-w-[76px] flex-col items-center text-center"
-                    >
-                      <Icon
-                        className={`h-5 w-5 transition ${
-                          active
-                            ? "text-[#E0A12E]"
-                            : "text-neutral-300 group-hover:text-[#E0A12E]"
-                        }`}
-                      />
-                      <span
-                        className={`mt-2 text-[14px] font-medium ${
-                          active ? "text-[#E0A12E]" : "text-neutral-300"
-                        }`}
+          <div className="relative">
+            <section className="snap-x overflow-x-auto rounded-lg border border-[#181A1F] bg-[#151618] px-4 py-3 pr-10 scrollbar-hide sm:px-6 sm:pr-12 lg:px-8">
+              <div className="flex min-w-[640px] items-center justify-between sm:min-w-[760px] xl:min-w-[900px]">
+                {WORKFLOW_STEPS.map((step, index) => {
+                  const Icon = step.icon;
+                  const active = step.title === activeStep;
+                  return (
+                    <React.Fragment key={step.title}>
+                      <button
+                        onClick={() => {
+                          setActiveStep(step.title);
+                          onNavigate?.(step.page);
+                        }}
+                        className="group flex min-w-[72px] snap-start flex-col items-center rounded-lg py-1 text-center sm:min-w-[76px]"
                       >
-                        {step.title}
-                      </span>
-                      <span className="mt-0.5 text-[14px] text-neutral-500">
-                        {step.label}
-                      </span>
-                    </button>
-                    {index < WORKFLOW_STEPS.length - 1 && (
-                      <div className="mx-2 h-px flex-1 bg-[#2A2E36]" />
-                    )}
-                  </React.Fragment>
-                );
-              })}
+                        <Icon
+                          className={`h-5 w-5 transition ${
+                            active
+                              ? "text-brand-primary"
+                              : "text-neutral-300 group-hover:text-brand-primary"
+                          }`}
+                        />
+                        <span
+                          className={`mt-2 text-[14px] font-medium ${
+                            active ? "text-brand-primary" : "text-neutral-300"
+                          }`}
+                        >
+                          {step.title}
+                        </span>
+                        <span className="mt-0.5 text-[14px] text-neutral-500">
+                          {step.label}
+                        </span>
+                      </button>
+                      {index < WORKFLOW_STEPS.length - 1 && (
+                        <div className="mx-2 h-px flex-1 bg-[#2A2E36]" />
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </section>
+            <div className="pointer-events-none absolute inset-y-px right-px flex w-10 items-center justify-end rounded-r-lg bg-gradient-to-l from-[#151618] via-[#151618]/90 to-transparent pr-1 xl:hidden" aria-hidden="true">
+              <ChevronRight className="h-4 w-4 text-brand-primary" />
             </div>
-          </section>
+          </div>
 
           <div className="grid grid-cols-1 gap-2 xl:grid-cols-[minmax(0,1fr)_340px] 2xl:grid-cols-[minmax(0,1fr)_400px]">
             <div className="flex flex-col gap-2">
@@ -630,7 +825,7 @@ export default function ProjectPage({
                   </div>
                 </div>
 
-                <div className="relative flex h-[500px] items-center justify-center overflow-hidden rounded-lg border border-[#181A1F] bg-[#050505]">
+                <div className="np-dark-media np-viewer-media relative flex h-[320px] items-center justify-center overflow-hidden rounded-lg border border-[#181A1F] bg-[#050505] sm:h-[420px] lg:h-[500px]">
                   {viewerImage && (
                     <button
                       type="button"
@@ -669,7 +864,7 @@ export default function ProjectPage({
                       onClick={() => setSelectedThumb(index)}
                       className={`h-[68px] w-[88px] shrink-0 overflow-hidden rounded-lg border-2 transition ${
                         selectedThumb === index
-                          ? "border-[#E0A12E]"
+                          ? "border-brand-primary"
                           : "border-[#22252B] opacity-65 hover:border-[#6E737B] hover:opacity-100"
                       }`}
                     >
@@ -835,7 +1030,7 @@ export default function ProjectPage({
           onClick={() => setIsViewerPreviewOpen(false)}
         >
           <div
-            className="relative flex max-h-[92vh] w-full max-w-[1280px] items-center justify-center overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] p-4 shadow-2xl"
+            className="relative flex max-h-[92dvh] w-full max-w-[1280px] items-center justify-center overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] p-4 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <button
@@ -849,7 +1044,7 @@ export default function ProjectPage({
             <img
               src={viewerImage}
               alt={`${activeProjData.name} 작업 뷰 크게 보기`}
-              className="max-h-[86vh] max-w-full object-contain"
+              className="max-h-[86dvh] max-w-full object-contain"
               referrerPolicy="no-referrer"
             />
           </div>
@@ -862,7 +1057,7 @@ export default function ProjectPage({
           onClick={() => setReferencePreviewImage(null)}
         >
           <div
-            className="relative flex max-h-[92vh] w-full max-w-[1280px] items-center justify-center overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] p-4 shadow-2xl"
+            className="relative flex max-h-[92dvh] w-full max-w-[1280px] items-center justify-center overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] p-4 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <button
@@ -876,10 +1071,53 @@ export default function ProjectPage({
             <img
               src={referencePreviewImage}
               alt={`${activeProjData.name} reference preview`}
-              className="max-h-[86vh] max-w-full object-contain"
+              className="max-h-[86dvh] max-w-full object-contain"
               referrerPolicy="no-referrer"
             />
           </div>
+        </div>
+      )}
+
+      {pendingDeleteProject && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
+          onClick={() => setPendingDeleteProjectId(null)}
+        >
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="project-delete-title"
+            initial={{ opacity: 0, scale: 0.98, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="np-project-delete-dialog w-full max-w-[420px] rounded-xl border border-border-primary bg-surface-primary p-6 shadow-[0_24px_70px_rgba(0,0,0,0.5)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/10 text-red-400">
+              <Trash2 className="h-5 w-5" />
+            </div>
+            <h2 id="project-delete-title" className="mt-4 text-[20px] font-semibold text-text-primary">
+              프로젝트를 삭제할까요?
+            </h2>
+            <p className="mt-2 text-[14px] leading-6 text-text-secondary">
+              <span className="font-semibold text-text-primary">{pendingDeleteProject.name}</span> 프로젝트가 목록에서 삭제됩니다.
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPendingDeleteProjectId(null)}
+                className="h-10 rounded-lg border border-border-primary px-4 text-[14px] font-medium text-text-secondary transition hover:bg-white/5 hover:text-text-primary"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteProject(pendingDeleteProject.id)}
+                className="h-10 rounded-lg bg-red-500 px-4 text-[14px] font-semibold text-white transition hover:bg-red-600"
+              >
+                삭제하기
+              </button>
+            </div>
+          </motion.div>
         </div>
       )}
 
@@ -908,7 +1146,7 @@ export default function ProjectPage({
           <div className="h-5 w-px bg-[#2A2E36]" />
           <button
             onClick={() => onSelectProject?.(activeProject)}
-            className="flex items-center gap-2 rounded-lg bg-[#E0A12E] px-5 py-2.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
+            className="np-primary-action flex items-center gap-2 rounded-lg bg-brand-primary px-5 py-2.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
           >
             시작하기
             <CheckCircle2 className="h-4 w-4" />

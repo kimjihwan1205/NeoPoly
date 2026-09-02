@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   Check,
@@ -6,19 +6,23 @@ import {
   ChevronDown,
   ChevronRight,
   Folder,
+  FolderPlus,
   LayoutGrid,
   Link as LinkIcon,
   List,
   PenLine,
   Plus,
+  RotateCcw,
   Search,
   Square,
   Star,
   Trash2,
+  Unlink,
   Wand2,
   X,
 } from "lucide-react";
 import NoteSidebar from "./NoteSidebar";
+import ManualGroupDialog from "./ManualGroupDialog";
 
 interface NotesPageProps {
   onNavigate: (page: string) => void;
@@ -34,6 +38,15 @@ interface NotesPageProps {
   onCreateNote?: () => void;
   initialTrashIds?: Set<number>;
   onTrashChange?: (trashIds: Set<number>) => void;
+  aiGroups?: Array<{
+    id: string;
+    code: string;
+    title: string;
+    rationale: string;
+    noteIds: number[];
+  }>;
+  onDissolveAIGroup?: (groupId: string) => void;
+  onCreateManualGroup?: (name: string, noteIds: number[]) => void;
 }
 
 export type NoteItem = {
@@ -301,10 +314,15 @@ export default function NotesPage({
   onCreateNote,
   initialTrashIds,
   onTrashChange,
+  aiGroups = [],
+  onDissolveAIGroup,
+  onCreateManualGroup,
 }: NotesPageProps) {
   const [notes, setNotes] = useState<NoteItem[]>(loadNotes);
   const [activeNote, setActiveNote] = useState<number | null>(() => hideDetailPanel || isPopup ? null : notes[0]?.id ?? null);
   const [selectedNotes, setSelectedNotes] = useState<Set<number>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [isManualGroupOpen, setIsManualGroupOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filter, setFilter] = useState("all");
@@ -323,6 +341,12 @@ export default function NotesPage({
   const [newNoteMemo, setNewNoteMemo] = useState("");
   const [newNoteReference, setNewNoteReference] = useState("");
   const [newNoteTags, setNewNoteTags] = useState("");
+  const [expandedTextNoteId, setExpandedTextNoteId] = useState<number | null>(null);
+  const [expandedImagesNoteId, setExpandedImagesNoteId] = useState<number | null>(null);
+  const [truncatedTextIds, setTruncatedTextIds] = useState<Set<number>>(new Set());
+  const popupScrollRef = useRef<HTMLDivElement | null>(null);
+  const expansionScrollOriginRef = useRef(0);
+  const descriptionRefs = useRef<Map<number, HTMLParagraphElement>>(new Map());
 
   useEffect(() => {
     if (boardFilter) setFilter(boardFilter);
@@ -378,16 +402,73 @@ export default function NotesPage({
     return result;
   }, [favoritesFirst, filter, notes, searchQuery, sortMode, trashIds]);
 
-  const handleNoteClick = (e: React.MouseEvent, id: number) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
+  useEffect(() => {
+    const measureTruncatedText = () => {
+      if (!window.matchMedia("(min-width: 1024px)").matches) return;
+
+      const next = new Set<number>();
+      descriptionRefs.current.forEach((element, id) => {
+        if (element.scrollHeight > element.clientHeight + 1) next.add(id);
+      });
+      setTruncatedTextIds((current) => {
+        if (
+          current.size === next.size &&
+          Array.from(current).every((id) => next.has(id))
+        ) {
+          return current;
+        }
+        return next;
+      });
+    };
+
+    const frame = window.requestAnimationFrame(measureTruncatedText);
+    const observer = new ResizeObserver(measureTruncatedText);
+    descriptionRefs.current.forEach((element) => observer.observe(element));
+    window.addEventListener("resize", measureTruncatedText);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", measureTruncatedText);
+    };
+  }, [filteredNotes, isPopup, viewMode]);
+
+  const registerExpansionOrigin = () => {
+    expansionScrollOriginRef.current = popupScrollRef.current?.scrollTop ?? 0;
+  };
+
+  const toggleMobileText = (id: number) => {
+    const willExpand = expandedTextNoteId !== id;
+    if (willExpand) registerExpansionOrigin();
+    setExpandedTextNoteId(willExpand ? id : null);
+  };
+
+  const toggleMobileImages = (id: number) => {
+    const willExpand = expandedImagesNoteId !== id;
+    if (willExpand) registerExpansionOrigin();
+    setExpandedImagesNoteId(willExpand ? id : null);
+  };
+
+  const handlePopupScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    if (expandedTextNoteId === null && expandedImagesNoteId === null) return;
+    if (typeof window !== "undefined" && !window.matchMedia("(max-width: 1023px)").matches) return;
+
+    const distance = event.currentTarget.scrollTop - expansionScrollOriginRef.current;
+    if (distance >= 180) {
+      setExpandedTextNoteId(null);
+      setExpandedImagesNoteId(null);
+    }
+  };
+
+  const selectNote = (id: number, additive = false) => {
+    if (additive) {
       setSelectedNotes((prev) => {
         const next = new Set(prev);
         if (next.has(id)) next.delete(id);
         else next.add(id);
         return next;
       });
-      setActiveNote(id);
+      if (!isPopup) setActiveNote(id);
       return;
     }
 
@@ -400,10 +481,15 @@ export default function NotesPage({
 
     if (isPopup) {
       setSelectedNotes(new Set([id]));
-    } else {
-      setSelectedNotes(new Set());
+      return;
     }
+    setSelectedNotes(new Set());
     setActiveNote(id);
+  };
+
+  const handleNoteClick = (event: React.MouseEvent, id: number) => {
+    if (event.ctrlKey || event.metaKey) event.preventDefault();
+    selectNote(id, isSelectionMode || event.ctrlKey || event.metaKey);
   };
 
   const toggleStar = (id: number) => {
@@ -517,12 +603,48 @@ export default function NotesPage({
     setToast("노트를 휴지통으로 보냈습니다.");
   };
 
+  const restoreNote = (id: number) => {
+    setTrashIds((current) => {
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
+    setSelectedNotes((current) => {
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
+    setToast("노트를 복원했습니다.");
+  };
+
+  const restoreAllNotes = () => {
+    if (trashIds.size === 0) return;
+    setTrashIds(new Set());
+    setSelectedNotes(new Set());
+    setToast("휴지통의 모든 노트를 복원했습니다.");
+  };
+
   const selectedCount = selectedNotes.size;
+  const groupedNoteIds = new Set(aiGroups.flatMap((group) => group.noteIds));
+  const selectionHasGroupedNotes = Array.from(selectedNotes).some((id) => groupedNoteIds.has(id));
+  const visibleAIGroups = filter === "trash"
+    ? []
+    : aiGroups
+        .map((group) => ({
+          ...group,
+          notes: group.noteIds
+            .map((noteId) => filteredNotes.find((note) => note.id === noteId))
+            .filter((note): note is NoteItem => Boolean(note)),
+        }))
+        .filter((group) => group.notes.length > 0);
+  const displayedNotes = visibleAIGroups.length > 0
+    ? filteredNotes.filter((note) => !groupedNoteIds.has(note.id))
+    : filteredNotes;
 
   return (
     <div
       className={`flex overflow-hidden bg-bg-dark font-sans text-text-primary ${
-        isPopup ? "h-full" : "h-[calc(100vh-76px)]"
+        isPopup ? "h-full" : "h-[calc(100dvh-60px)] lg:h-[calc(100dvh-76px)]"
       }`}
     >
       {!hideSidebar && (
@@ -544,8 +666,31 @@ export default function NotesPage({
         }`}
       >
         <div className="mx-auto flex h-full w-full max-w-[2400px] flex-col gap-6">
-          <div className="flex items-center gap-4">
-            <div className={`relative w-full ${isPopup ? "max-w-[400px] flex-[0_1_400px]" : "max-w-[560px] flex-[0_1_560px]"}`}>
+          {!hideSidebar && (
+            <div className="-mb-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide lg:hidden" aria-label="노트 보기">
+              {[
+                ["all", "전체 노트"],
+                ["starred", "즐겨찾기"],
+                ["trash", "휴지통"],
+              ].map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setFilter(id)}
+                  className={`h-10 shrink-0 rounded-lg border px-4 text-[14px] font-medium transition ${
+                    filter === id
+                      ? "border-brand-primary/60 bg-brand-primary/10 text-brand-primary"
+                      : "border-[#242832] bg-[#111317] text-text-secondary"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className={`relative order-first basis-full sm:order-none sm:basis-auto ${isPopup ? "sm:max-w-[400px] sm:flex-[0_1_400px]" : "sm:max-w-[560px] sm:flex-[1_1_360px]"}`}>
               <Search className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-neutral-400" />
               <input
                 type="text"
@@ -556,25 +701,57 @@ export default function NotesPage({
               />
             </div>
 
-            <div className="flex-1" />
+            <div className="hidden flex-1 lg:block" />
+
+            {filter === "trash" && trashIds.size > 0 && (
+              <button
+                type="button"
+                onClick={restoreAllNotes}
+                className="np-light-brand-action flex h-12 items-center justify-center gap-2 rounded-lg border border-brand-primary/35 bg-brand-primary/10 px-4 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-brand-primary/15"
+              >
+                <RotateCcw className="h-4 w-4" />
+                모두 복원
+              </button>
+            )}
 
             <button
               onClick={openCreateNote}
-              className="flex h-12 shrink-0 items-center gap-2 rounded-lg border border-[#E0A12E]/35 bg-[#E0A12E]/10 px-4 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-[#E0A12E]/15"
+              className="np-light-brand-action flex h-12 w-12 shrink-0 items-center justify-center gap-2 rounded-lg border border-brand-primary/35 bg-brand-primary/10 px-0 text-[14px] font-medium text-brand-primary transition hover:border-brand-primary/60 hover:bg-brand-primary/15 sm:w-auto sm:px-4"
+              aria-label="노트 추가"
             >
               <Plus className="h-4 w-4" />
-              노트 추가
+              <span className="hidden sm:inline">노트 추가</span>
             </button>
+            {onCreateManualGroup && !onAcceptSelection && !onSelectNote && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSelectionMode((current) => {
+                    if (current) setSelectedNotes(new Set());
+                    return !current;
+                  });
+                }}
+                className={`flex h-12 items-center justify-center gap-2 rounded-lg border px-3 text-[14px] font-medium transition ${
+                  isSelectionMode
+                    ? "border-brand-primary/55 bg-brand-primary/10 text-brand-primary"
+                    : "border-[#1C1E24] bg-[#121417] text-text-secondary hover:bg-surface-primary hover:text-white"
+                }`}
+              >
+                {isSelectionMode ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                선택
+              </button>
+            )}
             <button
               onClick={() => setFavoritesFirst((value) => !value)}
-              className={`flex h-12 items-center gap-2 rounded-lg border px-4 text-[14px] font-medium transition ${
+              className={`flex h-12 w-12 items-center justify-center gap-2 rounded-lg border px-0 text-[14px] font-medium transition sm:w-auto sm:px-4 ${
                 favoritesFirst
-                  ? "border-[#E0A12E]/45 bg-[#E0A12E]/10 text-brand-primary"
+                  ? "border-brand-primary/45 bg-brand-primary/10 text-brand-primary"
                   : "border-[#1C1E24] bg-[#121417] text-text-secondary hover:bg-surface-primary hover:text-white"
               }`}
+              aria-label="즐겨찾기 우선 보기"
             >
               <Star className={`h-4 w-4 ${favoritesFirst ? "fill-brand-primary" : ""}`} />
-              즐겨찾기
+              <span className="hidden sm:inline">즐겨찾기</span>
             </button>
 
             <div className="relative">
@@ -583,7 +760,7 @@ export default function NotesPage({
                 className="flex h-12 cursor-pointer items-center rounded-lg border border-[#1C1E24] bg-[#121417] px-3 text-[14px] font-medium text-text-secondary transition hover:bg-surface-primary hover:text-white"
               >
                 {sortMode === "recent" ? "최신순" : "이름순"}
-                <ChevronDown className="ml-6 h-4 w-4" />
+                <ChevronDown className="ml-2 h-4 w-4 sm:ml-6" />
               </button>
               {isSortMenuOpen && (
                 <div className="absolute right-0 top-[calc(100%+8px)] z-40 w-[132px] rounded-lg border border-[#2A2E36] bg-[#111317] p-1 shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
@@ -598,7 +775,7 @@ export default function NotesPage({
                         setIsSortMenuOpen(false);
                       }}
                       className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[14px] font-medium transition ${
-                        sortMode === value ? "bg-[#E0A12E]/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
+                        sortMode === value ? "bg-brand-primary/10 text-brand-primary" : "text-neutral-300 hover:bg-[#1A1C23] hover:text-white"
                       }`}
                     >
                       {label}
@@ -630,130 +807,343 @@ export default function NotesPage({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-1 text-[13px] text-neutral-400">
+          <div className="hidden items-center gap-2 px-1 text-[13px] text-neutral-400 sm:flex">
             <CheckSquare className="h-4 w-4 text-neutral-400" />
             Ctrl 또는 Cmd를 누른 채 클릭하면 여러 노트를 선택할 수 있습니다.
           </div>
 
-          <div className={isPopup ? "min-h-0 flex-1 overflow-y-auto pr-1 pb-28" : ""}>
+          <div className={isPopup ? "min-h-0 flex-1 overflow-hidden" : ""}>
             <div
-              className={
-                viewMode === "grid"
-                  ? "grid grid-cols-1 gap-5 transition md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
-                  : "flex flex-col gap-3"
-              }
+              ref={isPopup ? popupScrollRef : undefined}
+              onScroll={isPopup ? handlePopupScroll : undefined}
+              className={isPopup ? "h-full overflow-y-auto pr-1 pb-6" : ""}
             >
-            {filteredNotes.map((note) => {
-              const isSelected = selectedNotes.has(note.id);
-              return (
-                <button
-                  key={note.id}
-                  onClick={(e) => handleNoteClick(e, note.id)}
-                  className={`group relative flex cursor-pointer flex-col rounded-lg border p-5 text-left shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition ${
-                    viewMode === "list" ? "min-h-[150px]" : ""
-                  } ${
-                    isSelected
-                      ? "border-brand-primary bg-surface-primary shadow-[0_0_20px_rgba(224,161,46,0.15)]"
-                      : "border-border-primary/20 bg-surface-primary/80 hover:border-brand-primary/40 hover:bg-surface-primary"
-                  }`}
-                >
-                  <div className="mb-2 flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <h3
-                        className={`truncate text-[20px] font-bold ${
-                          isSelected ? "text-brand-primary" : "text-white"
-                        }`}
-                      >
-                        {note.title}
-                      </h3>
-                      {isSelected && (
-                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-primary text-bg-dark">
-                          <Check className="h-3.5 w-3.5 stroke-[3]" />
-                        </span>
-                      )}
+              {visibleAIGroups.length > 0 && (
+                <section className="mb-8">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-brand-primary">
+                        Grouped
+                      </p>
+                      <h2 className="mt-1 text-[20px] font-semibold text-white">묶인 그룹</h2>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <span
-                        role="button"
-                        tabIndex={0}
+                    <span className="text-[12px] text-text-tertiary">{visibleAIGroups.length}개</span>
+                  </div>
+                  <div className="grid gap-3 xl:grid-cols-2">
+                    {visibleAIGroups.map((group) => (
+                      <article
+                        key={group.id}
+                        className="overflow-hidden rounded-xl border border-brand-primary/25 bg-[linear-gradient(145deg,rgba(224,161,46,0.06),rgba(18,20,25,0.96))]"
+                      >
+                        <div className="flex items-start justify-between gap-3 border-b border-[#2A2E36] px-4 py-3.5">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="rounded bg-brand-primary/10 px-2 py-1 text-[10px] font-semibold text-brand-primary">
+                                {group.code}
+                              </span>
+                              <h3 className="truncate text-[16px] font-semibold text-white">{group.title}</h3>
+                            </div>
+                            <p className="mt-1.5 line-clamp-1 text-[12px] text-text-tertiary">
+                              {group.rationale}
+                            </p>
+                          </div>
+                          {onDissolveAIGroup && (
+                            <button
+                              type="button"
+                              onClick={() => onDissolveAIGroup(group.id)}
+                              className="flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-[#343842] px-2.5 text-[11px] text-text-secondary transition hover:border-brand-primary/45 hover:text-brand-primary"
+                            >
+                              <Unlink className="h-3.5 w-3.5" />
+                              그룹 해제
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid gap-2 p-3 sm:grid-cols-2">
+                          {group.notes.map((note) => (
+                            <button
+                              key={note.id}
+                              type="button"
+                              onClick={() => {
+                                if (isSelectionMode) {
+                                  selectNote(note.id, true);
+                                } else if (onOpenNote) {
+                                  onOpenNote(note.id);
+                                } else {
+                                  setActiveNote(note.id);
+                                }
+                              }}
+                              className={`flex min-w-0 items-center gap-3 rounded-lg border bg-[#111318] p-2.5 text-left transition ${
+                                selectedNotes.has(note.id)
+                                  ? "border-brand-primary ring-1 ring-brand-primary/30"
+                                  : "border-[#292D35] hover:border-brand-primary/40"
+                              }`}
+                            >
+                              <img
+                                src={note.images[0]}
+                                alt=""
+                                className="h-12 w-12 shrink-0 rounded-md object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                              <span className="min-w-0">
+                                <span className="block truncate text-[13px] font-medium text-white">{note.title}</span>
+                                <span className="mt-1 block truncate text-[11px] text-text-tertiary">
+                                  {note.tags.slice(0, 2).join(" · ")}
+                                </span>
+                              </span>
+                              <ChevronRight className="ml-auto h-4 w-4 shrink-0 text-text-tertiary" />
+                            </button>
+                          ))}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {visibleAIGroups.length > 0 && (
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-[18px] font-semibold text-white">미분류 노트</h2>
+                  <span className="text-[12px] text-text-tertiary">{displayedNotes.length}개</span>
+                </div>
+              )}
+
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-1 gap-5 transition md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+                    : "flex flex-col gap-3"
+                }
+              >
+                {displayedNotes.map((note) => {
+                  const isSelected = selectedNotes.has(note.id);
+                  const isTextExpanded = expandedTextNoteId === note.id;
+                  const areImagesExpanded = expandedImagesNoteId === note.id;
+                  const hasLongText = note.desc.length > 48;
+                  const hasHiddenImages = note.images.length > 3;
+
+                  return (
+                    <article
+                      key={note.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={isSelected}
+                      onClick={(event) => handleNoteClick(event, note.id)}
+                      onKeyDown={(event) => {
+                        if (event.target !== event.currentTarget) return;
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          selectNote(note.id, event.ctrlKey || event.metaKey);
+                        }
+                      }}
+                      className={`group relative flex cursor-pointer flex-col self-start overflow-visible rounded-lg border bg-surface-primary/80 p-5 text-left shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition hover:z-30 focus-within:z-30 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-primary ${
+                        viewMode === "list" ? "min-h-[150px]" : ""
+                      } ${
+                        isSelected
+                          ? "border-brand-primary bg-surface-primary shadow-[0_0_20px_rgba(224,161,46,0.15)]"
+                          : "border-border-primary/20 hover:border-brand-primary/40 hover:bg-surface-primary"
+                      }`}
+                    >
+                      <div className="mb-2 flex min-w-0 items-center gap-2 pr-12">
+                        <h3
+                          className={`truncate text-[20px] font-bold ${
+                            isSelected ? "text-brand-primary" : "text-white"
+                          }`}
+                        >
+                          {note.title}
+                        </h3>
+                        {isSelected && (
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-primary text-bg-dark">
+                            <Check className="h-3.5 w-3.5 stroke-[3]" />
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="group/note-text relative mb-4">
+                        <p
+                          ref={(element) => {
+                            if (element) descriptionRefs.current.set(note.id, element);
+                            else descriptionRefs.current.delete(note.id);
+                          }}
+                          id={`note-description-${note.id}`}
+                          className={`overflow-hidden pr-7 text-[14px] leading-5 text-neutral-400 transition-[max-height] duration-300 ${
+                            isTextExpanded ? "max-h-48 line-clamp-none" : "max-h-10 line-clamp-2"
+                          } lg:max-h-10 lg:pr-0 lg:line-clamp-2`}
+                        >
+                          {note.desc}
+                        </p>
+                        {truncatedTextIds.has(note.id) && (
+                          <div className="np-note-text-preview pointer-events-none absolute -left-2 -right-2 -top-1 z-40 hidden rounded-lg bg-[#101114]/98 px-2 py-1 text-[14px] leading-5 text-neutral-300 opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.42)] backdrop-blur-xl transition-opacity duration-100 lg:block lg:group-hover/note-text:pointer-events-auto lg:group-hover/note-text:opacity-100">
+                            {note.desc}
+                          </div>
+                        )}
+                        {hasLongText && (
+                          <button
+                            type="button"
+                            aria-label={`${note.title} 설명 ${isTextExpanded ? "접기" : "펼치기"}`}
+                            aria-expanded={isTextExpanded}
+                            aria-controls={`note-description-${note.id}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              toggleMobileText(note.id);
+                            }}
+                            className="absolute bottom-0 right-0 z-10 flex h-6 w-7 items-center justify-end bg-gradient-to-l from-surface-primary via-surface-primary to-transparent text-neutral-400 transition hover:text-white lg:hidden"
+                          >
+                            <ChevronDown className={`h-4 w-4 transition-transform ${isTextExpanded ? "rotate-180" : ""}`} />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="mb-4 flex flex-wrap gap-1.5">
+                        {note.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded border border-[#252830] bg-[#1A1C20] px-2 py-0.5 text-[14px] font-medium text-neutral-400"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="group/note-images relative mb-5">
+                        <div
+                          className={`flex gap-1.5 ${
+                            viewMode === "list" ? "h-[78px] max-w-[360px]" : "h-[90px]"
+                          }`}
+                        >
+                          {note.images.slice(0, 3).map((img) => (
+                            <div
+                              key={img}
+                              className="flex-1 overflow-hidden rounded-md border border-[#1A1C20] bg-[#0A0B0E]"
+                            >
+                              <img
+                                referrerPolicy="no-referrer"
+                                src={img}
+                                alt={note.title}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
+
+                        {hasHiddenImages && (
+                          <>
+                            <button
+                              type="button"
+                              aria-label={`${note.title} 추가 이미지 ${areImagesExpanded ? "접기" : "펼치기"}`}
+                              aria-expanded={areImagesExpanded}
+                              aria-controls={`note-extra-images-${note.id}`}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                toggleMobileImages(note.id);
+                            }}
+                            className="absolute bottom-2 right-2 z-10 flex h-8 items-center gap-0.5 rounded-md border border-white/15 bg-[#050505]/80 px-2 text-[11px] font-medium text-white shadow-lg backdrop-blur-sm lg:hidden"
+                          >
+                              {!areImagesExpanded && `+${note.images.length - 3}`}
+                              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${areImagesExpanded ? "rotate-180" : ""}`} />
+                            </button>
+                            <span className="pointer-events-none absolute bottom-2 right-2 hidden rounded-md border border-white/15 bg-[#050505]/80 px-2 py-1 text-[11px] font-medium text-white shadow-lg backdrop-blur-sm lg:block">
+                              +{note.images.length - 3}
+                            </span>
+
+                            <AnimatePresence initial={false}>
+                              {areImagesExpanded && (
+                                <motion.div
+                                  id={`note-extra-images-${note.id}`}
+                                  initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                                  animate={{ height: "auto", opacity: 1, marginTop: 8 }}
+                                  exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                                  transition={{ duration: 0.25, ease: "easeOut" }}
+                                  className="grid grid-cols-2 gap-2 overflow-hidden lg:hidden"
+                                >
+                                  {note.images.slice(3).map((image, index) => (
+                                    <img
+                                      key={`${image}-mobile-${index}`}
+                                      referrerPolicy="no-referrer"
+                                      src={image}
+                                      alt={`${note.title} 추가 레퍼런스 ${index + 4}`}
+                                      className="aspect-[4/3] w-full rounded-md border border-[#1F2329] object-cover"
+                                    />
+                                  ))}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+
+                            <div className="pointer-events-none absolute left-0 top-full z-40 hidden w-max gap-1.5 rounded-lg bg-[#050505] p-1.5 opacity-0 shadow-[0_14px_30px_rgba(0,0,0,0.62)] transition-opacity duration-100 lg:flex lg:group-hover/note-images:pointer-events-auto lg:group-hover/note-images:opacity-100">
+                              {note.images.slice(3).map((image, index) => (
+                                <img
+                                  key={`${image}-desktop-extra-${index}`}
+                                  referrerPolicy="no-referrer"
+                                  src={image}
+                                  alt={`${note.title} 추가 레퍼런스 ${index + 4}`}
+                                  className="h-[90px] w-[90px] shrink-0 rounded-md object-cover shadow-[0_12px_26px_rgba(0,0,0,0.55)]"
+                                />
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="mt-auto flex items-center justify-between border-t border-[#1C1E24] pt-4">
+                        <span className="font-sans text-[14px] text-neutral-400">
+                          {note.date}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
                         title="즐겨찾기"
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        aria-label={`${note.title} 즐겨찾기 ${note.starred ? "해제" : "추가"}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
                           toggleStar(note.id);
                         }}
-                        className={`transition ${
+                        className={`absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-md transition hover:bg-white/5 sm:h-9 sm:w-9 ${
                           note.starred ? "text-brand-primary" : "text-neutral-400 group-hover:text-white"
                         }`}
                       >
                         <Star className={`h-[18px] w-[18px] ${note.starred ? "fill-brand-primary" : ""}`} />
-                      </span>
-                    </div>
-                  </div>
+                      </button>
 
-                  <p className="mb-4 h-10 text-[14px] leading-relaxed text-neutral-400 line-clamp-2">
-                    {note.desc}
-                  </p>
-
-                  <div className="mb-4 flex flex-wrap gap-1.5">
-                    {note.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded border border-[#252830] bg-[#1A1C20] px-2 py-0.5 text-[14px] font-medium text-neutral-400"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div
-                    className={`mb-5 flex gap-1.5 ${
-                      viewMode === "list" ? "h-[78px] max-w-[360px]" : "h-[90px]"
-                    }`}
-                  >
-                    {note.images.slice(0, 3).map((img) => (
-                      <div
-                        key={img}
-                        className="flex-1 overflow-hidden rounded-md border border-[#1A1C20] bg-[#0A0B0E]"
-                      >
-                        <img
-                          referrerPolicy="no-referrer"
-                          src={img}
-                          alt={note.title}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-auto flex items-center justify-between border-t border-[#1C1E24] pt-4">
-                    <span className="font-sans text-[14px] text-neutral-400">
-                      {note.date}
-                    </span>
-                    {filter !== "trash" && (
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        title="삭제"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          moveNoteToTrash(note.id);
-                        }}
-                        className="text-neutral-400 opacity-0 transition hover:text-red-300 group-hover:opacity-100"
-                      >
-                        <Trash2 className="h-[18px] w-[18px]" />
-                      </span>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-            {filteredNotes.length === 0 && (
-              <div className="flex h-[280px] items-center justify-center rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-[14px] text-neutral-400">
-                조건에 맞는 노트가 없습니다.
+                      {filter !== "trash" && (
+                        <button
+                          type="button"
+                          title="삭제"
+                          aria-label={`${note.title} 삭제`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            moveNoteToTrash(note.id);
+                          }}
+                          className="absolute bottom-3 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-md text-neutral-400 opacity-100 transition hover:bg-red-500/10 hover:text-red-300 sm:h-9 sm:w-9 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+                        >
+                          <Trash2 className="h-[18px] w-[18px]" />
+                        </button>
+                      )}
+                      {filter === "trash" && (
+                        <button
+                          type="button"
+                          title="복원"
+                          aria-label={`${note.title} 복원`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            restoreNote(note.id);
+                          }}
+                          className="absolute bottom-3 right-3 z-10 flex h-11 items-center justify-center gap-1.5 rounded-md border border-brand-primary/30 bg-[#0A0B0D]/90 px-3 text-[12px] font-medium text-brand-primary shadow-lg transition hover:bg-brand-primary/10 sm:h-9"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          복원
+                        </button>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
-            )}
+
+              {displayedNotes.length === 0 && (
+                <div className="flex h-[280px] items-center justify-center rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-[14px] text-neutral-400">
+                  {visibleAIGroups.length > 0 ? "모든 노트가 그룹에 정리되었습니다." : "조건에 맞는 노트가 없습니다."}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
@@ -761,11 +1151,11 @@ export default function NotesPage({
       <AnimatePresence>
         {!hideDetailPanel && activeNoteData && (
           <motion.aside
-            initial={{ width: 0, opacity: 0, x: 20 }}
-            animate={{ width: 400, opacity: 1, x: 0 }}
-            exit={{ width: 0, opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="relative z-10 hidden h-full shrink-0 flex-col overflow-y-auto border-l border-[#161618] bg-[#0A0B0D] xl:flex"
+            className="fixed inset-x-0 bottom-0 top-[60px] z-[80] flex w-full shrink-0 flex-col overflow-y-auto border-l border-[#161618] bg-[#0A0B0D] xl:relative xl:inset-auto xl:z-10 xl:h-full xl:w-[400px]"
           >
             <div className="sticky top-0 z-20 flex items-start justify-between border-b border-[#161618] bg-[#0A0B0D]/85 p-5 backdrop-blur-xl">
               <div>
@@ -865,8 +1255,8 @@ export default function NotesPage({
                     <h4 className="mb-1.5 text-[16px] font-bold text-white">
                       {activeNoteData.title} 프로젝트
                     </h4>
-                    <span className="flex w-fit items-center gap-1.5 rounded border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-2 py-0.5 text-[11px] font-bold uppercase text-[#E0A12E]">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#E0A12E]" />
+                    <span className="flex w-fit items-center gap-1.5 rounded border border-brand-primary/30 bg-brand-primary/10 px-2 py-0.5 text-[11px] font-bold uppercase text-brand-primary">
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-primary" />
                       In Progress
                     </span>
                   </div>
@@ -992,7 +1382,7 @@ export default function NotesPage({
                 <button
                   onClick={createNote}
                   disabled={!newNoteTitle.trim()}
-                  className="rounded-lg bg-brand-primary px-5 py-2 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
+                  className="np-primary-action rounded-lg bg-brand-primary px-5 py-2 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   노트 저장
                 </button>
@@ -1007,9 +1397,9 @@ export default function NotesPage({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 30 }}
-            className="fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-lg border border-[#2A2E36] bg-[#1A1C20] p-2 px-4 shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
+            className="fixed bottom-4 left-1/2 z-50 flex max-w-[calc(100vw-24px)] -translate-x-1/2 items-center gap-2 overflow-x-auto rounded-lg border border-[#2A2E36] bg-[#1A1C20] p-2 px-3 shadow-[0_20px_40px_rgba(0,0,0,0.6)] sm:bottom-8 sm:gap-4 sm:px-4"
           >
-            <div className="flex items-center gap-2 border-r border-[#2A2E36] pr-4">
+            <div className="flex shrink-0 items-center gap-2 border-r border-[#2A2E36] pr-3 sm:pr-4">
               <div className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary text-[11px] font-bold text-bg-dark">
                 {selectedCount}
               </div>
@@ -1018,16 +1408,28 @@ export default function NotesPage({
 
             <div className="flex items-center gap-2">
               {isPopup ? (
-                <button
-                  onClick={() => {
-                    if (onAcceptSelection) onAcceptSelection(Array.from(selectedNotes));
-                    else if (onSelectNote) onSelectNote(Array.from(selectedNotes)[0]);
-                  }}
-                  className="flex items-center gap-2 rounded-md bg-[#E0A12E] px-6 py-1.5 text-[13px] font-bold text-bg-dark transition hover:bg-[#E0A12E]/90"
-                >
-                  노트 가져오기
-                  <ChevronRight className="h-4 w-4" />
-                </button>
+                onCreateManualGroup && !onAcceptSelection && !onSelectNote ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsManualGroupOpen(true)}
+                    disabled={selectedCount < 2}
+                    className="np-primary-action flex items-center gap-2 rounded-md bg-brand-primary px-4 py-1.5 text-[13px] font-bold text-bg-dark transition hover:bg-brand-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <FolderPlus className="h-4 w-4" />
+                    그룹 만들기
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (onAcceptSelection) onAcceptSelection(Array.from(selectedNotes));
+                      else if (onSelectNote) onSelectNote(Array.from(selectedNotes)[0]);
+                    }}
+                    className="np-primary-action flex items-center gap-2 rounded-md bg-brand-primary px-6 py-1.5 text-[13px] font-bold text-bg-dark transition hover:bg-brand-primary/90"
+                  >
+                    노트 가져오기
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                )
               ) : (
                 <>
                   <button
@@ -1049,7 +1451,7 @@ export default function NotesPage({
                   </button>
                   <button
                     onClick={() => onNavigate("studio")}
-                    className="flex items-center gap-2 rounded-md border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-4 py-1.5 text-[13px] font-bold text-brand-primary transition hover:bg-[#E0A12E]/20"
+                    className="flex items-center gap-2 rounded-md border border-brand-primary/30 bg-brand-primary/10 px-4 py-1.5 text-[13px] font-bold text-brand-primary transition hover:bg-brand-primary/20"
                   >
                     <Wand2 className="h-4 w-4" />
                     AI Studio 보내기
@@ -1068,6 +1470,23 @@ export default function NotesPage({
               </button>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isManualGroupOpen && onCreateManualGroup && (
+          <ManualGroupDialog
+            targetLabel="노트"
+            selectedCount={selectedCount}
+            hasGroupedItems={selectionHasGroupedNotes}
+            onClose={() => setIsManualGroupOpen(false)}
+            onCreate={(name) => {
+              onCreateManualGroup(name, Array.from(selectedNotes));
+              setSelectedNotes(new Set());
+              setIsSelectionMode(false);
+              setIsManualGroupOpen(false);
+              setToast("선택한 노트를 새 그룹으로 묶었습니다.");
+            }}
+          />
         )}
       </AnimatePresence>
 

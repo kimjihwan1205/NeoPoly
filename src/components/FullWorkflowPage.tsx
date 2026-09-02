@@ -56,7 +56,7 @@ const COLORS = {
   bg: "#050505",
   panel: "#0A0B0D",
   border: "#1F2329",
-  gold: "#E0A12E",
+  gold: "var(--color-brand-primary)",
   text: "#F5F5F5",
   muted: "#8B909A",
 };
@@ -817,7 +817,7 @@ export default function FullWorkflowPage({
   };
 
   return (
-    <div className="flex bg-[#050505] h-[calc(100vh-76px)] text-white font-sans antialiased w-full overflow-hidden relative">
+    <div className="np-workspace-shell relative flex h-[calc(100dvh-60px)] w-full overflow-hidden bg-[#050505] font-sans text-white antialiased lg:h-[calc(100dvh-76px)]">
       {showIntroOverlay && (
         <FullWorkflowIntroPage
           onNavigate={onNavigate}
@@ -826,17 +826,17 @@ export default function FullWorkflowPage({
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 flex overflow-hidden relative">
+      <main className="relative flex min-w-0 flex-1 flex-col overflow-y-auto custom-scrollbar lg:flex-row lg:overflow-hidden">
         {activeProject === null ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 relative w-full h-full bg-[#050505] overflow-y-auto custom-scrollbar">
-            <div className="max-w-[1200px] w-full flex flex-col items-center justify-center min-h-[60vh] pb-16">
+          <div className="relative flex h-full w-full flex-1 flex-col items-center justify-start overflow-y-auto bg-[#050505] p-4 custom-scrollbar sm:p-8 lg:justify-center">
+            <div className="flex min-h-full w-full max-w-[1200px] flex-col items-center justify-center py-10 sm:py-12 lg:min-h-[60vh] lg:pb-16 lg:pt-0">
               <div className="w-20 h-20 bg-[#141518] rounded-[24px] flex items-center justify-center border border-[#2A2E36] mb-8 shadow-xl">
-                <Sparkles className="w-10 h-10 text-[#E0A12E]" />
+                <Sparkles className="w-10 h-10 text-brand-primary" />
               </div>
-              <h2 className="text-[32px] font-bold text-white mb-4 tracking-tight">
+              <h2 className="mb-4 text-center text-[28px] font-bold tracking-tight text-white sm:text-[32px]">
                 새로운 작업 시작하기
               </h2>
-              <p className="text-[16px] text-neutral-300 leading-[1.65] max-w-xl text-center mb-12">
+              <p className="mb-8 max-w-xl text-center text-[14px] leading-[1.65] text-neutral-300 sm:mb-12 sm:text-[16px]">
                 바로 빈 캔버스에서 아이디어를 펼치거나,
                 <br />
                 미리 정리해둔 보드 자료를 세팅하고 시작할 수 있습니다.
@@ -846,11 +846,11 @@ export default function FullWorkflowPage({
                 {/* 빈 프로젝트로 시작 */}
                 <button
                   onClick={handleStartEmptyProject}
-                  className="flex flex-col items-center justify-start h-full pt-10 pb-9 px-7 bg-[#0A0B0D] hover:bg-[#141518] border border-[#1F2329] hover:border-[#E0A12E]/50 rounded-[24px] transition-all group shadow-[0_4px_24px_rgba(0,0,0,0.2)] text-center relative overflow-hidden"
+                  className="group relative flex h-full flex-col items-center justify-start overflow-hidden rounded-[20px] border border-[#1F2329] bg-[#0A0B0D] px-5 pb-7 pt-8 text-center shadow-[0_1px_4px_rgba(0,0,0,0.06)] transition-all hover:border-brand-primary/50 hover:bg-[#141518] sm:rounded-[24px] sm:px-7 sm:pb-9 sm:pt-10"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#E0A12E]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <div className="h-12 mb-6 flex items-center justify-center shrink-0">
-                    <FolderPlus className="w-12 h-12 text-[#E0A12E] group-hover:scale-110 transition-transform duration-500" />
+                    <FolderPlus className="w-12 h-12 text-brand-primary group-hover:scale-110 transition-transform duration-500" />
                   </div>
                   <h3 className="text-[20px] font-bold text-white mb-3 relative z-10 shrink-0">
                     빈 프로젝트로 시작
@@ -863,11 +863,11 @@ export default function FullWorkflowPage({
                 {/* 진행중인 프로젝트로 시작 */}
                 <button
                   onClick={() => setIsProjectPopupOpen(true)}
-                  className="flex flex-col items-center justify-start h-full pt-10 pb-9 px-7 bg-[#0A0B0D] hover:bg-[#141518] border border-[#1F2329] hover:border-[#E0A12E]/50 rounded-[24px] transition-all group shadow-[0_4px_24px_rgba(0,0,0,0.2)] text-center relative overflow-hidden"
+                  className="group relative flex h-full flex-col items-center justify-start overflow-hidden rounded-[20px] border border-[#1F2329] bg-[#0A0B0D] px-5 pb-7 pt-8 text-center shadow-[0_1px_4px_rgba(0,0,0,0.06)] transition-all hover:border-brand-primary/50 hover:bg-[#141518] sm:rounded-[24px] sm:px-7 sm:pb-9 sm:pt-10"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#E0A12E]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <div className="h-12 mb-6 flex items-center justify-center shrink-0">
-                    <FolderOpen className="w-12 h-12 text-[#E0A12E] group-hover:scale-110 transition-transform duration-500" />
+                    <FolderOpen className="w-12 h-12 text-brand-primary group-hover:scale-110 transition-transform duration-500" />
                   </div>
                   <h3 className="text-[20px] font-bold text-white mb-3 relative z-10 shrink-0">
                     프로젝트 이어서 시작
@@ -883,9 +883,9 @@ export default function FullWorkflowPage({
                   tabIndex={0}
                   onClick={openBoardImportPopup}
                   onKeyDown={handleBoardImportCardKeyDown}
-                  className="group flex flex-col items-center justify-start h-full pt-10 pb-9 px-7 bg-[#0A0B0D] hover:bg-[#141518] border border-[#1F2329] hover:border-[#E0A12E]/50 rounded-[24px] shadow-[0_4px_24px_rgba(0,0,0,0.2)] text-center relative overflow-hidden transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E0A12E]/70"
+                  className="group relative flex h-full cursor-pointer flex-col items-center justify-start overflow-hidden rounded-[20px] border border-[#1F2329] bg-[#0A0B0D] px-5 pb-7 pt-8 text-center shadow-[0_1px_4px_rgba(0,0,0,0.06)] transition-all hover:border-brand-primary/50 hover:bg-[#141518] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/70 sm:rounded-[24px] sm:px-7 sm:pb-9 sm:pt-10"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#E0A12E]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -894,7 +894,7 @@ export default function FullWorkflowPage({
                     <div className="h-12 mb-6 flex items-center justify-center shrink-0">
                       {stagedNotes.length === 0 &&
                       stagedReferences.length === 0 ? (
-                        <Inbox className="w-12 h-12 text-[#E0A12E] group-hover:scale-110 transition-transform duration-500" />
+                        <Inbox className="w-12 h-12 text-brand-primary group-hover:scale-110 transition-transform duration-500" />
                       ) : (
                         <div className="flex items-center gap-2">
                           {stagedNotes.length > 0 && (
@@ -951,7 +951,7 @@ export default function FullWorkflowPage({
                               e.stopPropagation();
                               handleStartProjectWithAssets();
                             }}
-                            className="flex-[2] py-3 bg-[#E0A12E] hover:bg-[#F0B43A] text-[#050505] rounded-xl text-[14px] font-medium transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(224,161,46,0.2)]"
+                            className="np-primary-action flex-[2] py-3 bg-brand-primary hover:bg-[#F0B43A] text-[#050505] rounded-xl text-[14px] font-medium transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(224,161,46,0.2)]"
                           >
                             작업 시작 <ChevronRight className="w-4 h-4" />
                           </button>
@@ -967,7 +967,7 @@ export default function FullWorkflowPage({
           </div>
         ) : (
           <>
-            <div className="flex-1 flex flex-col min-w-0 relative">
+            <div className="relative flex min-h-[65dvh] min-w-0 flex-1 flex-col lg:min-h-0">
               {workflowStep === "prompt" ? (
                 <>
                   {/* Main Top Header */}
@@ -978,13 +978,13 @@ export default function FullWorkflowPage({
                   />
 
                   {/* Chat Area */}
-                  <div className="flex-1 overflow-y-auto px-8 py-5 custom-scrollbar flex flex-col gap-8 pb-4">
+                  <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-4 py-5 pb-4 custom-scrollbar sm:px-6 lg:gap-8 lg:px-8">
                     {messages.map((msg) => {
                   if (msg.role === "assistant") {
                     return (
                       <div key={msg.id} className="flex gap-4 max-w-[85%]">
                         <div className="w-9 h-9 rounded-full bg-[#141518] border border-[#2A2E36] flex items-center justify-center shrink-0">
-                          <Sparkles className="w-5 h-5 text-[#E0A12E]" />
+                          <Sparkles className="w-5 h-5 text-brand-primary" />
                         </div>
                         <div className="flex flex-col gap-1.5 items-start">
                           <div className="bg-[#141518] border border-[#1F2329] rounded-2xl rounded-tl-sm px-5 py-4 text-[15px] text-neutral-100 leading-[1.65] font-medium">
@@ -1010,7 +1010,7 @@ export default function FullWorkflowPage({
                                   return (
                                     <button
                                       key={i}
-                                      className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[#E0A12E] bg-[#E0A12E]/10 text-neutral-100 text-[14px] transition-colors"
+                                      className="flex items-center gap-2 px-3 py-2 rounded-xl border border-brand-primary bg-brand-primary/10 text-neutral-100 text-[14px] transition-colors"
                                     >
                                       {chip.label}
                                     </button>
@@ -1115,7 +1115,7 @@ export default function FullWorkflowPage({
                     </div>
                     <button
                       onClick={handleSend}
-                      className="bg-[#E0A12E] hover:bg-[#F0B43A] text-black rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+                      className="bg-brand-primary hover:bg-[#F0B43A] text-black rounded-full w-8 h-8 flex items-center justify-center transition-colors"
                     >
                       <ArrowUp className="w-5 h-5" />
                     </button>
@@ -1138,10 +1138,10 @@ export default function FullWorkflowPage({
                   ) : (
                   <div className="mx-auto flex min-h-full w-full max-w-[2200px] flex-col">
                   <div
-                    className={`grid grid-cols-2 gap-3 lg:gap-4 2xl:gap-5 ${
+                    className={`grid grid-cols-1 gap-3 sm:grid-cols-2 lg:gap-4 2xl:gap-5 ${
                       generatedImageCount <= 4
-                        ? "min-h-[calc(100vh-180px)] flex-1 grid-rows-2"
-                        : "auto-rows-[minmax(320px,42vh)]"
+                        ? "min-h-[calc(100dvh-180px)] flex-1 grid-rows-none sm:grid-rows-2"
+                        : "auto-rows-[minmax(260px,42dvh)] sm:auto-rows-[minmax(320px,42dvh)]"
                     }`}
                   >
                     {Array.from({ length: generatedImageCount }, (_, i) => i).map((i) => (
@@ -1156,8 +1156,8 @@ export default function FullWorkflowPage({
                           handleGeneratedImageSelect(i);
                         }}
                         style={{ backgroundColor: getGeneratedImageBackground(i) }}
-                        className={`group relative block h-full w-full overflow-hidden rounded-xl border-[2px] transition-all duration-300 ${
-                          selectedGridImage === i ? "border-[#E0A12E]" : "border-[#1F2329] hover:border-[#555A64]"
+                        className={`np-dark-media np-generated-image-card group relative block h-full w-full overflow-hidden rounded-xl border-[2px] transition-all duration-300 ${
+                          selectedGridImage === i ? "border-brand-primary" : "border-[#1F2329] hover:border-[#555A64]"
                         } ${regeneratingImageIndex === i ? "cursor-wait" : ""}`}
                       >
                         <img
@@ -1170,22 +1170,22 @@ export default function FullWorkflowPage({
                         {/* Status Badge */}
                         <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
                            {selectedGridImage === i && (
-                             <div className="w-6 h-6 rounded-full bg-[#E0A12E] flex items-center justify-center text-black shadow-lg">
+                             <div className="w-6 h-6 rounded-full bg-brand-primary flex items-center justify-center text-black shadow-lg">
                                <Check className="w-4 h-4 stroke-[3]" />
                              </div>
                            )}
                         </div>
 
                         {/* Top Actions Bar (Hover) */}
-                        <div className="absolute top-0 left-0 right-0 p-4 pb-12 flex items-center justify-end bg-gradient-to-b from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <div className="flex items-center gap-3">
+                        <div className="np-generated-image-actions absolute inset-x-0 top-0 flex items-center justify-end bg-gradient-to-b from-black/60 to-transparent p-2 pb-10 opacity-100 transition-opacity duration-300 md:p-4 md:pb-12 md:opacity-0 md:group-hover:opacity-100">
+                          <div className="flex items-center gap-1.5 sm:gap-3">
                             <button
                               type="button"
                               onClick={(event) => {
                                 event.stopPropagation();
                                 openGeneratedImageEditor(i);
                               }}
-                              className="flex h-8 w-8 items-center justify-center rounded-full bg-black/50 backdrop-blur-md transition-colors hover:bg-[#E0A12E] hover:text-black"
+                              className="np-generated-image-action np-generated-image-action-edit flex h-8 w-8 items-center justify-center rounded-full text-white backdrop-blur-md"
                               title={`시안 ${i + 1} 수정`}
                             >
                               <Pencil className="h-4 w-4" />
@@ -1193,7 +1193,7 @@ export default function FullWorkflowPage({
                             <button
                               type="button"
                               onClick={(event) => event.stopPropagation()}
-                              className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center hover:bg-black/80 transition-colors"
+                              className="np-generated-image-action w-8 h-8 rounded-full backdrop-blur-md flex items-center justify-center"
                               title="이미지 다운로드"
                             >
                               <Download className="w-4 h-4 text-white" />
@@ -1201,7 +1201,7 @@ export default function FullWorkflowPage({
                             <button
                               type="button"
                               onClick={(event) => event.stopPropagation()}
-                              className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center hover:bg-black/80 transition-colors"
+                              className="np-generated-image-action w-8 h-8 rounded-full backdrop-blur-md flex items-center justify-center"
                               title="보드에 저장"
                             >
                               <Bookmark className="w-4 h-4 text-white" />
@@ -1227,7 +1227,7 @@ export default function FullWorkflowPage({
             {/* Right Sidebar - Output & Options */}
             {workflowStep === "prompt" ? (
               ((rightPanelMode === "prompt") || rightPanelMode === "expert") && (
-              <div className="w-[420px] xl:w-[480px] 2xl:w-[550px] flex-shrink-0 border-l border-[#1F2329] bg-[#050505] flex flex-col h-full overflow-hidden">
+              <div className="flex h-[70dvh] w-full flex-shrink-0 flex-col overflow-hidden border-t border-[#1F2329] bg-[#050505] lg:h-full lg:w-[420px] lg:border-l lg:border-t-0 xl:w-[480px] 2xl:w-[550px]">
                 {rightPanelMode === "prompt" ? (
                 <>
                   <WorkflowSidebarHeader
@@ -1240,7 +1240,7 @@ export default function FullWorkflowPage({
                   />
                   <div className="flex-1 flex flex-col overflow-hidden p-6 gap-6 pb-0">
                     {/* Selected Refs */}
-                    <div className="rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4 flex flex-col max-h-[45vh] shrink-0">
+                    <div className="flex max-h-[45dvh] shrink-0 flex-col rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-4">
                       <div className="flex items-center justify-between mb-3 text-[14px] shrink-0">
                         <span className="text-neutral-100 font-bold">레퍼런스</span>
                         <span className="text-neutral-400">
@@ -1261,7 +1261,7 @@ export default function FullWorkflowPage({
                             return (
                               <div
                                 key={id}
-                                className="relative aspect-square flex flex-col justify-end group"
+                                className="np-dark-media relative aspect-square flex flex-col justify-end group"
                               >
                                 <div className="absolute inset-0 border border-[#1F2329] rounded-lg overflow-hidden">
                                   <img
@@ -1279,7 +1279,8 @@ export default function FullWorkflowPage({
                                       );
                                       setHasUnsavedChanges(true);
                                     }}
-                                    className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-md text-white/70 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm border border-white/10 z-20"
+                                    aria-label="레퍼런스 제거"
+                                    className="absolute right-2 top-2 z-20 rounded-md border border-white/10 bg-black/60 p-1.5 text-white/70 opacity-100 backdrop-blur-sm transition-opacity hover:text-white md:opacity-0 md:group-hover:opacity-100"
                                   >
                                     <X className="w-3 h-3" />
                                   </button>
@@ -1316,7 +1317,7 @@ export default function FullWorkflowPage({
                                           e.currentTarget.blur();
                                         }
                                       }}
-                                      className="w-full text-center bg-black/70 border border-white/20 rounded-md backdrop-blur-md text-[14px] text-white px-2 py-1 outline-none focus:border-[#E0A12E]"
+                                      className="w-full text-center bg-black/70 border border-white/20 rounded-md backdrop-blur-md text-[14px] text-white px-2 py-1 outline-none focus:border-brand-primary"
                                     />
                                   ) : (
                                     <button
@@ -1384,7 +1385,7 @@ export default function FullWorkflowPage({
                         hasUnsavedChanges ? (
                           <button 
                             onClick={handleGenerateImage}
-                            className="w-full bg-[#E0A12E] hover:bg-[#F0B43A] text-black font-medium py-4 rounded-xl shadow-[0_0_15px_rgba(224,161,46,0.2)] transition-all flex items-center justify-center gap-2 text-[15px]"
+                            className="np-primary-action w-full bg-brand-primary hover:bg-[#F0B43A] text-black font-medium py-4 rounded-xl shadow-[0_0_15px_rgba(224,161,46,0.2)] transition-all flex items-center justify-center gap-2 text-[15px]"
                           >
                             변경사항 적용 및 재생성 ✨
                           </button>
@@ -1399,7 +1400,7 @@ export default function FullWorkflowPage({
                       ) : (
                         <button 
                           onClick={handleGenerateImage}
-                          className="w-full bg-[#E0A12E] hover:bg-[#F0B43A] text-black font-medium py-4 rounded-xl shadow-[0_0_15px_rgba(224,161,46,0.2)] transition-all flex items-center justify-center gap-2 text-[15px]"
+                          className="np-primary-action w-full bg-brand-primary hover:bg-[#F0B43A] text-black font-medium py-4 rounded-xl shadow-[0_0_15px_rgba(224,161,46,0.2)] transition-all flex items-center justify-center gap-2 text-[15px]"
                         >
                           작업 시작 <Sparkles className="w-5 h-5" />
                         </button>
@@ -1426,13 +1427,13 @@ export default function FullWorkflowPage({
                   <div className="flex border-b border-[#1F2329] px-6 shrink-0 bg-[#050505]">
                     <button
                       onClick={() => setExpertTab("turnaround")}
-                      className={`py-4 text-[14px] font-medium border-b-2 mr-6 transition-colors ${expertTab === "turnaround" ? "border-[#E0A12E] text-[#E0A12E]" : "border-transparent text-neutral-400 hover:text-white"}`}
+                      className={`py-4 text-[14px] font-medium border-b-2 mr-6 transition-colors ${expertTab === "turnaround" ? "border-brand-primary text-brand-primary" : "border-transparent text-neutral-400 hover:text-white"}`}
                     >
                       턴어라운드 설정
                     </button>
                     <button
                       onClick={() => setExpertTab("modular")}
-                      className={`py-4 text-[14px] font-medium border-b-2 mr-6 transition-colors ${expertTab === "modular" ? "border-[#E0A12E] text-[#E0A12E]" : "border-transparent text-neutral-400 hover:text-white"}`}
+                      className={`py-4 text-[14px] font-medium border-b-2 mr-6 transition-colors ${expertTab === "modular" ? "border-brand-primary text-brand-primary" : "border-transparent text-neutral-400 hover:text-white"}`}
                     >
                       모듈화 설정
                     </button>
@@ -1447,7 +1448,7 @@ export default function FullWorkflowPage({
                             <label className="text-[14px] font-medium text-neutral-100">
                               카메라 렌더링 앵글 (Count)
                             </label>
-                            <span className="text-[14px] font-medium text-[#E0A12E]">
+                            <span className="text-[14px] font-medium text-brand-primary">
                               8 views
                             </span>
                           </div>
@@ -1462,7 +1463,7 @@ export default function FullWorkflowPage({
                             max="16"
                             step="2"
                             defaultValue="8"
-                            className="w-full accent-[#E0A12E] mt-2 bg-[#1A1C20] h-1.5 rounded-lg appearance-none outline-none"
+                            className="w-full accent-brand-primary mt-2 bg-[#1A1C20] h-1.5 rounded-lg appearance-none outline-none"
                           />
                           <div className="flex justify-between text-[14px] text-neutral-400 mt-1 font-mono">
                             <span>4</span>
@@ -1486,11 +1487,11 @@ export default function FullWorkflowPage({
                                 모바일 / VR
                               </span>
                             </button>
-                            <button className="bg-[#E0A12E]/10 border border-[#E0A12E] py-3 rounded-xl flex flex-col items-center gap-1 transition-colors">
-                              <span className="text-[14px] font-medium text-[#E0A12E]">
+                            <button className="bg-brand-primary/10 border border-brand-primary py-3 rounded-xl flex flex-col items-center gap-1 transition-colors">
+                              <span className="text-[14px] font-medium text-brand-primary">
                                 Mid Poly
                               </span>
-                              <span className="text-[14px] text-[#E0A12E]/70">
+                              <span className="text-[14px] text-brand-primary/70">
                                 일반 PC / 콘솔
                               </span>
                             </button>
@@ -1509,7 +1510,7 @@ export default function FullWorkflowPage({
                           <label className="text-[14px] font-medium text-neutral-100">
                             텍스처 해상도 (Resolution)
                           </label>
-                          <select defaultValue="2048 x 2048 (2K)" className="w-full bg-[#1A1C20] border border-[#2A2E36] rounded-xl px-4 py-3.5 text-[14px] text-neutral-200 font-medium focus:outline-none focus:border-[#E0A12E]">
+                          <select defaultValue="2048 x 2048 (2K)" className="w-full bg-[#1A1C20] border border-[#2A2E36] rounded-xl px-4 py-3.5 text-[14px] text-neutral-200 font-medium focus:outline-none focus:border-brand-primary">
                             <option>1024 x 1024 (1K)</option>
                             <option>2048 x 2048 (2K)</option>
                             <option>4096 x 4096 (4K)</option>
@@ -1523,7 +1524,7 @@ export default function FullWorkflowPage({
                             <label className="text-[14px] font-medium text-neutral-100">
                               세그먼트 파츠 분할 (Auto-Segment)
                             </label>
-                            <div className="w-10 h-6 bg-[#E0A12E] rounded-full relative cursor-pointer shadow-[0_0_10px_rgba(224,161,46,0.3)]">
+                            <div className="w-10 h-6 bg-brand-primary rounded-full relative cursor-pointer shadow-[0_0_10px_rgba(224,161,46,0.3)]">
                               <div className="absolute right-1 top-1 w-4 h-4 bg-black rounded-full transition-all"></div>
                             </div>
                           </div>
@@ -1541,7 +1542,7 @@ export default function FullWorkflowPage({
                           <div className="flex items-center gap-4 bg-[#1A1C20] p-4 rounded-xl border border-[#2A2E36]">
                             <Minus className="w-4 h-4 text-neutral-400 cursor-pointer hover:text-white" />
                             <div className="flex-1 bg-black h-1.5 rounded-full overflow-hidden">
-                              <div className="bg-[#E0A12E] h-full w-[60%]"></div>
+                              <div className="bg-brand-primary h-full w-[60%]"></div>
                             </div>
                             <Plus className="w-4 h-4 text-neutral-400 cursor-pointer hover:text-white" />
                           </div>
@@ -1555,7 +1556,7 @@ export default function FullWorkflowPage({
                             <input
                               type="checkbox"
                               defaultChecked
-                              className="w-4 h-4 accent-[#E0A12E] bg-transparent border-[#2A2E36]"
+                              className="w-4 h-4 accent-brand-primary bg-transparent border-[#2A2E36]"
                             />
                             <span className="text-[14px] text-neutral-300">
                               각 파츠별 개별 바운딩 박스 자동 계산
@@ -1565,7 +1566,7 @@ export default function FullWorkflowPage({
                             <input
                               type="checkbox"
                               defaultChecked
-                              className="w-4 h-4 accent-[#E0A12E] bg-transparent border-[#2A2E36]"
+                              className="w-4 h-4 accent-brand-primary bg-transparent border-[#2A2E36]"
                             />
                             <span className="text-[14px] text-neutral-300">
                               부모-자식(Parent-Child) 계층 구조 자동 생성
@@ -1578,7 +1579,7 @@ export default function FullWorkflowPage({
 
                   {/* Fixed Bottom Button */}
                   <div className="shrink-0 p-6 pt-5 bg-[#0A0B0D] border-t border-[#1F2329] z-10 shadow-[0_-10px_30px_rgba(0,0,0,0.4)]">
-                    <button className="w-full bg-[#E0A12E] hover:bg-[#F0B43A] text-black font-medium py-4 rounded-xl shadow-[0_0_15px_rgba(224,161,46,0.3)] transition-all flex items-center justify-center gap-2 text-[15px]">
+                    <button className="np-primary-action w-full bg-brand-primary hover:bg-[#F0B43A] text-black font-medium py-4 rounded-xl shadow-[0_0_15px_rgba(224,161,46,0.3)] transition-all flex items-center justify-center gap-2 text-[15px]">
                       최종 3D 모델링 생성 <span className="text-[20px]">🚀</span>
                     </button>
                   </div>
@@ -1586,12 +1587,12 @@ export default function FullWorkflowPage({
               )}
             </div>
             )) : (
-              <div className="w-[420px] xl:w-[480px] 2xl:w-[550px] flex-shrink-0 border-l border-[#1F2329] bg-[#050505] flex flex-col h-full overflow-hidden">
+              <div className="flex h-[70dvh] w-full flex-shrink-0 flex-col overflow-hidden border-t border-[#1F2329] bg-[#050505] lg:h-full lg:w-[420px] lg:border-l lg:border-t-0 xl:w-[480px] 2xl:w-[550px]">
                 <WorkflowSidebarHeader
                   title="이미지 생성 설정"
                   action={
                     selectedGridImage !== null ? (
-                      <span className="rounded-md border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-2.5 py-1 text-[14px] text-[#E0A12E]">
+                      <span className="rounded-md border border-brand-primary/30 bg-brand-primary/10 px-2.5 py-1 text-[14px] text-brand-primary">
                         시안 {selectedGridImage + 1} 선택
                       </span>
                     ) : null
@@ -1620,7 +1621,7 @@ export default function FullWorkflowPage({
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-[14px] text-neutral-400">영향도</span>
-                            <input type="range" min="0" max="100" defaultValue="85" className="flex-1 accent-[#E0A12E] bg-[#1A1C20] h-1 rounded-lg appearance-none outline-none" />
+                            <input type="range" min="0" max="100" defaultValue="85" className="flex-1 accent-brand-primary bg-[#1A1C20] h-1 rounded-lg appearance-none outline-none" />
                             <span className="text-[14px] text-neutral-400 font-mono w-9 text-right">0.85</span>
                           </div>
                         </div>
@@ -1638,7 +1639,7 @@ export default function FullWorkflowPage({
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-[14px] text-neutral-400">영향도</span>
-                            <input type="range" min="0" max="100" defaultValue="60" className="flex-1 accent-[#E0A12E] bg-[#1A1C20] h-1 rounded-lg appearance-none outline-none" />
+                            <input type="range" min="0" max="100" defaultValue="60" className="flex-1 accent-brand-primary bg-[#1A1C20] h-1 rounded-lg appearance-none outline-none" />
                             <span className="text-[14px] text-neutral-400 font-mono w-9 text-right">0.60</span>
                           </div>
                         </div>
@@ -1656,7 +1657,7 @@ export default function FullWorkflowPage({
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-[14px] text-neutral-400 shrink-0">영향도</span>
-                            <input type="range" min="0" max="100" defaultValue="90" className="flex-1 accent-[#E0A12E] bg-[#1A1C20] h-1 rounded-lg appearance-none outline-none" />
+                            <input type="range" min="0" max="100" defaultValue="90" className="flex-1 accent-brand-primary bg-[#1A1C20] h-1 rounded-lg appearance-none outline-none" />
                             <span className="text-[14px] text-neutral-400 font-mono shrink-0 w-9 text-right">0.90</span>
                           </div>
                         </div>
@@ -1706,7 +1707,7 @@ export default function FullWorkflowPage({
                       className={`flex self-end items-center justify-center gap-2 rounded-lg border px-4 py-2 text-[14px] font-medium transition ${
                         isGeneratingMoreImages
                           ? "cursor-wait border-[#2A2E36] bg-[#111317] text-neutral-500"
-                          : "border-[#E0A12E]/45 bg-[#E0A12E]/10 text-[#E0A12E] hover:border-[#E0A12E] hover:bg-[#E0A12E]/15"
+                          : "border-brand-primary/45 bg-brand-primary/10 text-brand-primary hover:border-brand-primary hover:bg-brand-primary/15"
                       }`}
                     >
                       {isGeneratingMoreImages ? (
@@ -1729,9 +1730,9 @@ export default function FullWorkflowPage({
                       <button
                         disabled={!hasSelectedGeneratedImage}
                         onClick={handleToggleTurnaround}
-                        className={`flex-1 flex items-center justify-start px-4 py-3.5 rounded-xl border text-[14px] font-medium transition-colors ${!hasSelectedGeneratedImage ? "bg-[#08090B] border-[#1F2329] text-neutral-600 cursor-not-allowed" : isTurnaroundSelected ? "bg-[#141518] border-[#E0A12E] text-[#E0A12E]" : "bg-[#0A0B0D] border-[#2A2E36] text-neutral-400 hover:border-[#555A64] hover:text-white"}`}
+                        className={`flex-1 flex items-center justify-start px-4 py-3.5 rounded-xl border text-[14px] font-medium transition-colors ${!hasSelectedGeneratedImage ? "bg-[#08090B] border-[#1F2329] text-neutral-600 cursor-not-allowed" : isTurnaroundSelected ? "bg-[#141518] border-brand-primary text-brand-primary" : "bg-[#0A0B0D] border-[#2A2E36] text-neutral-400 hover:border-[#555A64] hover:text-white"}`}
                       >
-                        <div className={`w-4 h-4 rounded-[4px] border shrink-0 mr-3 flex items-center justify-center transition-colors ${isTurnaroundSelected ? 'bg-[#E0A12E] border-[#E0A12E]' : hasSelectedGeneratedImage ? 'border-[#555A64]' : 'border-[#2A2E36]'}`}>
+                        <div className={`w-4 h-4 rounded-[4px] border shrink-0 mr-3 flex items-center justify-center transition-colors ${isTurnaroundSelected ? 'bg-brand-primary border-brand-primary' : hasSelectedGeneratedImage ? 'border-[#555A64]' : 'border-[#2A2E36]'}`}>
                           {isTurnaroundSelected && <Check className="w-3 h-3 text-black stroke-[3]" />}
                         </div>
                         <RefreshCw className="w-4 h-4 mr-2 shrink-0" />
@@ -1740,9 +1741,9 @@ export default function FullWorkflowPage({
                       <button
                         disabled={!hasSelectedGeneratedImage}
                         onClick={handleToggleModular}
-                        className={`flex-1 flex items-center justify-start px-4 py-3.5 rounded-xl border text-[14px] font-medium transition-colors ${!hasSelectedGeneratedImage ? "bg-[#08090B] border-[#1F2329] text-neutral-600 cursor-not-allowed" : isModularSelected ? "bg-[#141518] border-[#E0A12E] text-[#E0A12E]" : "bg-[#0A0B0D] border-[#2A2E36] text-neutral-400 hover:border-[#555A64] hover:text-white"}`}
+                        className={`flex-1 flex items-center justify-start px-4 py-3.5 rounded-xl border text-[14px] font-medium transition-colors ${!hasSelectedGeneratedImage ? "bg-[#08090B] border-[#1F2329] text-neutral-600 cursor-not-allowed" : isModularSelected ? "bg-[#141518] border-brand-primary text-brand-primary" : "bg-[#0A0B0D] border-[#2A2E36] text-neutral-400 hover:border-[#555A64] hover:text-white"}`}
                       >
-                        <div className={`w-4 h-4 rounded-[4px] border shrink-0 mr-3 flex items-center justify-center transition-colors ${isModularSelected ? 'bg-[#E0A12E] border-[#E0A12E]' : hasSelectedGeneratedImage ? 'border-[#555A64]' : 'border-[#2A2E36]'}`}>
+                        <div className={`w-4 h-4 rounded-[4px] border shrink-0 mr-3 flex items-center justify-center transition-colors ${isModularSelected ? 'bg-brand-primary border-brand-primary' : hasSelectedGeneratedImage ? 'border-[#555A64]' : 'border-[#2A2E36]'}`}>
                           {isModularSelected && <Check className="w-3 h-3 text-black stroke-[3]" />}
                         </div>
                         <Puzzle className="w-4 h-4 mr-2 shrink-0" />
@@ -1767,7 +1768,7 @@ export default function FullWorkflowPage({
                         <button
                           disabled={!hasSelectedGeneratedImage}
                           onClick={handleDirectModeling}
-                          className={`w-[70%] font-medium py-3.5 rounded-xl transition-all flex items-center justify-center gap-1.5 text-[14px] ${hasSelectedGeneratedImage ? "bg-[#E0A12E] hover:bg-[#F0B43A] text-black shadow-[0_0_15px_rgba(224,161,46,0.3)]" : "bg-[#202126] text-neutral-500 cursor-not-allowed"}`}
+                          className={`w-[70%] font-medium py-3.5 rounded-xl transition-all flex items-center justify-center gap-1.5 text-[14px] ${hasSelectedGeneratedImage ? "bg-brand-primary hover:bg-[#F0B43A] text-black shadow-[0_0_15px_rgba(224,161,46,0.3)]" : "bg-[#202126] text-neutral-500 cursor-not-allowed"}`}
                         >
                           3D 모델링 생성 <Box className="w-4 h-4" />
                         </button>
@@ -1775,7 +1776,7 @@ export default function FullWorkflowPage({
                         <button 
                           disabled={!hasSelectedGeneratedImage}
                           onClick={handleRefineSelectedSettings}
-                          className={`w-[70%] font-medium py-3.5 rounded-xl transition-all flex items-center justify-center gap-1.5 text-[14px] ${hasSelectedGeneratedImage ? "bg-[#E0A12E] hover:bg-[#F0B43A] text-black shadow-[0_0_15px_rgba(224,161,46,0.3)]" : "bg-[#202126] text-neutral-500 cursor-not-allowed"}`}
+                          className={`w-[70%] font-medium py-3.5 rounded-xl transition-all flex items-center justify-center gap-1.5 text-[14px] ${hasSelectedGeneratedImage ? "bg-brand-primary hover:bg-[#F0B43A] text-black shadow-[0_0_15px_rgba(224,161,46,0.3)]" : "bg-[#202126] text-neutral-500 cursor-not-allowed"}`}
                         >
                           선택한 설정으로 정교화 <ChevronRight className="w-4 h-4" />
                         </button>
@@ -1796,7 +1797,7 @@ export default function FullWorkflowPage({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onMouseDown={closeGeneratedImageEditor}
-            className="fixed inset-0 z-[150] flex items-center justify-center bg-black/55 p-5 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[150] flex items-center justify-center bg-black/55 p-3 backdrop-blur-[2px] sm:p-5"
           >
             <motion.div
               initial={{ opacity: 0, y: 14, scale: 0.98 }}
@@ -1804,11 +1805,11 @@ export default function FullWorkflowPage({
               exit={{ opacity: 0, y: 14, scale: 0.98 }}
               transition={{ duration: 0.18 }}
               onMouseDown={(event) => event.stopPropagation()}
-              className="flex max-h-[92vh] w-full max-w-[1240px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_28px_80px_rgba(0,0,0,0.7)]"
+              className="flex max-h-[92dvh] w-full max-w-[1240px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_28px_80px_rgba(0,0,0,0.7)]"
             >
               <div className="flex items-center justify-between border-b border-[#1F2329] px-5 py-4">
                 <div>
-                  <p className="text-[14px] font-medium text-[#E0A12E]">개별 시안 수정</p>
+                  <p className="text-[14px] font-medium text-brand-primary">개별 시안 수정</p>
                   <h3 className="mt-0.5 text-[18px] font-medium text-white">시안 {editingGeneratedImage + 1}</h3>
                 </div>
                 <button
@@ -1837,7 +1838,7 @@ export default function FullWorkflowPage({
                   onPointerCancel={handleImageAreaPointerUp}
                   className={`relative h-[clamp(360px,55vh,620px)] touch-none overflow-hidden rounded-lg border bg-white ${
                     isImageAreaSelectionEnabled
-                      ? "cursor-crosshair border-[#E0A12E]"
+                      ? "cursor-crosshair border-brand-primary"
                       : "border-[#2A2E36]"
                   }`}
                   style={{ backgroundColor: getGeneratedImageBackground(editingGeneratedImage) }}
@@ -1857,7 +1858,7 @@ export default function FullWorkflowPage({
                       onClick={() => setIsImageAreaSelectionEnabled((current) => !current)}
                       className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-[14px] font-medium shadow-lg backdrop-blur-md transition ${
                         isImageAreaSelectionEnabled
-                          ? "border-[#E0A12E] bg-[#E0A12E] text-black"
+                          ? "border-brand-primary bg-brand-primary text-black"
                           : "border-white/15 bg-black/65 text-white hover:bg-black/80"
                       }`}
                     >
@@ -1885,7 +1886,7 @@ export default function FullWorkflowPage({
                         <polygon
                           points={generatedImageSelectionDraft.map((point) => `${point.x},${point.y}`).join(" ")}
                           fill="rgba(224, 161, 46, 0.22)"
-                          stroke="#E0A12E"
+                          stroke="var(--color-brand-primary)"
                           strokeWidth="0.6"
                           strokeDasharray="1.5 1"
                           vectorEffect="non-scaling-stroke"
@@ -1894,7 +1895,7 @@ export default function FullWorkflowPage({
                         <polyline
                           points={generatedImageSelectionDraft.map((point) => `${point.x},${point.y}`).join(" ")}
                           fill="none"
-                          stroke="#E0A12E"
+                          stroke="var(--color-brand-primary)"
                           strokeWidth="0.8"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -1921,7 +1922,7 @@ export default function FullWorkflowPage({
                     value={generatedImageEditDraft}
                     onChange={(event) => setGeneratedImageEditDraft(event.target.value)}
                     placeholder="예: 어깨 갑옷을 더 크게 하고 금속 스크래치를 강조해줘"
-                    className="mt-2 h-24 w-full resize-none rounded-lg border border-[#343842] bg-[#111317] px-3.5 py-3 text-[14px] leading-6 text-white outline-none transition placeholder:text-neutral-500 focus:border-[#E0A12E]"
+                    className="mt-2 h-24 w-full resize-none rounded-lg border border-[#343842] bg-[#111317] px-3.5 py-3 text-[14px] leading-6 text-white outline-none transition placeholder:text-neutral-500 focus:border-brand-primary"
                   />
                 </div>
                 </div>
@@ -1939,7 +1940,7 @@ export default function FullWorkflowPage({
                             aria-label={`${version.label} 선택`}
                             className={`group w-full overflow-hidden rounded-lg border transition ${
                               isActive
-                                ? "border-[#E0A12E]"
+                                ? "border-brand-primary"
                                 : "border-[#2A2E36] hover:border-[#555A64]"
                             }`}
                           >
@@ -1953,7 +1954,7 @@ export default function FullWorkflowPage({
                                 className="h-full w-full object-contain"
                               />
                               {isActive && (
-                                <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#E0A12E] text-black shadow-lg">
+                                <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand-primary text-black shadow-lg">
                                   <Check className="h-4 w-4 stroke-[3]" />
                                 </span>
                               )}
@@ -1984,7 +1985,7 @@ export default function FullWorkflowPage({
                   onClick={handleRegenerateGeneratedImage}
                   className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-[14px] font-medium transition ${
                     generatedImageEditDraft.trim() && regeneratingImageIndex !== editingGeneratedImage
-                      ? "bg-[#E0A12E] text-black hover:bg-[#F0B43A]"
+                      ? "bg-brand-primary text-black hover:bg-[#F0B43A]"
                       : "cursor-not-allowed bg-[#202126] text-neutral-500"
                   }`}
                 >
@@ -2008,7 +2009,7 @@ export default function FullWorkflowPage({
           <div className="bg-[#050505] border border-[#2A2E36] rounded-xl flex flex-col w-[95vw] h-[90vh] shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#1F2329] shrink-0 bg-[#0A0B0D]">
               <div>
-                <p className="text-[14px] font-medium text-[#E0A12E]">Board</p>
+                <p className="text-[14px] font-medium text-brand-primary">Board</p>
                 <h3 className="text-[18px] font-medium text-white tracking-tight">보드에서 가져오기</h3>
               </div>
 
@@ -2025,14 +2026,14 @@ export default function FullWorkflowPage({
                 <div className="flex w-fit items-center gap-1 rounded-lg border border-[#2A2E36] bg-[#111215] p-1">
                   <button
                     onClick={() => setBoardPopupView("notes")}
-                    className={`flex items-center gap-2 rounded-md px-4 py-2 text-[14px] font-medium transition ${boardPopupView === "notes" ? "bg-[#E0A12E] text-[#050505]" : "text-neutral-400 hover:bg-[#1A1C23] hover:text-white"}`}
+                    className={`flex items-center gap-2 rounded-md px-4 py-2 text-[14px] font-medium transition ${boardPopupView === "notes" ? "bg-brand-primary text-[#050505]" : "text-neutral-400 hover:bg-[#1A1C23] hover:text-white"}`}
                   >
                     <FileText className="w-4 h-4" />
                     노트 {boardSelectedNotes.length > 0 ? boardSelectedNotes.length : ""}
                   </button>
                   <button
                     onClick={() => setBoardPopupView("references")}
-                    className={`flex items-center gap-2 rounded-md px-4 py-2 text-[14px] font-medium transition ${boardPopupView === "references" ? "bg-[#E0A12E] text-[#050505]" : "text-neutral-400 hover:bg-[#1A1C23] hover:text-white"}`}
+                    className={`flex items-center gap-2 rounded-md px-4 py-2 text-[14px] font-medium transition ${boardPopupView === "references" ? "bg-brand-primary text-[#050505]" : "text-neutral-400 hover:bg-[#1A1C23] hover:text-white"}`}
                   >
                     <ImageIcon className="w-4 h-4" />
                     레퍼런스 {boardSelectedReferences.length > 0 ? boardSelectedReferences.length : ""}
@@ -2079,24 +2080,9 @@ export default function FullWorkflowPage({
                 )}
               </div>
             </div>
-            <div
-              className={`absolute bottom-5 left-1/2 z-[120] flex w-fit max-w-[calc(100%-40px)] -translate-x-1/2 items-center justify-between gap-4 rounded-xl border border-[#2A2E36] bg-[#111317]/95 px-3 py-2.5 shadow-[0_20px_60px_rgba(0,0,0,0.75)] backdrop-blur-xl transition-all duration-200 ${
-                boardSelectedNotes.length + boardSelectedReferences.length > 0
-                  ? "max-w-[520px]"
-                  : "max-w-[360px]"
-              }`}
-            >
-              <button
-                onClick={() => setIsBoardPopupOpen(false)}
-                className="rounded-lg bg-transparent px-3 py-2 text-[14px] font-medium text-neutral-400 transition hover:text-white"
-              >
-                작업으로 돌아가기
-              </button>
-              {boardSelectedNotes.length + boardSelectedReferences.length === 0 ? (
-                <span className="text-[14px] font-medium text-neutral-500">항목 선택 전</span>
-              ) : (
-                <>
-                  <div className="flex min-w-0 items-center justify-center gap-3 text-[14px] font-medium text-neutral-300">
+            {boardSelectedNotes.length + boardSelectedReferences.length > 0 && (
+              <div className="flex shrink-0 items-center justify-end gap-4 border-t border-[#2A2E36] bg-[#111317] px-4 py-3 sm:px-5">
+                  <div className="hidden min-w-0 items-center justify-center gap-3 text-[14px] font-medium text-neutral-300 sm:flex">
                     {boardSelectedNotes.length > 0 && (
                       <span className="rounded-full border border-[#60A5FA]/30 bg-[#60A5FA]/10 px-2.5 py-1 text-[#60A5FA]">
                         노트 {boardSelectedNotes.length}개
@@ -2132,13 +2118,15 @@ export default function FullWorkflowPage({
                       setBoardSelectedReferences([]);
                       setIsBoardPopupOpen(false);
                     }}
-                    className="rounded-lg bg-[#E0A12E] px-4 py-2 text-[14px] font-medium text-[#050505] transition hover:bg-[#F0B43A]"
+                    className="np-primary-action flex min-h-11 w-full items-center justify-center rounded-lg bg-brand-primary px-4 py-2 text-[14px] font-medium text-[#050505] transition hover:bg-[#F0B43A] sm:w-auto"
                   >
-                    가져오기
+                    <span className="sm:hidden">
+                      {boardSelectedNotes.length + boardSelectedReferences.length}개 가져오기
+                    </span>
+                    <span className="hidden sm:inline">가져오기</span>
                   </button>
-                </>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}

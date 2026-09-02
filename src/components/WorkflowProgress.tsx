@@ -31,7 +31,7 @@ export default function WorkflowProgress({
               key={step.id}
               className={`h-1.5 rounded-full transition-all ${
                 index === progress.currentIndex
-                  ? "w-4 bg-[#E0A12E]"
+                  ? "w-4 bg-brand-primary"
                   : index < progress.currentIndex
                     ? "w-1.5 bg-[#4ADE80]"
                     : "w-1.5 bg-[#343842]"
@@ -55,7 +55,7 @@ export default function WorkflowProgress({
               <div
                 key={step.id}
                 className={`flex h-10 items-center gap-3 rounded-lg px-2.5 ${
-                  isCurrent ? "bg-[#E0A12E]/10" : ""
+                  isCurrent ? "bg-brand-primary/10" : ""
                 }`}
               >
                 <span
@@ -63,7 +63,7 @@ export default function WorkflowProgress({
                     isComplete
                       ? "border-[#4ADE80]/40 bg-[#4ADE80]/10 text-[#4ADE80]"
                       : isCurrent
-                        ? "border-[#E0A12E] bg-[#E0A12E] text-black"
+                        ? "border-brand-primary bg-brand-primary text-black"
                         : "border-[#343842] bg-[#111317] text-neutral-600"
                   }`}
                 >
@@ -76,7 +76,7 @@ export default function WorkflowProgress({
                 <span
                   className={`text-[14px] font-medium ${
                     isCurrent
-                      ? "text-[#E0A12E]"
+                      ? "text-brand-primary"
                       : isComplete
                         ? "text-neutral-300"
                         : "text-neutral-500"

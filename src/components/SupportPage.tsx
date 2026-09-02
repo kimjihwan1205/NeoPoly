@@ -78,11 +78,11 @@ export default function SupportPage() {
   }, [searchQuery]);
 
   return (
-    <div className="relative min-h-[calc(100vh-76px)] bg-bg-dark font-sans text-text-primary">
+    <div className="relative min-h-[calc(100dvh-60px)] bg-bg-dark font-sans text-text-primary lg:min-h-[calc(100dvh-76px)]">
       <div className="relative overflow-hidden border-b border-[#1F2329] bg-[#0A0B0D]">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#E0A12E]/5 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-primary/5 to-transparent" />
         <div className="relative z-10 mx-auto flex max-w-[1200px] flex-col items-center px-4 py-12 text-center sm:px-6 2xl:px-8 min-[2200px]:px-10">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#E0A12E]/30 bg-[#E0A12E]/10 px-3 py-1.5 text-[14px] font-medium text-[#E0A12E]">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-primary/30 bg-brand-primary/10 px-3 py-1.5 text-[14px] font-medium text-brand-primary">
             <HelpCircle className="h-3.5 w-3.5" />
             고객 지원 센터
           </div>
@@ -93,14 +93,14 @@ export default function SupportPage() {
             NeoPoly 사용 중 궁금한 점을 검색하거나 1:1 문의를 남길 수 있습니다.
           </p>
 
-          <div className="group relative mt-2 w-full max-w-[640px] shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
-            <Search className="absolute left-6 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400 transition group-focus-within:text-[#E0A12E]" />
+          <div className="np-support-search group relative mt-2 w-full max-w-[640px] shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
+            <Search className="absolute left-6 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400 transition group-focus-within:text-brand-primary" />
             <input
               type="text"
               placeholder="예: 크레딧, 환불, 저작권"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-14 w-full rounded-lg border border-[#2A2E36] bg-[#141518] pl-14 pr-6 text-[15px] text-white outline-none transition placeholder:text-neutral-500 focus:border-[#E0A12E]/60"
+              className="h-14 w-full rounded-lg border border-[#2A2E36] bg-[#141518] pl-14 pr-6 text-[15px] text-white outline-none transition placeholder:text-neutral-500 focus:border-brand-primary/60"
             />
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function SupportPage() {
                 >
                   <details className="group">
                     <summary className="flex cursor-pointer list-none items-center justify-between px-6 py-5 font-medium">
-                      <span className="pr-8 text-[15px] font-medium leading-snug text-white transition group-hover:text-[#E0A12E]">
+                      <span className="pr-8 text-[15px] font-medium leading-snug text-white transition group-hover:text-brand-primary">
                         {faq.question}
                       </span>
                       <span className="shrink-0 text-neutral-400 transition group-open:rotate-180">
@@ -147,7 +147,7 @@ export default function SupportPage() {
             </div>
 
             <div className="relative mt-10 flex flex-col items-center justify-between gap-6 overflow-hidden rounded-lg border border-[#2A2E36] bg-[#0A0B0D] p-6 sm:flex-row">
-              <div className="absolute right-0 top-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-[#E0A12E]/5 blur-[80px]" />
+              <div className="absolute right-0 top-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-brand-primary/5 blur-[80px]" />
               <div className="relative z-10 flex flex-col gap-2">
                 <h3 className="text-[15px] font-medium text-white">
                   원하는 답을 찾지 못했나요?
@@ -184,13 +184,13 @@ export default function SupportPage() {
                     setSelectedGuide(guide.title);
                     setToast(`${guide.title}를 열었습니다.`);
                   }}
-                  className="group flex items-start gap-4 rounded-lg border border-[#1F2329] bg-[#0A0B0D] p-5 text-left transition hover:border-[#E0A12E]/40"
+                  className="group flex items-start gap-4 rounded-lg border border-[#1F2329] bg-[#0A0B0D] p-5 text-left transition hover:border-brand-primary/40"
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] transition group-hover:border-[#E0A12E]/30 group-hover:bg-[#E0A12E]/10">
-                    <Icon className="h-5 w-5 text-neutral-400 transition group-hover:text-[#E0A12E]" />
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#141518] transition group-hover:border-brand-primary/30 group-hover:bg-brand-primary/10">
+                    <Icon className="h-5 w-5 text-neutral-400 transition group-hover:text-brand-primary" />
                   </span>
                   <span className="flex min-w-0 flex-col gap-1.5">
-                    <span className="flex items-center gap-1.5 text-[15px] font-medium text-white transition group-hover:text-[#E0A12E]">
+                    <span className="flex items-center gap-1.5 text-[15px] font-medium text-white transition group-hover:text-brand-primary">
                       {guide.title}
                       <ExternalLink className="h-3.5 w-3.5 text-neutral-500" />
                     </span>
@@ -231,18 +231,18 @@ export default function SupportPage() {
             <div className="flex flex-col gap-4 p-6">
               <input
                 placeholder="제목"
-                className="h-11 rounded-lg border border-[#2A2E36] bg-[#141518] px-4 text-white outline-none placeholder:text-neutral-500 focus:border-[#E0A12E]/60"
+                className="h-11 rounded-lg border border-[#2A2E36] bg-[#141518] px-4 text-white outline-none placeholder:text-neutral-500 focus:border-brand-primary/60"
               />
               <textarea
                 placeholder="문의 내용을 적어주세요."
-                className="h-36 resize-none rounded-lg border border-[#2A2E36] bg-[#141518] px-4 py-3 text-white outline-none placeholder:text-neutral-500 focus:border-[#E0A12E]/60"
+                className="h-36 resize-none rounded-lg border border-[#2A2E36] bg-[#141518] px-4 py-3 text-white outline-none placeholder:text-neutral-500 focus:border-brand-primary/60"
               />
               <button
                 onClick={() => {
                   setContactOpen(false);
                   setToast("문의가 접수되었습니다.");
                 }}
-                className="rounded-lg bg-[#E0A12E] px-5 py-3 text-[14px] font-medium text-[#050505] transition hover:bg-[#F0B43A]"
+                className="np-primary-action rounded-lg bg-brand-primary px-5 py-3 text-[14px] font-medium text-[#050505] transition hover:bg-[#F0B43A]"
               >
                 문의 보내기
               </button>

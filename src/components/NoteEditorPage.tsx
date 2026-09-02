@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  ChevronDown, Plus, Star, Clock, Trash2, Settings, 
+  ChevronDown, ChevronRight, Plus, Star, Clock, Trash2, Settings,
   FileText, Image as ImageIcon, CheckSquare, LayoutGrid, X, 
   Bold, Italic, Underline, Strikethrough, List, ListOrdered, Quote, 
   Link2, Table, Code, MoreHorizontal, Sparkles, RefreshCw, 
@@ -59,43 +59,46 @@ export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteE
   ];
 
   return (
-    <div className="flex h-[calc(100vh-76px)] overflow-hidden bg-bg-dark font-sans text-text-primary">
+    <div className="np-workspace-shell flex h-[calc(100dvh-60px)] overflow-hidden bg-bg-dark font-sans text-text-primary lg:h-[calc(100dvh-76px)]">
       {/* Left Sidebar */}
       <NoteSidebar onNavigate={onNavigate} mode="editor" editorTitle={initialNote?.title} isNewNote={!initialNote} />
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto custom-scrollbar bg-bg-dark flex flex-col relative w-full">
         {/* Top Formatting Toolbar */}
-        <div className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 bg-[#0A0B0D]/90 backdrop-blur-md border-b border-[#1C1E24] text-neutral-400">
-          <div className="flex items-center gap-4 md:gap-6 overflow-x-auto custom-scrollbar">
+        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-[#1C1E24] bg-[#0A0B0D]/90 px-4 py-2 text-neutral-400 backdrop-blur-md after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:w-10 after:bg-gradient-to-l after:from-[#0A0B0D] after:to-transparent sm:px-6 sm:py-4 sm:after:hidden">
+          <div className="flex items-center gap-2 overflow-x-auto pr-8 scrollbar-hide sm:gap-4 sm:pr-0 md:gap-6">
             <div className="flex items-center gap-3 shrink-0">
-              <button className="text-[15px] font-bold hover:text-white transition-colors">H1</button>
-              <button className="text-[15px] font-bold hover:text-white transition-colors">H2</button>
-              <button className="text-[15px] font-bold hover:text-white transition-colors">H3</button>
+              <button className="flex h-11 min-w-11 items-center justify-center rounded-md text-[15px] font-bold transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8">H1</button>
+              <button className="flex h-11 min-w-11 items-center justify-center rounded-md text-[15px] font-bold transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8">H2</button>
+              <button className="flex h-11 min-w-11 items-center justify-center rounded-md text-[15px] font-bold transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8">H3</button>
             </div>
             <div className="w-px h-4 bg-[#2A2E36] shrink-0"></div>
             <div className="flex items-center gap-3 shrink-0">
-              <button className="hover:text-white transition-colors"><Bold className="w-4 h-4" /></button>
-              <button className="hover:text-white transition-colors"><Italic className="w-4 h-4" /></button>
-              <button className="hover:text-white transition-colors"><Underline className="w-4 h-4" /></button>
-              <button className="hover:text-white transition-colors"><Strikethrough className="w-4 h-4" /></button>
+              <button aria-label="굵게" className="flex h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><Bold className="w-4 h-4" /></button>
+              <button aria-label="기울임" className="flex h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><Italic className="w-4 h-4" /></button>
+              <button aria-label="밑줄" className="flex h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><Underline className="w-4 h-4" /></button>
+              <button aria-label="취소선" className="flex h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><Strikethrough className="w-4 h-4" /></button>
             </div>
             <div className="w-px h-4 bg-[#2A2E36] shrink-0"></div>
             <div className="flex items-center gap-3 shrink-0">
-              <button className="hover:text-white transition-colors"><List className="w-4 h-4" /></button>
-              <button className="hover:text-white transition-colors"><ListOrdered className="w-4 h-4" /></button>
+              <button aria-label="글머리 기호 목록" className="flex h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><List className="w-4 h-4" /></button>
+              <button aria-label="번호 목록" className="flex h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><ListOrdered className="w-4 h-4" /></button>
             </div>
             <div className="w-px h-4 bg-[#2A2E36] shrink-0"></div>
             <div className="flex items-center gap-3 shrink-0">
-              <button className="hover:text-white transition-colors"><CheckSquare className="w-4 h-4" /></button>
-              <button className="hover:text-white transition-colors"><Quote className="w-4 h-4" /></button>
-              <button className="hover:text-white transition-colors"><Link2 className="w-4 h-4" /></button>
-              <button className="hover:text-white transition-colors"><ImageIcon className="w-4 h-4" /></button>
-              <button className="hover:text-white transition-colors"><Table className="w-4 h-4" /></button>
-              <button className="hover:text-white transition-colors"><Code className="w-4 h-4" /></button>
+              <button aria-label="체크리스트" className="flex h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><CheckSquare className="w-4 h-4" /></button>
+              <button aria-label="인용문" className="flex h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><Quote className="w-4 h-4" /></button>
+              <button aria-label="링크 추가" className="flex h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><Link2 className="w-4 h-4" /></button>
+              <button aria-label="이미지 추가" className="flex h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><ImageIcon className="w-4 h-4" /></button>
+              <button aria-label="표 추가" className="flex h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><Table className="w-4 h-4" /></button>
+              <button aria-label="코드 블록" className="flex h-11 min-w-11 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><Code className="w-4 h-4" /></button>
             </div>
             <div className="w-px h-4 bg-[#2A2E36] shrink-0"></div>
-            <button className="hover:text-white transition-colors shrink-0"><MoreHorizontal className="w-4 h-4" /></button>
+            <button aria-label="편집 도구 더 보기" className="flex h-11 min-w-11 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-white/5 hover:text-white sm:h-8 sm:min-w-8"><MoreHorizontal className="w-4 h-4" /></button>
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 right-1 flex w-8 items-center justify-end sm:hidden" aria-hidden="true">
+            <ChevronRight className="h-4 w-4 text-brand-primary" />
           </div>
         </div>
 
@@ -111,7 +114,7 @@ export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteE
               type="text"
               defaultValue={initialNote?.title ?? ""}
               placeholder="제목을 입력하세요"
-              className="w-full bg-transparent border-none outline-none text-[36px] font-bold text-white placeholder-[#3A404F] tracking-tight"
+              className="w-full border-none bg-transparent text-[28px] font-bold tracking-tight text-white outline-none placeholder-[#3A404F] sm:text-[36px]"
             />
             <p className="text-[16px] text-neutral-400 mt-4 font-medium tracking-tight">
               {initialNote
@@ -123,14 +126,14 @@ export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteE
           <div className="h-px w-full border-b border-[#1C1E24] mt-2 mb-4"></div>
 
           {/* Active Editor Block */}
-          <div className="bg-[#111215] border border-[#1C1E24] rounded-xl p-6 flex-1 flex flex-col items-start relative group shadow-sm min-h-[340px]">
+          <div className="group relative flex min-h-[300px] flex-1 flex-col items-start rounded-xl border border-[#1C1E24] bg-[#111215] p-4 shadow-sm sm:min-h-[340px] sm:p-6">
             <textarea
               key={`memo-${initialNote?.id ?? "new"}`}
               defaultValue={initialNote?.desc ?? ""}
               placeholder="메모를 입력하세요."
               className="min-h-[260px] w-full flex-1 resize-y bg-transparent border-none outline-none text-[16px] leading-[1.75] text-white placeholder:text-neutral-500"
             />
-            <button className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-[#1A1C20] border border-[#2A2E36] hover:bg-[#22252A] hover:border-[#3A404F] text-neutral-300 px-4 py-2 rounded-lg text-[14px] font-semibold transition-all opacity-0 group-hover:opacity-100 shadow-md">
+            <button className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-lg border border-[#2A2E36] bg-[#1A1C20] px-4 py-2 text-[14px] font-semibold text-neutral-300 opacity-100 shadow-md transition-all hover:border-[#3A404F] hover:bg-[#22252A] md:opacity-0 md:group-hover:opacity-100">
               <Plus className="w-4 h-4" /> 블록 추가
             </button>
           </div>
@@ -185,7 +188,7 @@ export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteE
       </main>
 
       {/* Right Sidebar - AI Assist */}
-      <aside className="w-[350px] shrink-0 border-l border-[#161618] bg-[#0A0B0D] flex flex-col h-full relative z-10">
+      <aside className="relative z-10 hidden h-full w-[320px] shrink-0 flex-col border-l border-[#161618] bg-[#0A0B0D] xl:flex 2xl:w-[350px]">
         <div className="flex items-center justify-between p-5 border-b border-[#1C1E24]">
           <div className="flex items-center gap-2 text-[16px] font-bold text-white">
             <Sparkles className="w-4 h-4 text-brand-primary" /> AI 어시스트
@@ -207,7 +210,7 @@ export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteE
                  <ChevronDown className="w-4 h-4 transform -rotate-45" />
               </div>
             </div>
-            <button className="w-full py-2.5 rounded-lg border border-brand-primary/40 bg-brand-primary/5 hover:bg-brand-primary/10 text-brand-primary text-[14px] font-bold transition-colors flex items-center justify-center gap-2 shadow-sm">
+            <button className="np-light-brand-action w-full py-2.5 rounded-lg border border-brand-primary/40 bg-brand-primary/5 hover:bg-brand-primary/10 text-brand-primary text-[14px] font-bold transition-colors flex items-center justify-center gap-2 shadow-sm">
               아이디어 확장 받기 <Sparkles className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -267,10 +270,10 @@ export default function NoteEditorPage({ onNavigate, initialNote = null }: NoteE
 
         {/* Bottom Save Action */}
         <div className="absolute bottom-0 left-0 right-0 p-5 bg-[#0A0B0D]/90 backdrop-blur-md border-t border-[#1C1E24] flex items-center z-20">
-          <button className="flex-1 py-3 bg-[#E0A12E] hover:bg-[#F0B43A] text-[#0A0B0D] font-bold text-[15px] rounded-l-lg transition-colors shadow-lg">
+          <button className="flex-1 py-3 bg-brand-primary hover:bg-[#F0B43A] text-[#0A0B0D] font-bold text-[15px] rounded-l-lg transition-colors shadow-lg">
             저장
           </button>
-          <button className="px-3 py-3 bg-[#E0A12E] hover:bg-[#F0B43A] text-[#0A0B0D] font-bold rounded-r-lg transition-colors border-l border-[#0A0B0D]/20 shadow-lg">
+          <button className="px-3 py-3 bg-brand-primary hover:bg-[#F0B43A] text-[#0A0B0D] font-bold rounded-r-lg transition-colors border-l border-[#0A0B0D]/20 shadow-lg">
             <ChevronDown className="w-5 h-5" />
           </button>
         </div>
