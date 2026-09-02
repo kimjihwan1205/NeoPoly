@@ -9,8 +9,8 @@ import {
   Search, ShoppingCart, Bell, LayoutGrid, User, Mountain, Building2, Menu, 
   Car, Sword, Box, Leaf, Wand2, Heart, Eye, Sliders, Plus, Folder, ChevronRight,
   Sparkles, Video, BrainCircuit, GripVertical, FileText, Skull,
-  PanelRightClose, X, ChevronDown, Check, Instagram, Youtube, ShoppingBag,
-  Upload, Trash2, Clock, LogOut, Settings, Star, ImageIcon, ArrowUp, CircleHelp,
+  PanelRightClose, PanelRightOpen, X, ChevronDown, Check, Instagram, Youtube, ShoppingBag,
+  Upload, Trash2, Clock, LogOut, Settings, Star, ImageIcon, ArrowUp, CircleHelp, Share2,
   Moon, Sun
 } from 'lucide-react';
 import { motion, AnimatePresence, useDragControls } from 'motion/react';
@@ -1224,7 +1224,7 @@ function Header({
         
         {/* Navigation Menu (Left-aligned, comfortable spacing) */}
         <nav className="hidden lg:block">
-          <ul className="flex items-center gap-5 lg:gap-7 xl:gap-10 text-[17px] lg:text-[17px] xl:text-[17px] font-medium text-text-tertiary whitespace-nowrap">
+          <ul className="flex items-center gap-5 whitespace-nowrap text-[17px] font-medium text-text-secondary lg:gap-7 lg:text-[17px] xl:gap-10 xl:text-[17px]">
             <li 
               className={`${currentPage === 'home' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav(null); if(onNavigate) onNavigate('home'); }}
@@ -1845,7 +1845,7 @@ function Header({
                     className={`group flex h-12 w-full items-center justify-start rounded-md bg-transparent px-3 text-left text-[17px] transition-colors md:h-11 md:w-auto md:px-0 md:hover:bg-transparent ${
                       isActive
                         ? "font-semibold text-brand-primary"
-                        : "font-medium text-text-tertiary hover:bg-white/[0.04] hover:text-text-primary"
+                        : "font-medium text-text-secondary hover:bg-white/[0.04] hover:text-text-primary"
                     }`}
                   >
                     <span>{label}</span>
@@ -1943,7 +1943,7 @@ function CategoryNav({
             className={`group flex h-full w-[88px] min-w-[88px] shrink-0 flex-col items-center justify-center transition-all lg:w-[104px] lg:min-w-[104px] xl:w-[110px] xl:min-w-[110px] ${
               activeCategory === cat.id 
                 ? 'text-brand-primary' 
-                : 'text-text-tertiary hover:text-brand-primary/60'
+                : 'text-text-secondary hover:text-brand-primary'
             }`}
           >
             <div className={`flex items-center justify-center transition-all mb-1`}>
@@ -2033,7 +2033,7 @@ function MobileCategoryRail({
             className={`relative flex h-10 shrink-0 items-center text-[14px] font-medium transition-colors ${
               activeCategory === cat.id
                 ? 'text-brand-primary'
-                : 'text-text-tertiary hover:text-text-primary'
+                : 'text-text-secondary hover:text-text-primary'
             }`}
           >
             <span>{cat.label}</span>
@@ -2071,11 +2071,11 @@ function MobileCategoryPicker({
         type="button"
         onClick={() => setIsCategorySheetOpen(true)}
         aria-expanded={isCategorySheetOpen}
-        className="inline-flex h-11 items-center gap-2 rounded-md bg-transparent px-0 text-left text-[14px] font-medium text-text-tertiary transition-colors hover:text-text-primary"
+        className="inline-flex h-11 items-center gap-2 rounded-md bg-transparent px-0 text-left text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary"
       >
         <ActiveCategoryIcon className="h-4 w-4 text-brand-primary" />
         <span className="text-text-primary">{activeCategoryMeta.label}</span>
-        <ChevronDown className={`h-4 w-4 transition-transform ${isCategorySheetOpen ? 'rotate-180 text-brand-primary' : 'text-text-tertiary'}`} />
+        <ChevronDown className={`h-4 w-4 transition-transform ${isCategorySheetOpen ? 'rotate-180 text-brand-primary' : 'text-text-secondary'}`} />
       </button>
 
       <AnimatePresence>
@@ -2132,7 +2132,7 @@ function MobileCategoryPicker({
                           : 'border-[#1F2329] bg-[#0A0B0D] text-text-secondary hover:border-[#2A2E36] hover:text-text-primary'
                       }`}
                     >
-                      <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-brand-primary' : 'text-text-tertiary'}`} />
+                      <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-brand-primary' : 'text-text-secondary'}`} />
                       <span className="min-w-0 truncate text-[14px] font-medium">{cat.label}</span>
                     </button>
                   );
@@ -2235,7 +2235,7 @@ function QuickDropCard({
         </div>
         <button
           onClick={onNavigate}
-          className="text-[14px] font-medium text-text-tertiary transition hover:text-brand-primary"
+          className="text-[14px] font-medium text-text-secondary transition hover:text-brand-primary"
         >
           열기 <ChevronRight className="inline h-3 w-3" />
         </button>
@@ -2329,7 +2329,7 @@ function QuickCollectDialog({
               key={id}
               onClick={() => setMode(id as "existing" | "new")}
               className={`flex-1 rounded-md px-3 py-2 text-[14px] font-medium transition ${
-                mode === id ? "bg-brand-primary text-bg-dark" : "text-text-tertiary hover:text-white"
+                mode === id ? "bg-brand-primary text-bg-dark" : "text-text-secondary hover:text-white"
               }`}
             >
               {label}
@@ -2640,9 +2640,9 @@ const PRODUCT_DETAIL_DATA: Record<number, {
     slug: 'wyvern',
     imagePrefix: 'Discover_in_Wyvern',
     title: 'Wyvern',
-    category: 'Market',
-    price: '₩89,000',
-    originalPrice: '₩120,000',
+    category: 'Art',
+    price: '문의',
+    originalPrice: '',
     stats: ['1.2K', '156', '4.8'],
     tags: ['캐릭터', '몬스터', 'Rigged', 'PBR', '판타지', '크리처'],
     description: '커다란 날개와 긴 꼬리 실루엣이 특징인 와이번 크리처 모델입니다. 비행 포즈, 턴어라운드, 와이어 프레임 참고를 기반으로 고품질 크리처 작업에 적합합니다.',
@@ -2815,6 +2815,7 @@ function ProductDetailPage({
   onQuickCollect,
   onAssetDragStart,
   onViewPurchases,
+  onContactArtist,
 }: {
   assetId: number;
   onNavigateHome: () => void;
@@ -2822,6 +2823,7 @@ function ProductDetailPage({
   onQuickCollect?: (target: QuickDropTarget, asset: any) => void;
   onAssetDragStart?: (asset: any, e: React.DragEvent) => void;
   onViewPurchases?: () => void;
+  onContactArtist: () => void;
 }) {
   const asset = ASSETS.find((item) => item.id === assetId) ?? ASSETS[0];
   const product = PRODUCT_DETAIL_DATA[asset.id] ?? PRODUCT_DETAIL_DATA[1];
@@ -2833,8 +2835,19 @@ function ProductDetailPage({
   const gallery = PRODUCT_IMAGE_ORDER[asset.id] ?? Array.from({ length: product.galleryCount }, (_, index) => index + 1);
   const [heroOrder, ...detailOrders] = gallery;
   const [activeMobileSlide, setActiveMobileSlide] = useState(0);
+  const [isDesktopInfoPanelCollapsed, setIsDesktopInfoPanelCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('neopoly_product_detail_panel_collapsed') === 'true';
+  });
   const mobileGalleryRef = useRef<HTMLDivElement>(null);
   const mobileThumbnailRailRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem(
+      'neopoly_product_detail_panel_collapsed',
+      String(isDesktopInfoPanelCollapsed),
+    );
+  }, [isDesktopInfoPanelCollapsed]);
 
   useEffect(() => {
     setActiveMobileSlide(0);
@@ -2870,11 +2883,11 @@ function ProductDetailPage({
   }, [activeMobileSlide]);
 
   return (
-    <main className="np-product-detail flex-1 bg-[#08090B]">
+    <main className="np-product-detail flex-1 overflow-x-clip bg-[#08090B]">
       <div className={PRODUCT_DETAIL_CONTAINER_CLASS}>
         <button
           onClick={onNavigateHome}
-          className="mb-5 inline-flex min-h-11 items-center gap-2 rounded-md text-[14px] font-medium text-text-tertiary transition hover:text-brand-primary"
+          className="mb-2 inline-flex min-h-11 items-center gap-2 rounded-md text-[14px] font-medium text-text-secondary transition hover:text-brand-primary lg:hidden"
         >
           <ChevronRight className="h-4 w-4 rotate-180" />
           Discover로 돌아가기
@@ -2883,37 +2896,17 @@ function ProductDetailPage({
         <div
           draggable
           onDragStart={(event) => onAssetDragStart?.(asset, event)}
-          className="np-product-media group relative mb-6 hidden aspect-[1456/744] overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D] md:block md:aspect-auto"
+          className="np-product-media group relative left-1/2 mb-6 hidden h-[clamp(360px,32.6vw,600px)] w-screen -translate-x-1/2 overflow-hidden border-y border-[#1F2329] bg-[#0A0B0D] lg:block"
         >
           <SmartProductImage
             candidates={detailImageCandidates(product, asset.id, heroOrder)}
             fallback={productFallbackImage(asset.id, heroOrder, asset.image)}
             alt={displayTitle}
-            className="h-full w-full object-cover md:h-auto md:object-contain"
+            className="h-full w-full object-cover"
           />
-          <div className="absolute right-2 top-2 flex gap-1.5 opacity-100 transition md:right-4 md:top-4 md:gap-2 md:opacity-0 md:group-hover:opacity-100">
-            <button
-              onClick={(event) => {
-                event.stopPropagation();
-                onQuickCollect?.("references", asset);
-              }}
-              className="np-product-media-action min-h-11 rounded-md border px-2.5 py-1.5 text-[12px] font-medium backdrop-blur transition sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
-            >
-              레퍼런스
-            </button>
-            <button
-              onClick={(event) => {
-                event.stopPropagation();
-                onQuickCollect?.("notes", asset);
-              }}
-              className="np-product-media-action min-h-11 rounded-md border px-2.5 py-1.5 text-[12px] font-medium backdrop-blur transition sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
-            >
-              메모
-            </button>
-          </div>
         </div>
 
-        <section className="relative -mx-4 mb-5 w-[calc(100%+2rem)] md:hidden" aria-label={`${displayTitle} 이미지 갤러리`}>
+        <section className="relative -mx-4 mb-5 w-[calc(100%+2rem)] md:-mx-6 md:w-[calc(100%+3rem)] lg:hidden" aria-label={`${displayTitle} 이미지 갤러리`}>
           <div
             ref={mobileGalleryRef}
             onScroll={(event) => {
@@ -2955,7 +2948,7 @@ function ProductDetailPage({
                       event.stopPropagation();
                       onQuickCollect?.("references", asset);
                     }}
-                    className="np-product-media-action np-product-mobile-media-action min-h-8 rounded-md border px-2.5 py-1 text-[12px] font-medium backdrop-blur transition"
+                    className="np-product-media-action np-product-mobile-media-action min-h-8 rounded-md border px-2.5 py-1 text-[12px] font-medium backdrop-blur transition md:min-h-9 md:px-3 md:text-[14px]"
                   >
                     레퍼런스
                   </button>
@@ -2964,7 +2957,7 @@ function ProductDetailPage({
                       event.stopPropagation();
                       onQuickCollect?.("notes", asset);
                     }}
-                    className="np-product-media-action np-product-mobile-media-action min-h-8 rounded-md border px-2.5 py-1 text-[12px] font-medium backdrop-blur transition"
+                    className="np-product-media-action np-product-mobile-media-action min-h-8 rounded-md border px-2.5 py-1 text-[12px] font-medium backdrop-blur transition md:min-h-9 md:px-3 md:text-[14px]"
                   >
                     메모
                   </button>
@@ -2976,7 +2969,7 @@ function ProductDetailPage({
           {gallery.length > 1 && (
             <div
               ref={mobileThumbnailRailRef}
-              className="np-product-thumbnail-rail scrollbar-hide flex touch-pan-x snap-x snap-proximity gap-1.5 overflow-x-auto overscroll-x-contain px-4 py-2.5 scroll-smooth"
+              className="np-product-thumbnail-rail scrollbar-hide flex touch-pan-x snap-x snap-proximity gap-1.5 overflow-x-auto overscroll-x-contain px-4 py-2.5 scroll-smooth md:gap-2 md:px-6 md:py-3"
               role="tablist"
               aria-label="상세 이미지 선택"
             >
@@ -2990,7 +2983,7 @@ function ProductDetailPage({
                   data-active={index === activeMobileSlide}
                   data-thumbnail-index={index}
                   onClick={() => moveMobileGallery(index)}
-                  className="np-product-gallery-thumbnail relative h-11 w-14 shrink-0 snap-center overflow-hidden rounded-md border-2"
+                  className="np-product-gallery-thumbnail relative h-11 w-14 shrink-0 snap-center overflow-hidden rounded-md border-2 md:h-14 md:w-[72px]"
                 >
                   <SmartProductImage
                     candidates={detailImageCandidates(product, asset.id, order)}
@@ -3006,8 +2999,37 @@ function ProductDetailPage({
           )}
         </section>
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_360px] min-[2200px]:grid-cols-[minmax(0,1fr)_420px]">
-          <section className="hidden min-w-0 space-y-3 md:block">
+        {isDesktopInfoPanelCollapsed && (
+          <button
+            type="button"
+            onClick={() => setIsDesktopInfoPanelCollapsed(false)}
+            className="np-product-panel-toggle fixed right-0 top-1/2 z-40 hidden h-14 w-8 -translate-y-1/2 flex-col items-center justify-center gap-1 rounded-l-lg border border-r-0 border-[#2A2E36] bg-[#141518]/95 text-text-secondary shadow-[-8px_0_20px_rgba(0,0,0,0.22)] backdrop-blur-md transition-all hover:w-9 hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary lg:flex"
+            aria-label="상세 패널 열기"
+            aria-expanded="false"
+            title="상세 패널 열기"
+          >
+            <span
+              className={`text-[10px] font-semibold leading-none ${
+                product.category === 'Market'
+                  ? 'np-product-category-market'
+                  : 'np-product-category-art'
+              }`}
+              aria-hidden="true"
+            >
+              {product.category.slice(0, 1).toUpperCase()}
+            </span>
+            <PanelRightOpen className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
+
+        <div
+          className={`grid grid-cols-1 gap-6 transition-[grid-template-columns,gap] duration-300 ${
+            isDesktopInfoPanelCollapsed
+              ? 'lg:grid-cols-[minmax(0,1fr)_0px] lg:gap-0'
+              : 'lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_360px] min-[2200px]:grid-cols-[minmax(0,1fr)_420px]'
+          }`}
+        >
+          <section className="hidden min-w-0 space-y-3 lg:block">
             {detailOrders.map((order) => (
               <div
                 key={order}
@@ -3021,34 +3043,28 @@ function ProductDetailPage({
                   alt={`${displayTitle} detail ${order}`}
                   className="h-auto w-full object-contain"
                 />
-                <div className="absolute right-2 top-2 flex gap-1.5 opacity-100 transition md:right-4 md:top-4 md:gap-2 md:opacity-0 md:group-hover:opacity-100">
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onQuickCollect?.("references", asset);
-                    }}
-                    className="np-product-media-action min-h-11 rounded-md border px-2.5 py-1.5 text-[12px] font-medium backdrop-blur transition sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
-                  >
-                    레퍼런스
-                  </button>
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onQuickCollect?.("notes", asset);
-                    }}
-                    className="np-product-media-action min-h-11 rounded-md border px-2.5 py-1.5 text-[12px] font-medium backdrop-blur transition sm:min-h-9 sm:px-3 sm:py-2 sm:text-[14px]"
-                  >
-                    메모
-                  </button>
-                </div>
               </div>
             ))}
           </section>
 
-          <aside className="xl:sticky xl:top-[92px] xl:self-start">
+          <aside
+            className={`w-full md:mx-auto md:max-w-[760px] lg:sticky lg:top-[92px] lg:mx-0 lg:max-w-none lg:self-start ${
+              isDesktopInfoPanelCollapsed
+                ? 'lg:hidden'
+                : 'lg:block'
+            }`}
+          >
             <div className="flex flex-col gap-5">
-              <ProductPurchasePanel asset={asset} product={product} displayTitle={displayTitle} onViewPurchases={onViewPurchases} />
-              <ProductLicensePanel />
+              <ProductPurchasePanel
+                asset={asset}
+                product={product}
+                displayTitle={displayTitle}
+                onNavigateHome={onNavigateHome}
+                onViewPurchases={onViewPurchases}
+                onCollapseInfoPanel={() => setIsDesktopInfoPanelCollapsed(true)}
+                onContactArtist={onContactArtist}
+              />
+              {product.category === 'Market' && <ProductLicensePanel />}
               <ProductStatsPanel stats={product.stats} />
               <ProductInfoPanel product={product} />
             </div>
@@ -3212,11 +3228,11 @@ function BoardPage({
       key={label}
       onClick={onClick}
       className={`flex w-full items-center justify-between rounded-md px-4 py-3 text-[15px] font-medium transition ${
-        active ? "bg-[#171A20] text-white" : "text-text-tertiary hover:bg-[#121417] hover:text-white"
+        active ? "bg-[#171A20] text-white" : "text-text-secondary hover:bg-[#121417] hover:text-white"
       }`}
     >
       <span className="flex min-w-0 items-center gap-2.5">
-        {icon && <span className={active ? "text-brand-primary" : "text-text-tertiary"}>{icon}</span>}
+        {icon && <span className={active ? "text-brand-primary" : "text-text-secondary"}>{icon}</span>}
         <span className="truncate">{label}</span>
       </span>
       <span className={`ml-3 shrink-0 text-[14px] ${active ? "text-brand-primary" : "text-text-tertiary"}`}>
@@ -3261,7 +3277,7 @@ function BoardPage({
         {submenuButton("휴지통", boardDeletedNoteIds.size, boardNoteFilter === "trash", () => setBoardNoteFilter("trash"), <Trash2 className="h-4 w-4" />)}
       </div>
       <div>
-        <p className="mb-2 px-4 text-[14px] font-medium uppercase tracking-[0.08em] text-text-tertiary">폴더</p>
+        <p className="mb-2 px-4 text-[14px] font-medium uppercase tracking-[0.08em] text-text-secondary">폴더</p>
         <div className="space-y-1.5">
           {noteFolders.map((folder) =>
             submenuButton(
@@ -3286,7 +3302,7 @@ function BoardPage({
         {submenuButton("최근 추가", referenceCountFor("recent"), boardReferenceCategory === "recent", () => setBoardReferenceCategory("recent"), <Clock className="h-4 w-4" />)}
       </div>
       <div>
-        <p className="mb-2 px-4 text-[14px] font-medium uppercase tracking-[0.08em] text-text-tertiary">보드</p>
+        <p className="mb-2 px-4 text-[14px] font-medium uppercase tracking-[0.08em] text-text-secondary">보드</p>
         <div className="space-y-2">
           {REFERENCE_BOARDS.map((board) => {
             const active = boardReferenceCategory === board.id;
@@ -3332,7 +3348,7 @@ function BoardPage({
               : "border-transparent text-text-secondary hover:border-[#2A2E36] hover:bg-[#111317] hover:text-white"
           }`}
         >
-          <Icon className={`h-5 w-5 shrink-0 ${active ? "text-brand-primary" : "text-text-tertiary"}`} />
+          <Icon className={`h-5 w-5 shrink-0 ${active ? "text-brand-primary" : "text-text-secondary"}`} />
           <span className="min-w-0 flex-1 text-[15px] font-medium">{item.label}</span>
         </button>
         {item.id === "notes" && boardView === "notes" && renderNoteSubMenu()}
@@ -3848,14 +3864,21 @@ function ProductPurchasePanel({
   asset,
   product,
   displayTitle,
+  onNavigateHome,
   onViewPurchases,
+  onCollapseInfoPanel,
+  onContactArtist,
 }: {
   asset: any;
   product: typeof PRODUCT_DETAIL_DATA[number];
   displayTitle: string;
+  onNavigateHome: () => void;
   onViewPurchases?: () => void;
+  onCollapseInfoPanel?: () => void;
+  onContactArtist: () => void;
 }) {
   const purchaseItem = createPurchaseItem(asset, product, displayTitle);
+  const isArt = product.category === 'Art';
   const [checkoutItems, setCheckoutItems] = useState<PrototypePurchaseItem[] | null>(null);
   const [completeItems, setCompleteItems] = useState<PrototypePurchaseItem[] | null>(null);
   const [isInCart, setIsInCart] = useState(() => safeReadPurchaseItems(PURCHASE_CART_KEY).some((item) => item.id === asset.id));
@@ -3913,12 +3936,43 @@ function ProductPurchasePanel({
   return (
     <>
       <div className="px-1">
-        <span className="mb-1 block text-[14px] font-medium text-brand-primary">{product.category}</span>
+        <span
+          className={`mb-1 block text-[14px] font-medium lg:hidden ${
+            isArt ? 'np-product-category-art' : 'np-product-category-market'
+          }`}
+        >
+          {product.category}
+        </span>
+        <nav aria-label="상품 상세 경로" className="mb-1 hidden min-w-0 items-center gap-1.5 text-[14px] font-medium lg:flex">
+          <button
+            type="button"
+            onClick={onNavigateHome}
+            className="shrink-0 rounded-md text-text-secondary transition hover:text-brand-primary"
+          >
+            Discover
+          </button>
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-text-tertiary/60" aria-hidden="true" />
+          <span className={`truncate ${isArt ? 'np-product-category-art' : 'np-product-category-market'}`}>
+            {product.category}
+          </span>
+        </nav>
         <h1 className="text-[24px] font-bold text-white">{displayTitle}</h1>
       </div>
 
       <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-4">
-        <p className="mb-4 text-[14px] font-medium text-white">Artist</p>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <p className="text-[14px] font-medium text-white">Artist</p>
+          <button
+            type="button"
+            onClick={onCollapseInfoPanel}
+            className="np-product-panel-ghost hidden min-h-8 items-center gap-0.5 rounded-md px-2 text-[12px] font-medium text-text-secondary transition hover:bg-white/5 hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary lg:inline-flex"
+            aria-label="상세 패널 접기"
+            aria-expanded="true"
+          >
+            접기
+            <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </div>
         <div className="flex items-center gap-3">
           <img src={PROFILE_IMAGE} alt="" className="h-10 w-10 rounded-full bg-white object-cover" />
           <div>
@@ -3937,45 +3991,71 @@ function ProductPurchasePanel({
         </button>
       </div>
 
-      <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-4">
-        <div className="mb-4 flex items-end gap-3">
-          <span className="text-[24px] font-bold text-brand-primary">{product.price}</span>
-          {product.originalPrice && <span className="pb-1 text-[14px] text-text-tertiary line-through">{product.originalPrice}</span>}
-        </div>
-        <button
-          onClick={() => {
-            if (isPurchased) {
-              onViewPurchases?.();
-              return;
-            }
-            setCheckoutItems([purchaseItem]);
-          }}
-          className="np-primary-action mb-2 w-full rounded-md bg-brand-primary py-3 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover"
-        >
-          {isPurchased ? '\uAD6C\uB9E4\uD55C \uC791\uC5C5\uBB3C \uBCF4\uAE30' : '\uAD6C\uB9E4\uD558\uAE30'}
-        </button>
-        <button
-          onClick={handleAddToCart}
-          disabled={isInCart}
-          className={`np-product-cart-action mb-3 w-full rounded-md py-3 text-[14px] font-medium transition ${
-            isInCart
-              ? 'np-product-cart-action-active cursor-default bg-[#262A31] text-brand-primary'
-              : 'bg-[#333] text-white hover:bg-[#444]'
-          }`}
-        >
-          {isInCart ? '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uB2F4\uAE40' : '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uCD94\uAC00'}
-        </button>
-        <div className="grid grid-cols-2 gap-2">
-          <button className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
-            <Heart className="h-4 w-4 text-brand-primary" />
-            568
+      {isArt ? (
+        <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-4">
+          <p className="np-product-category-art text-[16px] font-semibold">Art 작품</p>
+          <p className="mt-2 text-[14px] leading-6 text-text-secondary">
+            판매 상품이 아닌 감상용으로 공개된 작품입니다.
+          </p>
+          <button
+            type="button"
+            onClick={onContactArtist}
+            className="np-product-art-contact-action mt-4 w-full rounded-md bg-[#4C88D9] py-3 text-[14px] font-medium text-white transition hover:bg-[#5A96E6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A0C5FF]"
+          >
+            문의하기
           </button>
-          <button className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
-            <ShoppingBag className="h-4 w-4" />
-            {'\uACF5\uC720'}
-          </button>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <button className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+              <Heart className="h-4 w-4 np-product-category-art" />
+              568
+            </button>
+            <button className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+              <Share2 className="h-4 w-4" />
+              {'\uACF5\uC720'}
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-4">
+          <div className="mb-4 flex items-end gap-3">
+            <span className="text-[24px] font-bold text-brand-primary">{product.price}</span>
+            {product.originalPrice && <span className="pb-1 text-[14px] text-text-tertiary line-through">{product.originalPrice}</span>}
+          </div>
+          <button
+            onClick={() => {
+              if (isPurchased) {
+                onViewPurchases?.();
+                return;
+              }
+              setCheckoutItems([purchaseItem]);
+            }}
+            className="np-primary-action mb-2 w-full rounded-md bg-brand-primary py-3 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover"
+          >
+            {isPurchased ? '\uAD6C\uB9E4\uD55C \uC791\uC5C5\uBB3C \uBCF4\uAE30' : '\uAD6C\uB9E4\uD558\uAE30'}
+          </button>
+          <button
+            onClick={handleAddToCart}
+            disabled={isInCart}
+            className={`np-product-cart-action mb-3 w-full rounded-md py-3 text-[14px] font-medium transition ${
+              isInCart
+                ? 'np-product-cart-action-active cursor-default bg-[#262A31] text-brand-primary'
+                : 'bg-[#333] text-white hover:bg-[#444]'
+            }`}
+          >
+            {isInCart ? '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uB2F4\uAE40' : '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uCD94\uAC00'}
+          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+              <Heart className="h-4 w-4 text-brand-primary" />
+              568
+            </button>
+            <button className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+              <ShoppingBag className="h-4 w-4" />
+              {'\uACF5\uC720'}
+            </button>
+          </div>
+        </div>
+      )}
 
       <AnimatePresence>
         {checkoutItems && (
@@ -4366,7 +4446,7 @@ function DiscoverSection({
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                     className={`relative min-h-11 min-w-11 py-2 text-[15px] font-medium transition-all sm:min-h-0 sm:min-w-0 sm:py-1 sm:text-[16px] md:text-[18px] ${
-                    activeTab === tab ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
+                    activeTab === tab ? 'text-brand-primary' : 'text-text-secondary hover:text-text-primary'
                   }`}
                 >
                   {tab}
@@ -4382,7 +4462,7 @@ function DiscoverSection({
               aria-label="필터 열기"
               aria-expanded={showFilters}
               className={`mb-[-2px] flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-transparent bg-transparent transition-colors md:hidden ${
-                isFilterButtonActive ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
+                isFilterButtonActive ? 'text-brand-primary' : 'text-text-secondary hover:text-text-primary'
               }`}
             >
               <Sliders className="h-5 w-5" />
@@ -4393,7 +4473,7 @@ function DiscoverSection({
           {/* Active Filter Tags */}
           <div className="hidden xl:flex items-center justify-end flex-nowrap gap-2 max-w-[700px] overflow-x-auto scrollbar-hide h-8 flex-1 min-w-0">
             {activeFilters.map((filter) => (
-              <span key={filter} className="flex items-center gap-1.5 h-7 px-3 bg-surface-primary border border-border-soft text-[15px] font-medium text-text-tertiary rounded-sm whitespace-nowrap">
+              <span key={filter} className="flex h-7 items-center gap-1.5 whitespace-nowrap rounded-sm border border-border-soft bg-surface-primary px-3 text-[15px] font-medium text-text-secondary">
                 {filter}
                 <button
                   type="button"
@@ -4410,7 +4490,7 @@ function DiscoverSection({
           <button 
             onClick={openFilterPanel}
             className={`flex items-center gap-2 text-[17px] font-semibold transition-all h-8 ${
-              isFilterButtonActive ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
+              isFilterButtonActive ? 'text-brand-primary' : 'text-text-secondary hover:text-text-primary'
             }`}
           >
             <Sliders className="w-5 h-5" /> 필터
@@ -4470,7 +4550,7 @@ function DiscoverSection({
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
               {/* 가격 필터 */}
               <div className="space-y-4 col-span-1 md:col-span-3">
-                <h4 className="text-[15px] font-medium text-text-tertiary uppercase tracking-wider">가격</h4>
+                <h4 className="text-[15px] font-medium text-text-secondary uppercase tracking-wider">가격</h4>
                 <div className="flex gap-2">
                   {['free', 'paid'].map((type) => (
                     <button
@@ -4485,7 +4565,7 @@ function DiscoverSection({
                       className={`px-3 py-1.5 rounded-sm text-[15px] font-medium border transition-all ${
                         priceType === type 
                         ? 'bg-brand-primary border-brand-primary text-bg-dark' 
-                        : 'bg-surface-primary border-border-soft text-text-tertiary hover:border-brand-primary/50'
+                        : 'bg-surface-primary border-border-soft text-text-secondary hover:border-brand-primary/50'
                       }`}
                     >
                       {type === 'free' ? '무료' : '유료'}
@@ -4518,7 +4598,7 @@ function DiscoverSection({
 
               {/* 파일 형식 */}
               <div className="space-y-4 col-span-1 md:col-span-3">
-                <h4 className="text-[15px] font-medium text-text-tertiary uppercase tracking-wider">파일 형식</h4>
+                <h4 className="text-[15px] font-medium text-text-secondary uppercase tracking-wider">파일 형식</h4>
                 <div className="flex flex-wrap gap-2">
                   {formats.map((fmt) => (
                     <button
@@ -4527,7 +4607,7 @@ function DiscoverSection({
                       className={`px-3 py-1.5 min-w-[60px] rounded-sm text-[15px] font-medium border transition-all ${
                         selectedFormats.includes(fmt)
                         ? 'bg-brand-primary border-brand-primary text-bg-dark'
-                        : 'bg-surface-primary border-border-soft text-text-tertiary hover:border-brand-primary/50'
+                        : 'bg-surface-primary border-border-soft text-text-secondary hover:border-brand-primary/50'
                       }`}
                     >
                       {fmt}
@@ -4538,7 +4618,7 @@ function DiscoverSection({
 
               {/* 폴리곤 수 */}
               <div className="space-y-4 col-span-1 md:col-span-4 flex flex-col">
-                <h4 className="text-[15px] font-medium text-text-tertiary uppercase tracking-wider">폴리곤 수</h4>
+                <h4 className="text-[15px] font-medium text-text-secondary uppercase tracking-wider">폴리곤 수</h4>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   {[...polyOptions, '직접 설정'].map((opt) => {
                     let tooltipText = '';
@@ -4573,7 +4653,7 @@ function DiscoverSection({
                           {polyCount.includes(opt) && <Check className="w-3.5 h-3.5 text-bg-dark" />}
                         </div>
                         <span className={`text-[15px] transition-colors font-medium ${
-                          isDisabled ? 'text-text-tertiary/50' : 'text-text-tertiary group-hover/item:text-text-secondary'
+                          isDisabled ? 'text-text-tertiary/50' : 'text-text-secondary group-hover/item:text-text-primary'
                         }`}>{opt}</span>
                         
                         {tooltipText && !isDisabled && (
@@ -4613,7 +4693,7 @@ function DiscoverSection({
 
               {/* 라이선스 */}
               <div className="space-y-4 col-span-1 md:col-span-2">
-                <h4 className="text-[15px] font-medium text-text-tertiary uppercase tracking-wider">라이선스</h4>
+                <h4 className="text-[15px] font-medium text-text-secondary uppercase tracking-wider">라이선스</h4>
                 <div className="grid grid-cols-3 gap-2 md:block md:space-y-3">
                   {licenseOptions.map((opt) => (
                     <label 
@@ -4628,7 +4708,7 @@ function DiscoverSection({
                       >
                         {license.includes(opt) && <Check className="h-3 w-3 text-bg-dark md:h-3.5 md:w-3.5" />}
                       </div>
-                      <span className="min-w-0 truncate text-[14px] font-medium text-text-tertiary transition-colors group-hover:text-text-secondary md:text-[15px]">{opt}</span>
+                      <span className="min-w-0 truncate text-[14px] font-medium text-text-secondary transition-colors group-hover:text-text-primary md:text-[15px]">{opt}</span>
                     </label>
                   ))}
                 </div>
@@ -4643,7 +4723,7 @@ function DiscoverSection({
               <div className="flex gap-4 w-full sm:w-auto justify-end">
                 <button 
                   onClick={resetDraftFilters}
-                  className="text-[15px] font-medium text-text-tertiary hover:text-text-primary px-4 py-2 transition-colors uppercase tracking-wider"
+                  className="px-4 py-2 text-[15px] font-medium uppercase tracking-wider text-text-secondary transition-colors hover:text-text-primary"
                 >
                   초기화
                 </button>
@@ -4686,7 +4766,7 @@ function DiscoverSection({
         })}
       </div>
       <div className="flex justify-center mt-8 py-6 pb-20">
-        <button className="flex min-h-11 items-center gap-2 px-4 py-2 text-[14px] font-medium text-text-tertiary transition-colors hover:text-white">
+        <button className="flex min-h-11 items-center gap-2 px-4 py-2 text-[14px] font-medium text-text-secondary transition-colors hover:text-white">
           더보기 <ChevronDown className="w-4 h-4" />
         </button>
       </div>
@@ -4704,14 +4784,14 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
             {onToggleSidebar && (
               <button 
                 onClick={onToggleSidebar}
-                className="hidden lg:flex items-center text-text-tertiary hover:text-brand-primary transition-all"
+                className="hidden items-center text-text-secondary transition-all hover:text-brand-primary lg:flex"
                 title="사이드바 접기"
               >
                 <PanelRightClose className="w-5 h-5" />
               </button>
             )}
           </div>
-          <button className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
+          <button className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary">모두 보기 <ChevronRight className="ml-0.5 inline h-3.5 w-3.5" /></button>
         </div>
         <div className="divide-y divide-[#161618]">
           <SidebarProject 
@@ -4738,7 +4818,7 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
       <section className="bg-surface-primary rounded-[8px] border border-border-soft/40 p-5 shadow-2xl">
         <div className="flex items-center justify-between mb-5 px-1">
           <h3 className="text-[18px] font-semibold text-text-primary tracking-tight">노트</h3>
-          <button className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
+          <button className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary">모두 보기 <ChevronRight className="ml-0.5 inline h-3.5 w-3.5" /></button>
         </div>
         <div className="divide-y divide-[#161618]">
           <SidebarNote 
@@ -4759,7 +4839,7 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
       <section className="bg-surface-primary rounded-[8px] border border-border-soft/40 p-5 shadow-2xl">
         <div className="flex items-center justify-between mb-5 px-1">
           <h3 className="text-[18px] font-semibold text-text-primary tracking-tight">레퍼런스</h3>
-          <button className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
+          <button className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary">모두 보기 <ChevronRight className="ml-0.5 inline h-3.5 w-3.5" /></button>
         </div>
         <div className="divide-y divide-[#161618]">
           {[
@@ -4832,6 +4912,73 @@ function ScrollToTopButton() {
 
 export type PageType = 'home' | 'uploads' | 'purchases' | 'favorites' | 'settings' | 'board' | 'projects' | 'note-editor' | 'studio' | 'support' | 'full_workflow' | 'full_workflow_chat' | 'turnaround' | 'modeling_generation' | 'product_detail';
 
+const VALID_APP_PAGES: PageType[] = [
+  'home',
+  'uploads',
+  'purchases',
+  'favorites',
+  'settings',
+  'board',
+  'projects',
+  'note-editor',
+  'studio',
+  'support',
+  'full_workflow',
+  'full_workflow_chat',
+  'turnaround',
+  'modeling_generation',
+  'product_detail',
+];
+
+type AppRoute = {
+  page: PageType;
+  productId: number;
+  boardView: 'all' | 'notes' | 'references';
+};
+
+const isValidProductId = (productId: number) =>
+  Number.isInteger(productId) && ASSETS.some((asset) => asset.id === productId);
+
+const readSavedProductId = () => {
+  try {
+    const savedProductId = Number(localStorage.getItem('neopoly_selected_product_id'));
+    return isValidProductId(savedProductId) ? savedProductId : ASSETS[0].id;
+  } catch {
+    return ASSETS[0].id;
+  }
+};
+
+const parseAppRoute = (hash: string, fallbackProductId = ASSETS[0].id): AppRoute => {
+  const [rawPage = '', rawProductId = ''] = hash.replace(/^#/, '').split('/');
+  const boardView = rawPage === 'notes' || rawPage === 'references' ? rawPage : 'all';
+  const normalizedPage = rawPage === 'notes' || rawPage === 'references' ? 'board' : rawPage;
+  const page = VALID_APP_PAGES.includes(normalizedPage as PageType)
+    ? normalizedPage as PageType
+    : 'home';
+  const parsedProductId = Number(rawProductId);
+
+  return {
+    page,
+    productId: isValidProductId(parsedProductId) ? parsedProductId : fallbackProductId,
+    boardView,
+  };
+};
+
+const createAppHash = (page: PageType, productId: number) => {
+  if (page === 'home') return '';
+  if (page === 'product_detail') return `#product_detail/${productId}`;
+  return `#${page}`;
+};
+
+const activeNavForPage = (page: PageType) => {
+  if (page === 'studio' || page === 'full_workflow' || page === 'full_workflow_chat' || isPersistentModelingWorkflowPage(page)) {
+    return 'studio' as const;
+  }
+  if (page === 'projects') return 'projects' as const;
+  if (page === 'support') return 'support' as const;
+  return null;
+};
+
 export default function App() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const isThemeTransitioningRef = useRef(false);
@@ -4845,38 +4992,88 @@ export default function App() {
     }
   });
   
-  const [currentPage, setCurrentPage] = useState<PageType>(() => {
-    const rawHash = window.location.hash.replace('#', '');
-    const legacyHashPage = rawHash.split('/')[0];
-    const normalizedHashPage = legacyHashPage === 'notes' || legacyHashPage === 'references' ? 'board' : legacyHashPage;
-    const hashPage = normalizedHashPage as PageType;
-    const validPages: PageType[] = ['home', 'uploads', 'purchases', 'favorites', 'settings', 'board', 'projects', 'note-editor', 'studio', 'support', 'full_workflow', 'full_workflow_chat', 'turnaround', 'modeling_generation', 'product_detail'];
-    return validPages.includes(hashPage) ? hashPage : 'home';
-  });
+  const [currentPage, setCurrentPage] = useState<PageType>(() => parseAppRoute(window.location.hash, readSavedProductId()).page);
   const [visitedModelingWorkflowPages, setVisitedModelingWorkflowPages] = useState<Set<PageType>>(
     () => new Set(isPersistentModelingWorkflowPage(currentPage) ? [currentPage] : []),
   );
   const [activeNav, setActiveNav] = useState<'market' | 'art' | 'studio' | 'projects' | 'support' | null>(null);
   const [activeCategory, setActiveCategory] = useState('all');
-  const [selectedProductId, setSelectedProductId] = useState<number>(() => {
-    const hashProductId = Number(window.location.hash.replace('#', '').split('/')[1]);
-    if (hashProductId >= 1 && hashProductId <= 8) return hashProductId;
-    const saved = Number(localStorage.getItem('neopoly_selected_product_id'));
-    return saved >= 1 && saved <= 8 ? saved : 1;
-  });
+  const [selectedProductId, setSelectedProductId] = useState<number>(() =>
+    parseAppRoute(window.location.hash, readSavedProductId()).productId,
+  );
   const [focusedProjectId, setFocusedProjectId] = useState<number | null>(null);
   const [focusedBoardView, setFocusedBoardView] = useState<"all" | "notes" | "references">("all");
   const mainPanelRef = useRef<HTMLDivElement>(null);
   const quickDropAcceptedRef = useRef(false);
   const homeScrollYRef = useRef(0);
   const shouldRestoreHomeScrollRef = useRef(false);
+  const currentPageRef = useRef(currentPage);
+  const hasInitializedHistoryRef = useRef(false);
+  currentPageRef.current = currentPage;
 
   useEffect(() => {
-    const nextHash = currentPage === 'home' ? '' : currentPage === 'product_detail' ? `#product_detail/${selectedProductId}` : `#${currentPage}`;
+    const nextHash = createAppHash(currentPage, selectedProductId);
+    const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`;
+
+    if (!hasInitializedHistoryRef.current) {
+      hasInitializedHistoryRef.current = true;
+      if (window.location.hash !== nextHash) {
+        window.history.replaceState({ page: currentPage, productId: selectedProductId }, '', nextUrl);
+      }
+      return;
+    }
+
     if (window.location.hash !== nextHash) {
-      history.replaceState(null, '', `${window.location.pathname}${nextHash}`);
+      window.history.pushState({ page: currentPage, productId: selectedProductId }, '', nextUrl);
     }
   }, [currentPage, selectedProductId]);
+
+  useEffect(() => {
+    const syncFromBrowserHistory = () => {
+      const nextRoute = parseAppRoute(window.location.hash, selectedProductId);
+      const previousPage = currentPageRef.current;
+
+      if (nextRoute.page === 'home' && previousPage === 'product_detail') {
+        shouldRestoreHomeScrollRef.current = true;
+      }
+
+      if (nextRoute.page === 'product_detail') {
+        setSelectedProductId(nextRoute.productId);
+        try {
+          localStorage.setItem('neopoly_selected_product_id', String(nextRoute.productId));
+        } catch {
+          // The route still works when storage is unavailable.
+        }
+      }
+
+      if (nextRoute.page === 'board') {
+        setFocusedBoardView(nextRoute.boardView);
+      }
+
+      if (isPersistentModelingWorkflowPage(nextRoute.page)) {
+        setVisitedModelingWorkflowPages((current) => {
+          if (current.has(nextRoute.page)) return current;
+          const next = new Set(current);
+          next.add(nextRoute.page);
+          return next;
+        });
+      }
+
+      setActiveNav(activeNavForPage(nextRoute.page));
+      setIsPanelOpen(false);
+      setIsPanelDropMode(false);
+      setIsAssetDragging(false);
+      setQuickDialog(null);
+      setCurrentPage(nextRoute.page);
+    };
+
+    window.addEventListener('popstate', syncFromBrowserHistory);
+    window.addEventListener('hashchange', syncFromBrowserHistory);
+    return () => {
+      window.removeEventListener('popstate', syncFromBrowserHistory);
+      window.removeEventListener('hashchange', syncFromBrowserHistory);
+    };
+  }, [selectedProductId]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -5173,6 +5370,7 @@ export default function App() {
           onQuickCollect={handleQuickCollect}
           onAssetDragStart={handleAssetDragStart}
           onViewPurchases={() => setCurrentPage('purchases')}
+          onContactArtist={() => setCurrentPage('support')}
         />
       ) : currentPage === 'support' ? (
         <SupportPage />
@@ -5252,7 +5450,7 @@ export default function App() {
                 <div className="xl:col-span-6 space-y-4">
                   <div className="flex items-center justify-between px-1">
                     <h3 onClick={() => { setIsPanelOpen(false); openProjectsPage(); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">내 프로젝트</h3>
-                    <button onClick={() => { setIsPanelOpen(false); openProjectsPage(); }} className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">
+                    <button onClick={() => { setIsPanelOpen(false); openProjectsPage(); }} className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary">
                       모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" />
                     </button>
                   </div>
@@ -5290,7 +5488,7 @@ export default function App() {
                 <div className="xl:col-span-3 space-y-4">
                   <div className="flex items-center justify-between px-1">
                     <h3 onClick={() => { setIsPanelOpen(false); openBoardPage('notes'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">노트</h3>
-                    <button onClick={() => { setIsPanelOpen(false); openBoardPage('notes'); }} className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">
+                    <button onClick={() => { setIsPanelOpen(false); openBoardPage('notes'); }} className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary">
                       모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" />
                     </button>
                   </div>
@@ -5319,7 +5517,7 @@ export default function App() {
                         setIsPanelOpen(false);
                         openNoteEditor(null);
                       }}
-                      className="flex h-9 items-center justify-center gap-2 rounded-md px-2 text-[14px] font-medium text-text-tertiary transition hover:bg-white/5 hover:text-brand-primary"
+                      className="flex h-9 items-center justify-center gap-2 rounded-md px-2 text-[14px] font-medium text-text-secondary transition hover:bg-white/5 hover:text-brand-primary"
                     >
                       <Plus className="h-4 w-4" />
                       노트 추가
@@ -5333,7 +5531,7 @@ export default function App() {
                     <h3 onClick={() => { setIsPanelOpen(false); openBoardPage('references'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">레퍼런스</h3>
                     <button 
                       onClick={() => { setIsPanelOpen(false); openBoardPage('references'); }}
-                      className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors"
+                      className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary"
                     >
                       모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" />
                     </button>

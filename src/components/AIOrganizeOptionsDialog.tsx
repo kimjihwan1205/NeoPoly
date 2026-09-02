@@ -95,7 +95,7 @@ export default function AIOrganizeOptionsDialog({
               onClick={() => onStart("all")}
               className="group flex w-full items-start gap-4 rounded-xl border border-[#2A2E36] bg-[#101216] p-4 text-left transition hover:border-brand-primary/35 hover:bg-[#14171C]"
             >
-              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#3A3F49] text-text-tertiary group-hover:border-brand-primary/50 group-hover:text-brand-primary">
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#3A3F49] text-text-secondary group-hover:border-brand-primary/50 group-hover:text-brand-primary">
                 <Layers3 className="h-3.5 w-3.5" />
               </span>
               <span className="min-w-0 flex-1">

@@ -467,7 +467,7 @@ export function AIBoardOrganizer({
                         className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition ${
                           active
                             ? "bg-[#1A1D23] text-white"
-                            : "text-text-tertiary hover:bg-[#12151A] hover:text-white"
+                            : "text-text-secondary hover:bg-[#12151A] hover:text-white"
                         }`}
                       >
                         <Icon className={`h-4 w-4 ${active ? "text-brand-primary" : ""}`} />
@@ -493,7 +493,7 @@ export function AIBoardOrganizer({
                       className={`shrink-0 rounded-full border px-3 py-2 text-[13px] font-medium ${
                         activeTab === item.id
                           ? "border-brand-primary/50 bg-brand-primary/10 text-brand-primary"
-                          : "border-[#2A2E36] text-text-tertiary"
+                          : "border-[#2A2E36] text-text-secondary"
                       }`}
                     >
                       {item.label}
@@ -714,7 +714,7 @@ function RelationReview({
             className={`shrink-0 rounded-full border px-3 py-2 text-[12px] font-medium ${
               activeNoteId === note.id
                 ? "border-brand-primary/60 bg-brand-primary/10 text-brand-primary"
-                : "border-[#2A2E36] text-text-tertiary hover:text-white"
+                : "border-[#2A2E36] text-text-secondary hover:text-white"
             }`}
           >
             {compactTitle(note.title)}
@@ -1139,7 +1139,7 @@ export function AIOrganizedBoard({
                 <button
                   type="button"
                   onClick={() => setFocusedNoteId(null)}
-                  className="self-end text-[11px] text-text-tertiary hover:text-white sm:self-auto"
+                  className="self-end text-[11px] text-text-secondary hover:text-white sm:self-auto"
                 >
                   관계 보기 닫기
                 </button>
@@ -1194,7 +1194,7 @@ export function AIOrganizedBoard({
                         <button
                           type="button"
                           onClick={() => onDissolveGroup(group.id)}
-                          className="flex h-7 items-center gap-1 rounded-md border border-[#343842] px-2 text-[10px] font-medium text-text-tertiary transition hover:border-red-400/35 hover:bg-red-500/5 hover:text-red-300"
+                          className="flex h-7 items-center gap-1 rounded-md border border-[#343842] px-2 text-[10px] font-medium text-text-secondary transition hover:border-red-400/35 hover:bg-red-500/5 hover:text-red-300"
                           aria-label={`${group.title} 그룹 해제`}
                         >
                           <Unlink className="h-3 w-3" />

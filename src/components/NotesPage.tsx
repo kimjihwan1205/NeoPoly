@@ -851,7 +851,7 @@ export default function NotesPage({
                             <button
                               type="button"
                               onClick={() => onDissolveAIGroup(group.id)}
-                              className="flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-[#343842] px-2.5 text-[11px] text-text-tertiary transition hover:border-brand-primary/45 hover:text-brand-primary"
+                              className="flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-[#343842] px-2.5 text-[11px] text-text-secondary transition hover:border-brand-primary/45 hover:text-brand-primary"
                             >
                               <Unlink className="h-3.5 w-3.5" />
                               그룹 해제

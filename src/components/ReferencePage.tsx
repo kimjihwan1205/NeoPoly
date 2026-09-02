@@ -867,7 +867,7 @@ export default function ReferencePage({
                         <button
                           type="button"
                           onClick={() => onDissolveAIGroup(group.id)}
-                          className="flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-[#343842] px-2.5 text-[11px] text-text-tertiary transition hover:border-brand-primary/45 hover:text-brand-primary"
+                          className="flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-[#343842] px-2.5 text-[11px] text-text-secondary transition hover:border-brand-primary/45 hover:text-brand-primary"
                         >
                           <Unlink className="h-3.5 w-3.5" />
                           그룹 해제
@@ -1033,7 +1033,7 @@ export default function ReferencePage({
             <button
               onClick={handleLoadMore}
               disabled={isLoadingMore}
-              className="flex items-center gap-2 rounded-full border border-[#2A2E36] bg-surface-primary px-6 py-2.5 text-[14px] font-bold text-text-tertiary transition hover:bg-[#111215] hover:text-white"
+              className="flex items-center gap-2 rounded-full border border-[#2A2E36] bg-surface-primary px-6 py-2.5 text-[14px] font-bold text-text-secondary transition hover:bg-[#111215] hover:text-white"
             >
               {isLoadingMore ? (
                 <>

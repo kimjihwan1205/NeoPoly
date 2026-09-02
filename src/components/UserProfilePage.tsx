@@ -396,7 +396,7 @@ export default function UserProfilePage({
             {isEditingBio ? (
               <div className="space-y-4 font-sans animate-in fade-in duration-200">
                 <div className="space-y-1.5">
-                  <label className="text-[14px] font-medium text-text-tertiary">닉네임</label>
+                  <label className="text-[14px] font-medium text-text-secondary">닉네임</label>
                   <input
                     type="text"
                     value={editedNickname}
@@ -406,7 +406,7 @@ export default function UserProfilePage({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[14px] font-medium text-text-tertiary">크리에이터 약력 (Bio)</label>
+                  <label className="text-[14px] font-medium text-text-secondary">크리에이터 약력 (Bio)</label>
                   <textarea
                     value={editedBio}
                     onChange={(e) => setEditedBio(e.target.value)}
@@ -811,7 +811,7 @@ export default function UserProfilePage({
               <form onSubmit={handleSaveProject} className="p-6 space-y-4 font-sans">
                 {/* Title */}
                 <div className="space-y-1.5">
-                  <label className="text-[15px] leading-relaxed font-medium text-text-tertiary">프로젝트 명칭</label>
+                  <label className="text-[15px] font-medium leading-relaxed text-text-secondary">프로젝트 명칭</label>
                   <input
                     type="text"
                     required
@@ -824,7 +824,7 @@ export default function UserProfilePage({
 
                 {/* Description */}
                 <div className="space-y-1.5">
-                  <label className="text-[15px] leading-relaxed font-medium text-text-tertiary">세부 설명</label>
+                  <label className="text-[15px] font-medium leading-relaxed text-text-secondary">세부 설명</label>
                   <textarea
                     required
                     rows={3}
@@ -838,7 +838,7 @@ export default function UserProfilePage({
                 {/* Grid Progress & Status */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[15px] leading-relaxed font-medium text-text-tertiary">상태 (Status)</label>
+                    <label className="text-[15px] font-medium leading-relaxed text-text-secondary">상태 (Status)</label>
                     <select
                       value={projectStatus}
                       onChange={(e) => setProjectStatus(e.target.value)}
@@ -852,7 +852,7 @@ export default function UserProfilePage({
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[15px] leading-relaxed font-medium text-text-tertiary">진척도 (Progress): {projectProgress}%</label>
+                    <label className="text-[15px] font-medium leading-relaxed text-text-secondary">진척도 (Progress): {projectProgress}%</label>
                     <input
                       type="range"
                       min="0"
@@ -866,7 +866,7 @@ export default function UserProfilePage({
 
                 {/* Tags manager */}
                 <div className="space-y-2">
-                  <label className="text-[15px] leading-relaxed font-medium text-text-tertiary">기술 스택 또는 태그</label>
+                  <label className="text-[15px] font-medium leading-relaxed text-text-secondary">기술 스택 또는 태그</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -908,7 +908,7 @@ export default function UserProfilePage({
 
                 {/* Artwork selection */}
                 <div className="space-y-2">
-                  <label className="text-[15px] leading-relaxed font-medium text-text-tertiary">프로젝트 대표 이미지 업로드 / 무작위 매칭</label>
+                  <label className="text-[15px] font-medium leading-relaxed text-text-secondary">프로젝트 대표 이미지 업로드 / 무작위 매칭</label>
                   <div className="flex gap-4">
                     <button
                       type="button"

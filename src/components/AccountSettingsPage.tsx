@@ -467,7 +467,7 @@ export default function AccountSettingsPage({
                           </span>
                         </div>
                         <div className="flex w-full items-center gap-2">
-                          <Icon className={`h-4 w-4 ${selected ? 'text-brand-primary' : 'text-text-tertiary'}`} />
+                          <Icon className={`h-4 w-4 ${selected ? 'text-brand-primary' : 'text-text-secondary'}`} />
                           <span className={`text-[14px] font-semibold ${selected ? 'text-brand-primary' : 'text-text-primary'}`}>
                             {option.label}
                           </span>
