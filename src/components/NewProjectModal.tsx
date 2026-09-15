@@ -125,34 +125,36 @@ export default function NewProjectModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4">
       <button
         className="absolute inset-0 bg-[#050505]/80 backdrop-blur-md"
         onClick={onClose}
         aria-label="닫기"
       />
 
-      <div className="relative flex w-full max-w-[640px] flex-col overflow-hidden rounded-lg border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.8)]">
-        <div className="absolute right-0 top-0 h-[280px] w-[280px] translate-x-1/2 -translate-y-1/2 rounded-full bg-[#E0A12E]/5 blur-[90px]" />
+      <div className="relative flex max-h-[calc(100dvh-24px)] w-full max-w-[640px] flex-col overflow-hidden rounded-lg border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.8)] sm:max-h-[calc(100dvh-32px)]">
+        <div className="absolute right-0 top-0 h-[280px] w-[280px] translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-primary/5 blur-[90px]" />
 
-        <div className="relative z-10 flex items-center justify-between border-b border-[#1F2329] px-8 py-6">
+        <div className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-[#1F2329] px-4 py-4 sm:px-8 sm:py-6">
           <div>
-            <h2 className="mb-2 text-[24px] font-bold text-white">
+            <h2 className="mb-1 text-[20px] font-bold text-white sm:mb-2 sm:text-[24px]">
               새 프로젝트 만들기
             </h2>
-            <p className="text-[14px] text-neutral-400">
+            <p className="text-[13px] text-neutral-400 sm:text-[14px]">
               작업 목적에 맞는 템플릿으로 바로 시작하세요.
             </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2A2E36] bg-[#141518] text-neutral-400 transition hover:border-[#E0A12E]/50 hover:text-white"
+            aria-label="새 프로젝트 창 닫기"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-[#2A2E36] bg-[#141518] text-neutral-400 transition hover:border-brand-primary/50 hover:text-white"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="relative z-10 flex flex-col gap-7 p-8">
+        <div className="relative z-10 flex min-h-0 flex-col gap-5 overflow-y-auto p-4 custom-scrollbar sm:gap-7 sm:p-8">
           <label className="flex flex-col gap-2.5">
             <span className="ml-1 text-[14px] font-medium text-white">
               프로젝트 이름
@@ -165,7 +167,7 @@ export default function NewProjectModal({
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleCreate();
               }}
-              className="h-[52px] rounded-lg border border-[#2A2E36] bg-[#141518] px-5 text-[15px] text-white outline-none transition placeholder:text-neutral-500 focus:border-[#E0A12E]/60"
+              className="h-[52px] rounded-lg border border-[#2A2E36] bg-[#141518] px-5 text-[15px] text-white outline-none transition placeholder:text-neutral-500 focus:border-brand-primary/60"
               autoFocus
             />
           </label>
@@ -178,7 +180,7 @@ export default function NewProjectModal({
               placeholder="작업 방향이나 참고할 내용을 적어두세요."
               value={projectDesc}
               onChange={(e) => setProjectDesc(e.target.value)}
-              className="h-24 resize-none rounded-lg border border-[#2A2E36] bg-[#141518] px-5 py-4 text-[15px] text-white outline-none transition placeholder:text-neutral-500 focus:border-[#E0A12E]/60"
+              className="h-24 resize-none rounded-lg border border-[#2A2E36] bg-[#141518] px-5 py-4 text-[15px] text-white outline-none transition placeholder:text-neutral-500 focus:border-brand-primary/60"
             />
           </label>
 
@@ -195,14 +197,14 @@ export default function NewProjectModal({
                     onClick={() => setSelectedTemplate(template.id)}
                     className={`flex flex-col items-start rounded-lg border p-4 text-left transition ${
                       active
-                        ? "border-[#E0A12E] bg-[#E0A12E]/10"
+                        ? "border-brand-primary bg-brand-primary/10"
                         : "border-[#2A2E36] bg-[#141518] hover:border-[#3A404F]"
                     }`}
                   >
                     <span
                       className={`mb-3 flex h-10 w-10 items-center justify-center rounded-lg ${
                         active
-                          ? "bg-[#E0A12E] text-[#050505]"
+                          ? "bg-brand-primary text-[#050505]"
                           : "bg-[#1C1F26] text-neutral-400"
                       }`}
                     >
@@ -210,7 +212,7 @@ export default function NewProjectModal({
                     </span>
                     <span
                       className={`mb-1 text-[14px] font-medium ${
-                        active ? "text-[#E0A12E]" : "text-white"
+                        active ? "text-brand-primary" : "text-white"
                       }`}
                     >
                       {template.title}
@@ -233,7 +235,7 @@ export default function NewProjectModal({
                 대표 이미지는 비워두고 자료만 연결됩니다.
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <button
                 onClick={() =>
                   setSelectionMode(selectionMode === "notes" ? null : "notes")
@@ -293,7 +295,7 @@ export default function NewProjectModal({
                         }
                         className={`relative overflow-hidden rounded-lg border text-left transition ${
                           active
-                            ? "border-[#E0A12E]"
+                            ? "border-brand-primary"
                             : "border-[#2A2E36] hover:border-[#555A64]"
                         }`}
                       >
@@ -307,7 +309,7 @@ export default function NewProjectModal({
                           {item.title}
                         </span>
                         {active && (
-                          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#E0A12E] text-black">
+                          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary text-black">
                             <Check className="h-3.5 w-3.5" />
                           </span>
                         )}
@@ -320,19 +322,19 @@ export default function NewProjectModal({
           </div>
         </div>
 
-        <div className="relative z-10 flex justify-end gap-3 border-t border-[#1F2329] bg-[#101114] p-6">
+        <div className="relative z-10 flex shrink-0 justify-end gap-2 border-t border-[#1F2329] bg-[#101114] p-3 sm:gap-3 sm:p-6">
           <button
             onClick={onClose}
-            className="rounded-lg px-6 py-3 text-[14px] font-medium text-neutral-400 transition hover:text-white"
+            className="rounded-lg px-4 py-3 text-[14px] font-medium text-neutral-400 transition hover:text-white sm:px-6"
           >
             취소
           </button>
           <button
             onClick={handleCreate}
             disabled={!projectName.trim()}
-            className={`flex items-center gap-2 rounded-lg px-8 py-3 text-[14px] font-medium transition ${
+            className={`flex items-center gap-2 rounded-lg px-5 py-3 text-[14px] font-medium transition sm:px-8 ${
               projectName.trim()
-                ? "bg-[#E0A12E] text-[#050505] hover:bg-[#F0B43A]"
+                ? "bg-brand-primary text-[#050505] hover:bg-[#F0B43A]"
                 : "cursor-not-allowed bg-[#1A1C21] text-neutral-500"
             }`}
           >

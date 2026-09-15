@@ -4,22 +4,38 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { 
   Search, ShoppingCart, Bell, LayoutGrid, User, Mountain, Building2, Menu, 
   Car, Sword, Box, Leaf, Wand2, Heart, Eye, Sliders, Plus, Folder, ChevronRight,
   Sparkles, Video, BrainCircuit, GripVertical, FileText, Skull,
-  PanelRightClose, X, ChevronDown, Check, Instagram, Youtube, ShoppingBag,
-  Upload, Trash2, Clock, LogOut, Settings, Star, ImageIcon, ArrowUp, CircleHelp
+  PanelRightClose, PanelRightOpen, X, ChevronDown, Check, Instagram, Youtube, ShoppingBag,
+  Upload, Trash2, Clock, LogOut, Settings, Star, ImageIcon, ArrowUp, CircleHelp, Share2,
+  Moon, Sun
 } from 'lucide-react';
 import { motion, AnimatePresence, useDragControls } from 'motion/react';
 import ContentManagementPage from './components/ContentManagementPage';
 import PurchasedAssetsPage from './components/PurchasedAssetsPage';
 import FavoritesPage from './components/FavoritesPage';
 import AccountSettingsPage from './components/AccountSettingsPage';
-import ReferencePage, { REFERENCE_BOARDS, boardMatchesAsset } from './components/ReferencePage';
+import ReferencePage, {
+  REFERENCE_BOARDS,
+  boardMatchesAsset,
+  type ReferenceAIGroup,
+} from './components/ReferencePage';
 import ProjectPage, { DEFAULT_PROJECTS } from './components/ProjectPage';
 import NotesPage, { NOTES, type NoteItem } from './components/NotesPage';
 import NoteEditorPage from './components/NoteEditorPage';
+import {
+  AIBoardOrganizer,
+  AIOrganizedBoard,
+  type AIBoardPlan,
+} from './components/AIBoardOrganizer';
+import AIOrganizeOptionsDialog, {
+  type AIOrganizationScope,
+  type AIOrganizerTarget,
+} from './components/AIOrganizeOptionsDialog';
+import AIReferenceOrganizer from './components/AIReferenceOrganizer';
 import UserProfilePage from './components/UserProfilePage';
 import AIStudioPage from './components/AIStudioPage';
 import FullWorkflowPage from './components/FullWorkflowPage';
@@ -27,9 +43,13 @@ import FullWorkflowIntroPage from './components/FullWorkflowIntroPage';
 import SupportPage from './components/SupportPage';
 import TurnaroundPage from './components/TurnaroundPage';
 import ModelingGenerationPage from './components/ModelingGenerationPage';
-import { UserProfile } from './types';
+import { type ThemeMode, UserProfile } from './types';
 import { PRODUCT_DETAIL_CONTAINER_CLASS } from './productDetailLayout';
 import { isPersistentModelingWorkflowPage } from './workflowPageCache';
+import { readJSON, writeJSON, useStoredIdSet, useStoredState, useUndoStoredState, STORAGE_ERROR_EVENT } from './localStore';
+import { mergeBoardPlans } from './boardState';
+import { saveNote, noteDate } from './noteState';
+import ModalLayer from './components/ModalLayer';
 
 // --- Constants & Updated Asset Data ---
 
@@ -171,7 +191,7 @@ export const ASSETS = [
     likes: '872',
     views: '56',
     image: "/images/work_%208.png",
-    badge: 'M'
+    badge: 'A'
   },
   {
     id: 9,
@@ -832,7 +852,7 @@ function CheckoutDialog({
           <button onClick={onClose} className="rounded-md border border-border-primary bg-transparent py-3 text-[15px] font-medium text-text-secondary transition hover:bg-white/5 hover:text-white">
             {'\uCDE8\uC18C'}
           </button>
-          <button onClick={onConfirm} className="rounded-md bg-brand-primary py-3 text-[15px] font-medium text-bg-dark transition hover:bg-brand-hover">
+          <button onClick={onConfirm} className="np-primary-action rounded-md bg-brand-primary py-3 text-[15px] font-medium text-bg-dark transition hover:bg-brand-hover">
             {'\uACB0\uC81C\uD558\uAE30'}
           </button>
         </div>
@@ -884,7 +904,7 @@ function PurchaseCompleteDialog({
               onClose();
               onViewPurchases?.();
             }}
-            className="rounded-md bg-brand-primary py-3 text-[15px] font-medium text-bg-dark transition hover:bg-brand-hover"
+            className="np-primary-action rounded-md bg-brand-primary py-3 text-[15px] font-medium text-bg-dark transition hover:bg-brand-hover"
           >
             {'\uAD6C\uB9E4\uD55C \uC791\uC5C5\uBB3C'}
           </button>
@@ -894,13 +914,30 @@ function PurchaseCompleteDialog({
   );
 }
 
-function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNavigate?: (page: any) => void, currentPage?: string, activeNav?: 'market' | 'art' | 'studio' | 'projects' | 'support' | null, setActiveNav?: (nav: 'market' | 'art' | 'studio' | 'projects' | 'support' | null) => void }) {
+function Header({
+  onNavigate,
+  currentPage,
+  activeNav,
+  setActiveNav,
+  theme,
+  onThemeChange,
+  profile,
+  onOpenProduct,
+}: {
+  onNavigate?: (page: any) => void;
+  currentPage?: string;
+  activeNav?: 'market' | 'art' | 'studio' | 'projects' | 'support' | null;
+  setActiveNav?: (nav: 'market' | 'art' | 'studio' | 'projects' | 'support' | null) => void;
+  profile: UserProfile;
+  onOpenProduct: (assetId: number) => void;
+  theme: ThemeMode;
+  onThemeChange: (theme: ThemeMode) => void;
+}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [similarityResults, setSimilarityResults] = useState<any[] | null>(null);
-  const [isAiSearch, setIsAiSearch] = useState(false);
   
   // Interactive Cart, Notifications, and Profile state
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -956,6 +993,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
   const cartRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const themeToggleTimerRef = useRef<number | null>(null);
+  const [isThemeTogglePrimed, setIsThemeTogglePrimed] = useState(false);
 
   useEffect(() => {
     try {
@@ -968,6 +1007,16 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
   useEffect(() => {
     safeWritePurchaseItems(PURCHASE_CART_KEY, cartItems);
   }, [cartItems]);
+
+  useEffect(() => {
+    setIsThemeTogglePrimed(false);
+  }, [theme]);
+
+  useEffect(() => () => {
+    if (themeToggleTimerRef.current !== null) {
+      window.clearTimeout(themeToggleTimerRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     const handleAddToCart = (event: Event) => {
@@ -1001,6 +1050,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
   }, []);
 
   useEffect(() => {
+    const closeWithEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') { setIsFocused(false); setIsCartOpen(false); setIsNotifOpen(false); setIsProfileMenuOpen(false); setIsMobileMenuOpen(false); } };
+    document.addEventListener("keydown", closeWithEscape);
     function handleClickOutside(event: MouseEvent) {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
         setIsFocused(false);
@@ -1016,12 +1067,14 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => { document.removeEventListener("mousedown", handleClickOutside); document.removeEventListener("keydown", closeWithEscape); };
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
       const query = searchQuery.trim();
+      const match = ASSETS.find((asset) => asset.title.toLowerCase().includes(query.toLowerCase()));
+      if (match) { onOpenProduct(match.id); setIsFocused(false); setIsMobileMenuOpen(false); }
       if (!recentSearches.includes(query)) {
         setRecentSearches(prev => [query, ...prev.slice(0, 6)]);
       }
@@ -1058,6 +1111,22 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 
   const handleMarkAllRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+  };
+
+  const handleEclipseThemeToggle = () => {
+    if (isThemeTogglePrimed) return;
+
+    const nextTheme: ThemeMode = theme === 'dark' ? 'light' : 'dark';
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      onThemeChange(nextTheme);
+      return;
+    }
+
+    setIsThemeTogglePrimed(true);
+    themeToggleTimerRef.current = window.setTimeout(() => {
+      themeToggleTimerRef.current = null;
+      onThemeChange(nextTheme);
+    }, 120);
   };
 
   const handleRemoveNotif = (id: number, e: React.MouseEvent) => {
@@ -1138,9 +1207,9 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 
   return (
     <>
-    <header className="sticky top-0 z-50 flex h-[60px] w-full items-center justify-between gap-3 border-b border-border-primary/45 bg-[#08090B]/80 px-4 backdrop-blur-xl sm:px-5 md:gap-6 lg:h-[76px] lg:px-6">
+    <header className="sticky top-0 z-50 flex h-[60px] w-full items-center justify-between gap-2 border-b border-border-primary/45 bg-[#08090B]/80 px-3 backdrop-blur-xl sm:px-5 md:gap-6 lg:h-[76px] lg:px-5">
       {/* Left section: Logo + Left-aligned menu with comfortable custom spacing */}
-      <div className="flex items-center gap-3 md:gap-8 lg:gap-12 xl:gap-16 shrink-0">
+      <div className="flex items-center gap-3 md:gap-5 lg:gap-6 xl:gap-10 shrink-0">
         <button
           type="button"
           onClick={() => {
@@ -1150,7 +1219,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
             setIsProfileMenuOpen(false);
             setIsFocused(false);
           }}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-transparent bg-transparent text-text-secondary transition hover:bg-white/5 hover:text-text-primary lg:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-lg border border-transparent bg-transparent text-text-secondary transition hover:bg-white/5 hover:text-text-primary lg:hidden"
           aria-label={isMobileMenuOpen ? "모바일 메뉴 닫기" : "모바일 메뉴 열기"}
           aria-expanded={isMobileMenuOpen}
         >
@@ -1159,41 +1228,41 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
         <div className="flex items-center">
           <img referrerPolicy="no-referrer" 
             src="/images/logo.png?v=2" 
-            alt="NeoPoly" 
+            alt="NeoPoly" role="button" tabIndex={0} aria-label="NeoPoly 홈" onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onNavigate?.('home'); } }}
             onClick={() => { if(onNavigate) onNavigate('home'); if(setActiveNav) setActiveNav(null); }} 
-            className="absolute left-1/2 top-1/2 h-[28px] w-auto max-h-[37px] -translate-x-1/2 -translate-y-1/2 cursor-pointer object-contain transition-all sm:h-[32px] md:h-[35px] lg:static lg:translate-x-0 lg:translate-y-0" 
+            className="np-brand-logo absolute left-1/2 top-1/2 h-[28px] w-auto max-h-[37px] -translate-x-1/2 -translate-y-1/2 cursor-pointer object-contain transition-all sm:h-[32px] md:h-[35px] lg:static lg:translate-x-0 lg:translate-y-0"
           />
         </div>
         
         {/* Navigation Menu (Left-aligned, comfortable spacing) */}
         <nav className="hidden lg:block">
-          <ul className="flex items-center gap-5 lg:gap-7 xl:gap-10 text-[17px] lg:text-[17px] xl:text-[17px] font-medium text-text-tertiary whitespace-nowrap">
-            <li 
+          <ul className="flex items-center gap-5 whitespace-nowrap text-[17px] font-medium text-text-secondary lg:gap-4 lg:text-[14px] xl:gap-7 xl:text-[15px]">
+            <li role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click(); } }}
               className={`${currentPage === 'home' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav(null); if(onNavigate) onNavigate('home'); }}
             >
               Discover
             </li>
-            <li 
+            <li role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click(); } }}
               className={`${activeNav === 'studio' || currentPage === 'studio' || currentPage === 'full_workflow' || currentPage === 'full_workflow_chat' || currentPage === 'turnaround' || currentPage === 'modeling_generation' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav('studio'); if(onNavigate) onNavigate('studio'); }}
             >
               AI Studio
             </li>
-            <li 
+            <li role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click(); } }}
               className={`${activeNav === 'projects' || currentPage === 'projects' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav('projects'); if(onNavigate) onNavigate('projects'); }}
             >
               Projects
             </li>
-            <li 
+            <li role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click(); } }}
               className={`${currentPage === 'board' || currentPage === 'notes' || currentPage === 'references' || currentPage === 'note-editor' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav(null); if(onNavigate) onNavigate('board'); }}
             >
               Board
             </li>
 
-            <li 
+            <li role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click(); } }}
               className={`${activeNav === 'support' || currentPage === 'support' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav('support'); if(onNavigate) onNavigate('support'); }}
             >
@@ -1206,7 +1275,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
       {/* Right Column: Search + Proponent Action widgets (Responsive & beautifully scales with generous, high-readability sizes) */}
       <div className="flex-1 flex items-center gap-3 md:gap-5 min-w-0 justify-end max-w-full">
         {/* Stateful Search Bar Area - Enriched to meet user demands for spacious layout and 14px clear text */}
-        <div className="relative hidden items-center gap-2 flex-1 max-w-[420px] lg:flex xl:max-w-[580px]" ref={searchContainerRef}>
+        <div className="relative hidden w-[180px] min-w-[130px] shrink items-center gap-2 lg:flex xl:w-[240px]" ref={searchContainerRef}>
           <div className="relative flex-1">
             <input 
               type="text" 
@@ -1218,12 +1287,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                 setIsNotifOpen(false);
               }}
               onKeyDown={handleKeyDown}
-              placeholder={isAiSearch ? "예: '마법 효과가 부착된 웅장한 다크 엘프 전사용 대검 찾아줘'" : "에셋, 컬렉션 검색"} 
-              className={`w-full bg-surface-primary border rounded-full h-[40px] pl-4 pr-10 text-[14px] md:text-[15px] leading-relaxed font-medium font-sans focus:outline-none transition-all text-text-primary/95 placeholder:text-text-tertiary/75 ${
-                isAiSearch 
-                  ? 'border-brand-primary/80 ring-2 ring-brand-primary/10 shadow-[0_0_15px_rgba(224,161,46,0.3)] bg-surface-primary/90' 
-                  : 'border-border-primary/80 focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/10'
-              }`}
+              placeholder="에셋·컬렉션 검색"
+              className="h-[40px] w-full rounded-full border border-border-primary/80 bg-surface-primary pl-4 pr-10 font-sans text-[14px] font-medium leading-relaxed text-text-primary/95 outline-none transition-all placeholder:text-text-tertiary/75 focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/10 md:text-[15px]"
             />
             {searchQuery && (
               <button 
@@ -1235,24 +1300,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                 <X className="w-4 h-4" />
               </button>
             )}
-            <Search className={`absolute right-4 w-4 h-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${isAiSearch ? 'text-brand-primary' : 'text-text-tertiary'}`} />
+            <Search className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary transition-colors" />
           </div>
-
-          {/* AI 자연어 지능형 검색 전환기 (Intelligent Natural Language Toggle with gold status ring) */}
-          <button
-            type="button"
-            onClick={() => setIsAiSearch(!isAiSearch)}
-            className={`flex items-center gap-1.5 px-3 h-[40px] rounded-full text-[14px] md:text-[14px] font-medium tracking-tight transition-all shrink-0 select-none border cursor-pointer ${
-              isAiSearch
-                ? 'bg-brand-primary/15 text-brand-primary border-brand-primary/60 shadow-[0_0_12px_rgba(224,161,46,0.3)]'
-                : 'bg-[#15161A] hover:bg-[#1C1F26] text-text-secondary border-border-primary/70 hover:border-brand-primary/30'
-            }`}
-            title="AI 자연어로 대화식 검색 전환"
-          >
-            <Sparkles className={`w-[13px] h-[13px] md:w-[14px] md:h-[14px] ${isAiSearch ? 'text-brand-primary scale-110 animate-pulse' : 'text-text-tertiary'}`} />
-            <span className="hidden xl:inline text-[14px] font-sans">AI 자연어</span>
-            <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all ${isAiSearch ? 'bg-brand-primary shadow-[0_0_8px_#E0A12E]' : 'bg-[#555A64]'}`} />
-          </button>
 
           {/* Floating Search Dropdown Board */}
           <AnimatePresence>
@@ -1262,13 +1311,13 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 15 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
-                className="absolute top-full right-0 mt-3.5 w-[310px] sm:w-[500px] md:w-[600px] bg-[#0E1011]/98 border border-border-primary rounded-[12px] p-5.5 shadow-[0_25px_60px_rgba(0,0,0,0.98)] backdrop-blur-2xl z-50 flex flex-col gap-5.5 text-left"
+                className="np-header-popover absolute top-full right-0 mt-3.5 w-[310px] sm:w-[500px] md:w-[600px] bg-[#0E1011]/98 border border-border-primary rounded-[12px] p-5.5 shadow-[0_25px_60px_rgba(0,0,0,0.98)] backdrop-blur-2xl z-50 flex flex-col gap-5.5 text-left"
               >
                 {/* 1. 유사 항목 찾기 Drag & Drop Area */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[14px] font-medium text-text-primary flex items-center gap-1.5 font-sans">
-                      <Sparkles className="w-3.5 h-3.5 text-brand-primary" /> AI 이미지 유사도 검색
+                      <Sparkles className="w-3.5 h-3.5 text-brand-primary" /> 이미지 검색 · 시연
                     </span>
                     {uploadedImage && (
                       <button 
@@ -1295,8 +1344,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                           reader.onload = (event) => {
                             setUploadedImage(event.target?.result as string);
                             setSimilarityResults([
-                              { id: 1, title: '엘프궁수', creator: 'Vitality', img: '/images/work_%2039.png', simLevel: '98.4%' },
-                              { id: 2, title: '오크', creator: 'Alexey', img: '/images/work_%2040.png', simLevel: '92.1%' }
+                              { id: 1, title: '엘프궁수', creator: 'Vitality', img: '/images/work_%2039.png', simLevel: '샘플' },
+                              { id: 2, title: '오크', creator: 'Alexey', img: '/images/work_%2040.png', simLevel: '샘플' }
                             ]);
                           };
                           reader.readAsDataURL(file);
@@ -1320,8 +1369,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                             reader.onload = (event) => {
                               setUploadedImage(event.target?.result as string);
                               setSimilarityResults([
-                                { id: 1, title: '엘프궁수', creator: 'Vitality', img: '/images/work_%2041.png', simLevel: '98.4%' },
-                                { id: 2, title: '오크', creator: 'Alexey', img: '/images/work_%2042.png', simLevel: '92.1%' }
+                                { id: 1, title: '엘프궁수', creator: 'Vitality', img: '/images/work_%2041.png', simLevel: '샘플' },
+                                { id: 2, title: '오크', creator: 'Alexey', img: '/images/work_%2042.png', simLevel: '샘플' }
                               ]);
                             };
                             reader.readAsDataURL(file);
@@ -1330,7 +1379,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                       />
                       <Upload className="w-5 h-5 text-brand-primary" />
                       <p className="text-[14px] font-medium text-text-secondary font-sans">유사 이미지 검색 (드롭 / 클릭)</p>
-                      <p className="text-[14px] text-text-tertiary font-sans">여기에 이미지를 놓으시면 유사 3D 모델을 매칭합니다</p>
+                      <p className="text-[14px] text-text-tertiary font-sans">MVP 시연 · 이미지 분석 없이 고정 샘플 결과를 보여줍니다</p>
                     </label>
                   ) : (
                     <div className="bg-bg-dark/40 border border-border-primary/30 rounded-[8px] p-3.5 flex flex-col gap-3.5">
@@ -1342,16 +1391,16 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                           referrerPolicy="no-referrer"
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="text-[14px] font-medium text-text-primary font-sans">업로드된 이미지 기반 매칭 중</p>
+                          <p className="text-[14px] font-medium text-text-primary font-sans">선택한 이미지 미리보기</p>
                           <p className="text-[14px] text-brand-primary/80 flex items-center gap-1 font-medium font-sans">
-                            <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-ping" /> AI 알고리즘 비전 스캔 완료
+                            <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-ping" /> 실제 이미지 분석은 준비 중입니다
                           </p>
                         </div>
                       </div>
 
                       {/* Display Similarity Results */}
                       <div className="space-y-2 border-t border-border-primary/20 pt-3">
-                        <p className="text-[14px] font-sans font-medium uppercase tracking-wider text-text-secondary">유사 항목 매칭 결과</p>
+                        <p className="text-[14px] font-sans font-medium uppercase tracking-wider text-text-secondary">검색 결과 UI 샘플</p>
                         <div className="grid grid-cols-2 gap-2.5">
                           {similarityResults?.map((res, index) => (
                             <div key={index} className="bg-surface-primary/60 hover:bg-surface-primary p-2.5 rounded-[6px] border border-border-primary/20 flex flex-col gap-2 group cursor-pointer">
@@ -1441,7 +1490,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                     {filteredAssets.length > 0 ? (
                       <div className="grid grid-cols-1 gap-2">
                         {filteredAssets.slice(0, 4).map((asset) => (
-                          <div 
+                          <div role="button" tabIndex={0} onClick={() => { onOpenProduct(asset.id); setIsFocused(false); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenProduct(asset.id); setIsFocused(false); } }}
                             key={asset.id}
                             className="flex items-center gap-3 p-2.5 bg-surface-primary/50 hover:bg-surface-primary border border-border-primary/10 hover:border-brand-primary/30 rounded-[8px] transition-all cursor-pointer group"
                           >
@@ -1473,7 +1522,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
         
         <div className="flex items-center gap-3 md:gap-4 shrink-0">
           {/* Cart Icon + Dropdown */}
-          <div className="relative hidden lg:block" ref={cartRef}>
+          <div className={`relative ${isCartOpen ? 'block' : 'hidden lg:block'}`} ref={cartRef}>
             <button 
               onClick={toggleCart}
               className={`text-text-tertiary hover:text-text-primary transition-all p-2 hover:scale-110 relative cursor-pointer rounded-full hover:bg-surface-primary/30 ${isCartOpen ? 'text-brand-primary' : ''}`}
@@ -1493,7 +1542,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 15 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="absolute top-full right-[-50px] sm:right-0 mt-3.5 w-80 md:w-96 bg-[#0E1011]/98 border border-border-primary rounded-[12px] p-4.5 shadow-[0_25px_60px_rgba(0,0,0,0.98)] backdrop-blur-2xl z-50 flex flex-col gap-4 text-left"
+                    className="np-header-popover absolute top-full right-0 mt-3.5 w-80 md:w-96 max-lg:fixed max-lg:inset-x-3 max-lg:top-[60px] max-lg:mt-2 max-lg:w-auto max-h-[calc(100dvh-90px)] overflow-y-auto bg-[#0E1011]/98 border border-border-primary rounded-[12px] p-4.5 shadow-[0_25px_60px_rgba(0,0,0,0.98)] backdrop-blur-2xl z-50 flex flex-col gap-4 text-left"
                   >
                     <div className="flex items-center justify-between border-b border-border-primary pb-3">
                       <span className="text-[15px] font-medium text-text-primary font-sans flex items-center gap-2">
@@ -1545,7 +1594,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                           <span className="text-text-secondary font-sans font-medium">총 주문 금액:</span>
                           <span className="text-[18px] font-semibold text-brand-primary font-sans">{formattedTotalPrice}</span>
                         </div>
-                        <button onClick={handleCartCheckout} className="w-full py-2.5 bg-brand-primary hover:bg-[#F2B038] text-bg-dark text-[15px] font-medium rounded-[6px] tracking-wide transition-colors cursor-pointer text-center font-sans shadow-lg shadow-brand-primary/10 border-0">
+                        <button onClick={handleCartCheckout} className="np-primary-action w-full py-2.5 bg-brand-primary hover:bg-[#F2B038] text-bg-dark text-[15px] font-medium rounded-[6px] tracking-wide transition-colors cursor-pointer text-center font-sans shadow-lg shadow-brand-primary/10 border-0">
                           결제 진행하기
                         </button>
                       </div>
@@ -1556,7 +1605,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
             </div>
 
             {/* Notification Icon + Dropdown */}
-            <div className="relative hidden lg:block" ref={notifRef}>
+            <div className={`relative ${isNotifOpen ? 'block' : 'hidden lg:block'}`} ref={notifRef}>
               <button 
                 onClick={toggleNotif}
                 className={`text-text-tertiary hover:text-text-primary transition-all relative p-2 hover:scale-110 cursor-pointer rounded-full hover:bg-surface-primary/30 ${isNotifOpen ? 'text-brand-primary' : ''}`}
@@ -1564,7 +1613,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
               >
                 <Bell className="w-[19px] h-[19px] md:w-[21px] md:h-[21px]" />
                 {notifications.some(n => n.unread) && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-primary rounded-full ring-2 ring-[#08090B] animate-pulse"></span>
+                  <span className="np-notification-status absolute top-1.5 right-1.5 w-2 h-2 bg-brand-primary rounded-full ring-2 ring-[#08090B] animate-pulse"></span>
                 )}
               </button>
               <AnimatePresence>
@@ -1574,7 +1623,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 15 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="absolute top-full right-[-10px] sm:right-0 mt-3.5 w-[340px] md:w-[420px] bg-[#0E1011]/98 border border-border-primary rounded-[12px] p-5 shadow-[0_25px_60px_rgba(0,0,0,0.98)] backdrop-blur-2xl z-50 flex flex-col gap-4 text-left"
+                    className="np-header-popover np-notification-popover absolute top-full right-0 mt-3.5 w-[340px] md:w-[420px] max-lg:fixed max-lg:inset-x-3 max-lg:top-[60px] max-lg:mt-2 max-lg:w-auto max-h-[calc(100dvh-90px)] overflow-y-auto bg-[#0E1011]/98 border border-border-primary rounded-[12px] p-5 shadow-[0_25px_60px_rgba(0,0,0,0.98)] backdrop-blur-2xl z-50 flex flex-col gap-4 text-left"
                   >
                     <div className="flex items-center justify-between border-b border-border-primary pb-3.5">
                       <span className="text-[15px] font-medium text-text-primary font-sans flex items-center gap-2 tracking-tight">
@@ -1586,7 +1635,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                       <div className="flex gap-4">
                         <button 
                           onClick={handleMarkAllRead} 
-                          className="text-[14px] text-brand-primary hover:text-[#f3ba4b] font-medium font-sans border-0 bg-transparent cursor-pointer transition-colors"
+                          className="np-light-brand-text-action text-[14px] text-brand-primary hover:text-[#f3ba4b] font-medium font-sans border-0 bg-transparent cursor-pointer transition-colors"
                         >
                           모두 읽음
                         </button>
@@ -1601,6 +1650,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                       </div>
                     </div>
 
+                    <p className="text-[12px] leading-[18px] text-text-secondary">시연용 알림입니다. 실제 활동·거래 알림은 아직 연결되지 않았습니다.</p>
                     <div className="max-h-[300px] overflow-y-auto custom-scrollbar space-y-3 pr-1">
                       {notifications.length > 0 ? (
                         notifications.map((notif) => (
@@ -1617,7 +1667,7 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                           >
                             <div className="mt-2 flex-shrink-0">
                               {notif.unread ? (
-                                <span className="block w-2.5 h-2.5 rounded-full bg-brand-primary shadow-[0_0_8px_#E0A12E] animate-pulse" />
+                                <span className="block w-2.5 h-2.5 rounded-full bg-brand-primary shadow-[0_0_8px_var(--color-brand-primary)] animate-pulse" />
                               ) : (
                                 <span className="block w-2 h-2 rounded-full bg-text-tertiary/60" />
                               )}
@@ -1632,7 +1682,8 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 
                             <button 
                               onClick={(e) => handleRemoveNotif(notif.id, e)}
-                              className="opacity-0 group-hover:opacity-100 text-text-tertiary hover:text-red-400 p-1.5 rounded-full transition-colors self-center duration-150 border-0 bg-transparent cursor-pointer"
+                              aria-label={`${notif.title} 알림 삭제`}
+                              className="self-center cursor-pointer rounded-full border-0 bg-transparent p-1.5 text-text-tertiary opacity-100 transition-colors duration-150 hover:text-red-400 md:opacity-0 md:group-hover:opacity-100"
                               title="삭제"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1652,12 +1703,15 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
             </div>
 
 <div className="relative" ref={profileRef}>
-  <div 
+  <button
+    type="button"
+    aria-label="프로필 메뉴 열기"
+    aria-expanded={isProfileMenuOpen}
     onClick={toggleProfileMenu}
-    className="w-8 h-8 rounded-full bg-surface-secondary border border-border-soft cursor-pointer overflow-hidden hover:border-brand-primary transition-colors"
+    className="h-11 w-11 rounded-full bg-surface-secondary border border-border-soft cursor-pointer overflow-hidden hover:border-brand-primary transition-colors sm:h-10 sm:w-10 lg:h-8 lg:w-8"
   >
-    <img src={PROFILE_IMAGE} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-  </div>
+    <img src={profile.avatar} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+  </button>
 
   <AnimatePresence>
     {isProfileMenuOpen && (
@@ -1675,17 +1729,17 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -14 }}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed inset-x-0 top-[60px] z-[240] flex flex-col border-b border-[#242831] bg-[#0B0D10]/98 px-4 pb-2 shadow-[0_18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl font-sans lg:absolute lg:inset-auto lg:top-full lg:right-0 lg:mt-3.5 lg:w-[300px] lg:rounded-[12px] lg:border lg:border-[#2A2E36]/80 lg:bg-[#0E1011] lg:px-0 lg:pb-1 lg:shadow-[0_25px_60px_rgba(0,0,0,0.95)] lg:backdrop-blur-3xl"
+        className="np-header-popover np-profile-popover safe-area-bottom fixed inset-x-0 top-[60px] z-[240] flex max-h-[calc(100dvh-60px)] flex-col overflow-y-auto border-b border-[#242831] bg-[#0B0D10]/98 px-4 pb-2 shadow-[0_18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl font-sans custom-scrollbar lg:absolute lg:inset-auto lg:top-full lg:right-0 lg:mt-3.5 lg:max-h-[calc(100dvh-96px)] lg:w-[300px] lg:rounded-[12px] lg:border lg:border-[#2A2E36]/80 lg:bg-[#0E1011] lg:px-0 lg:pb-1 lg:shadow-[0_25px_60px_rgba(0,0,0,0.95)] lg:backdrop-blur-3xl"
       >
         {/* Header: User Info */}
         <div className="flex items-center gap-3 p-4 border-b border-[#2A2E36]/50">
-          <img referrerPolicy="no-referrer" src={PROFILE_IMAGE} alt="Profile" className="w-[42px] h-[42px] rounded-full border border-border-soft object-cover" />
+          <img referrerPolicy="no-referrer" src={profile.avatar} alt="Profile" className="w-[42px] h-[42px] rounded-full border border-border-soft object-cover" />
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="text-[15px] font-medium text-text-primary tracking-tight">Hwan</span>
+              <span className="text-[15px] font-medium text-text-primary tracking-tight">{profile.nickname}</span>
               <span className="text-[14px] bg-brand-primary/20 text-brand-primary border border-brand-primary/30 px-1.5 py-[1px] rounded uppercase font-medium tracking-wider">PRO</span>
             </div>
-            <span className="text-[14px] text-text-secondary">rlawlghks898@gmail.com</span>
+            <span className="text-[14px] text-text-secondary">{profile.email}</span>
           </div>
         </div>
 
@@ -1702,10 +1756,42 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
           </div>
         </div>
 
+        <div className="mx-4 mt-3 flex items-center justify-between rounded-[8px] border border-border-soft/60 bg-surface-primary/45 px-3.5 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-secondary text-text-secondary">
+              {theme === 'dark' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            </div>
+            <div className="flex min-w-0 flex-col">
+              <span className="text-[14px] font-medium tracking-tight text-text-primary">화면 모드</span>
+              <span className="text-[12px] leading-[18px] text-text-tertiary">
+                {theme === 'dark' ? '다크 모드' : '라이트 모드'}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={theme === 'light'}
+            aria-label={`현재 ${theme === 'dark' ? '다크 모드' : '라이트 모드'}, 화면 모드 전환`}
+            onClick={handleEclipseThemeToggle}
+            disabled={isThemeTogglePrimed}
+            data-mode={theme}
+            className={`np-eclipse-toggle shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/60 ${
+              isThemeTogglePrimed ? 'is-priming' : ''
+            }`}
+          >
+            <span aria-hidden="true" className="np-eclipse-orbit" />
+            <span aria-hidden="true" className="np-eclipse-sparkle np-eclipse-sparkle-one" />
+            <span aria-hidden="true" className="np-eclipse-sparkle np-eclipse-sparkle-two" />
+            <span aria-hidden="true" className="np-eclipse-sparkle np-eclipse-sparkle-three" />
+            <span aria-hidden="true" className="np-eclipse-orb" />
+          </button>
+        </div>
+
         {/* Menu Items */}
         <div className="flex flex-col mt-3 px-2">
           <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('uploads'); }} className="flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
-            <Upload className="w-[20px] h-[20px]" /> 업로드한 작업물 관리
+            <Upload className="w-[20px] h-[20px]" /> 콘텐츠 관리
           </button>
           <button onClick={() => { setIsProfileMenuOpen(false); if(onNavigate) onNavigate('projects'); }} className="hidden lg:flex items-center gap-3.5 px-3 py-3 w-full text-left bg-transparent border-0 text-text-secondary hover:text-text-primary hover:bg-surface-primary/50 transition-colors cursor-pointer rounded-lg text-[14px] font-medium tracking-tight">
             <Folder className="w-[20px] h-[20px]" /> 내 프로젝트
@@ -1760,9 +1846,18 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
               exit={{ opacity: 0, y: -14 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               onMouseDown={(event) => event.stopPropagation()}
-              className="border-b border-[#242831] bg-[#0B0D10]/98 px-4 pb-4 pt-5 shadow-[0_18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl"
+              className="safe-area-bottom max-h-[calc(100dvh-60px)] overflow-y-auto border-b border-border-primary bg-surface-primary/98 px-4 pb-4 pt-5 shadow-[0_18px_45px_rgba(0,0,0,0.32)] backdrop-blur-xl custom-scrollbar"
               aria-label="모바일 메뉴"
             >
+              <div className="mx-auto mb-4 max-w-[720px]">
+                <label className="flex items-center gap-2 rounded-lg border border-border-primary bg-surface-primary px-3">
+                  <Search className="h-4 w-4 shrink-0 text-text-secondary" aria-hidden="true" />
+                  <input aria-label="작품 검색" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} onKeyDown={handleKeyDown} placeholder="작품 이름 검색" className="h-11 min-w-0 flex-1 bg-transparent text-[14px] text-text-primary outline-none" />
+                </label>
+                {searchQuery.trim() && <div className="mt-2 max-h-52 overflow-y-auto rounded-lg border border-border-soft bg-surface-primary">
+                  {filteredAssets.length ? filteredAssets.slice(0, 8).map((asset) => <button key={asset.id} onClick={() => { onOpenProduct(asset.id); setIsMobileMenuOpen(false); }} className="flex min-h-11 w-full items-center gap-3 px-3 py-2 text-left text-[14px] text-text-primary hover:bg-surface-secondary"><img src={asset.image} alt="" className="h-9 w-12 rounded object-cover" />{asset.title}</button>) : <p className="p-3 text-[14px] text-text-secondary" role="status">일치하는 작품이 없습니다.</p>}
+                </div>}
+              </div>
               <div className="mx-auto flex max-w-[720px] flex-col gap-1 md:flex-row md:items-center md:justify-center md:gap-9">
                 {mobileNavItems.map(({ label, isActive, action }) => (
                   <button
@@ -1772,12 +1867,16 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
                     className={`group flex h-12 w-full items-center justify-start rounded-md bg-transparent px-3 text-left text-[17px] transition-colors md:h-11 md:w-auto md:px-0 md:hover:bg-transparent ${
                       isActive
                         ? "font-semibold text-brand-primary"
-                        : "font-medium text-text-tertiary hover:bg-white/[0.04] hover:text-text-primary"
+                        : "font-medium text-text-secondary hover:bg-white/[0.04] hover:text-text-primary"
                     }`}
                   >
                     <span>{label}</span>
                   </button>
                 ))}
+              </div>
+              <div className="mx-auto mt-3 grid max-w-[720px] grid-cols-2 gap-2 border-t border-border-soft pt-3">
+                <button onClick={() => { setIsMobileMenuOpen(false); setIsCartOpen(true); setIsNotifOpen(false); }} className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border-primary text-[14px] text-text-primary"><ShoppingBag className="h-4 w-4" />장바구니 {cartItems.length}</button>
+                <button onClick={() => { setIsMobileMenuOpen(false); setIsNotifOpen(true); setIsCartOpen(false); }} className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border-primary text-[14px] text-text-primary"><Bell className="h-4 w-4" />알림</button>
               </div>
             </motion.nav>
           </motion.div>
@@ -1811,32 +1910,32 @@ function Header({ onNavigate, currentPage, activeNav, setActiveNav }: { onNaviga
 
 function Hero({ onNavigate }: { onNavigate?: (page: any) => void }) {
   return (
-    <section className="relative w-full h-[420px] overflow-hidden">
+    <section className="relative h-[300px] w-full overflow-hidden">
       <div className="absolute inset-0">
         <img 
           src={HERO_IMAGE} 
           alt="Hero" 
-          className="w-full h-[calc(100%+20px)] object-cover object-top -translate-y-5" 
+          className="h-[calc(100%+20px)] w-full -translate-y-2 object-cover object-[62%_top] sm:object-[58%_top] md:object-top"
           referrerPolicy="no-referrer"
         />
         {/* Adjusted cinematic overlays (reduced opacity) */}
-        <div className="absolute inset-0 bg-gradient-to-r from-bg-dark/75 via-bg-dark/30 to-transparent"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-bg-dark/70 via-transparent to-transparent"></div>
+        <div className="np-hero-gradient absolute inset-0 bg-gradient-to-r from-bg-dark/75 via-bg-dark/30 to-transparent"></div>
+        <div className="np-hero-gradient absolute inset-0 bg-gradient-to-t from-bg-dark/70 via-transparent to-transparent"></div>
       </div>
       
-      <div className="max-w-[2560px] mx-auto px-4 sm:px-6 2xl:px-8 min-[2200px]:px-10 h-full flex flex-col justify-center items-center md:items-start relative z-10 pt-4 text-center md:text-left">
+      <div className="relative z-10 mx-auto flex h-full max-w-[2560px] flex-col items-start justify-center px-5 pt-4 text-left sm:px-6 2xl:px-8 min-[2200px]:px-10">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          className="max-w-2xl w-full md:pl-[8%] lg:pl-[10%] md:translate-x-[300px]"
+          className="np-hero-content w-full max-w-[560px] md:ml-[18vw] lg:ml-[28vw] xl:ml-[30vw]"
         >
-          <div className="space-y-3 mb-8">
-            <h1 className="text-[32px] md:text-[44px] font-bold leading-[1.2] tracking-tight text-text-primary drop-shadow-2xl font-display">
+          <div className="mb-7 space-y-3 sm:mb-8">
+            <h1 className="text-[30px] font-bold leading-[1.3] tracking-tight text-text-primary drop-shadow-2xl font-display sm:text-[36px] md:text-[40px] md:leading-[1.3]">
               아이디어를 현실로<br />
               <span className="text-text-primary/95">3D 제작의 모든 과정</span>
             </h1>
-            <p className="text-text-tertiary text-[15px] md:text-[15px] leading-[1.6] font-medium max-w-sm mx-auto md:mx-0 opacity-80">
+            <p className="np-hero-copy max-w-sm text-[14px] font-medium leading-[1.65] text-text-secondary/85 sm:text-[15px]">
               레퍼런스 수집부터 AI 생성, 모델링까지<br />
               당신의 3D 워크플로우를 하나로 연결합니다.
             </p>
@@ -1844,7 +1943,7 @@ function Hero({ onNavigate }: { onNavigate?: (page: any) => void }) {
           
           <button 
             onClick={() => onNavigate && onNavigate('studio')}
-            className="group relative px-6 py-2 border border-brand-primary/80 text-brand-primary rounded-sm text-[14px] font-medium transition-all hover:bg-brand-primary hover:text-bg-dark bg-transparent">
+            className="np-hero-cta group relative min-h-11 rounded-sm border border-brand-primary/80 bg-black/15 px-6 py-2 text-[14px] font-medium text-brand-primary transition-all hover:bg-brand-primary hover:text-bg-dark">
             AI 스튜디오 시작
           </button>
         </motion.div>
@@ -1862,21 +1961,21 @@ function CategoryNav({
 }) {
   return (
     <section className="relative hidden md:block">
-      <div className="flex items-center gap-0 h-[100px] overflow-x-auto scrollbar-hide">
+      <div className="flex h-[92px] items-center gap-0 overflow-x-auto scrollbar-hide lg:h-[100px]">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.id}
             onClick={() => onCategoryChange(cat.id)}
-            className={`flex flex-col items-center justify-center min-w-[110px] w-[110px] h-full transition-all group shrink-0 ${
+            className={`group flex h-full w-[88px] min-w-[88px] shrink-0 flex-col items-center justify-center transition-all lg:w-[104px] lg:min-w-[104px] xl:w-[110px] xl:min-w-[110px] ${
               activeCategory === cat.id 
                 ? 'text-brand-primary' 
-                : 'text-text-tertiary hover:text-brand-primary/60'
+                : 'text-text-secondary hover:text-brand-primary'
             }`}
           >
             <div className={`flex items-center justify-center transition-all mb-1`}>
-              <cat.icon className={activeCategory === cat.id ? "w-[30px] h-[30px]" : "w-[30px] h-[30px] opacity-60 group-hover:opacity-100 transition-opacity"} />
+              <cat.icon className={activeCategory === cat.id ? "h-7 w-7 lg:h-[30px] lg:w-[30px]" : "h-7 w-7 opacity-60 transition-opacity group-hover:opacity-100 lg:h-[30px] lg:w-[30px]"} />
             </div>
-            <span className={`text-[15px] font-medium tracking-tight`}>{cat.label}</span>
+            <span className="text-[14px] font-medium tracking-tight lg:text-[15px]">{cat.label}</span>
           </button>
         ))}
       </div>
@@ -1960,7 +2059,7 @@ function MobileCategoryRail({
             className={`relative flex h-10 shrink-0 items-center text-[14px] font-medium transition-colors ${
               activeCategory === cat.id
                 ? 'text-brand-primary'
-                : 'text-text-tertiary hover:text-text-primary'
+                : 'text-text-secondary hover:text-text-primary'
             }`}
           >
             <span>{cat.label}</span>
@@ -1998,11 +2097,11 @@ function MobileCategoryPicker({
         type="button"
         onClick={() => setIsCategorySheetOpen(true)}
         aria-expanded={isCategorySheetOpen}
-        className="inline-flex h-8 items-center gap-2 rounded-md bg-transparent px-0 text-left text-[14px] font-medium text-text-tertiary transition-colors hover:text-text-primary"
+        className="inline-flex h-11 items-center gap-2 rounded-md bg-transparent px-0 text-left text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary"
       >
         <ActiveCategoryIcon className="h-4 w-4 text-brand-primary" />
         <span className="text-text-primary">{activeCategoryMeta.label}</span>
-        <ChevronDown className={`h-4 w-4 transition-transform ${isCategorySheetOpen ? 'rotate-180 text-brand-primary' : 'text-text-tertiary'}`} />
+        <ChevronDown className={`h-4 w-4 transition-transform ${isCategorySheetOpen ? 'rotate-180 text-brand-primary' : 'text-text-secondary'}`} />
       </button>
 
       <AnimatePresence>
@@ -2027,7 +2126,7 @@ function MobileCategoryPicker({
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={{ top: 0, bottom: 0.35 }}
               onDragEnd={handleCategorySheetDragEnd}
-              className="fixed inset-x-0 bottom-0 z-[260] max-h-[76vh] overflow-hidden rounded-t-[16px] border-t border-[#242831] bg-[#0B0D10]/98 shadow-[0_-18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl"
+              className="fixed inset-x-0 bottom-0 z-[260] max-h-[76dvh] overflow-hidden rounded-t-[16px] border-t border-[#242831] bg-[#0B0D10]/98 shadow-[0_-18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl"
             >
               <div
                 className="flex cursor-grab touch-none flex-col items-center border-b border-[#242831] px-4 pb-4 pt-3 active:cursor-grabbing"
@@ -2039,7 +2138,7 @@ function MobileCategoryPicker({
                 </div>
               </div>
 
-              <div className="grid max-h-[calc(76vh-68px)] grid-cols-2 gap-2 overflow-y-auto p-4 pb-6 custom-scrollbar">
+              <div className="grid max-h-[calc(76dvh-68px)] grid-cols-2 gap-2 overflow-y-auto p-4 pb-6 custom-scrollbar">
                 {CATEGORIES.map((cat) => {
                   const Icon = cat.icon;
                   const isActive = activeCategory === cat.id;
@@ -2059,7 +2158,7 @@ function MobileCategoryPicker({
                           : 'border-[#1F2329] bg-[#0A0B0D] text-text-secondary hover:border-[#2A2E36] hover:text-text-primary'
                       }`}
                     >
-                      <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-brand-primary' : 'text-text-tertiary'}`} />
+                      <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-brand-primary' : 'text-text-secondary'}`} />
                       <span className="min-w-0 truncate text-[14px] font-medium">{cat.label}</span>
                     </button>
                   );
@@ -2089,6 +2188,7 @@ type QuickCollectAsset = {
 type QuickCollections = Record<QuickDropTarget, QuickCollectAsset[]>;
 
 type QuickCollectOption = {
+  id: string | number;
   name: string;
   image: string;
   count: string;
@@ -2162,7 +2262,7 @@ function QuickDropCard({
         </div>
         <button
           onClick={onNavigate}
-          className="text-[14px] font-medium text-text-tertiary transition hover:text-brand-primary"
+          className="text-[14px] font-medium text-text-secondary transition hover:text-brand-primary"
         >
           열기 <ChevronRight className="inline h-3 w-3" />
         </button>
@@ -2196,11 +2296,14 @@ function QuickCollectDialog({
 }: {
   request: { target: "notes" | "references"; asset: QuickCollectAsset } | null;
   onClose: () => void;
-  onSave: (mode: "existing" | "new", groupName: string, memo?: string) => void;
+  onSave: (mode: "existing" | "new", groupName: string, memo?: string, targetId?: string | number) => void;
 }) {
   const [mode, setMode] = useState<"existing" | "new">("existing");
   const [memo, setMemo] = useState("");
   const [newName, setNewName] = useState("");
+  const [allNotes] = useStoredState<NoteItem[]>("neopoly_notes_v3", NOTES);
+  const [trashedNotes] = useStoredIdSet("neopoly_note_trash_v3");
+  const [savedBoards] = useStoredState("neopoly_reference_boards_v1", REFERENCE_BOARDS);
 
   useEffect(() => {
     if (!request) return;
@@ -2212,37 +2315,31 @@ function QuickCollectDialog({
   if (!request) return null;
 
   const isNote = request.target === "notes";
-  const availableNotes = (() => {
-    try {
-      const saved = localStorage.getItem("neopoly_notes_v3");
-      const parsed = saved ? JSON.parse(saved) : null;
-      return Array.isArray(parsed) && parsed.length ? parsed : NOTES;
-    } catch {
-      return NOTES;
-    }
-  })();
+  const availableNotes = allNotes.filter((note) => !trashedNotes.has(note.id));
   const existingOptions: QuickCollectOption[] = isNote
     ? availableNotes.map((note) => ({
+        id: note.id,
         name: note.title,
         image: note.images[0] ?? request.asset.image,
         count: `${note.images.length}장`,
         helper: note.date,
       }))
-    : REFERENCE_BOARDS.map((board) => ({
+    : savedBoards.map((board) => ({
+        id: board.id,
         name: board.label,
         image: board.image,
         count: `${ASSETS.filter((asset) => boardMatchesAsset(board, asset)).length}개`,
         helper: "Reference board",
       }));
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-5 backdrop-blur-[1px]">
-      <div className="w-full max-w-[600px] rounded-xl border border-[#2A2E36] bg-[#0E1011] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.65)]">
+    <ModalLayer onClose={onClose} aria-label={isNote ? "노트에 저장" : "레퍼런스에 저장"} className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[1px]">
+      <div className="max-h-[90dvh] w-full max-w-[600px] overflow-y-auto rounded-xl border border-[#2A2E36] bg-[#0E1011] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.65)]">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
             <p className="text-[14px] font-medium text-brand-primary">{isNote ? "노트에 추가" : "레퍼런스에 추가"}</p>
             <h3 className="mt-1 text-[20px] font-bold text-white">{request.asset.title}</h3>
           </div>
-          <button onClick={onClose} className="rounded-md p-1.5 text-text-tertiary transition hover:bg-[#1A1C20] hover:text-white">
+          <button aria-label="저장 모달 닫기" onClick={onClose} className="rounded-md p-1.5 text-text-tertiary transition hover:bg-[#1A1C20] hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -2256,7 +2353,7 @@ function QuickCollectDialog({
               key={id}
               onClick={() => setMode(id as "existing" | "new")}
               className={`flex-1 rounded-md px-3 py-2 text-[14px] font-medium transition ${
-                mode === id ? "bg-brand-primary text-bg-dark" : "text-text-tertiary hover:text-white"
+                mode === id ? "bg-brand-primary text-bg-dark" : "text-text-secondary hover:text-white"
               }`}
             >
               {label}
@@ -2268,8 +2365,8 @@ function QuickCollectDialog({
           <div className="grid max-h-[360px] gap-2 overflow-y-auto pr-1 custom-scrollbar">
             {existingOptions.map((option) => (
               <button
-                key={option.name}
-                onClick={() => onSave("existing", option.name, memo)}
+                key={option.id}
+                onClick={() => onSave("existing", option.name, memo, option.id)}
                 className="flex items-center gap-3 rounded-lg border border-[#1F2329] bg-[#141518] p-2.5 text-left transition hover:border-brand-primary/60 hover:bg-[#191B20]"
               >
                 <img
@@ -2285,6 +2382,7 @@ function QuickCollectDialog({
                 <Plus className="h-4 w-4 shrink-0 text-brand-primary" />
               </button>
             ))}
+            {existingOptions.length === 0 && <p className="py-5 text-[14px] text-text-secondary">저장할 항목이 없습니다. ‘새 노트’에서 만들어 주세요.</p>}
           </div>
         ) : (
           <div className="space-y-3">
@@ -2302,14 +2400,14 @@ function QuickCollectDialog({
             />
             <button
               onClick={() => onSave("new", newName.trim() || (isNote ? "새 노트" : "새 레퍼런스"), memo)}
-              className="w-full rounded-lg bg-brand-primary py-3 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover"
+              className="np-primary-action w-full rounded-lg bg-brand-primary py-3 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover"
             >
               저장하기
             </button>
           </div>
         )}
       </div>
-    </div>
+    </ModalLayer>
   );
 }
 
@@ -2335,11 +2433,11 @@ function QuickCollectPanel({
       <AnimatePresence>
         {!isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 50, x: "-50%" }}
-            animate={{ opacity: 1, y: 0, x: "-50%" }}
-            exit={{ opacity: 0, y: 50, x: "-50%" }}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-8 left-1/2 z-40 transform"
+            className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+12px)] z-40 flex justify-center sm:bottom-8"
           >
             <button
               onClick={onOpen}
@@ -2351,7 +2449,7 @@ function QuickCollectPanel({
                 event.preventDefault();
                 onOpenDrop(readDraggedAsset(event));
               }}
-              className="flex items-center gap-2 rounded-[8px] border border-border-primary/80 bg-bg-secondary/95 px-8 py-3 text-[15px] font-medium tracking-wide text-text-primary shadow-[0_15px_40px_rgba(0,0,0,0.9)] backdrop-blur-md transition-all hover:border-brand-primary hover:text-brand-primary"
+              className="np-panel-trigger flex min-h-11 items-center gap-2 rounded-[8px] border border-border-primary/80 bg-bg-secondary/95 px-4 py-2.5 text-[14px] font-medium tracking-wide text-text-primary shadow-[0_15px_40px_rgba(0,0,0,0.9)] backdrop-blur-md transition-all hover:border-brand-primary hover:text-brand-primary sm:px-8 sm:py-3 sm:text-[15px]"
             >
               <Plus className="h-4 w-4" />
               패널 열기
@@ -2367,7 +2465,7 @@ function QuickCollectPanel({
             animate={{ opacity: 1, y: 0, x: "-50%" }}
             exit={{ opacity: 0, y: 150, x: "-50%" }}
             transition={{ type: "spring", damping: 25, stiffness: 180 }}
-            className="fixed bottom-6 left-1/2 z-50 w-[1536px] max-w-[95%] rounded-[12px] border border-border-primary/50 bg-[#0E1011]/95 p-5 pt-12 shadow-[0_30px_60px_rgba(0,0,0,0.95)] backdrop-blur-xl"
+            className="np-main-panel fixed bottom-6 left-1/2 z-50 w-[1536px] max-w-[95%] rounded-[12px] border border-border-primary/50 bg-[#0E1011]/95 p-5 pt-12 shadow-[0_30px_60px_rgba(0,0,0,0.95)] backdrop-blur-xl"
           >
             <button
               onClick={onClose}
@@ -2433,43 +2531,67 @@ function AssetCard({
   onAssetDragStart?: (asset: any, e: React.DragEvent) => void,
 }) {
   const isMarket = asset.badge === 'M';
+  const authorInitial = String(asset.author ?? "").trim().charAt(0).toUpperCase() || "?";
   
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       onClick={() => onOpenProduct?.(asset)}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
+        event.preventDefault();
+        onOpenProduct?.(asset);
+      }}
+      role="button"
+      tabIndex={0}
       draggable
       onDragStart={(e) => onAssetDragStart?.(asset, e as unknown as React.DragEvent)}
-      className="group relative rounded-[6px] overflow-hidden bg-surface-primary border border-border-soft shadow-xl cursor-pointer flex flex-col aspect-[16/10]"
+      className="group relative flex cursor-pointer flex-col overflow-hidden rounded-[6px] border border-border-soft bg-surface-primary shadow-xl"
     >
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative aspect-[16/10] overflow-hidden">
         {/* Main Image */}
         <img 
-          src={asset.image} 
+          loading="lazy" decoding="async" src={asset.image}
           alt={asset.title} 
           className="h-full w-full origin-center transform-gpu object-cover transition-transform duration-300 ease-out will-change-transform group-hover:scale-[1.006]"
           referrerPolicy="no-referrer"
         />
 
         {/* Badge - M or A */}
-        <div className={`absolute top-2 right-2 h-7 min-w-7 px-1 rounded-[6px] flex items-center justify-center text-[14px] font-medium backdrop-blur-[8px] z-20 transition-all duration-200 ${
+        <div className={`np-asset-type-badge absolute right-1.5 top-1.5 z-20 flex h-6 min-w-6 items-center justify-center rounded-[5px] px-1 text-[12px] font-medium backdrop-blur-[8px] transition-all duration-200 sm:right-2 sm:top-2 sm:h-7 sm:min-w-7 sm:rounded-[6px] sm:text-[14px] ${
           isMarket 
-            ? 'bg-[#E0A12E]/40 text-[#F0B43A] group-hover:bg-[#E0A12E]/50' 
-            : 'bg-[#4C88D9]/40 text-[#A0C5FF] group-hover:bg-[#4C88D9]/50'
+            ? 'np-asset-type-badge-market bg-brand-primary/40 text-[#F0B43A] group-hover:bg-brand-primary/50'
+            : 'np-asset-type-badge-art bg-[#4C88D9]/40 text-[#A0C5FF] group-hover:bg-[#4C88D9]/50'
         }`}>
           {asset.badge}
         </div>
 
+        {/* Always-visible Information Overlay (Mobile & Tablet) */}
+        <div className="np-dark-media pointer-events-none absolute inset-x-0 bottom-0 z-10 flex min-h-[52%] flex-col justify-end bg-gradient-to-t from-black/98 via-black/68 to-transparent px-3 pb-3 pt-10 sm:px-3.5 sm:pb-3.5 lg:hidden">
+          <p className="truncate text-[16px] font-semibold leading-6 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] sm:text-[14px] sm:leading-5 md:text-[15px] md:leading-[22px]">
+            {asset.title}
+          </p>
+          <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-[10px] font-semibold text-white/90 backdrop-blur-sm">
+              {authorInitial}
+            </span>
+            <span className="truncate text-[12px] leading-[18px] text-white/65">
+              {asset.author}
+            </span>
+          </div>
+        </div>
+
         {/* Hover Information Overlay (Desktop) */}
-        <div className="absolute inset-x-0 bottom-0 z-10 hidden h-[48%] flex-col justify-end bg-gradient-to-t from-black/90 via-black/48 to-transparent p-4 pb-4 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 md:flex">
-          <p className="text-[15px] text-text-secondary font-medium">
+        <div className="np-dark-media absolute inset-x-0 bottom-0 z-10 hidden h-[56%] flex-col justify-end bg-gradient-to-t from-black/98 via-black/72 to-transparent p-4 pb-4 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 group-focus-within:opacity-100 lg:flex">
+          <h3 className="truncate text-[16px] font-semibold leading-6 text-white">{asset.title}</h3>
+          <p className="mt-1 text-[14px] text-text-secondary font-medium">
             {asset.author}
           </p>
           <div className="flex items-center gap-3 mt-2 text-[14px] text-text-secondary">
-            <div className="flex items-center gap-1 opacity-75 cursor-pointer hover:opacity-100 transition-opacity" onClick={onToggleFavorite}>
+            <button type="button" aria-label={`${asset.title} ${isFavorite ? '찜 해제' : '찜하기'}`} aria-pressed={isFavorite} className="flex min-h-8 items-center gap-1 opacity-75 cursor-pointer hover:opacity-100 transition-opacity" onClick={onToggleFavorite}>
               <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} /> {asset.likes}
-            </div>
+            </button>
             <div className="flex items-center gap-1 opacity-75">
               <Eye className="w-3.5 h-3.5" /> {asset.views}
             </div>
@@ -2501,6 +2623,19 @@ function AssetCard({
   );
 }
 
+type CreatorInquiryType = 'headhunting' | 'commission' | 'other';
+
+const CREATOR_INQUIRY_OPTIONS: Array<{
+  id: CreatorInquiryType;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { id: 'headhunting', label: '헤드헌팅', description: '채용 및 장기 협업 제안', icon: User },
+  { id: 'commission', label: '제품 의뢰', description: '작품·제품 제작 및 커미션 의뢰', icon: Box },
+  { id: 'other', label: '기타', description: '그 외 작품과 제작자 관련 문의', icon: FileText },
+];
+
 const PRODUCT_DETAIL_DATA: Record<number, {
   slug: string;
   imagePrefix: string;
@@ -2513,6 +2648,8 @@ const PRODUCT_DETAIL_DATA: Record<number, {
   description: string;
   fileInfo: [string, string][];
   galleryCount: number;
+  allowedInquiryTypes?: CreatorInquiryType[];
+  isPreview?: boolean;
 }> = {
   1: {
     slug: 'elf',
@@ -2544,14 +2681,15 @@ const PRODUCT_DETAIL_DATA: Record<number, {
     slug: 'wyvern',
     imagePrefix: 'Discover_in_Wyvern',
     title: 'Wyvern',
-    category: 'Market',
-    price: '₩89,000',
-    originalPrice: '₩120,000',
+    category: 'Art',
+    price: '문의',
+    originalPrice: '',
     stats: ['1.2K', '156', '4.8'],
     tags: ['캐릭터', '몬스터', 'Rigged', 'PBR', '판타지', '크리처'],
     description: '커다란 날개와 긴 꼬리 실루엣이 특징인 와이번 크리처 모델입니다. 비행 포즈, 턴어라운드, 와이어 프레임 참고를 기반으로 고품질 크리처 작업에 적합합니다.',
     fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함 (Humanoid)']],
     galleryCount: 4,
+    allowedInquiryTypes: ['headhunting', 'commission', 'other'],
   },
   4: {
     slug: 'dinosaur',
@@ -2604,6 +2742,7 @@ const PRODUCT_DETAIL_DATA: Record<number, {
     description: '산업 설비와 조선, 건축 모듈을 한 화면에서 확인할 수 있는 포스코 스타일 3D 에셋 구성입니다. 기업 교육, 설명형 콘텐츠, 산업 시뮬레이션에 어울립니다.',
     fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함']],
     galleryCount: 11,
+    allowedInquiryTypes: ['commission', 'other'],
   },
   8: {
     slug: 'posco_b',
@@ -2617,6 +2756,7 @@ const PRODUCT_DETAIL_DATA: Record<number, {
     description: '철골 구조물, 와이어, 주택 구조, 건축 모듈 중심의 포스코 스타일 3D 에셋 구성입니다. 단계별 산업 모델 소개와 기술 콘텐츠에 적합합니다.',
     fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함']],
     galleryCount: 11,
+    allowedInquiryTypes: ['headhunting', 'commission', 'other'],
   },
 };
 
@@ -2666,6 +2806,7 @@ function productFallbackImage(assetId: number, order: number, fallback: string) 
 }
 
 function detailImageCandidates(product: { slug: string; imagePrefix: string }, assetId: number, index: number) {
+  if (!product.imagePrefix) return [];
   const padded = String(index).padStart(2, '0');
   return [
     `/images/${product.imagePrefix}${padded}.png`,
@@ -2683,11 +2824,15 @@ function SmartProductImage({
   fallback,
   alt,
   className,
+  draggable,
+  ariaHidden,
 }: {
   candidates: string[];
   fallback: string;
   alt: string;
   className: string;
+  draggable?: boolean;
+  ariaHidden?: boolean;
 }) {
   const sources = [...candidates, fallback];
   const [sourceIndex, setSourceIndex] = useState(0);
@@ -2699,6 +2844,8 @@ function SmartProductImage({
       alt={alt}
       referrerPolicy="no-referrer"
       className={className}
+      draggable={draggable}
+      aria-hidden={ariaHidden}
       onError={() => {
         setSourceIndex((prev) => Math.min(prev + 1, sources.length - 1));
       }}
@@ -2722,7 +2869,12 @@ function ProductDetailPage({
   onViewPurchases?: () => void;
 }) {
   const asset = ASSETS.find((item) => item.id === assetId) ?? ASSETS[0];
-  const product = PRODUCT_DETAIL_DATA[asset.id] ?? PRODUCT_DETAIL_DATA[1];
+  const product: typeof PRODUCT_DETAIL_DATA[number] = PRODUCT_DETAIL_DATA[asset.id] ?? {
+    slug: String(asset.id), imagePrefix: '', title: asset.title, category: asset.badge === 'A' ? 'Art' : 'Market',
+    price: '판매 정보 준비 중', originalPrice: '', stats: [asset.views, asset.likes, '—'],
+    tags: [], description: '갤러리 미리보기 작품입니다. 상세 설명과 판매 파일은 아직 등록되지 않았습니다.',
+    fileInfo: [['상세 정보', '등록 준비 중']], galleryCount: 1, isPreview: true,
+  };
   const displayTitle = asset.title || product.title;
   const recommended = [5, 2, 1, 6]
     .map((id) => ASSETS.find((item) => item.id === id))
@@ -2730,13 +2882,82 @@ function ProductDetailPage({
 
   const gallery = PRODUCT_IMAGE_ORDER[asset.id] ?? Array.from({ length: product.galleryCount }, (_, index) => index + 1);
   const [heroOrder, ...detailOrders] = gallery;
+  const [activeMobileSlide, setActiveMobileSlide] = useState(0);
+  const [isDesktopInfoPanelCollapsed, setIsDesktopInfoPanelCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('neopoly_product_detail_panel_collapsed') === 'true';
+  });
+  const mobileGalleryRef = useRef<HTMLDivElement>(null);
+  const mobileThumbnailRailRef = useRef<HTMLDivElement>(null);
+  const desktopInfoRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const panel = desktopInfoRef.current;
+      if (!panel) return;
+      if (window.innerWidth < 1024) { panel.style.removeProperty('max-height'); return; }
+      const top = Math.max(92, panel.getBoundingClientRect().top);
+      panel.style.maxHeight = `${Math.max(128, window.innerHeight - top - 24)}px`;
+    };
+    const schedule = () => { if (!frame) frame = window.requestAnimationFrame(measure); };
+    measure();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+    };
+  }, [asset.id, isDesktopInfoPanelCollapsed]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      'neopoly_product_detail_panel_collapsed',
+      String(isDesktopInfoPanelCollapsed),
+    );
+  }, [isDesktopInfoPanelCollapsed]);
+
+  useEffect(() => {
+    setActiveMobileSlide(0);
+    mobileGalleryRef.current?.scrollTo({ left: 0 });
+    mobileThumbnailRailRef.current?.scrollTo({ left: 0 });
+  }, [asset.id]);
+
+  const moveMobileGallery = (nextIndex: number) => {
+    const galleryElement = mobileGalleryRef.current;
+    if (!galleryElement) return;
+
+    const boundedIndex = Math.min(Math.max(nextIndex, 0), gallery.length - 1);
+    galleryElement.scrollTo({
+      left: boundedIndex * galleryElement.clientWidth,
+      behavior: "smooth",
+    });
+    setActiveMobileSlide(boundedIndex);
+  };
+
+  useEffect(() => {
+    const thumbnailRail = mobileThumbnailRailRef.current;
+    const activeThumbnail = thumbnailRail?.querySelector<HTMLElement>(
+      `[data-thumbnail-index="${activeMobileSlide}"]`,
+    );
+    if (!thumbnailRail || !activeThumbnail) return;
+
+    const centeredScrollPosition =
+      activeThumbnail.offsetLeft - (thumbnailRail.clientWidth - activeThumbnail.clientWidth) / 2;
+    thumbnailRail.scrollTo({
+      left: Math.max(0, centeredScrollPosition),
+      behavior: "smooth",
+    });
+  }, [activeMobileSlide]);
 
   return (
-    <main className="flex-1 bg-[#08090B]">
+    <main className="np-product-detail flex-1 overflow-x-clip bg-[#08090B]">
       <div className={PRODUCT_DETAIL_CONTAINER_CLASS}>
         <button
           onClick={onNavigateHome}
-          className="mb-5 inline-flex items-center gap-2 text-[14px] font-medium text-text-tertiary transition hover:text-brand-primary"
+          className="mb-2 inline-flex min-h-11 items-center gap-2 rounded-md text-[14px] font-medium text-text-secondary transition hover:text-brand-primary lg:hidden"
         >
           <ChevronRight className="h-4 w-4 rotate-180" />
           Discover로 돌아가기
@@ -2745,44 +2966,145 @@ function ProductDetailPage({
         <div
           draggable
           onDragStart={(event) => onAssetDragStart?.(asset, event)}
-          className="group relative mb-6 aspect-[1456/744] overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D] md:aspect-auto"
+          className="np-product-media group relative left-1/2 mb-6 hidden h-[clamp(360px,32.6vw,600px)] w-screen -translate-x-1/2 overflow-hidden border-y border-[#1F2329] bg-[#0A0B0D] lg:block"
         >
           <SmartProductImage
             candidates={detailImageCandidates(product, asset.id, heroOrder)}
             fallback={productFallbackImage(asset.id, heroOrder, asset.image)}
             alt={displayTitle}
-            className="h-full w-full object-cover md:h-auto md:object-contain"
+            className="h-full w-full object-cover"
           />
-          <div className="absolute right-4 top-4 flex gap-2 opacity-0 transition group-hover:opacity-100">
-            <button
-              onClick={(event) => {
-                event.stopPropagation();
-                onQuickCollect?.("references", asset);
-              }}
-              className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
-            >
-              레퍼런스
-            </button>
-            <button
-              onClick={(event) => {
-                event.stopPropagation();
-                onQuickCollect?.("notes", asset);
-              }}
-              className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
-            >
-              메모
-            </button>
-          </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_360px] min-[2200px]:grid-cols-[minmax(0,1fr)_420px]">
-          <section className="min-w-0 space-y-3">
+        <section className="relative -mx-4 mb-5 w-[calc(100%+2rem)] md:-mx-6 md:w-[calc(100%+3rem)] lg:hidden" aria-label={`${displayTitle} 이미지 갤러리`}>
+          <div
+            ref={mobileGalleryRef}
+            onScroll={(event) => {
+              const slideWidth = event.currentTarget.clientWidth;
+              if (!slideWidth) return;
+              const nextIndex = Math.round(event.currentTarget.scrollLeft / slideWidth);
+              setActiveMobileSlide((currentIndex) => currentIndex === nextIndex ? currentIndex : nextIndex);
+            }}
+            className="scrollbar-hide flex aspect-video w-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-smooth"
+          >
+            {gallery.map((order, index) => (
+              <div
+                key={order}
+                className="np-product-media np-product-carousel-slide group relative h-full w-full shrink-0 snap-center overflow-hidden bg-[#0A0B0D]"
+                aria-label={`${gallery.length}개 중 ${index + 1}번째 이미지`}
+              >
+                <SmartProductImage
+                  candidates={detailImageCandidates(product, asset.id, order)}
+                  fallback={productFallbackImage(asset.id, order, asset.image)}
+                  alt=""
+                  className="absolute inset-0 h-full w-full scale-110 object-cover opacity-55 blur-xl"
+                  draggable={false}
+                  ariaHidden
+                />
+                <span
+                  className="pointer-events-none absolute inset-0 bg-black/25"
+                  aria-hidden="true"
+                />
+                <SmartProductImage
+                  candidates={detailImageCandidates(product, asset.id, order)}
+                  fallback={productFallbackImage(asset.id, order, asset.image)}
+                  alt={index === 0 ? displayTitle : `${displayTitle} detail ${order}`}
+                  className="relative z-[1] h-full w-full object-contain"
+                  draggable={false}
+                />
+                <div className="absolute right-2 top-2 z-[2] flex gap-1.5">
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onQuickCollect?.("references", { ...asset, image: event.currentTarget.closest('.np-product-carousel-slide')?.querySelector<HTMLImageElement>('img:not([aria-hidden])')?.currentSrc || asset.image });
+                    }}
+                    className="np-product-media-action np-product-mobile-media-action min-h-8 rounded-md border px-2.5 py-1 text-[12px] font-medium backdrop-blur transition md:min-h-9 md:px-3 md:text-[14px]"
+                  >
+                    레퍼런스
+                  </button>
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onQuickCollect?.("notes", { ...asset, image: event.currentTarget.closest('.np-product-carousel-slide')?.querySelector<HTMLImageElement>('img:not([aria-hidden])')?.currentSrc || asset.image });
+                    }}
+                    className="np-product-media-action np-product-mobile-media-action min-h-8 rounded-md border px-2.5 py-1 text-[12px] font-medium backdrop-blur transition md:min-h-9 md:px-3 md:text-[14px]"
+                  >
+                    메모
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {gallery.length > 1 && (
+            <div
+              ref={mobileThumbnailRailRef}
+              className="np-product-thumbnail-rail scrollbar-hide flex touch-pan-x snap-x snap-proximity gap-1.5 overflow-x-auto overscroll-x-contain px-4 py-2.5 scroll-smooth md:gap-2 md:px-6 md:py-3"
+              role="group"
+              aria-label="상세 이미지 선택"
+            >
+              {gallery.map((order, index) => (
+                <button
+                  key={order}
+                  type="button"
+                  aria-pressed={index === activeMobileSlide}
+                  aria-label={`${gallery.length}개 중 ${index + 1}번째 이미지 보기`}
+                  data-active={index === activeMobileSlide}
+                  data-thumbnail-index={index}
+                  onClick={() => moveMobileGallery(index)}
+                  className="np-product-gallery-thumbnail relative h-11 w-14 shrink-0 snap-center overflow-hidden rounded-md border-2 md:h-14 md:w-[72px]"
+                >
+                  <SmartProductImage
+                    candidates={detailImageCandidates(product, asset.id, order)}
+                    fallback={productFallbackImage(asset.id, order, asset.image)}
+                    alt={`${displayTitle} ${index + 1}번째 이미지 썸네일`}
+                    className="h-full w-full object-cover"
+                    draggable={false}
+                  />
+                  <span className="np-product-gallery-thumbnail-veil absolute inset-0" aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {isDesktopInfoPanelCollapsed && (
+          <button
+            type="button"
+            onClick={() => setIsDesktopInfoPanelCollapsed(false)}
+            className="np-product-panel-toggle fixed right-0 top-1/2 z-40 hidden h-14 w-8 -translate-y-1/2 flex-col items-center justify-center gap-1 rounded-l-lg border border-r-0 border-[#2A2E36] bg-[#141518]/95 text-text-secondary shadow-[-8px_0_20px_rgba(0,0,0,0.22)] backdrop-blur-md transition-all hover:w-9 hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary lg:flex"
+            aria-label="상세 패널 열기"
+            aria-expanded="false"
+            title="상세 패널 열기"
+          >
+            <span
+              className={`text-[10px] font-semibold leading-none ${
+                product.category === 'Market'
+                  ? 'np-product-category-market'
+                  : 'np-product-category-art'
+              }`}
+              aria-hidden="true"
+            >
+              {product.category.slice(0, 1).toUpperCase()}
+            </span>
+            <PanelRightOpen className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
+
+        <div
+          className={`grid grid-cols-1 gap-6 transition-[grid-template-columns,gap] duration-300 ${
+            isDesktopInfoPanelCollapsed
+              ? 'lg:grid-cols-[minmax(0,1fr)_0px] lg:gap-0'
+              : 'lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_360px] min-[2200px]:grid-cols-[minmax(0,1fr)_420px]'
+          }`}
+        >
+          <section className="hidden min-w-0 space-y-3 lg:block">
             {detailOrders.map((order) => (
               <div
                 key={order}
                 draggable
                 onDragStart={(event) => onAssetDragStart?.(asset, event)}
-                className="group relative overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D]"
+                className="np-product-media group relative overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D]"
               >
                 <SmartProductImage
                   candidates={detailImageCandidates(product, asset.id, order)}
@@ -2790,44 +3112,39 @@ function ProductDetailPage({
                   alt={`${displayTitle} detail ${order}`}
                   className="h-auto w-full object-contain"
                 />
-                <div className="absolute right-4 top-4 flex gap-2 opacity-0 transition group-hover:opacity-100">
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onQuickCollect?.("references", asset);
-                    }}
-                    className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
-                  >
-                    레퍼런스
-                  </button>
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onQuickCollect?.("notes", asset);
-                    }}
-                    className="rounded-md border border-white/15 bg-black/60 px-3 py-2 text-[14px] font-medium text-white backdrop-blur transition hover:border-brand-primary hover:text-brand-primary"
-                  >
-                    메모
-                  </button>
-                </div>
               </div>
             ))}
           </section>
 
-          <aside className="xl:sticky xl:top-[92px] xl:self-start">
+          <aside
+            aria-label="작품 정보"
+            ref={desktopInfoRef}
+            className={`np-product-info-scroll custom-scrollbar w-full md:mx-auto md:max-w-[760px] lg:sticky lg:top-[92px] lg:mx-0 lg:max-h-[calc(100dvh-116px)] lg:max-w-none lg:self-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1 ${
+              isDesktopInfoPanelCollapsed
+                ? 'lg:hidden'
+                : 'lg:block'
+            }`}
+          >
             <div className="flex flex-col gap-5">
-              <ProductPurchasePanel asset={asset} product={product} displayTitle={displayTitle} onViewPurchases={onViewPurchases} />
-              <ProductLicensePanel />
-              <ProductStatsPanel stats={product.stats} />
+              <ProductPurchasePanel
+                asset={asset}
+                product={product}
+                displayTitle={displayTitle}
+                onNavigateHome={onNavigateHome}
+                onViewPurchases={onViewPurchases}
+                onCollapseInfoPanel={() => setIsDesktopInfoPanelCollapsed(true)}
+              />
+              {product.category === 'Market' && !product.isPreview && <ProductLicensePanel />}
+              <ProductStatsPanel stats={product.stats} isArt={product.category === 'Art' || product.isPreview} />
               <ProductInfoPanel product={product} />
             </div>
           </aside>
         </div>
       </div>
 
-      <section className="border-t border-[#1F2329] px-4 py-14 sm:px-6 sm:py-16">
+      <section className="np-product-recommend-section border-t border-[#1F2329] px-4 py-14 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-[2560px]">
-          <h2 className="mb-8 text-[24px] font-bold text-white">추천 모델링</h2>
+          <h2 className="mb-8 text-[20px] leading-[30px] font-semibold text-white">함께 볼 작품</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
             {recommended.map((item) => (
               <button
@@ -2835,20 +3152,20 @@ function ProductDetailPage({
                 onClick={() => onOpenProduct(item.id)}
                 draggable
                 onDragStart={(event) => onAssetDragStart?.(item, event)}
-                className="overflow-hidden rounded-lg border border-[#242832] bg-[#101215] text-left transition hover:border-brand-primary/50"
+                className="np-product-recommend-card overflow-hidden rounded-lg border border-[#242832] bg-[#101215] text-left transition hover:border-brand-primary/50"
               >
                 <img src={item.image} alt={item.title} className="aspect-[16/10] w-full object-cover" referrerPolicy="no-referrer" />
-                <div className="border-t border-[#262A31] bg-[#15171D] p-4">
+                <div className="np-product-recommend-info border-t border-[#262A31] bg-[#15171D] p-4">
                   <span className="mb-2.5 inline-flex rounded-sm bg-brand-primary px-2 py-0.5 text-[14px] font-medium text-bg-dark">
-                    Market
+                    {item.badge === 'A' ? 'Art' : 'Market'}
                   </span>
-                  <h3 className="text-[15px] font-medium leading-tight text-white line-clamp-1">{item.id === 5 ? 'Street Dunker' : 'Fantasy Character 1'}</h3>
-                  <p className="mt-1.5 text-[14px] font-medium leading-snug text-text-secondary">고품질 3D 캐릭터 모델</p>
+                  <h3 className="text-[16px] leading-6 font-semibold text-white line-clamp-1">{item.title}</h3>
+                  <p className="mt-1.5 text-[14px] leading-6 text-text-secondary">{item.author}</p>
                   <div className="mt-4 flex items-center justify-between">
-                    <span className="text-[15px] font-medium text-brand-primary">{item.id === 5 ? '₩89,000' : '₩62K'}</span>
+                    <span className="np-price-text text-[15px] font-medium text-brand-primary">{item.badge === 'A' ? '감상 작품' : PRODUCT_DETAIL_DATA[item.id]?.price ?? '상세 준비 중'}</span>
                     <span className="flex items-center gap-1.5 text-[14px] font-medium text-text-tertiary">
                       <Heart className="h-3.5 w-3.5" />
-                      485
+                      {item.likes}
                     </span>
                   </div>
                 </div>
@@ -2891,12 +3208,17 @@ function BoardPage({
   const [boardNoteFilter, setBoardNoteFilter] = useState("all");
   const [boardReferenceCategory, setBoardReferenceCategory] = useState("all");
   const [activeBoardNoteId, setActiveBoardNoteId] = useState<number | null>(null);
-  const [boardDeletedNoteIds, setBoardDeletedNoteIds] = useState<Set<number>>(
-    () => readStoredIdSet(NOTE_TRASH_STORAGE_KEY),
-  );
-  const [boardDeletedReferenceIds, setBoardDeletedReferenceIds] = useState<Set<number>>(
-    () => readStoredIdSet(REFERENCE_TRASH_STORAGE_KEY),
-  );
+  const [aiOrganizerTarget, setAiOrganizerTarget] = useState<AIOrganizerTarget | null>(null);
+  const [aiOrganizerStep, setAiOrganizerStep] = useState<"options" | "review">("options");
+  const [aiOrganizerScope, setAiOrganizerScope] = useState<AIOrganizationScope>("ungrouped");
+  const [aiBoardPlan, setAiBoardPlan, undoNotes, canUndoNotes] = useUndoStoredState<AIBoardPlan | null>("neopoly_board_plan_v1", null);
+  const [referenceAiGroups, setReferenceAiGroups, undoReferences, canUndoReferences] = useUndoStoredState<ReferenceAIGroup[]>("neopoly_reference_groups_v1", []);
+  const [storedNotes] = useStoredState<NoteItem[]>("neopoly_notes_v3", NOTES);
+  const [referenceBoards] = useStoredState("neopoly_reference_boards_v1", REFERENCE_BOARDS);
+  const [collectedReferences] = useStoredState<any[]>("neopoly_reference_assets_v1", []);
+  const [focusedAiGroupCode, setFocusedAiGroupCode] = useState<string | null>(null);
+  const [boardDeletedNoteIds, setBoardDeletedNoteIds] = useStoredIdSet(NOTE_TRASH_STORAGE_KEY);
+  const [boardDeletedReferenceIds, setBoardDeletedReferenceIds] = useStoredIdSet(REFERENCE_TRASH_STORAGE_KEY);
 
   useEffect(() => {
     setBoardView(initialView);
@@ -2908,25 +3230,33 @@ function BoardPage({
     }
   }, [boardView]);
 
-  useEffect(() => {
-    localStorage.setItem(NOTE_TRASH_STORAGE_KEY, JSON.stringify(Array.from(boardDeletedNoteIds)));
-  }, [boardDeletedNoteIds]);
-
-  useEffect(() => {
-    localStorage.setItem(REFERENCE_TRASH_STORAGE_KEY, JSON.stringify(Array.from(boardDeletedReferenceIds)));
-  }, [boardDeletedReferenceIds]);
 
   const boardItems = [
-    { id: "all" as const, label: "전체", desc: "노트와 레퍼런스 함께 보기", icon: LayoutGrid },
-    { id: "notes" as const, label: "노트", desc: "아이디어 / 작업 메모", icon: FileText },
-    { id: "references" as const, label: "레퍼런스", desc: "이미지 / 보드 / 자료", icon: ImageIcon },
+    { id: "all" as const, label: "전체", icon: LayoutGrid },
+    { id: "notes" as const, label: "노트", icon: FileText },
+    { id: "references" as const, label: "레퍼런스", icon: ImageIcon },
   ];
 
-  const liveNotes = NOTES.filter((note) => !boardDeletedNoteIds.has(note.id));
-  const liveReferences = ASSETS.filter((asset) =>
-    !boardDeletedReferenceIds.has(asset.id) &&
-    REFERENCE_BOARDS.some((board) => boardMatchesAsset(board, asset as any)),
+  const liveNotes = storedNotes.filter((note) => !boardDeletedNoteIds.has(note.id));
+  const liveReferences = [...new Map([...ASSETS, ...collectedReferences].map((asset) => [asset.id, asset])).values()]
+    .filter((asset) => !boardDeletedReferenceIds.has(asset.id));
+  const savedReferenceIds = new Set(liveReferences.map((asset) => asset.id));
+  const groupedNoteIds = new Set(
+    aiBoardPlan?.groups
+      .filter((group) => group.id !== "ungrouped")
+      .flatMap((group) => group.noteIds)
+      .filter((id) => liveNotes.some((note) => note.id === id)) ?? [],
   );
+  const groupedReferenceIds = new Set(
+    referenceAiGroups.flatMap((group) => group.assetIds)
+      .filter((id) => savedReferenceIds.has(id)),
+  );
+  const notesForAI = aiOrganizerScope === "all"
+    ? liveNotes
+    : liveNotes.filter((note) => !groupedNoteIds.has(note.id));
+  const referencesForAI = aiOrganizerScope === "all"
+    ? liveReferences
+    : liveReferences.filter((asset) => !groupedReferenceIds.has(asset.id));
   const activeBoardNote = activeBoardNoteId
     ? liveNotes.find((note) => note.id === activeBoardNoteId) || null
     : null;
@@ -2936,9 +3266,9 @@ function BoardPage({
     filter === "all" ? liveNotes.length : liveNotes.filter((note) => note.tags.includes(filter)).length;
   const referenceCountFor = (category: string) => {
     if (category === "all") return liveReferences.length;
-    if (category === "favorites") return favorites.length;
+    if (category === "favorites") return liveReferences.filter((asset) => favorites.includes(asset.id)).length;
     if (category === "recent") return Math.min(12, liveReferences.length);
-    const board = REFERENCE_BOARDS.find((item) => item.id === category);
+    const board = referenceBoards.find((item) => item.id === category);
     return board ? liveReferences.filter((asset) => boardMatchesAsset(board, asset as any)).length : 0;
   };
 
@@ -2960,11 +3290,11 @@ function BoardPage({
       key={label}
       onClick={onClick}
       className={`flex w-full items-center justify-between rounded-md px-4 py-3 text-[15px] font-medium transition ${
-        active ? "bg-[#171A20] text-white" : "text-text-tertiary hover:bg-[#121417] hover:text-white"
+        active ? "bg-[#171A20] text-white" : "text-text-secondary hover:bg-[#121417] hover:text-white"
       }`}
     >
       <span className="flex min-w-0 items-center gap-2.5">
-        {icon && <span className={active ? "text-brand-primary" : "text-text-tertiary"}>{icon}</span>}
+        {icon && <span className={active ? "text-brand-primary" : "text-text-secondary"}>{icon}</span>}
         <span className="truncate">{label}</span>
       </span>
       <span className={`ml-3 shrink-0 text-[14px] ${active ? "text-brand-primary" : "text-text-tertiary"}`}>
@@ -2973,16 +3303,43 @@ function BoardPage({
     </button>
   );
 
+  const openAIOrganizer = (target: AIOrganizerTarget) => {
+    setAiOrganizerTarget(target);
+    setAiOrganizerScope("ungrouped");
+    setAiOrganizerStep("options");
+  };
+
+  const contextualAIButton = (target: AIOrganizerTarget) => {
+    const isNotes = target === "notes";
+    return (
+      <button
+        type="button"
+        onClick={() => openAIOrganizer(target)}
+        className="flex w-full items-center gap-3 rounded-lg border border-brand-primary/30 bg-brand-primary/[0.06] px-3 py-3 text-left transition hover:border-brand-primary/50 hover:bg-brand-primary/[0.10]"
+      >
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-brand-primary text-[#050505]">
+          <Wand2 className="h-4 w-4" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-[13px] font-semibold text-white">AI 정리</span>
+          <span className="mt-0.5 block truncate text-[11px] text-text-tertiary">
+            {isNotes ? "내용을 분석해 노트 그룹 제안" : "이미지와 태그로 컬렉션 제안"}
+          </span>
+        </span>
+      </button>
+    );
+  };
+
   const renderNoteSubMenu = () => (
     <div className="ml-4 mt-3 space-y-4 pl-1">
       <div className="space-y-1.5">
         {submenuButton("전체 노트", liveNotes.length, boardNoteFilter === "all", () => setBoardNoteFilter("all"), <LayoutGrid className="h-4 w-4" />)}
         {submenuButton("즐겨찾기", liveNotes.filter((note) => note.starred).length, boardNoteFilter === "starred", () => setBoardNoteFilter("starred"), <Star className="h-4 w-4" />)}
         {submenuButton("최근 수정", liveNotes.length, false, () => setBoardNoteFilter("all"), <Clock className="h-4 w-4" />)}
-        {submenuButton("휴지통", 0, boardNoteFilter === "trash", () => setBoardNoteFilter("trash"), <Trash2 className="h-4 w-4" />)}
+        {submenuButton("휴지통", boardDeletedNoteIds.size, boardNoteFilter === "trash", () => setBoardNoteFilter("trash"), <Trash2 className="h-4 w-4" />)}
       </div>
       <div>
-        <p className="mb-2 px-4 text-[14px] font-medium uppercase tracking-[0.08em] text-text-tertiary">폴더</p>
+        <p className="mb-2 px-4 text-[14px] font-medium uppercase tracking-[0.08em] text-text-secondary">폴더</p>
         <div className="space-y-1.5">
           {noteFolders.map((folder) =>
             submenuButton(
@@ -2995,6 +3352,7 @@ function BoardPage({
           )}
         </div>
       </div>
+      {contextualAIButton("notes")}
     </div>
   );
 
@@ -3004,11 +3362,12 @@ function BoardPage({
         {submenuButton("전체", referenceCountFor("all"), boardReferenceCategory === "all", () => setBoardReferenceCategory("all"), <LayoutGrid className="h-4 w-4" />)}
         {submenuButton("즐겨찾기", referenceCountFor("favorites"), boardReferenceCategory === "favorites", () => setBoardReferenceCategory("favorites"), <Star className="h-4 w-4" />)}
         {submenuButton("최근 추가", referenceCountFor("recent"), boardReferenceCategory === "recent", () => setBoardReferenceCategory("recent"), <Clock className="h-4 w-4" />)}
+        {submenuButton("휴지통", boardDeletedReferenceIds.size, boardReferenceCategory === "trash", () => setBoardReferenceCategory("trash"), <Trash2 className="h-4 w-4" />)}
       </div>
       <div>
-        <p className="mb-2 px-4 text-[14px] font-medium uppercase tracking-[0.08em] text-text-tertiary">보드</p>
+        <p className="mb-2 px-4 text-[14px] font-medium uppercase tracking-[0.08em] text-text-secondary">보드</p>
         <div className="space-y-2">
-          {REFERENCE_BOARDS.map((board) => {
+          {referenceBoards.map((board) => {
             const active = boardReferenceCategory === board.id;
             return (
               <button
@@ -3035,6 +3394,7 @@ function BoardPage({
           })}
         </div>
       </div>
+      {contextualAIButton("references")}
     </div>
   );
 
@@ -3042,20 +3402,17 @@ function BoardPage({
     const Icon = item.icon;
     const active = boardView === item.id;
     return (
-      <div key={item.id} className="py-3 first:pt-0 last:pb-0">
+      <div key={item.id} className="py-2 first:pt-0 last:pb-0">
         <button
           onClick={() => setBoardView(item.id)}
-          className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3.5 text-left transition ${
+          className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition ${
             active
               ? "border-brand-primary/50 bg-brand-primary/10 text-white"
               : "border-transparent text-text-secondary hover:border-[#2A2E36] hover:bg-[#111317] hover:text-white"
           }`}
         >
-          <Icon className={`h-5 w-5 shrink-0 ${active ? "text-brand-primary" : "text-text-tertiary"}`} />
-          <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-medium">{item.label}</span>
-            <span className="mt-0.5 block truncate text-[14px] font-medium text-text-tertiary">{item.desc}</span>
-          </span>
+          <Icon className={`h-5 w-5 shrink-0 ${active ? "text-brand-primary" : "text-text-secondary"}`} />
+          <span className="min-w-0 flex-1 text-[15px] font-medium">{item.label}</span>
         </button>
         {item.id === "notes" && boardView === "notes" && renderNoteSubMenu()}
         {item.id === "references" && boardView === "references" && renderReferenceSubMenu()}
@@ -3067,12 +3424,66 @@ function BoardPage({
     setActiveBoardNoteId(noteId);
   };
 
+  const createManualNoteGroup = (name: string, noteIds: number[]) => {
+    if (noteIds.length < 2) return;
+    const selected = new Set(noteIds);
+    setAiBoardPlan((current) => {
+      const remainingGroups = (current?.groups ?? [])
+        .filter((group) => group.id !== "ungrouped")
+        .map((group) => ({
+          ...group,
+          noteIds: group.noteIds.filter((noteId) => !selected.has(noteId)),
+        }))
+        .filter((group) => group.noteIds.length > 0);
+      const manualIndex = remainingGroups.filter((group) => group.id.startsWith("manual-note-")).length + 1;
+      return {
+        groups: [
+          ...remainingGroups,
+          {
+            id: `manual-note-${Date.now()}`,
+            code: `M${Math.max(0, ...remainingGroups.map((group) => Number(group.code.replace(/\D/g, "")) || 0)) + 1}`,
+            title: name,
+            rationale: "사용자가 직접 선택해 만든 노트 그룹입니다.",
+            noteIds,
+          },
+        ],
+        relations: current?.relations ?? [],
+        duplicates: current?.duplicates ?? [],
+        recommendations: current?.recommendations ?? [],
+      };
+    });
+  };
+
+  const createManualReferenceGroup = (name: string, assetIds: number[]) => {
+    if (assetIds.length < 2) return;
+    const selected = new Set(assetIds);
+    setReferenceAiGroups((current) => {
+      const remainingGroups = current
+        .map((group) => ({
+          ...group,
+          assetIds: group.assetIds.filter((assetId) => !selected.has(assetId)),
+        }))
+        .filter((group) => group.assetIds.length > 0);
+      const manualIndex = Math.max(0, ...remainingGroups.map((group) => Number(group.code.replace(/\D/g, "")) || 0)) + 1;
+      return [
+        ...remainingGroups,
+        {
+          id: `manual-reference-${Date.now()}`,
+          code: `M${manualIndex}`,
+          title: name,
+          rationale: "사용자가 직접 선택해 만든 레퍼런스 그룹입니다.",
+          assetIds,
+        },
+      ];
+    });
+  };
+
   const renderOverviewNote = (note: (typeof NOTES)[number]) => (
     <button
       key={note.id}
       type="button"
       onClick={() => openBoardNoteDetail(note.id)}
-      className="group flex min-h-[240px] flex-col rounded-lg border border-[#242832] bg-[#121419] p-4 text-left transition hover:border-brand-primary/50 hover:bg-[#171A20]"
+      className="group flex min-h-[300px] min-w-0 flex-col overflow-hidden rounded-lg border border-[#242832] bg-[#121419] p-4 text-left transition hover:border-brand-primary/50 hover:bg-[#171A20]"
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -3083,7 +3494,7 @@ function BoardPage({
           {note.starred && <Star className="h-4 w-4 fill-brand-primary text-brand-primary" />}
         </div>
       </div>
-      <p className="line-clamp-3 text-[15px] leading-[1.6] text-text-secondary">{note.desc}</p>
+      <p className="line-clamp-2 text-[15px] leading-[1.6] text-text-secondary">{note.desc}</p>
       <div className="mt-3 flex flex-wrap gap-1.5">
         {note.tags.slice(0, 3).map((tag) => (
           <span key={tag} className="rounded-full border border-[#2A2E36] px-2 py-1 text-[14px] font-medium text-text-tertiary">
@@ -3093,7 +3504,13 @@ function BoardPage({
       </div>
       <div className="mt-auto grid grid-cols-3 gap-2 pt-4">
         {note.images.slice(0, 3).map((image) => (
-          <img key={image} src={image} alt="" className="aspect-square rounded object-cover" referrerPolicy="no-referrer" />
+          <img
+            key={image}
+            src={image}
+            alt=""
+            className="h-24 min-w-0 w-full rounded object-cover"
+            referrerPolicy="no-referrer"
+          />
         ))}
       </div>
     </button>
@@ -3102,10 +3519,10 @@ function BoardPage({
   const renderBoardNoteDetail = (note: (typeof NOTES)[number]) => (
     <article className="flex h-full min-h-0 flex-col bg-[#0A0B0D]">
       <header className="shrink-0 border-b border-[#1C1E24] px-6 py-5 sm:px-7">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-[14px] font-medium text-brand-primary">노트 보기</p>
-            <h2 className="mt-2 text-[30px] font-medium leading-tight text-white sm:text-[34px]">{note.title}</h2>
+            <h2 className="mt-2 text-[20px] font-semibold leading-[30px] text-white sm:text-[28px] sm:leading-[38px]">{note.title}</h2>
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[14px] font-medium text-text-tertiary">
               <span>{note.date}</span>
               <span className="h-1 w-1 rounded-full bg-[#4A4F5A]" />
@@ -3126,7 +3543,7 @@ function BoardPage({
               type="button"
               title="닫기"
               onClick={() => setActiveBoardNoteId(null)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#2A2E36] text-text-secondary transition hover:border-brand-primary/45 hover:text-white"
+              className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#2A2E36] text-text-secondary transition hover:border-brand-primary/45 hover:text-white sm:h-9 sm:w-9"
             >
               <X className="h-4 w-4" />
             </button>
@@ -3144,9 +3561,12 @@ function BoardPage({
               id={`board-note-memo-${note.id}`}
               key={note.id}
               defaultValue={note.desc}
+              readOnly
+              aria-describedby={`board-note-readonly-${note.id}`}
               placeholder="아이디어나 참고할 내용을 메모하세요."
               className="min-h-[260px] w-full resize-y rounded-xl border border-[#252A33] bg-[#101216] px-5 py-4 text-[17px] leading-[1.75] text-text-primary outline-none transition placeholder:text-text-tertiary focus:border-brand-primary/55 focus:bg-[#12161D]"
             />
+            <p id={`board-note-readonly-${note.id}`} className="text-[12px] leading-[18px] text-text-secondary">읽기 전용 미리보기입니다. 내용을 수정하려면 ‘노트 편집’을 선택하세요.</p>
           </section>
 
           <section className="flex flex-wrap items-center gap-2">
@@ -3184,111 +3604,249 @@ function BoardPage({
     if (!activeBoardNote) return null;
 
     return (
-      <div
-        className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 px-4 py-5 backdrop-blur-sm"
+      <ModalLayer
+        onClose={() => setActiveBoardNoteId(null)}
+        aria-label={`${activeBoardNote.title} 노트 보기`}
+        className="fixed inset-0 z-[270] flex items-center justify-center bg-black/55 px-4 py-5 backdrop-blur-sm"
         onClick={() => setActiveBoardNoteId(null)}
       >
         <div
-          className="h-[min(780px,calc(100vh-48px))] w-full max-w-[960px] overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] shadow-2xl"
+          className="h-[min(780px,calc(100dvh-32px))] w-full max-w-[960px] overflow-hidden rounded-xl border border-[#252A33] bg-[#08090B] shadow-2xl sm:h-[min(780px,calc(100dvh-48px))]"
           onClick={(event) => event.stopPropagation()}
         >
           {renderBoardNoteDetail(activeBoardNote)}
         </div>
-      </div>
+      </ModalLayer>
     );
   };
 
-  const renderOverviewReference = (asset: (typeof ASSETS)[number]) => (
-    <div
-      key={asset.id}
-      className="group h-[260px] overflow-hidden rounded-lg border border-[#242832] bg-[#080A0E] transition hover:border-brand-primary/50"
-    >
-      <img
-        src={asset.image}
-        alt={asset.title}
-        className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-        referrerPolicy="no-referrer"
-      />
-    </div>
-  );
+  const renderReferenceCollectionRail = () => {
+    const priorityByGroup: Record<string, string[]> = {
+      A: ["character", "armor", "weapon", "orc", "environment"],
+      B: ["environment", "character", "armor", "orc", "weapon"],
+      C: ["weapon", "environment", "armor", "character", "orc"],
+    };
+    const priority = focusedAiGroupCode
+      ? priorityByGroup[focusedAiGroupCode] ?? REFERENCE_BOARDS.map((board) => board.id)
+      : REFERENCE_BOARDS.map((board) => board.id);
+    const orderedBoards = [...referenceBoards].sort(
+      (first, second) => priority.indexOf(first.id) - priority.indexOf(second.id),
+    );
 
-  return (
-    <>
-      <main className="flex h-[calc(100vh-76px)] overflow-hidden bg-bg-dark text-text-primary">
-      <aside className="hidden w-[300px] shrink-0 border-r border-[#1C1E24] bg-[#0B0D10] p-5 lg:flex lg:flex-col">
-        <div className="mb-6">
-          <p className="text-[14px] font-medium uppercase tracking-[0.18em] text-brand-primary">Board</p>
-          <h1 className="mt-2 text-[24px] font-bold text-white">작업 보드</h1>
-          <p className="mt-2 text-[15px] font-medium leading-[1.6] text-text-tertiary">
-            노트와 레퍼런스를 같은 공간에서 정리합니다.
-          </p>
+    return (
+      <aside className="flex min-h-[420px] min-w-0 flex-col overflow-hidden rounded-xl border border-[#20232A] bg-[#0D0F12] xl:min-h-0">
+        <div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-[#242832] px-4 sm:h-16">
+          <div className="flex min-w-0 items-center gap-2">
+            <h2 className="truncate text-[16px] font-semibold text-white">레퍼런스</h2>
+            {focusedAiGroupCode && (
+              <span className="shrink-0 rounded-full bg-brand-primary/10 px-2 py-0.5 text-[10px] font-semibold text-brand-primary">
+                PROJECT {focusedAiGroupCode} 연관
+              </span>
+            )}
+          </div>
+          <span className="shrink-0 text-[12px] font-medium text-text-tertiary">
+              {liveReferences.length}개
+          </span>
         </div>
-        <div className="divide-y divide-[#1C1E24]">{boardItems.map(sidebarButton)}</div>
-        <div className="mt-auto rounded-lg border border-dashed border-[#2A2E36] p-4">
-          <p className="text-[14px] font-medium text-white">연결맵</p>
-          <p className="mt-1 text-[15px] leading-[1.6] text-text-tertiary">
-            노트와 레퍼런스의 직접 연결, AI 추천 연결은 다음 단계에서 붙일 수 있어요.
+
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3 custom-scrollbar">
+          {orderedBoards.map((board, index) => {
+            const isAiRelated = Boolean(focusedAiGroupCode && index < 2);
+            return (
+              <button
+                key={board.id}
+                type="button"
+                onClick={() => {
+                  setBoardReferenceCategory(board.id);
+                  setBoardView("references");
+                }}
+                className={`group flex w-full items-center gap-3 rounded-lg border p-2.5 text-left transition ${
+                  isAiRelated
+                    ? "border-brand-primary/30 bg-brand-primary/[0.05]"
+                    : "border-[#252932] bg-[#101216] hover:border-brand-primary/35"
+                }`}
+              >
+                <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-md bg-[#08090B]">
+                  <img
+                    src={board.image}
+                    alt=""
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]"
+                    referrerPolicy="no-referrer"
+                  />
+                  {isAiRelated && (
+                    <span className="absolute left-1.5 top-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[9px] font-semibold text-brand-primary">
+                      AI 연관
+                    </span>
+                  )}
+                </div>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] font-medium text-white">{board.label}</span>
+                  <span className="mt-1 block text-[11px] text-text-tertiary">
+                    {referenceCountFor(board.id)}개 · 컬렉션
+                  </span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-text-tertiary transition group-hover:translate-x-0.5 group-hover:text-brand-primary" />
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="shrink-0 border-t border-[#242832] px-4 py-3">
+          <p className="text-[11px] leading-5 text-text-tertiary">
+            노트에 추가된 이미지는 노트 안에서만 표시해 중복을 줄였습니다.
           </p>
         </div>
       </aside>
+    );
+  };
 
-      <section className="min-w-0 flex-1 overflow-hidden p-4 lg:p-5">
+  return (
+    <>
+      <main className="flex h-[calc(100dvh-60px)] overflow-hidden bg-bg-dark text-text-primary lg:h-[calc(100dvh-76px)]">
+      <aside className="np-primary-sidebar-surface hidden w-[300px] shrink-0 overflow-hidden border-r border-[#1C1E24] bg-[#0B0D10] p-5 lg:flex lg:flex-col">
+        <div className="mb-6 shrink-0">
+          <p className="text-[14px] font-medium uppercase tracking-[0.18em] text-brand-primary">Board</p>
+          <h1 className="np-primary-sidebar-title mt-2 text-white">작업 보드</h1>
+        </div>
+        <nav
+          aria-label="보드 메뉴"
+          className="-mr-2 min-h-0 flex-1 overflow-y-auto pr-2 custom-scrollbar"
+        >
+          <div className="divide-y divide-[#1C1E24]">{boardItems.map(sidebarButton)}</div>
+        </nav>
+      </aside>
+
+      <section className="relative min-w-0 flex-1 overflow-hidden p-4 lg:p-5">
+        {(canUndoNotes || canUndoReferences) && (
+          <div className="absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-2 rounded-lg border border-border-primary bg-surface-primary p-2 shadow-sm" role="status">
+            {canUndoNotes && <button onClick={undoNotes} className="min-h-10 whitespace-nowrap px-3 text-[13px] text-text-secondary hover:text-text-primary">노트 정리 되돌리기</button>}
+            {canUndoReferences && <button onClick={undoReferences} className="min-h-10 whitespace-nowrap px-3 text-[13px] text-text-secondary hover:text-text-primary">레퍼런스 정리 되돌리기</button>}
+          </div>
+        )}
         <div className="mb-4 flex gap-2 lg:hidden">
-          {boardItems.map((item) => (
+          <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto scrollbar-hide">
+            {boardItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setBoardView(item.id)}
+                className={`min-w-[72px] flex-1 rounded-lg border px-3 py-2 text-[14px] font-medium ${
+                  boardView === item.id
+                    ? "border-brand-primary bg-brand-primary text-bg-dark"
+                    : "border-[#2A2E36] bg-[#111317] text-text-secondary"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          {boardView !== "all" && (
             <button
-              key={item.id}
-              onClick={() => setBoardView(item.id)}
-              className={`flex-1 rounded-lg border px-3 py-2 text-[14px] font-medium ${
-                boardView === item.id
-                  ? "border-brand-primary bg-brand-primary text-bg-dark"
-                  : "border-[#2A2E36] bg-[#111317] text-text-secondary"
-              }`}
+              type="button"
+              onClick={() => openAIOrganizer(boardView)}
+              className="np-light-brand-action flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-brand-primary/40 bg-brand-primary/10 px-3 text-[13px] font-semibold text-brand-primary"
             >
-              {item.label}
+              <Sparkles className="h-4 w-4" />
+              AI 정리
             </button>
-          ))}
+          )}
         </div>
 
         {boardView === "all" ? (
-          <div className="grid h-full min-h-0 grid-cols-1 gap-4 xl:grid-cols-2">
-            <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-[#1C1E24] bg-bg-dark">
-              <div className="flex shrink-0 items-center justify-between border-b border-[#1C1E24] px-5 py-4">
-                <div>
-                  <p className="text-[14px] font-medium uppercase tracking-[0.12em] text-brand-primary">Notes</p>
-                  <h2 className="mt-1 text-[24px] font-bold text-white">노트</h2>
-                </div>
-                <span className="text-[14px] font-medium text-text-tertiary">{liveNotes.length}개</span>
+          aiBoardPlan ? (
+            <div className="grid h-[calc(100%_-_60px)] min-h-0 grid-cols-1 gap-4 overflow-y-auto lg:h-full xl:grid-cols-[minmax(0,3fr)_minmax(280px,1fr)] xl:overflow-hidden">
+              <div className="min-h-[620px] min-w-0 xl:min-h-0">
+                <AIOrganizedBoard
+                  plan={aiBoardPlan}
+                  notes={liveNotes}
+                  onOpenNote={openBoardNoteDetail}
+                  onRefine={() => openAIOrganizer("notes")}
+                  onReset={() => {
+                    setAiBoardPlan(null);
+                    setFocusedAiGroupCode(null);
+                  }}
+                  onDissolveGroup={(groupId) => {
+                    setFocusedAiGroupCode(null);
+                    setAiBoardPlan((current) => {
+                      if (!current) return current;
+                      const targetGroup = current.groups.find((group) => group.id === groupId);
+                      if (!targetGroup) return current;
+                      const existingUngrouped = current.groups.find((group) => group.id === "ungrouped");
+                      const ungroupedNoteIds = Array.from(
+                        new Set([...(existingUngrouped?.noteIds ?? []), ...targetGroup.noteIds]),
+                      );
+                      return {
+                        ...current,
+                        groups: [
+                          ...current.groups.filter(
+                            (group) => group.id !== groupId && group.id !== "ungrouped",
+                          ),
+                          {
+                            id: "ungrouped",
+                            code: "U",
+                            title: "그룹 없음",
+                            rationale: "그룹에서 해제한 노트입니다. 연결 관계와 레퍼런스는 그대로 유지됩니다.",
+                            noteIds: ungroupedNoteIds,
+                          },
+                        ],
+                      };
+                    });
+                  }}
+                  onDisconnectRelation={(relationId) => {
+                    setAiBoardPlan((current) =>
+                      current
+                        ? {
+                            ...current,
+                            relations: current.relations.filter(
+                              (relation) => relation.id !== relationId,
+                            ),
+                          }
+                        : current,
+                    );
+                  }}
+                  focusedGroupCode={focusedAiGroupCode}
+                  onFocusedGroupChange={setFocusedAiGroupCode}
+                />
               </div>
-              <div className="grid min-h-0 flex-1 content-start grid-cols-1 gap-3 overflow-y-auto p-4 pb-8 md:grid-cols-3">
+              {renderReferenceCollectionRail()}
+            </div>
+          ) : (
+          <div className="grid h-[calc(100%_-_60px)] min-h-0 grid-cols-1 gap-4 overflow-y-auto lg:h-full xl:grid-cols-[minmax(0,3fr)_minmax(280px,1fr)] xl:overflow-hidden">
+            <div className="flex min-h-[560px] min-w-0 flex-col overflow-hidden rounded-xl border border-[#20232A] bg-[#090A0C] xl:min-h-0">
+              <div className="flex h-14 shrink-0 items-center justify-between border-b border-[#1C1E24] px-4 sm:h-16 sm:px-5">
+                <h2 className="text-[16px] font-semibold text-white">노트</h2>
+                <span className="text-[12px] font-medium text-text-tertiary">{liveNotes.length}개</span>
+              </div>
+              <div className="grid min-h-0 flex-1 content-start grid-cols-1 gap-3 overflow-y-auto p-4 pb-8 sm:grid-cols-2 2xl:grid-cols-3">
                 {liveNotes.map(renderOverviewNote)}
               </div>
             </div>
-
-            <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-[#1C1E24] bg-bg-dark">
-              <div className="flex shrink-0 items-center justify-between border-b border-[#1C1E24] px-5 py-4">
-                <div>
-                  <p className="text-[14px] font-medium uppercase tracking-[0.12em] text-brand-primary">References</p>
-                  <h2 className="mt-1 text-[24px] font-bold text-white">레퍼런스</h2>
-                </div>
-                <span className="text-[14px] font-medium text-text-tertiary">{liveReferences.length}개</span>
-              </div>
-              <div className="grid min-h-0 flex-1 content-start grid-cols-1 gap-3 overflow-y-auto p-4 pb-8 md:grid-cols-3">
-                {liveReferences.map(renderOverviewReference)}
-              </div>
-            </div>
+            {renderReferenceCollectionRail()}
           </div>
+          )
         ) : boardView === "notes" ? (
           <NotesPage
             onNavigate={onNavigate}
             isPopup
             hideSidebar
             hideDetailPanel
-            hideSelectionActionBar
+            showMobileFilters
             onOpenNote={openBoardNoteDetail}
             onCreateNote={() => onEditNote(null)}
             boardFilter={boardNoteFilter}
             initialTrashIds={boardDeletedNoteIds}
             onTrashChange={setBoardDeletedNoteIds}
+            aiGroups={aiBoardPlan?.groups.filter((group) => group.id !== "ungrouped") ?? []}
+            onDissolveAIGroup={(groupId) => {
+              setAiBoardPlan((current) =>
+                current
+                  ? {
+                      ...current,
+                      groups: current.groups.filter((group) => group.id !== groupId),
+                    }
+                  : current,
+              );
+            }}
+            onCreateManualGroup={createManualNoteGroup}
           />
         ) : (
           <ReferencePage
@@ -3298,14 +3856,228 @@ function BoardPage({
             isPopup
             hideSidebar
             boardCategory={boardReferenceCategory}
+            showMobileFilters
             initialTrashIds={boardDeletedReferenceIds}
             onTrashChange={setBoardDeletedReferenceIds}
+            aiGroups={referenceAiGroups}
+            onDissolveAIGroup={(groupId) =>
+              setReferenceAiGroups((current) => current.filter((group) => group.id !== groupId))
+            }
+            onCreateManualGroup={createManualReferenceGroup}
           />
         )}
       </section>
       </main>
       {renderBoardNoteModal()}
+      {aiOrganizerTarget && aiOrganizerStep === "options" && (
+        <AIOrganizeOptionsDialog
+          target={aiOrganizerTarget}
+          totalCount={aiOrganizerTarget === "notes" ? liveNotes.length : liveReferences.length}
+          groupedCount={aiOrganizerTarget === "notes" ? groupedNoteIds.size : groupedReferenceIds.size}
+          onClose={() => setAiOrganizerTarget(null)}
+          onStart={(scope) => {
+            setAiOrganizerScope(scope);
+            setAiOrganizerStep("review");
+          }}
+        />
+      )}
+      {aiOrganizerTarget === "notes" && aiOrganizerStep === "review" && (
+        <AIBoardOrganizer
+          notes={notesForAI}
+          references={ASSETS}
+          savedReferenceIds={savedReferenceIds}
+          onClose={() => setAiOrganizerTarget(null)}
+          onApply={(plan) => {
+            setAiBoardPlan((current) => mergeBoardPlans(current, plan, aiOrganizerScope === "all"));
+            setFocusedAiGroupCode(null);
+            setBoardView("notes");
+            setAiOrganizerTarget(null);
+          }}
+        />
+      )}
+      {aiOrganizerTarget === "references" && aiOrganizerStep === "review" && (
+        <AIReferenceOrganizer
+          assets={referencesForAI}
+          onClose={() => setAiOrganizerTarget(null)}
+          onApply={(groups) => {
+            setReferenceAiGroups((current) => {
+              if (aiOrganizerScope === "all") return groups;
+              const offset = current.length;
+              return [
+                ...current,
+                ...groups.map((group, index) => ({
+                  ...group,
+                  id: `reference-ai-${crypto.randomUUID()}`,
+                  code: `R${Math.max(0, ...current.map((item) => Number(item.code.replace(/\D/g, "")) || 0)) + index + 1}`,
+                })),
+              ];
+            });
+            setBoardView("references");
+            setAiOrganizerTarget(null);
+          }}
+        />
+      )}
     </>
+  );
+}
+
+function CreatorInquiryDialog({
+  artworkTitle,
+  creatorName,
+  allowedTypes,
+  onClose,
+}: {
+  artworkTitle: string;
+  creatorName: string;
+  allowedTypes: CreatorInquiryType[];
+  onClose: () => void;
+}) {
+  const [draft, setDraft] = useStoredState<{ type: CreatorInquiryType | null; message: string }>(`neopoly_inquiry_draft_v1:${artworkTitle}`, { type: null, message: '' });
+  const selectedType = draft.type;
+  const message = draft.message;
+  const setSelectedType = (type: CreatorInquiryType) => setDraft((previous) => ({ ...previous, type }));
+  const setMessage = (message: string) => setDraft((previous) => ({ ...previous, message }));
+  const [isSent, setIsSent] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const availableOptions = CREATOR_INQUIRY_OPTIONS.filter((option) => allowedTypes.includes(option.id));
+  const canSubmit = selectedType !== null && allowedTypes.includes(selectedType) && message.trim().length > 0;
+
+
+  return (
+    <ModalLayer onClose={onClose} aria-labelledby="creator-inquiry-title" aria-describedby="creator-inquiry-description"
+      className="fixed inset-0 z-[300] flex items-end justify-center bg-black/60 backdrop-blur-sm md:items-center md:px-4 md:py-6"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <motion.section
+        initial={{ opacity: 0, y: 28, scale: 0.99 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 28, scale: 0.99 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+        className="np-creator-inquiry-dialog safe-area-bottom max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl border border-border-primary bg-[#101215] p-5 shadow-[0_-16px_48px_rgba(0,0,0,0.48)] md:max-w-[520px] md:rounded-xl md:p-6 md:shadow-[0_24px_70px_rgba(0,0,0,0.7)]"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        {isSent ? (
+          <div className="py-5 text-center md:py-7">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-brand-primary/30 bg-brand-primary/10 text-brand-primary">
+              <Check className="h-7 w-7" aria-hidden="true" />
+            </div>
+            <h2 id="creator-inquiry-title" className="mt-5 text-[20px] font-semibold leading-[30px] text-white">
+              문의 초안을 저장했습니다
+            </h2>
+            <p id="creator-inquiry-description" className="mt-2 text-[14px] leading-6 text-text-secondary">
+              현재는 기기 내 저장만 지원합니다. 제작자에게 전송되지 않았으며, 다시 열어 내용을 확인할 수 있습니다.
+            </p>
+            <button
+              ref={closeButtonRef}
+              type="button"
+              onClick={onClose}
+              className="np-primary-action mt-6 min-h-11 w-full rounded-md bg-brand-primary px-4 py-2.5 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover"
+            >
+              확인
+            </button>
+          </div>
+        ) : (
+          <>
+            <header className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[12px] font-medium leading-[18px] text-brand-primary">CREATOR CONTACT</p>
+                <h2 id="creator-inquiry-title" className="mt-1 text-[20px] font-semibold leading-[30px] text-white">
+                  제작자에게 문의하기
+                </h2>
+                <p id="creator-inquiry-description" className="mt-1 text-[14px] leading-6 text-text-secondary">
+                  <span className="font-medium text-white">{artworkTitle}</span>에 관해 {creatorName} 님에게 보낼 문의 초안을 작성합니다.
+                </p>
+              </div>
+              <button
+                ref={closeButtonRef}
+                type="button"
+                onClick={onClose}
+                className="np-creator-inquiry-close shrink-0 rounded-md p-2 text-text-tertiary transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+                aria-label="문의 모달 닫기"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </header>
+
+            <form
+              className="mt-6"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!canSubmit) return;
+                const entries = readJSON<any[]>('neopoly_inquiries_v1', []);
+                if (writeJSON('neopoly_inquiries_v1', [{ id: crypto.randomUUID(), artworkTitle, creatorName, type: selectedType, message: message.trim(), status: 'draft', createdAt: new Date().toISOString() }, ...entries.filter((item) => item.artworkTitle !== artworkTitle)])) setIsSent(true);
+              }}
+            >
+              <fieldset>
+                <legend className="text-[14px] font-medium text-white">문의 유형</legend>
+                <p className="mt-1 text-[12px] leading-[18px] text-text-tertiary">
+                  제작자별 문의 유형 시연입니다. 실제 계정 설정 연동은 준비 중입니다.
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  {availableOptions.map((option) => {
+                    const Icon = option.icon;
+                    const isSelected = selectedType === option.id;
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() => setSelectedType(option.id)}
+                        className={`np-creator-inquiry-option min-h-[88px] rounded-lg border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                          isSelected
+                            ? 'border-brand-primary bg-brand-primary/10'
+                            : 'border-border-primary bg-surface-primary/60 hover:border-brand-primary/45 hover:bg-white/[0.04]'
+                        }`}
+                      >
+                        <Icon className={`h-4 w-4 ${isSelected ? 'text-brand-primary' : 'text-text-secondary'}`} aria-hidden="true" />
+                        <span className="mt-2 block text-[14px] font-medium text-white">{option.label}</span>
+                        <span className="mt-0.5 block text-[12px] leading-[18px] text-text-tertiary">{option.description}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+
+              <label htmlFor="creator-inquiry-message" className="mt-5 block text-[14px] font-medium text-white">
+                문의 내용
+              </label>
+              <textarea
+                id="creator-inquiry-message"
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                rows={5}
+                maxLength={1000}
+                placeholder="제안 내용, 일정, 예산 등 제작자가 확인해야 할 내용을 작성해 주세요."
+                className="np-creator-inquiry-textarea mt-2 w-full resize-none rounded-lg border border-border-primary bg-[#0A0B0D] px-3.5 py-3 text-[14px] leading-6 text-white outline-none transition placeholder:text-text-tertiary focus:border-brand-primary"
+              />
+              <div className="mt-1 flex items-center justify-between gap-3 text-[12px] leading-[18px] text-text-tertiary">
+                <span>MVP · 실제 전송 없이 이 기기에 저장합니다.</span>
+                <span className="shrink-0">{message.length}/1000</span>
+              </div>
+
+              <div className="mt-6 grid grid-cols-[0.8fr_1.2fr] gap-2.5">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="np-creator-inquiry-cancel min-h-11 rounded-md border border-border-primary px-4 py-2.5 text-[14px] font-medium text-text-secondary transition hover:bg-white/5 hover:text-white"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={!canSubmit}
+                  className="np-primary-action min-h-11 rounded-md bg-brand-primary px-4 py-2.5 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  초안 저장
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+      </motion.section>
+    </ModalLayer>
   );
 }
 
@@ -3313,18 +4085,41 @@ function ProductPurchasePanel({
   asset,
   product,
   displayTitle,
+  onNavigateHome,
   onViewPurchases,
+  onCollapseInfoPanel,
 }: {
   asset: any;
   product: typeof PRODUCT_DETAIL_DATA[number];
   displayTitle: string;
+  onNavigateHome: () => void;
   onViewPurchases?: () => void;
+  onCollapseInfoPanel?: () => void;
 }) {
   const purchaseItem = createPurchaseItem(asset, product, displayTitle);
+  const isArt = product.category === 'Art';
   const [checkoutItems, setCheckoutItems] = useState<PrototypePurchaseItem[] | null>(null);
   const [completeItems, setCompleteItems] = useState<PrototypePurchaseItem[] | null>(null);
   const [isInCart, setIsInCart] = useState(() => safeReadPurchaseItems(PURCHASE_CART_KEY).some((item) => item.id === asset.id));
   const [isPurchased, setIsPurchased] = useState(() => safeReadPurchaseItems(PURCHASED_ASSETS_KEY).some((item) => item.id === asset.id));
+  const [isCreatorInquiryOpen, setIsCreatorInquiryOpen] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useStoredState<number[]>("neopoly_favorites_v1", []);
+  const [followingAuthors, setFollowingAuthors] = useStoredState<string[]>("neopoly_following_authors_v1", []);
+  const [actionMessage, setActionMessage] = useState("");
+  const isFavorite = favoriteIds.includes(asset.id);
+  const isFollowing = followingAuthors.includes(asset.author);
+  const toggleSavedFavorite = () => setFavoriteIds((ids) => ids.includes(asset.id) ? ids.filter((id) => id !== asset.id) : [...ids, asset.id]);
+  const toggleFollow = () => {
+    if (setFollowingAuthors((authors) => authors.includes(asset.author) ? authors.filter((author) => author !== asset.author) : [...authors, asset.author])) {
+      setActionMessage(isFollowing ? "팔로잉을 해제했습니다." : "이 기기의 팔로잉 목록에 추가했습니다.");
+    }
+  };
+  const shareArtwork = async () => {
+    try {
+      await navigator.clipboard.writeText(new URL(`#product_detail/${asset.id}`, window.location.href).href);
+      setActionMessage("작품 링크를 복사했습니다.");
+    } catch { setActionMessage("복사 권한이 없습니다. 주소창의 작품 주소를 복사해 주세요."); }
+  };
 
   useEffect(() => {
     const syncState = () => {
@@ -3378,16 +4173,47 @@ function ProductPurchasePanel({
   return (
     <>
       <div className="px-1">
-        <span className="mb-1 block text-[14px] font-medium text-brand-primary">{product.category}</span>
+        <span
+          className={`mb-1 block text-[14px] font-medium lg:hidden ${
+            isArt ? 'np-product-category-art' : 'np-product-category-market'
+          }`}
+        >
+          {product.category}
+        </span>
+        <nav aria-label="상품 상세 경로" className="mb-1 hidden min-w-0 items-center gap-1.5 text-[14px] font-medium lg:flex">
+          <button
+            type="button"
+            onClick={onNavigateHome}
+            className="shrink-0 rounded-md text-text-secondary transition hover:text-brand-primary"
+          >
+            Discover
+          </button>
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-text-tertiary/60" aria-hidden="true" />
+          <span className={`truncate ${isArt ? 'np-product-category-art' : 'np-product-category-market'}`}>
+            {product.category}
+          </span>
+        </nav>
         <h1 className="text-[24px] font-bold text-white">{displayTitle}</h1>
       </div>
 
-      <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-4">
-        <p className="mb-4 text-[14px] font-medium text-white">Artist</p>
+      <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-4">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <p className="text-[14px] font-medium text-white">Artist</p>
+          <button
+            type="button"
+            onClick={onCollapseInfoPanel}
+            className="np-product-panel-ghost hidden min-h-8 items-center gap-0.5 rounded-md px-2 text-[12px] font-medium text-text-secondary transition hover:bg-white/5 hover:text-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary lg:inline-flex"
+            aria-label="상세 패널 접기"
+            aria-expanded="true"
+          >
+            접기
+            <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </div>
         <div className="flex items-center gap-3">
           <img src={PROFILE_IMAGE} alt="" className="h-10 w-10 rounded-full bg-white object-cover" />
           <div>
-            <p className="text-[14px] font-medium text-white">Kim ji hwan</p>
+            <p className="text-[14px] font-medium text-white">{asset.author}</p>
             <p className="text-[14px] text-text-tertiary">3D Character Artist</p>
           </div>
         </div>
@@ -3397,51 +4223,89 @@ function ProductPurchasePanel({
           <span>{'\uD314\uB85C\uC6CC'}</span>
           <span className="text-right text-text-secondary">0.3K</span>
         </div>
-        <button className="mt-4 w-full rounded-md bg-[#3A3A3A] py-2.5 text-[14px] font-medium text-white transition hover:bg-[#4A4A4A]">
-          {'\uD314\uB85C\uC6B0'}
+        <button onClick={toggleFollow} aria-pressed={isFollowing} className="np-product-secondary-action mt-4 min-h-11 w-full rounded-md bg-[#3A3A3A] py-2.5 text-[14px] font-medium text-white transition hover:bg-[#4A4A4A]">
+          {isFollowing ? '팔로잉' : '팔로우'}
         </button>
       </div>
 
-      <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-4">
-        <div className="mb-4 flex items-end gap-3">
-          <span className="text-[24px] font-bold text-brand-primary">{product.price}</span>
-          {product.originalPrice && <span className="pb-1 text-[14px] text-text-tertiary line-through">{product.originalPrice}</span>}
-        </div>
-        <button
-          onClick={() => {
-            if (isPurchased) {
-              onViewPurchases?.();
-              return;
-            }
-            setCheckoutItems([purchaseItem]);
-          }}
-          className="mb-2 w-full rounded-md bg-brand-primary py-3 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover"
-        >
-          {isPurchased ? '\uAD6C\uB9E4\uD55C \uC791\uC5C5\uBB3C \uBCF4\uAE30' : '\uAD6C\uB9E4\uD558\uAE30'}
-        </button>
-        <button
-          onClick={handleAddToCart}
-          disabled={isInCart}
-          className={`mb-3 w-full rounded-md py-3 text-[14px] font-medium transition ${
-            isInCart
-              ? 'cursor-default bg-[#262A31] text-brand-primary'
-              : 'bg-[#333] text-white hover:bg-[#444]'
-          }`}
-        >
-          {isInCart ? '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uB2F4\uAE40' : '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uCD94\uAC00'}
-        </button>
-        <div className="grid grid-cols-2 gap-2">
-          <button className="flex items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
-            <Heart className="h-4 w-4 text-brand-primary" />
-            568
+      {isArt ? (
+        <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-4">
+          <p className="np-product-category-art text-[16px] font-semibold">Art 작품</p>
+          <p className="mt-2 text-[14px] leading-6 text-text-secondary">
+            판매 상품이 아닌 감상용으로 공개된 작품입니다.
+          </p>
+          <button
+            type="button"
+            onClick={() => setIsCreatorInquiryOpen(true)}
+            className="np-product-art-contact-action mt-4 w-full rounded-md bg-[#4C88D9] py-3 text-[14px] font-medium text-white transition hover:bg-[#5A96E6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A0C5FF]"
+          >
+            문의하기
           </button>
-          <button className="flex items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
-            <ShoppingBag className="h-4 w-4" />
-            {'\uACF5\uC720'}
-          </button>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <button onClick={toggleSavedFavorite} aria-pressed={isFavorite} className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+              <Heart className={`h-4 w-4 np-product-category-art ${isFavorite ? 'fill-current' : ''}`} />
+              {isFavorite ? '찜 해제' : '찜하기'}
+            </button>
+            <button onClick={shareArtwork} className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+              <Share2 className="h-4 w-4" />
+              {'\uACF5\uC720'}
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-4">
+          <div className="mb-4 flex items-end gap-3">
+            <span className="np-price-text text-[24px] font-bold text-brand-primary">{product.price}</span>
+            {product.originalPrice && <span className="pb-1 text-[14px] text-text-tertiary line-through">{product.originalPrice}</span>}
+          </div>
+          <button
+            disabled={product.isPreview}
+            onClick={() => {
+              if (isPurchased) {
+                onViewPurchases?.();
+                return;
+              }
+              setCheckoutItems([purchaseItem]);
+            }}
+            className="np-primary-action mb-2 w-full rounded-md bg-brand-primary py-3 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover"
+          >
+            {product.isPreview ? '판매 준비 중' : isPurchased ? '구매한 작업물 보기' : '구매하기 · 시연'}
+          </button>
+          <button
+            onClick={handleAddToCart}
+            disabled={isInCart || product.isPreview}
+            className={`np-product-cart-action mb-3 w-full rounded-md py-3 text-[14px] font-medium transition ${
+              isInCart
+                ? 'np-product-cart-action-active cursor-default bg-[#262A31] text-brand-primary'
+                : 'bg-[#333] text-white hover:bg-[#444]'
+            }`}
+          >
+            {isInCart ? '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uB2F4\uAE40' : '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uCD94\uAC00'}
+          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={toggleSavedFavorite} aria-pressed={isFavorite} className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+              <Heart className={`h-4 w-4 text-brand-primary ${isFavorite ? 'fill-current' : ''}`} />
+              {isFavorite ? '찜 해제' : '찜하기'}
+            </button>
+            <button onClick={shareArtwork} className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+              <Share2 className="h-4 w-4" />
+              {'\uACF5\uC720'}
+            </button>
+          </div>
+        </div>
+      )}
 
+      <p aria-live="polite" className="text-[12px] leading-[18px] text-text-secondary">{actionMessage || 'MVP · 찜·팔로잉은 이 기기에 저장되며 작가 통계는 샘플입니다.'}</p>
+      <AnimatePresence>
+        {isCreatorInquiryOpen && (
+          <CreatorInquiryDialog
+            artworkTitle={displayTitle}
+            creatorName={asset.author}
+            allowedTypes={product.allowedInquiryTypes ?? ['other']}
+            onClose={() => setIsCreatorInquiryOpen(false)}
+          />
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {checkoutItems && (
           <CheckoutDialog
@@ -3469,8 +4333,8 @@ function ProductPurchasePanel({
 
 function ProductLicensePanel() {
   return (
-    <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-5">
-      <h2 className="mb-4 text-[15px] font-medium text-white">라이센스</h2>
+    <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-5">
+      <h2 className="mb-4 text-[15px] font-medium text-white">라이선스</h2>
       {['상업적 사용 가능', '무제한 다운로드', 'AI 변환 가능'].map((item) => (
         <div key={item} className="mb-4 last:mb-0">
           <p className="text-[14px] font-medium text-white">{item}</p>
@@ -3481,13 +4345,13 @@ function ProductLicensePanel() {
   );
 }
 
-function ProductStatsPanel({ stats }: { stats: [string, string, string] }) {
+function ProductStatsPanel({ stats, isArt = false }: { stats: [string, string, string]; isArt?: boolean }) {
   return (
-    <div className="grid grid-cols-3 rounded-lg border border-[#1F2329] bg-[#141518] p-5 text-center">
+    <div className="np-product-panel grid grid-cols-3 rounded-lg border border-[#1F2329] bg-[#141518] p-5 text-center">
       {[
         ['조회수', stats[0]],
-        ['구매', stats[1]],
-        ['평점', stats[2]],
+        [isArt ? '좋아요' : '구매', stats[1]],
+        [isArt ? '댓글' : '평점', isArt ? '—' : stats[2]],
       ].map(([label, value]) => (
         <div key={label}>
           <p className="text-[20px] font-bold text-white">{value}</p>
@@ -3500,7 +4364,7 @@ function ProductStatsPanel({ stats }: { stats: [string, string, string] }) {
 
 function ProductInfoPanel({ product }: { product: typeof PRODUCT_DETAIL_DATA[number] }) {
   return (
-    <div className="rounded-lg border border-[#1F2329] bg-[#141518] p-5">
+    <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-5">
       <h2 className="mb-4 text-[15px] font-medium text-white">파일 정보</h2>
       <div className="space-y-3 border-b border-[#2A2E36] pb-5">
         {product.fileInfo.map(([label, value]) => (
@@ -3515,7 +4379,7 @@ function ProductInfoPanel({ product }: { product: typeof PRODUCT_DETAIL_DATA[num
       <h2 className="mb-3 mt-5 text-[15px] font-medium text-white">태그</h2>
       <div className="flex flex-wrap gap-2">
         {product.tags.map((tag) => (
-          <span key={tag} className="rounded-full border border-[#3A404F] px-2.5 py-1 text-[14px] font-medium text-text-secondary">
+          <span key={tag} className="np-product-tag rounded-full border border-[#3A404F] px-2.5 py-1 text-[14px] font-medium text-text-secondary">
             {tag}
           </span>
         ))}
@@ -3591,22 +4455,22 @@ function DiscoverSection({
   onQuickCollect?: (target: QuickDropTarget, asset: any) => void,
   onAssetDragStart?: (asset: any, e: React.DragEvent) => void,
 }) {
-  const [activeTab, setActiveTab] = useState<'전체' | '마켓' | '아트' | '최신' | '팔로잉'>('전체');
+  const [activeTab, setActiveTab] = useStoredState<'전체' | '마켓' | '아트' | '최신' | '팔로잉'>("neopoly_discover_activeTab_v1", '전체');
   const [showFilters, setShowFilters] = useState(false);
   
   // Filter States
-  const [priceType, setPriceType] = useState<'all' | 'free' | 'paid'>('all');
-  const [priceRange, setPriceRange] = useState({ min: '0', max: '1,000,000+' });
-  const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
-  const [polyCount, setPolyCount] = useState<string[]>([]);
-  const [polyRange, setPolyRange] = useState({ min: '0', max: '1,000,000' });
-  const [license, setLicense] = useState<string[]>([]);
-  const [appliedPriceType, setAppliedPriceType] = useState<'all' | 'free' | 'paid'>('all');
-  const [appliedPriceRange, setAppliedPriceRange] = useState({ min: '0', max: '1,000,000+' });
-  const [appliedFormats, setAppliedFormats] = useState<string[]>([]);
-  const [appliedPolyCount, setAppliedPolyCount] = useState<string[]>([]);
-  const [appliedPolyRange, setAppliedPolyRange] = useState({ min: '0', max: '1,000,000' });
-  const [appliedLicense, setAppliedLicense] = useState<string[]>([]);
+  const [priceType, setPriceType] = useStoredState<'all' | 'free' | 'paid'>("neopoly_discover_priceType_v1", 'all');
+  const [priceRange, setPriceRange] = useStoredState("neopoly_discover_priceRange_v1", { min: '0', max: '1,000,000+' });
+  const [selectedFormats, setSelectedFormats] = useStoredState<string[]>("neopoly_discover_selectedFormats_v1", []);
+  const [polyCount, setPolyCount] = useStoredState<string[]>("neopoly_discover_polyCount_v1", []);
+  const [polyRange, setPolyRange] = useStoredState("neopoly_discover_polyRange_v1", { min: '0', max: '1,000,000' });
+  const [license, setLicense] = useStoredState<string[]>("neopoly_discover_license_v1", []);
+  const [appliedPriceType, setAppliedPriceType] = useStoredState<'all' | 'free' | 'paid'>("neopoly_discover_appliedPriceType_v1", 'all');
+  const [appliedPriceRange, setAppliedPriceRange] = useStoredState("neopoly_discover_appliedPriceRange_v1", { min: '0', max: '1,000,000+' });
+  const [appliedFormats, setAppliedFormats] = useStoredState<string[]>("neopoly_discover_appliedFormats_v1", []);
+  const [appliedPolyCount, setAppliedPolyCount] = useStoredState<string[]>("neopoly_discover_appliedPolyCount_v1", []);
+  const [appliedPolyRange, setAppliedPolyRange] = useStoredState("neopoly_discover_appliedPolyRange_v1", { min: '0', max: '1,000,000' });
+  const [appliedLicense, setAppliedLicense] = useStoredState<string[]>("neopoly_discover_appliedLicense_v1", []);
   const filterSheetDragControls = useDragControls();
   const [isMobileFilterSheet, setIsMobileFilterSheet] = useState(() => (
     typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false
@@ -3614,7 +4478,7 @@ function DiscoverSection({
 
 
   const tabs: Array<typeof activeTab> = ['전체', '마켓', '아트', '최신', '팔로잉'];
-  const followingAssetIds = new Set([1, 2, 3, 4, 5, 6, 7, 8]);
+  const [followingAuthors] = useStoredState<string[]>("neopoly_following_authors_v1", []);
   const formats = ['.FBX', '.OBJ', '.ABC', '.BLEND', '.MAX', '.GLB'];
   const polyOptions = ['Low Poly', 'Mid Poly', 'High Poly'];
   const licenseOptions = ['\uD45C\uC900', '\uD655\uC7A5', '\uC0C1\uC5C5\uC801'];
@@ -3634,32 +4498,27 @@ function DiscoverSection({
   };
 
   const getAssetFilterMeta = (asset: typeof ASSETS[number]) => {
-    const id = asset.id;
-    const isFree = id % 7 === 0 || asset.badge === 'A';
-    const price = isFree ? 0 : 30000 + (id % 12) * 10000;
-    const assetFormats = formats.filter((_, index) => (id + index) % 3 !== 1);
-    const polyLabel = polyOptions[id % polyOptions.length];
-    const polyValue = 5000 + (id % 24) * 4200;
-    const assetLicenses = licenseOptions.filter((_, index) => (id + index) % 2 === 0);
-
-    return {
-      isFree,
-      price,
-      formats: assetFormats.length ? assetFormats : [formats[id % formats.length]],
-      polyLabel,
-      polyValue,
-      licenses: assetLicenses.length ? assetLicenses : [licenseOptions[id % licenseOptions.length]],
+    const data = PRODUCT_DETAIL_DATA[asset.id];
+    const isMarket = asset.badge === 'M';
+    const price = data && isMarket ? parseWonAmount(data.price) : 0;
+    const polyValue = Number(data?.fileInfo.find(([label]) => label === '폴리곤 수')?.[1].replace(/[^0-9]/g, '')) || 0;
+    const fileText = data?.fileInfo.find(([label]) => label === '파일 형식')?.[1].toUpperCase() ?? '';
+    return { known: Boolean(data), isFree: Boolean(data && isMarket && price === 0), price,
+      formats: formats.filter((format) => fileText.includes(format.slice(1))),
+      polyLabel: polyValue < 10000 ? 'Low Poly' : polyValue < 50000 ? 'Mid Poly' : 'High Poly', polyValue,
+      licenses: data && isMarket ? ['표준', '상업적'] : [],
     };
   };
 
   const assetMatchesAdvancedFilters = (asset: typeof ASSETS[number]) => {
     const meta = getAssetFilterMeta(asset);
+    if (!meta.known && (appliedPriceType !== 'all' || appliedFormats.length || appliedPolyCount.length || appliedLicense.length)) return false;
 
     if (appliedPriceType === 'free' && !meta.isFree) return false;
     if (appliedPriceType === 'paid') {
       const minPrice = parseFilterNumber(appliedPriceRange.min, 0);
       const maxPrice = parseFilterNumber(appliedPriceRange.max, Number.POSITIVE_INFINITY);
-      if (meta.isFree || meta.price < minPrice || meta.price > maxPrice) return false;
+      if (asset.badge !== 'M' || meta.isFree || meta.price < minPrice || meta.price > maxPrice) return false;
     }
 
     if (appliedFormats.length > 0 && appliedFormats.length < formats.length) {
@@ -3693,7 +4552,7 @@ function DiscoverSection({
     if (activeTabIndex === 3) {
       return [...ASSETS].sort((a, b) => b.id - a.id);
     }
-    return ASSETS.filter((asset) => followingAssetIds.has(asset.id));
+    return ASSETS.filter((asset) => followingAuthors.includes(asset.author));
   })();
   const discoverAssets = tabAssets
     .filter((asset) => assetMatchesCategory(asset.id, activeCategory))
@@ -3821,22 +4680,23 @@ function DiscoverSection({
 
   return (
     <div className="flex-1 min-w-0 relative">
-      <div className="mb-6 flex flex-col gap-3 border-b border-border-soft/50 pb-3 sm:h-[46px] sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:pb-2">
+      <div className="mb-5 flex flex-col gap-3 border-b border-border-soft/50 pb-3 sm:mb-6 sm:h-[46px] sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:pb-2">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:gap-8 lg:gap-10">
-          <h2 className="text-[30px] font-bold tracking-tight text-text-primary leading-none font-display">Discover</h2>
-          <div className="mb-[-2px] flex min-w-0 items-end gap-2 sm:self-end md:translate-y-[4px]">
-            <div className="flex min-w-0 flex-1 items-end gap-4 overflow-x-auto scrollbar-hide pr-1 sm:gap-6">
+          <h2 className="text-[28px] font-bold leading-[38px] tracking-tight text-text-primary font-display sm:leading-none">Discover</h2>
+          <div className="mb-[-2px] flex min-w-0 items-end gap-2 sm:self-end md:translate-y-[7px]">
+            <div className="flex min-w-0 flex-1 flex-nowrap items-end gap-4 overflow-visible pr-1 sm:gap-6">
               {tabs.map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`text-[18px] font-medium transition-all relative py-1 ${
-                    activeTab === tab ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
+                  aria-pressed={activeTab === tab}
+                    className={`relative min-h-11 min-w-11 py-2 text-[15px] font-medium transition-all sm:min-h-0 sm:min-w-0 sm:py-1 sm:text-[16px] md:text-[18px] ${
+                    activeTab === tab ? 'text-brand-primary' : 'text-text-secondary hover:text-text-primary'
                   }`}
                 >
                   {tab}
                   {activeTab === tab && (
-                    <motion.div layoutId="activeUnderline" className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-brand-primary" />
+                    <motion.div layoutId="activeUnderline" className="absolute bottom-[-10px] left-0 right-0 h-[2px] bg-brand-primary sm:bottom-[-8px] md:bottom-[-1px]" />
                   )}
                 </button>
               ))}
@@ -3846,8 +4706,8 @@ function DiscoverSection({
               onClick={openFilterPanel}
               aria-label="필터 열기"
               aria-expanded={showFilters}
-              className={`mb-[-2px] flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-transparent bg-transparent transition-colors md:hidden ${
-                isFilterButtonActive ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
+              className={`mb-[-2px] flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-transparent bg-transparent transition-colors md:hidden ${
+                isFilterButtonActive ? 'text-brand-primary' : 'text-text-secondary hover:text-text-primary'
               }`}
             >
               <Sliders className="h-5 w-5" />
@@ -3858,7 +4718,7 @@ function DiscoverSection({
           {/* Active Filter Tags */}
           <div className="hidden xl:flex items-center justify-end flex-nowrap gap-2 max-w-[700px] overflow-x-auto scrollbar-hide h-8 flex-1 min-w-0">
             {activeFilters.map((filter) => (
-              <span key={filter} className="flex items-center gap-1.5 h-7 px-3 bg-surface-primary border border-border-soft text-[15px] font-medium text-text-tertiary rounded-sm whitespace-nowrap">
+              <span key={filter} className="flex h-7 items-center gap-1.5 whitespace-nowrap rounded-sm border border-border-soft bg-surface-primary px-3 text-[15px] font-medium text-text-secondary">
                 {filter}
                 <button
                   type="button"
@@ -3875,7 +4735,7 @@ function DiscoverSection({
           <button 
             onClick={openFilterPanel}
             className={`flex items-center gap-2 text-[17px] font-semibold transition-all h-8 ${
-              isFilterButtonActive ? 'text-brand-primary' : 'text-text-tertiary hover:text-text-primary'
+              isFilterButtonActive ? 'text-brand-primary' : 'text-text-secondary hover:text-text-primary'
             }`}
           >
             <Sliders className="w-5 h-5" /> 필터
@@ -3898,6 +4758,7 @@ function DiscoverSection({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.16, ease: "easeOut" }}
+              onMouseDown={() => setShowFilters(false)}
               className="fixed inset-x-0 bottom-0 top-[60px] z-[245] bg-black/45 backdrop-blur-[2px] md:hidden"
             />
           )}
@@ -3912,7 +4773,7 @@ function DiscoverSection({
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.35 }}
             onDragEnd={handleFilterSheetDragEnd}
-            className="fixed inset-x-0 bottom-0 z-[260] max-h-[70vh] overflow-hidden rounded-t-[16px] border-t border-[#242831] bg-[#0B0D10]/98 shadow-[0_-18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl md:absolute md:bottom-auto md:left-auto md:right-0 md:top-[50px] md:z-50 md:max-h-none md:w-[80%] md:max-w-[1000px] md:rounded-[8px] md:border md:border-border-primary md:bg-[#0E1011]/95 md:p-6 md:shadow-[0_30px_60px_rgba(0,0,0,0.9)] md:backdrop-blur-md"
+            className="fixed inset-x-0 bottom-0 z-[260] max-h-[82dvh] overflow-hidden rounded-t-[16px] border-t border-[#242831] bg-[#0B0D10]/98 shadow-[0_-18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl md:absolute md:bottom-auto md:left-auto md:right-0 md:top-[50px] md:z-50 md:max-h-none md:w-[80%] md:max-w-[1000px] md:rounded-[8px] md:border md:border-border-primary md:bg-[#0E1011]/95 md:p-6 md:shadow-[0_30px_60px_rgba(0,0,0,0.9)] md:backdrop-blur-md"
           >
             <div
               className="flex cursor-grab touch-none flex-col items-center border-b border-[#242831] px-4 pb-3 pt-2.5 active:cursor-grabbing md:hidden"
@@ -3930,11 +4791,11 @@ function DiscoverSection({
               <X className="w-5 h-5" />
             </button>
 
-            <div className="max-h-[calc(70vh-58px)] overflow-y-auto px-4 pb-5 pt-4 custom-scrollbar md:max-h-none md:overflow-visible md:p-0">
+            <div className="safe-area-bottom max-h-[calc(82dvh-58px)] overflow-y-auto px-4 pb-5 pt-4 custom-scrollbar md:max-h-none md:overflow-visible md:p-0">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
               {/* 가격 필터 */}
               <div className="space-y-4 col-span-1 md:col-span-3">
-                <h4 className="text-[15px] font-medium text-text-tertiary uppercase tracking-wider">가격</h4>
+                <h4 className="text-[15px] font-medium text-text-secondary uppercase tracking-wider">가격</h4>
                 <div className="flex gap-2">
                   {['free', 'paid'].map((type) => (
                     <button
@@ -3949,7 +4810,7 @@ function DiscoverSection({
                       className={`px-3 py-1.5 rounded-sm text-[15px] font-medium border transition-all ${
                         priceType === type 
                         ? 'bg-brand-primary border-brand-primary text-bg-dark' 
-                        : 'bg-surface-primary border-border-soft text-text-tertiary hover:border-brand-primary/50'
+                        : 'bg-surface-primary border-border-soft text-text-secondary hover:border-brand-primary/50'
                       }`}
                     >
                       {type === 'free' ? '무료' : '유료'}
@@ -3982,7 +4843,7 @@ function DiscoverSection({
 
               {/* 파일 형식 */}
               <div className="space-y-4 col-span-1 md:col-span-3">
-                <h4 className="text-[15px] font-medium text-text-tertiary uppercase tracking-wider">파일 형식</h4>
+                <h4 className="text-[15px] font-medium text-text-secondary uppercase tracking-wider">파일 형식</h4>
                 <div className="flex flex-wrap gap-2">
                   {formats.map((fmt) => (
                     <button
@@ -3991,7 +4852,7 @@ function DiscoverSection({
                       className={`px-3 py-1.5 min-w-[60px] rounded-sm text-[15px] font-medium border transition-all ${
                         selectedFormats.includes(fmt)
                         ? 'bg-brand-primary border-brand-primary text-bg-dark'
-                        : 'bg-surface-primary border-border-soft text-text-tertiary hover:border-brand-primary/50'
+                        : 'bg-surface-primary border-border-soft text-text-secondary hover:border-brand-primary/50'
                       }`}
                     >
                       {fmt}
@@ -4002,7 +4863,7 @@ function DiscoverSection({
 
               {/* 폴리곤 수 */}
               <div className="space-y-4 col-span-1 md:col-span-4 flex flex-col">
-                <h4 className="text-[15px] font-medium text-text-tertiary uppercase tracking-wider">폴리곤 수</h4>
+                <h4 className="text-[15px] font-medium text-text-secondary uppercase tracking-wider">폴리곤 수</h4>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                   {[...polyOptions, '직접 설정'].map((opt) => {
                     let tooltipText = '';
@@ -4037,7 +4898,7 @@ function DiscoverSection({
                           {polyCount.includes(opt) && <Check className="w-3.5 h-3.5 text-bg-dark" />}
                         </div>
                         <span className={`text-[15px] transition-colors font-medium ${
-                          isDisabled ? 'text-text-tertiary/50' : 'text-text-tertiary group-hover/item:text-text-secondary'
+                          isDisabled ? 'text-text-tertiary/50' : 'text-text-secondary group-hover/item:text-text-primary'
                         }`}>{opt}</span>
                         
                         {tooltipText && !isDisabled && (
@@ -4077,7 +4938,7 @@ function DiscoverSection({
 
               {/* 라이선스 */}
               <div className="space-y-4 col-span-1 md:col-span-2">
-                <h4 className="text-[15px] font-medium text-text-tertiary uppercase tracking-wider">라이선스</h4>
+                <h4 className="text-[15px] font-medium text-text-secondary uppercase tracking-wider">라이선스</h4>
                 <div className="grid grid-cols-3 gap-2 md:block md:space-y-3">
                   {licenseOptions.map((opt) => (
                     <label 
@@ -4092,7 +4953,7 @@ function DiscoverSection({
                       >
                         {license.includes(opt) && <Check className="h-3 w-3 text-bg-dark md:h-3.5 md:w-3.5" />}
                       </div>
-                      <span className="min-w-0 truncate text-[14px] font-medium text-text-tertiary transition-colors group-hover:text-text-secondary md:text-[15px]">{opt}</span>
+                      <span className="min-w-0 truncate text-[14px] font-medium text-text-secondary transition-colors group-hover:text-text-primary md:text-[15px]">{opt}</span>
                     </label>
                   ))}
                 </div>
@@ -4107,13 +4968,13 @@ function DiscoverSection({
               <div className="flex gap-4 w-full sm:w-auto justify-end">
                 <button 
                   onClick={resetDraftFilters}
-                  className="text-[15px] font-medium text-text-tertiary hover:text-text-primary px-4 py-2 transition-colors uppercase tracking-wider"
+                  className="px-4 py-2 text-[15px] font-medium uppercase tracking-wider text-text-secondary transition-colors hover:text-text-primary"
                 >
                   초기화
                 </button>
                 <button 
                   onClick={applyFilters}
-                  className="bg-brand-primary text-bg-dark text-[15px] font-medium px-6 py-2 rounded-sm hover:bg-brand-hover transition-all uppercase tracking-wider shadow-none"
+                  className="np-primary-action bg-brand-primary text-bg-dark text-[15px] font-medium px-6 py-2 rounded-sm hover:bg-brand-hover transition-all uppercase tracking-wider shadow-none"
                 >
                   필터 적용
                 </button>
@@ -4125,10 +4986,10 @@ function DiscoverSection({
         )}
       </AnimatePresence>
 
-      <div className={`grid gap-1.5 transition-all duration-300 ${
+      <div className={`grid grid-cols-1 gap-3 transition-all duration-300 sm:grid-cols-2 md:gap-2 ${
         isSidebarOpen 
-          ? "grid-cols-1 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
-          : "grid-cols-1 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6"
+          ? "lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 min-[2200px]:grid-cols-5"
+          : "lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 min-[2200px]:grid-cols-6"
       }`}>
         {discoverAssets.map((asset, index) => {
           let displayedAsset = { ...asset };
@@ -4141,7 +5002,7 @@ function DiscoverSection({
               isFavorite={favorites.includes(displayedAsset.id)}
               onToggleFavorite={(e) => { e.stopPropagation(); toggleFavorite(displayedAsset.id); }}
               onOpenProduct={() => {
-                if (displayedAsset.id <= 8) onOpenProduct?.(displayedAsset.id);
+                onOpenProduct?.(displayedAsset.id);
               }}
               onQuickCollect={onQuickCollect}
               onAssetDragStart={onAssetDragStart}
@@ -4149,11 +5010,7 @@ function DiscoverSection({
           );
         })}
       </div>
-      <div className="flex justify-center mt-8 py-6 pb-20">
-        <button className="flex items-center gap-2 px-4 py-2 text-[14px] font-medium text-text-tertiary hover:text-white transition-colors">
-          더보기 <ChevronDown className="w-4 h-4" />
-        </button>
-      </div>
+      <p role="status" className="py-10 text-center text-[14px] text-text-secondary">{discoverAssets.length ? `${discoverAssets.length}개 작품을 모두 확인했습니다.` : '조건에 맞는 작품이 없습니다. 필터를 변경해 주세요.'}</p>
     </div>
   );
 }
@@ -4168,14 +5025,14 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
             {onToggleSidebar && (
               <button 
                 onClick={onToggleSidebar}
-                className="hidden lg:flex items-center text-text-tertiary hover:text-brand-primary transition-all"
+                className="hidden items-center text-text-secondary transition-all hover:text-brand-primary lg:flex"
                 title="사이드바 접기"
               >
                 <PanelRightClose className="w-5 h-5" />
               </button>
             )}
           </div>
-          <button className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
+          <button className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary">모두 보기 <ChevronRight className="ml-0.5 inline h-3.5 w-3.5" /></button>
         </div>
         <div className="divide-y divide-[#161618]">
           <SidebarProject 
@@ -4202,7 +5059,7 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
       <section className="bg-surface-primary rounded-[8px] border border-border-soft/40 p-5 shadow-2xl">
         <div className="flex items-center justify-between mb-5 px-1">
           <h3 className="text-[18px] font-semibold text-text-primary tracking-tight">노트</h3>
-          <button className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
+          <button className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary">모두 보기 <ChevronRight className="ml-0.5 inline h-3.5 w-3.5" /></button>
         </div>
         <div className="divide-y divide-[#161618]">
           <SidebarNote 
@@ -4223,7 +5080,7 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
       <section className="bg-surface-primary rounded-[8px] border border-border-soft/40 p-5 shadow-2xl">
         <div className="flex items-center justify-between mb-5 px-1">
           <h3 className="text-[18px] font-semibold text-text-primary tracking-tight">레퍼런스</h3>
-          <button className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" /></button>
+          <button className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary">모두 보기 <ChevronRight className="ml-0.5 inline h-3.5 w-3.5" /></button>
         </div>
         <div className="divide-y divide-[#161618]">
           {[
@@ -4244,7 +5101,7 @@ function Sidebar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
             </div>
           ))}
         </div>
-        <button className="w-full mt-4 flex items-center gap-2 px-4 py-3 bg-surface-primary/30 hover:bg-surface-primary rounded-[8px] text-[14px] font-medium text-brand-primary border border-dashed border-brand-primary/20 hover:border-border-primary/60 transition-all justify-center group">
+        <button className="np-light-brand-action w-full mt-4 flex items-center gap-2 px-4 py-3 bg-surface-primary/30 hover:bg-surface-primary rounded-[8px] text-[14px] font-medium text-brand-primary border border-dashed border-brand-primary/20 hover:border-border-primary/60 transition-all justify-center group">
             <Plus className="w-3.5 h-3.5" /> 새 보드 만들기
         </button>
       </section>
@@ -4282,9 +5139,10 @@ function ScrollToTopButton() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
           onClick={scrollToTop}
-          className="fixed bottom-[40px] right-[40px] z-[100] p-3.5 bg-surface-primary hover:bg-[#22252B] text-text-secondary hover:text-brand-primary hover:border-brand-primary/50 border border-border-primary/50 shadow-lg rounded-full transition-colors group"
+          aria-label="페이지 맨 위로 이동"
+          className="group fixed bottom-[calc(env(safe-area-inset-bottom)+12px)] right-4 z-[100] rounded-full border border-border-primary/50 bg-surface-primary p-3 text-text-secondary shadow-lg transition-colors hover:border-brand-primary/50 hover:bg-[#22252B] hover:text-brand-primary sm:bottom-8 sm:right-6"
         >
-          <ArrowUp className="w-6 h-6 group-hover:-translate-y-0.5 transition-transform" />
+          <ArrowUp className="h-5 w-5 transition-transform group-hover:-translate-y-0.5 sm:h-6 sm:w-6" />
         </motion.button>
       )}
     </AnimatePresence>
@@ -4295,40 +5153,262 @@ function ScrollToTopButton() {
 
 export type PageType = 'home' | 'uploads' | 'purchases' | 'favorites' | 'settings' | 'board' | 'projects' | 'note-editor' | 'studio' | 'support' | 'full_workflow' | 'full_workflow_chat' | 'turnaround' | 'modeling_generation' | 'product_detail';
 
+const VALID_APP_PAGES: PageType[] = [
+  'home',
+  'uploads',
+  'purchases',
+  'favorites',
+  'settings',
+  'board',
+  'projects',
+  'note-editor',
+  'studio',
+  'support',
+  'full_workflow',
+  'full_workflow_chat',
+  'turnaround',
+  'modeling_generation',
+  'product_detail',
+];
+
+type AppRoute = {
+  page: PageType;
+  productId: number;
+  boardView: 'all' | 'notes' | 'references';
+};
+
+const isValidProductId = (productId: number) =>
+  Number.isInteger(productId) && ASSETS.some((asset) => asset.id === productId);
+
+const readSavedProductId = () => {
+  try {
+    const savedProductId = Number(localStorage.getItem('neopoly_selected_product_id'));
+    return isValidProductId(savedProductId) ? savedProductId : ASSETS[0].id;
+  } catch {
+    return ASSETS[0].id;
+  }
+};
+
+const parseAppRoute = (hash: string, fallbackProductId = ASSETS[0].id): AppRoute => {
+  const [rawPage = '', rawProductId = ''] = hash.replace(/^#/, '').split('/');
+  const boardView = rawPage === 'notes' || rawPage === 'references' ? rawPage : 'all';
+  const normalizedPage = rawPage === 'notes' || rawPage === 'references' ? 'board' : rawPage;
+  const page = VALID_APP_PAGES.includes(normalizedPage as PageType)
+    ? normalizedPage as PageType
+    : 'home';
+  const parsedProductId = Number(rawProductId);
+
+  return {
+    page,
+    productId: isValidProductId(parsedProductId) ? parsedProductId : fallbackProductId,
+    boardView,
+  };
+};
+
+const createAppHash = (page: PageType, productId: number) => {
+  if (page === 'home') return '';
+  if (page === 'product_detail') return `#product_detail/${productId}`;
+  return `#${page}`;
+};
+
+const activeNavForPage = (page: PageType) => {
+  if (page === 'studio' || page === 'full_workflow' || page === 'full_workflow_chat' || isPersistentModelingWorkflowPage(page)) {
+    return 'studio' as const;
+  }
+  if (page === 'projects') return 'projects' as const;
+  if (page === 'support') return 'support' as const;
+  return null;
+};
+
 export default function App() {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  
-  const [currentPage, setCurrentPage] = useState<PageType>(() => {
-    const rawHash = window.location.hash.replace('#', '');
-    const legacyHashPage = rawHash.split('/')[0];
-    const normalizedHashPage = legacyHashPage === 'notes' || legacyHashPage === 'references' ? 'board' : legacyHashPage;
-    const hashPage = normalizedHashPage as PageType;
-    const validPages: PageType[] = ['home', 'uploads', 'purchases', 'favorites', 'settings', 'board', 'projects', 'note-editor', 'studio', 'support', 'full_workflow', 'full_workflow_chat', 'turnaround', 'modeling_generation', 'product_detail'];
-    return validPages.includes(hashPage) ? hashPage : 'home';
+  const isThemeTransitioningRef = useRef(false);
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    const documentTheme = document.documentElement.dataset.theme;
+    if (documentTheme === 'light' || documentTheme === 'dark') return documentTheme;
+    try {
+      return localStorage.getItem('neopoly_theme') === 'light' ? 'light' : 'dark';
+    } catch {
+      return 'dark';
+    }
   });
+  
+  const [currentPage, setCurrentPage] = useState<PageType>(() => parseAppRoute(window.location.hash, readSavedProductId()).page);
   const [visitedModelingWorkflowPages, setVisitedModelingWorkflowPages] = useState<Set<PageType>>(
     () => new Set(isPersistentModelingWorkflowPage(currentPage) ? [currentPage] : []),
   );
   const [activeNav, setActiveNav] = useState<'market' | 'art' | 'studio' | 'projects' | 'support' | null>(null);
   const [activeCategory, setActiveCategory] = useState('all');
-  const [selectedProductId, setSelectedProductId] = useState<number>(() => {
-    const hashProductId = Number(window.location.hash.replace('#', '').split('/')[1]);
-    if (hashProductId >= 1 && hashProductId <= 8) return hashProductId;
-    const saved = Number(localStorage.getItem('neopoly_selected_product_id'));
-    return saved >= 1 && saved <= 8 ? saved : 1;
-  });
+  const [selectedProductId, setSelectedProductId] = useState<number>(() =>
+    parseAppRoute(window.location.hash, readSavedProductId()).productId,
+  );
   const [focusedProjectId, setFocusedProjectId] = useState<number | null>(null);
   const [focusedBoardView, setFocusedBoardView] = useState<"all" | "notes" | "references">("all");
   const mainPanelRef = useRef<HTMLDivElement>(null);
   const quickDropAcceptedRef = useRef(false);
   const homeScrollYRef = useRef(0);
   const shouldRestoreHomeScrollRef = useRef(false);
+  const currentPageRef = useRef(currentPage);
+  const hasInitializedHistoryRef = useRef(false);
+  currentPageRef.current = currentPage;
 
   useEffect(() => {
-    const nextHash = currentPage === 'home' ? '' : currentPage === 'product_detail' ? `#product_detail/${selectedProductId}` : `#${currentPage}`;
-    if (window.location.hash !== nextHash) {
-      history.replaceState(null, '', `${window.location.pathname}${nextHash}`);
+    const hideTimers = new Map<HTMLElement, number>();
+
+    const showScrollbar = (scrollHost: HTMLElement) => {
+      scrollHost.classList.add('np-scroll-active');
+      const previousTimer = hideTimers.get(scrollHost);
+      if (previousTimer) window.clearTimeout(previousTimer);
+
+      const nextTimer = window.setTimeout(() => {
+        scrollHost.classList.remove('np-scroll-active');
+        hideTimers.delete(scrollHost);
+      }, 700);
+      hideTimers.set(scrollHost, nextTimer);
+    };
+
+    const handleScroll = (event: Event) => {
+      const scrollHost = event.target === document
+        ? document.documentElement
+        : event.target instanceof HTMLElement
+          ? event.target
+          : document.documentElement;
+      showScrollbar(scrollHost);
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      const scrollHost = event.composedPath().find((item) => {
+        if (!(item instanceof HTMLElement)) return false;
+        const style = window.getComputedStyle(item);
+        const canScrollVertically = item.scrollHeight > item.clientHeight && /(auto|scroll|overlay)/.test(style.overflowY);
+        const canScrollHorizontally = item.scrollWidth > item.clientWidth && /(auto|scroll|overlay)/.test(style.overflowX);
+        return canScrollVertically || canScrollHorizontally;
+      });
+      showScrollbar(scrollHost instanceof HTMLElement ? scrollHost : document.documentElement);
+    };
+
+    document.addEventListener('scroll', handleScroll, true);
+    document.addEventListener('wheel', handleWheel, { capture: true, passive: true });
+    return () => {
+      document.removeEventListener('scroll', handleScroll, true);
+      document.removeEventListener('wheel', handleWheel, true);
+      hideTimers.forEach((timer, element) => {
+        window.clearTimeout(timer);
+        element.classList.remove('np-scroll-active');
+      });
+      hideTimers.clear();
+    };
+  }, []);
+
+  useEffect(() => {
+    const nextHash = createAppHash(currentPage, selectedProductId);
+    const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`;
+
+    if (!hasInitializedHistoryRef.current) {
+      hasInitializedHistoryRef.current = true;
+      if (window.location.hash !== nextHash) {
+        window.history.replaceState({ page: currentPage, productId: selectedProductId }, '', nextUrl);
+      }
+      return;
     }
+
+    if (window.location.hash !== nextHash) {
+      window.history.pushState({ page: currentPage, productId: selectedProductId }, '', nextUrl);
+    }
+  }, [currentPage, selectedProductId]);
+
+  useEffect(() => {
+    const syncFromBrowserHistory = () => {
+      const nextRoute = parseAppRoute(window.location.hash, selectedProductId);
+      const previousPage = currentPageRef.current;
+
+      if (nextRoute.page === 'home' && previousPage === 'product_detail') {
+        shouldRestoreHomeScrollRef.current = true;
+      }
+
+      if (nextRoute.page === 'product_detail') {
+        setSelectedProductId(nextRoute.productId);
+        try {
+          localStorage.setItem('neopoly_selected_product_id', String(nextRoute.productId));
+        } catch {
+          // The route still works when storage is unavailable.
+        }
+      }
+
+      if (nextRoute.page === 'board') {
+        setFocusedBoardView(nextRoute.boardView);
+      }
+
+      if (isPersistentModelingWorkflowPage(nextRoute.page)) {
+        setVisitedModelingWorkflowPages((current) => {
+          if (current.has(nextRoute.page)) return current;
+          const next = new Set(current);
+          next.add(nextRoute.page);
+          return next;
+        });
+      }
+
+      setActiveNav(activeNavForPage(nextRoute.page));
+      setIsPanelOpen(false);
+      setIsPanelDropMode(false);
+      setIsAssetDragging(false);
+      setQuickDialog(null);
+      setCurrentPage(nextRoute.page);
+    };
+
+    window.addEventListener('popstate', syncFromBrowserHistory);
+    window.addEventListener('hashchange', syncFromBrowserHistory);
+    return () => {
+      window.removeEventListener('popstate', syncFromBrowserHistory);
+      window.removeEventListener('hashchange', syncFromBrowserHistory);
+    };
+  }, [selectedProductId]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    try {
+      localStorage.setItem('neopoly_theme', theme);
+    } catch {
+      // The selected theme still applies for the current session.
+    }
+  }, [theme]);
+
+  const handleThemeChange = (nextTheme: ThemeMode) => {
+    if (nextTheme === theme || isThemeTransitioningRef.current) return;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const transitionDocument = document as Document & {
+      startViewTransition?: (update: () => void) => { finished: Promise<void> };
+    };
+
+    if (!transitionDocument.startViewTransition || reduceMotion) {
+      setTheme(nextTheme);
+      return;
+    }
+
+    isThemeTransitioningRef.current = true;
+    document.documentElement.dataset.themeTransition = nextTheme;
+
+    const transition = transitionDocument.startViewTransition(() => {
+      flushSync(() => setTheme(nextTheme));
+    });
+
+    transition.finished.finally(() => {
+      delete document.documentElement.dataset.themeTransition;
+      isThemeTransitioningRef.current = false;
+    });
+  };
+
+  useEffect(() => {
+    const labels: Partial<Record<PageType, string>> = {
+      home: 'Discover', board: '작업 보드', studio: 'AI Studio', projects: '내 프로젝트',
+      uploads: '콘텐츠 관리', settings: '계정 설정', support: '고객 지원',
+      'note-editor': '노트 편집', favorites: '즐겨찾기', purchases: '구매한 에셋',
+    };
+    const title = currentPage === 'product_detail' ? ASSETS.find((asset) => asset.id === selectedProductId)?.title : labels[currentPage];
+    document.title = `${title ?? 'AI 작업'} · NeoPoly`;
+    if (currentPage !== 'home' || !shouldRestoreHomeScrollRef.current) window.scrollTo({ top: 0, behavior: 'instant' });
   }, [currentPage, selectedProductId]);
 
   useEffect(() => {
@@ -4344,18 +5424,10 @@ export default function App() {
   }, [currentPage]);
 
   // Initialize dummy UserProfile (usually fetched from an API or local storage in reality)
-  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('neopoly_user_profile');
+  const [userProfile, setUserProfile] = useStoredState<UserProfile>('neopoly_user_profile', () => {
+    const saved = readJSON<UserProfile | null>('neopoly_user_profile', null);
     if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return {
-          ...parsed,
-          avatar: PROFILE_IMAGE,
-          username: 'kimjihwan',
-          nickname: 'Hwan',
-        };
-      } catch (e) {}
+      return saved;
     }
     return {
       username: 'kimjihwan',
@@ -4371,30 +5443,28 @@ export default function App() {
 
   // Dummy state proxies required by UserProfilePage
   const [assets, setAssets] = useState<any[]>([]); // UserProfilePage will use this if needed, but ASSETS constant is global too.
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [favorites, setFavorites] = useStoredState<number[]>("neopoly_favorites_v1", []);
   const [isAssetDragging, setIsAssetDragging] = useState(false);
   const [isPanelDropMode, setIsPanelDropMode] = useState(false);
-  const [quickCollections, setQuickCollections] = useState<QuickCollections>(() => emptyQuickCollections());
+  const [quickCollections, setQuickCollections] = useStoredState<QuickCollections>(QUICK_COLLECTIONS_KEY, emptyQuickCollections);
   const [quickDialog, setQuickDialog] = useState<{ target: "notes" | "references"; asset: QuickCollectAsset } | null>(null);
   const [editingNote, setEditingNote] = useState<NoteItem | null>(null);
 
-  const panelNotes = (() => {
-    try {
-      const saved = localStorage.getItem("neopoly_notes_v3");
-      const parsed = saved ? JSON.parse(saved) : null;
-      return Array.isArray(parsed) && parsed.length ? parsed : NOTES;
-    } catch {
-      return NOTES;
-    }
-  })().slice(0, 2);
+  const [savedPanelNotes] = useStoredState<NoteItem[]>("neopoly_notes_v3", NOTES);
+  const [trashedPanelNotes] = useStoredIdSet("neopoly_note_trash_v3");
+  const [savedPanelBoards] = useStoredState("neopoly_reference_boards_v1", REFERENCE_BOARDS);
+  const panelNotes = savedPanelNotes.filter((note) => !trashedPanelNotes.has(note.id)).slice(0, 2);
 
-  const panelReferenceBoards = REFERENCE_BOARDS.slice(0, 2).map((board) => ({
+  const panelReferenceBoards = savedPanelBoards.slice(0, 2).map((board) => ({
     ...board,
     count: ASSETS.filter((asset) => boardMatchesAsset(board, asset as any)).length,
   }));
 
+  const [storageError, setStorageError] = useState(false);
   useEffect(() => {
-    localStorage.removeItem(QUICK_COLLECTIONS_KEY);
+    const onError = () => setStorageError(true);
+    window.addEventListener(STORAGE_ERROR_EVENT, onError);
+    return () => window.removeEventListener(STORAGE_ERROR_EVENT, onError);
   }, []);
 
   useEffect(() => {
@@ -4446,14 +5516,7 @@ export default function App() {
   };
 
   const handleQuickCollect = (target: QuickDropTarget, asset: any) => {
-    if (target === "notes") {
-      setCurrentPage("board");
-      return;
-    }
-    if (target === "references") {
-      setCurrentPage("board");
-      return;
-    }
+    if (target === "notes" || target === "references") setQuickDialog({ target, asset: toQuickCollectAsset(asset) });
   };
 
   const handleDropTarget = (target: QuickDropTarget, asset: QuickCollectAsset) => {
@@ -4532,15 +5595,28 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-bg-dark flex flex-col font-sans selection:bg-brand-primary/30 scroll-smooth">
-      <Header onNavigate={(page) => handleHeaderNavigate(page as PageType)} currentPage={currentPage} activeNav={activeNav} setActiveNav={setActiveNav} />
+    <div className="flex min-h-dvh flex-col bg-bg-dark font-sans selection:bg-brand-primary/30 scroll-smooth">
+      {storageError && <div role="alert" className="fixed inset-x-3 top-3 z-[500] mx-auto flex max-w-[600px] items-center gap-3 rounded-lg border border-red-400 bg-surface-primary p-4 text-[14px] text-text-primary shadow-sm">
+        <span className="flex-1">변경 사항을 저장하지 못했습니다. 브라우저 저장 공간 또는 저장 허용 설정을 확인해 주세요.</span>
+        <button onClick={() => setStorageError(false)} aria-label="저장 오류 안내 닫기" className="p-2"><X className="h-4 w-4" /></button>
+      </div>}
+      <Header
+        profile={userProfile}
+        onOpenProduct={openProductDetail}
+        onNavigate={(page) => handleHeaderNavigate(page as PageType)}
+        currentPage={currentPage}
+        activeNav={activeNav}
+        setActiveNav={setActiveNav}
+        theme={theme}
+        onThemeChange={handleThemeChange}
+      />
       
       {currentPage === 'uploads' ? (
-        <ContentManagementPage />
+        <ContentManagementPage onNavigate={(page) => setCurrentPage(page as PageType)} />
       ) : currentPage === 'purchases' ? (
         <PurchasedAssetsPage />
       ) : currentPage === 'favorites' ? (
-        <FavoritesPage favorites={favorites} toggleFavorite={toggleFavorite} />
+        <FavoritesPage favorites={favorites} toggleFavorite={toggleFavorite} onOpenProduct={openProductDetail} />
       ) : currentPage === 'board' ? (
         <BoardPage
           onNavigate={(page) => setCurrentPage(page as PageType)}
@@ -4552,11 +5628,17 @@ export default function App() {
       ) : currentPage === 'projects' ? (
         <ProjectPage onNavigate={(page) => setCurrentPage(page as PageType)} selectedProjectId={focusedProjectId ?? undefined} />
       ) : currentPage === 'note-editor' ? (
-        <NoteEditorPage onNavigate={(page) => setCurrentPage(page as PageType)} initialNote={editingNote} />
+        <NoteEditorPage key={editingNote?.id ?? "new"} onNavigate={() => openBoardPage("notes")} initialNote={editingNote} />
       ) : currentPage === 'settings' ? (
-        <AccountSettingsPage userProfile={userProfile} setUserProfile={setUserProfile} />
+        <AccountSettingsPage
+          userProfile={userProfile}
+          setUserProfile={setUserProfile}
+          theme={theme}
+          onThemeChange={handleThemeChange}
+          onNavigate={(page) => setCurrentPage(page as PageType)}
+        />
       ) : currentPage === 'studio' ? (
-        <AIStudioPage onNavigate={(page) => setCurrentPage(page as PageType)} />
+        <AIStudioPage onNavigate={(page) => setCurrentPage(page as PageType)} onOpenProject={openProjectsPage} />
       ) : isPersistentModelingWorkflowPage(currentPage) ? (
         <div className="flex-1">
           {visitedModelingWorkflowPages.has('turnaround') && (
@@ -4589,7 +5671,7 @@ export default function App() {
         <main className="flex-1 pb-32 bg-bg-dark">
           <Hero onNavigate={(page) => setCurrentPage(page as PageType)} />
           
-          <div className="mx-auto w-full max-w-[2560px] px-4 py-6 sm:px-6 2xl:px-8 min-[2200px]:px-10">
+          <div className="mx-auto w-full max-w-[2560px] px-4 py-5 sm:px-6 sm:py-6 2xl:px-8 min-[2200px]:px-10">
             <div className="flex flex-col gap-8 xl:gap-12">
               <div className="flex-1 min-w-0 space-y-6">
                 <CategoryNav activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
@@ -4612,18 +5694,18 @@ export default function App() {
         <AnimatePresence>
           {!isAssetDragging && !isPanelDropMode && !isPanelOpen && (
             <motion.div
-              initial={{ opacity: 0, y: 50, x: "-50%" }}
-              animate={{ opacity: 1, y: 0, x: "-50%" }}
-              exit={{ opacity: 0, y: 50, x: "-50%" }}
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed bottom-8 left-1/2 z-40 transform"
+              className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+12px)] z-40 flex justify-center sm:bottom-8"
             >
               <button
                 onClick={() => {
                   setIsPanelDropMode(false);
                   setIsPanelOpen(true);
                 }}
-                className="flex items-center gap-2 px-8 py-3 bg-bg-secondary/95 backdrop-blur-md rounded-[8px] text-[15px] font-medium text-text-primary border border-border-primary/80 hover:border-brand-primary hover:text-brand-primary transition-all shadow-[0_15px_40px_rgba(0,0,0,0.9)] cursor-pointer tracking-wide"
+                className="np-panel-trigger flex min-h-11 items-center gap-2 rounded-[8px] border border-border-primary/80 bg-bg-secondary/95 px-6 py-2.5 text-[14px] font-medium tracking-wide text-text-primary shadow-[0_15px_40px_rgba(0,0,0,0.9)] backdrop-blur-md transition-all hover:border-brand-primary hover:text-brand-primary sm:px-8 sm:py-3 sm:text-[15px]"
               >
                 패널 열기
               </button>
@@ -4640,7 +5722,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0, x: "-50%" }}
               exit={{ opacity: 0, y: 150, x: "-50%" }}
               transition={{ type: "spring", damping: 25, stiffness: 180 }}
-              className="fixed bottom-6 left-1/2 z-50 max-h-[82vh] w-[1536px] max-w-[95%] overflow-y-auto bg-[#0E1011]/95 md:bg-[#0E1011]/93 backdrop-blur-xl border border-border-primary/50 rounded-[12px] pt-[46px] pl-[24px] pr-[24px] pb-[20px] ml-0 shadow-[0_30px_60px_rgba(0,0,0,0.95)]"
+              className="np-main-panel safe-area-bottom fixed bottom-0 left-1/2 z-50 max-h-[88dvh] w-full max-w-full overflow-y-auto rounded-t-[16px] border border-border-primary/50 bg-[#0E1011]/95 px-4 pb-5 pt-[46px] shadow-[0_30px_60px_rgba(0,0,0,0.95)] backdrop-blur-xl custom-scrollbar sm:bottom-4 sm:w-[calc(100%_-_32px)] sm:max-w-[95%] sm:rounded-[12px] sm:px-6 md:bottom-6 md:max-h-[82dvh] md:w-[1536px] md:bg-[#0E1011]/93"
             >
               {/* Close Button - Inside but safe from overlap */}
               <button
@@ -4657,7 +5739,7 @@ export default function App() {
                 <div className="xl:col-span-6 space-y-4">
                   <div className="flex items-center justify-between px-1">
                     <h3 onClick={() => { setIsPanelOpen(false); openProjectsPage(); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">내 프로젝트</h3>
-                    <button onClick={() => { setIsPanelOpen(false); openProjectsPage(); }} className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">
+                    <button onClick={() => { setIsPanelOpen(false); openProjectsPage(); }} className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary">
                       모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" />
                     </button>
                   </div>
@@ -4695,7 +5777,7 @@ export default function App() {
                 <div className="xl:col-span-3 space-y-4">
                   <div className="flex items-center justify-between px-1">
                     <h3 onClick={() => { setIsPanelOpen(false); openBoardPage('notes'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">노트</h3>
-                    <button onClick={() => { setIsPanelOpen(false); openBoardPage('notes'); }} className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors">
+                    <button onClick={() => { setIsPanelOpen(false); openBoardPage('notes'); }} className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary">
                       모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" />
                     </button>
                   </div>
@@ -4724,7 +5806,7 @@ export default function App() {
                         setIsPanelOpen(false);
                         openNoteEditor(null);
                       }}
-                      className="flex h-9 items-center justify-center gap-2 rounded-md px-2 text-[14px] font-medium text-text-tertiary transition hover:bg-white/5 hover:text-brand-primary"
+                      className="flex h-9 items-center justify-center gap-2 rounded-md px-2 text-[14px] font-medium text-text-secondary transition hover:bg-white/5 hover:text-brand-primary"
                     >
                       <Plus className="h-4 w-4" />
                       노트 추가
@@ -4738,7 +5820,7 @@ export default function App() {
                     <h3 onClick={() => { setIsPanelOpen(false); openBoardPage('references'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">레퍼런스</h3>
                     <button 
                       onClick={() => { setIsPanelOpen(false); openBoardPage('references'); }}
-                      className="text-[14px] font-medium text-text-tertiary hover:text-text-primary transition-colors"
+                      className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary"
                     >
                       모두 보기 <ChevronRight className="inline w-3.5 h-3.5 ml-0.5" />
                     </button>
@@ -4750,24 +5832,24 @@ export default function App() {
                         key={board.id}
                         type="button"
                         onClick={() => { setIsPanelOpen(false); openBoardPage('references'); }}
-                        className="relative h-[82px] rounded-[10px] border border-border-primary/20 overflow-hidden transition-all hover:scale-[1.005] hover:border-brand-primary/45 shadow-[0_4px_15px_rgba(0,0,0,0.3)] cursor-pointer group text-left"
+                        className="np-panel-reference-card relative h-[82px] rounded-[10px] border border-border-primary/20 overflow-hidden transition-all hover:scale-[1.005] hover:border-brand-primary/45 shadow-[0_4px_15px_rgba(0,0,0,0.3)] cursor-pointer group text-left"
                       >
                         <div className="absolute inset-0 z-0">
                           <img 
                             src={board.image} 
                             alt="" 
-                            className="w-full h-full object-cover opacity-[0.32] transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" 
+                            className="np-panel-reference-image w-full h-full object-cover opacity-[0.32] transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90"
                             referrerPolicy="no-referrer" 
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#0e1011] via-[#0e1011]/80 to-transparent" />
-                          <div className="absolute inset-0 bg-gradient-to-r from-[#0e1011] via-[#0e1011]/60 to-[#0e1011]/20" />
+                          <div className="np-panel-reference-gradient-vertical absolute inset-0 bg-gradient-to-t from-[#0e1011] via-[#0e1011]/80 to-transparent" />
+                          <div className="np-panel-reference-gradient-horizontal absolute inset-0 bg-gradient-to-r from-[#0e1011] via-[#0e1011]/60 to-[#0e1011]/20" />
                         </div>
                         
                         <div className="relative z-10 flex flex-col justify-end h-full p-3.5">
                           <h4 className="text-[15px] font-medium text-text-primary group-hover:text-brand-primary transition-colors truncate">{board.label}</h4>
                           <div className="flex gap-1.5 mt-2">
-                            <span className="text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter">{board.count}개</span>
-                            <span className="text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter truncate">{board.keyword}</span>
+                            <span className="np-panel-reference-meta text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter">{board.count}개</span>
+                            <span className="np-panel-reference-meta text-[14px] px-2 py-0.5 bg-bg-dark/80 text-text-secondary rounded font-medium border border-border-primary/30 uppercase tracking-tighter truncate">{board.keyword}</span>
                           </div>
                         </div>
                       </button>
@@ -4810,8 +5892,36 @@ export default function App() {
       <QuickCollectDialog
         request={quickDialog}
         onClose={() => setQuickDialog(null)}
-        onSave={(mode, groupName, memo) => {
+        onSave={(mode, groupName, memo, targetId) => {
           if (!quickDialog) return;
+          if (quickDialog.target === "notes") {
+            const existing = mode === "existing" ? savedPanelNotes.find((note) => note.id === targetId) : null;
+            if (mode === "existing" && !existing) return;
+            const note: NoteItem = {
+              id: existing?.id ?? Date.now(), title: existing?.title ?? groupName,
+              desc: [existing?.desc, memo].filter(Boolean).join("\n\n"),
+              images: [...new Set([...(existing?.images ?? []), quickDialog.asset.image])],
+              tags: existing?.tags ?? [], date: noteDate(), starred: existing?.starred ?? false,
+              authorImage: existing?.authorImage ?? userProfile.avatar,
+            };
+            if (!saveNote(note, NOTES)) return;
+          } else {
+            const collected = readJSON<any[]>("neopoly_reference_assets_v1", []);
+            const known = [...ASSETS, ...collected].find((asset) => asset.image === quickDialog.asset.image);
+            const asset = known ?? { ...quickDialog.asset, id: Date.now(), likes: "0", views: "0", avatar: userProfile.avatar, badge: quickDialog.asset.badge ?? "A" };
+            if (!known && !writeJSON("neopoly_reference_assets_v1", [...collected, asset])) return;
+            const boards = readJSON<import('./components/ReferencePage').ReferenceBoard[]>("neopoly_reference_boards_v1", REFERENCE_BOARDS);
+            const existing = mode === "existing" ? boards.find((board) => board.id === targetId) : null;
+            if (mode === "existing" && !existing) return;
+            const board = {
+              id: existing?.id ?? `custom-${crypto.randomUUID()}`, label: existing?.label ?? groupName,
+              image: existing?.image ?? asset.image, keyword: existing?.keyword ?? groupName, memo: existing?.memo ?? memo,
+              assetIds: [...new Set([...(existing?.assetIds ?? (existing ? [...ASSETS, ...collected].filter((item) => boardMatchesAsset(existing, item)).map((item) => item.id) : [])), asset.id])],
+            };
+            if (!writeJSON("neopoly_reference_boards_v1", existing ? boards.map((item) => item.id === existing.id ? board : item) : [board, ...boards])) return;
+            const trash = readJSON<number[]>("neopoly_reference_trash_v3", []);
+            if (trash.includes(asset.id)) writeJSON("neopoly_reference_trash_v3", trash.filter((id) => id !== asset.id));
+          }
           const suffix = mode === "new" ? "새로 저장" : "기존에 추가";
           addQuickCollection(quickDialog.target, quickDialog.asset, `${groupName} · ${suffix}`, memo);
           setQuickDialog(null);
@@ -4821,7 +5931,7 @@ export default function App() {
       />
 
       {/* Premium Multi-Column Footer (Custom designed in Neo-Poly aesthetic matching reference screenshot) */}
-      {currentPage !== 'board' && currentPage !== 'projects' && currentPage !== 'note-editor' && currentPage !== 'uploads' && currentPage !== 'full_workflow' && currentPage !== 'full_workflow_chat' && currentPage !== 'studio' && currentPage !== 'turnaround' && currentPage !== 'modeling_generation' && (
+      {currentPage !== 'settings' && currentPage !== 'board' && currentPage !== 'projects' && currentPage !== 'note-editor' && currentPage !== 'uploads' && currentPage !== 'full_workflow' && currentPage !== 'full_workflow_chat' && currentPage !== 'studio' && currentPage !== 'turnaround' && currentPage !== 'modeling_generation' && (
         <footer className="bg-[#08080a] border-t border-border-soft/60 pt-16 pb-12 px-4 sm:px-6 2xl:px-8 min-[2200px]:px-10">
           <div className="max-w-[2560px] mx-auto">
             {/* Main Footer columns */}
@@ -4883,14 +5993,14 @@ export default function App() {
               <div className="flex items-center gap-6">
                 <a 
                   href="#" 
-                  className="flex items-center justify-center text-text-secondary hover:text-brand-primary transition-all p-1 hover:scale-105" 
+                  className="flex h-11 min-w-11 items-center justify-center text-text-secondary transition-all hover:scale-105 hover:text-brand-primary"
                   aria-label="Instagram"
                 >
                   <Instagram className="w-[24px] h-[24px]" />
                 </a>
                 <a 
                   href="#" 
-                  className="flex items-center justify-center text-text-secondary hover:text-brand-primary transition-all p-1 group hover:scale-105" 
+                  className="group flex h-11 min-w-11 items-center justify-center text-text-secondary transition-all hover:scale-105 hover:text-brand-primary"
                   aria-label="Naver Blog"
                 >
                   <div className="flex items-center font-sans font-medium text-[14px] tracking-tight text-text-secondary group-hover:text-brand-primary whitespace-nowrap">
@@ -4900,7 +6010,7 @@ export default function App() {
                 </a>
                 <a 
                   href="#" 
-                  className="flex items-center justify-center text-text-secondary hover:text-brand-primary transition-all p-1 hover:scale-105" 
+                  className="flex h-11 min-w-11 items-center justify-center text-text-secondary transition-all hover:scale-105 hover:text-brand-primary"
                   aria-label="YouTube"
                 >
                   <Youtube className="w-[26px] h-[26px]" />

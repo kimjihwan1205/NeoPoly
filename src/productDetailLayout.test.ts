@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { PRODUCT_DETAIL_CONTAINER_CLASS } from "./productDetailLayout";
 
-assert.match(PRODUCT_DETAIL_CONTAINER_CLASS, /pt-3/);
+assert.match(PRODUCT_DETAIL_CONTAINER_CLASS, /pt-1/);
 assert.match(PRODUCT_DETAIL_CONTAINER_CLASS, /sm:pt-4/);
+assert.match(PRODUCT_DETAIL_CONTAINER_CLASS, /lg:pt-0/);
 assert.match(PRODUCT_DETAIL_CONTAINER_CLASS, /pb-8/);
 assert.doesNotMatch(PRODUCT_DETAIL_CONTAINER_CLASS, /\bpy-8\b/);
 

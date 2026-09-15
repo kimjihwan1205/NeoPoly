@@ -58,13 +58,10 @@ export default function NoteSidebar({
 
   if (mode === "editor") {
     return (
-      <aside className="hidden h-full w-[300px] shrink-0 flex-col overflow-y-auto border-r border-[#1C1E24] bg-[#0B0D10] p-5 lg:flex">
+      <aside className="np-primary-sidebar-surface hidden h-full w-[300px] shrink-0 flex-col overflow-y-auto border-r border-[#1C1E24] bg-[#0B0D10] p-5 lg:flex">
         <div className="mb-6">
           <p className="text-[14px] font-medium uppercase tracking-[0.18em] text-brand-primary">Board</p>
-          <h2 className="mt-2 text-[24px] font-medium text-white">노트 편집</h2>
-          <p className="mt-2 text-[15px] leading-[1.6] text-text-tertiary">
-            아이디어 메모와 저장 이미지를 정리합니다.
-          </p>
+          <h2 className="np-primary-sidebar-title mt-2 text-white">노트 편집</h2>
         </div>
 
         <button
@@ -95,22 +92,19 @@ export default function NoteSidebar({
   }
 
   return (
-    <aside className="hidden h-full w-[300px] shrink-0 flex-col overflow-y-auto border-r border-[#161618] bg-[#08090B] p-5 lg:flex">
-      <div className="mb-8">
+    <aside className="np-primary-sidebar-surface hidden h-full w-[300px] shrink-0 flex-col overflow-y-auto border-r border-[#161618] bg-[#08090B] p-5 lg:flex">
+      <div className="mb-6">
         <h2
-          className="mb-2 cursor-pointer text-[24px] font-medium text-white transition hover:text-brand-primary"
+          className="np-primary-sidebar-title cursor-pointer text-white transition hover:text-brand-primary"
           onClick={() => applyFilter("all")}
         >
           노트
         </h2>
-        <p className="w-[90%] text-[14px] leading-relaxed text-text-secondary">
-          아이디어와 메모를 한곳에 정리하세요.
-        </p>
       </div>
 
       <button
         onClick={() => onNavigate("note-editor")}
-        className="mb-6 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-medium text-brand-primary transition hover:border-brand-primary/50 hover:bg-[#22252B]"
+        className="np-light-brand-action mb-6 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#3A404F]/60 bg-[#15161A] py-3 text-[15px] font-medium text-brand-primary transition hover:border-brand-primary/50 hover:bg-[#22252B]"
       >
         <Plus className="h-[18px] w-[18px]" />
         새 노트
