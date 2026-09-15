@@ -27,6 +27,13 @@ export interface CompletedProject {
 }
 
 export interface UserProfile {
+  displayName?: string;
+  location?: string;
+  creatorRole?: string;
+  banner?: string;
+  expertise?: string[];
+  tools?: string[];
+  externalLinks?: Record<string, string>;
   username: string;
   nickname: string;
   avatar: string;

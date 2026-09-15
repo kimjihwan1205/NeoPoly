@@ -10,7 +10,9 @@ import {
   Star,
   Wand2,
 } from "lucide-react";
-import { DEFAULT_PROJECTS } from "./ProjectPage";
+import { loadProjects, type Project } from "./ProjectPage";
+import { useStoredState } from "../localStore";
+import { PROJECT_STORAGE_KEY } from "../workflowState";
 
 type StudioProject = {
   id: number;
@@ -21,27 +23,6 @@ type StudioProject = {
   image: string;
   color: string;
 };
-
-const PROJECT_TIME_AGOS = [
-  "10분 전",
-  "1시간 전",
-  "3시간 전",
-  "5시간 전",
-  "6시간 전",
-  "1일 전",
-  "2일 전",
-  "3일 전",
-];
-
-const RECENT_PROJECTS: StudioProject[] = DEFAULT_PROJECTS.map((project, index) => ({
-  id: project.id,
-  title: project.name,
-  status: project.status,
-  timeAgo: PROJECT_TIME_AGOS[index] ?? "최근 수정",
-  type: project.status,
-  image: project.listImage || project.image || "",
-  color: project.statusColor,
-}));
 
 type WorkflowCard = {
   title: string;
@@ -86,21 +67,20 @@ const QUICK_TOOLS = [
   { label: "리메시 도구", icon: Box, page: "modeling_generation" },
 ];
 
-function routeForProject(project: StudioProject) {
-  if (project.type.includes("Modeling")) return "modeling_generation";
-  if (project.type.includes("Turnaround") || project.type.includes("Modular")) {
-    return "turnaround";
-  }
-  if (project.type.includes("Image")) return "full_workflow_chat";
-  return "full_workflow";
-}
-
 export default function AIStudioPage({
   onNavigate,
+  onOpenProject,
 }: {
   onNavigate?: (page: string) => void;
+  onOpenProject?: (projectId: number) => void;
 }) {
-  const [starred, setStarred] = useState<Set<number>>(new Set([2]));
+  const [projects, setProjects] = useStoredState<Project[]>(PROJECT_STORAGE_KEY, loadProjects);
+  const [deletedProjectIds] = useStoredState<number[]>("neopoly_deleted_project_ids", []);
+  const recentProjects: StudioProject[] = projects.filter((project) => !deletedProjectIds.includes(project.id)).map((project) => ({
+    id: project.id, title: project.name, status: project.status, timeAgo: project.date,
+    type: project.status, image: project.listImage || project.image || "", color: project.statusColor,
+  }));
+  const starred = new Set(projects.filter((project) => project.pinned).map((project) => project.id));
   const [toast, setToast] = useState("");
   const continueScrollRef = useRef<HTMLDivElement | null>(null);
   const continueDragRef = useRef({
@@ -119,16 +99,13 @@ export default function AIStudioPage({
   }, [toast]);
 
   const toggleStar = (id: number) => {
-    setStarred((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    setProjects((previous) => previous.map((project) => project.id === id ? { ...project, pinned: !project.pinned } : project));
   };
 
   const handleContinueDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "mouse" && event.button !== 0) return;
+    // Touch uses native horizontal scrolling. Capture a mouse only after dragging,
+    // otherwise the browser retargets a card's click to this scroll container.
+    if (event.pointerType !== "mouse" || event.button !== 0) return;
     const scroller = continueScrollRef.current;
     if (!scroller) return;
 
@@ -139,7 +116,6 @@ export default function AIStudioPage({
       scrollLeft: scroller.scrollLeft,
       moved: false,
     };
-    scroller.setPointerCapture?.(event.pointerId);
   };
 
   const handleContinueDragMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -150,6 +126,7 @@ export default function AIStudioPage({
     const deltaX = event.clientX - drag.startX;
     if (Math.abs(deltaX) > 4) {
       drag.moved = true;
+      scroller.setPointerCapture?.(event.pointerId);
       event.preventDefault();
     }
     scroller.scrollLeft = drag.scrollLeft - deltaX;
@@ -167,13 +144,13 @@ export default function AIStudioPage({
       }, 0);
     }
 
-    scroller?.releasePointerCapture?.(event.pointerId);
+    if (scroller?.hasPointerCapture(event.pointerId)) scroller.releasePointerCapture(event.pointerId);
     continueDragRef.current = { ...drag, active: false };
   };
 
   const openProjectFromCard = (project: StudioProject) => {
     if (suppressProjectClickRef.current) return;
-    onNavigate?.(routeForProject(project));
+    onOpenProject?.(project.id);
   };
 
   return (
@@ -195,6 +172,7 @@ export default function AIStudioPage({
               </button>
             </div>
 
+            <p className="text-[12px] leading-[18px] text-text-secondary">MVP 시연 · 생성 단계는 샘플 결과로 동작합니다. 실제 AI 생성 서비스와 클라우드 저장은 아직 연결되지 않았습니다.</p>
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
               {WORKFLOW_CARDS.map((card) => (
                 <button
@@ -293,7 +271,7 @@ export default function AIStudioPage({
               onPointerCancel={finishContinueDrag}
               className="custom-scrollbar flex cursor-grab select-none gap-5 overflow-x-auto pb-3 active:cursor-grabbing"
             >
-              {RECENT_PROJECTS.map((project) => (
+              {recentProjects.map((project) => (
                 <button
                   key={project.id}
                   onClick={() => openProjectFromCard(project)}

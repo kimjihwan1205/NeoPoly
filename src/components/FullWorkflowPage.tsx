@@ -363,7 +363,7 @@ export default function FullWorkflowPage({
     try {
       const saved = window.localStorage.getItem("neopoly_notes_v3");
       const parsed = saved ? JSON.parse(saved) : null;
-      return Array.isArray(parsed) && parsed.length ? (parsed as NoteItem[]) : NOTES;
+      return Array.isArray(parsed) ? (parsed as NoteItem[]) : NOTES;
     } catch {
       return NOTES;
     }

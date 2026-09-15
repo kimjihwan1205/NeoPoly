@@ -46,6 +46,10 @@ import ModelingGenerationPage from './components/ModelingGenerationPage';
 import { type ThemeMode, UserProfile } from './types';
 import { PRODUCT_DETAIL_CONTAINER_CLASS } from './productDetailLayout';
 import { isPersistentModelingWorkflowPage } from './workflowPageCache';
+import { readJSON, writeJSON, useStoredIdSet, useStoredState, useUndoStoredState, STORAGE_ERROR_EVENT } from './localStore';
+import { mergeBoardPlans } from './boardState';
+import { saveNote, noteDate } from './noteState';
+import ModalLayer from './components/ModalLayer';
 
 // --- Constants & Updated Asset Data ---
 
@@ -187,7 +191,7 @@ export const ASSETS = [
     likes: '872',
     views: '56',
     image: "/images/work_%208.png",
-    badge: 'M'
+    badge: 'A'
   },
   {
     id: 9,
@@ -917,11 +921,15 @@ function Header({
   setActiveNav,
   theme,
   onThemeChange,
+  profile,
+  onOpenProduct,
 }: {
   onNavigate?: (page: any) => void;
   currentPage?: string;
   activeNav?: 'market' | 'art' | 'studio' | 'projects' | 'support' | null;
   setActiveNav?: (nav: 'market' | 'art' | 'studio' | 'projects' | 'support' | null) => void;
+  profile: UserProfile;
+  onOpenProduct: (assetId: number) => void;
   theme: ThemeMode;
   onThemeChange: (theme: ThemeMode) => void;
 }) {
@@ -1042,6 +1050,8 @@ function Header({
   }, []);
 
   useEffect(() => {
+    const closeWithEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') { setIsFocused(false); setIsCartOpen(false); setIsNotifOpen(false); setIsProfileMenuOpen(false); setIsMobileMenuOpen(false); } };
+    document.addEventListener("keydown", closeWithEscape);
     function handleClickOutside(event: MouseEvent) {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
         setIsFocused(false);
@@ -1057,12 +1067,14 @@ function Header({
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => { document.removeEventListener("mousedown", handleClickOutside); document.removeEventListener("keydown", closeWithEscape); };
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
       const query = searchQuery.trim();
+      const match = ASSETS.find((asset) => asset.title.toLowerCase().includes(query.toLowerCase()));
+      if (match) { onOpenProduct(match.id); setIsFocused(false); setIsMobileMenuOpen(false); }
       if (!recentSearches.includes(query)) {
         setRecentSearches(prev => [query, ...prev.slice(0, 6)]);
       }
@@ -1195,9 +1207,9 @@ function Header({
 
   return (
     <>
-    <header className="sticky top-0 z-50 flex h-[60px] w-full items-center justify-between gap-2 border-b border-border-primary/45 bg-[#08090B]/80 px-3 backdrop-blur-xl sm:px-5 md:gap-6 lg:h-[76px] lg:px-6">
+    <header className="sticky top-0 z-50 flex h-[60px] w-full items-center justify-between gap-2 border-b border-border-primary/45 bg-[#08090B]/80 px-3 backdrop-blur-xl sm:px-5 md:gap-6 lg:h-[76px] lg:px-5">
       {/* Left section: Logo + Left-aligned menu with comfortable custom spacing */}
-      <div className="flex items-center gap-3 md:gap-8 lg:gap-12 xl:gap-16 shrink-0">
+      <div className="flex items-center gap-3 md:gap-5 lg:gap-6 xl:gap-10 shrink-0">
         <button
           type="button"
           onClick={() => {
@@ -1216,7 +1228,7 @@ function Header({
         <div className="flex items-center">
           <img referrerPolicy="no-referrer" 
             src="/images/logo.png?v=2" 
-            alt="NeoPoly" 
+            alt="NeoPoly" role="button" tabIndex={0} aria-label="NeoPoly 홈" onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onNavigate?.('home'); } }}
             onClick={() => { if(onNavigate) onNavigate('home'); if(setActiveNav) setActiveNav(null); }} 
             className="np-brand-logo absolute left-1/2 top-1/2 h-[28px] w-auto max-h-[37px] -translate-x-1/2 -translate-y-1/2 cursor-pointer object-contain transition-all sm:h-[32px] md:h-[35px] lg:static lg:translate-x-0 lg:translate-y-0"
           />
@@ -1224,33 +1236,33 @@ function Header({
         
         {/* Navigation Menu (Left-aligned, comfortable spacing) */}
         <nav className="hidden lg:block">
-          <ul className="flex items-center gap-5 whitespace-nowrap text-[17px] font-medium text-text-secondary lg:gap-7 lg:text-[17px] xl:gap-10 xl:text-[17px]">
-            <li 
+          <ul className="flex items-center gap-5 whitespace-nowrap text-[17px] font-medium text-text-secondary lg:gap-4 lg:text-[14px] xl:gap-7 xl:text-[15px]">
+            <li role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click(); } }}
               className={`${currentPage === 'home' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav(null); if(onNavigate) onNavigate('home'); }}
             >
               Discover
             </li>
-            <li 
+            <li role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click(); } }}
               className={`${activeNav === 'studio' || currentPage === 'studio' || currentPage === 'full_workflow' || currentPage === 'full_workflow_chat' || currentPage === 'turnaround' || currentPage === 'modeling_generation' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav('studio'); if(onNavigate) onNavigate('studio'); }}
             >
               AI Studio
             </li>
-            <li 
+            <li role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click(); } }}
               className={`${activeNav === 'projects' || currentPage === 'projects' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav('projects'); if(onNavigate) onNavigate('projects'); }}
             >
               Projects
             </li>
-            <li 
+            <li role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click(); } }}
               className={`${currentPage === 'board' || currentPage === 'notes' || currentPage === 'references' || currentPage === 'note-editor' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav(null); if(onNavigate) onNavigate('board'); }}
             >
               Board
             </li>
 
-            <li 
+            <li role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click(); } }}
               className={`${activeNav === 'support' || currentPage === 'support' ? 'text-brand-primary' : 'hover:text-text-primary'} py-1.5 cursor-pointer font-sans transition-colors`}
               onClick={() => { if(setActiveNav) setActiveNav('support'); if(onNavigate) onNavigate('support'); }}
             >
@@ -1263,7 +1275,7 @@ function Header({
       {/* Right Column: Search + Proponent Action widgets (Responsive & beautifully scales with generous, high-readability sizes) */}
       <div className="flex-1 flex items-center gap-3 md:gap-5 min-w-0 justify-end max-w-full">
         {/* Stateful Search Bar Area - Enriched to meet user demands for spacious layout and 14px clear text */}
-        <div className="relative hidden w-[210px] shrink-0 items-center gap-2 lg:flex xl:w-[290px]" ref={searchContainerRef}>
+        <div className="relative hidden w-[180px] min-w-[130px] shrink items-center gap-2 lg:flex xl:w-[240px]" ref={searchContainerRef}>
           <div className="relative flex-1">
             <input 
               type="text" 
@@ -1305,7 +1317,7 @@ function Header({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[14px] font-medium text-text-primary flex items-center gap-1.5 font-sans">
-                      <Sparkles className="w-3.5 h-3.5 text-brand-primary" /> AI 이미지 유사도 검색
+                      <Sparkles className="w-3.5 h-3.5 text-brand-primary" /> 이미지 검색 · 시연
                     </span>
                     {uploadedImage && (
                       <button 
@@ -1332,8 +1344,8 @@ function Header({
                           reader.onload = (event) => {
                             setUploadedImage(event.target?.result as string);
                             setSimilarityResults([
-                              { id: 1, title: '엘프궁수', creator: 'Vitality', img: '/images/work_%2039.png', simLevel: '98.4%' },
-                              { id: 2, title: '오크', creator: 'Alexey', img: '/images/work_%2040.png', simLevel: '92.1%' }
+                              { id: 1, title: '엘프궁수', creator: 'Vitality', img: '/images/work_%2039.png', simLevel: '샘플' },
+                              { id: 2, title: '오크', creator: 'Alexey', img: '/images/work_%2040.png', simLevel: '샘플' }
                             ]);
                           };
                           reader.readAsDataURL(file);
@@ -1357,8 +1369,8 @@ function Header({
                             reader.onload = (event) => {
                               setUploadedImage(event.target?.result as string);
                               setSimilarityResults([
-                                { id: 1, title: '엘프궁수', creator: 'Vitality', img: '/images/work_%2041.png', simLevel: '98.4%' },
-                                { id: 2, title: '오크', creator: 'Alexey', img: '/images/work_%2042.png', simLevel: '92.1%' }
+                                { id: 1, title: '엘프궁수', creator: 'Vitality', img: '/images/work_%2041.png', simLevel: '샘플' },
+                                { id: 2, title: '오크', creator: 'Alexey', img: '/images/work_%2042.png', simLevel: '샘플' }
                               ]);
                             };
                             reader.readAsDataURL(file);
@@ -1367,7 +1379,7 @@ function Header({
                       />
                       <Upload className="w-5 h-5 text-brand-primary" />
                       <p className="text-[14px] font-medium text-text-secondary font-sans">유사 이미지 검색 (드롭 / 클릭)</p>
-                      <p className="text-[14px] text-text-tertiary font-sans">여기에 이미지를 놓으시면 유사 3D 모델을 매칭합니다</p>
+                      <p className="text-[14px] text-text-tertiary font-sans">MVP 시연 · 이미지 분석 없이 고정 샘플 결과를 보여줍니다</p>
                     </label>
                   ) : (
                     <div className="bg-bg-dark/40 border border-border-primary/30 rounded-[8px] p-3.5 flex flex-col gap-3.5">
@@ -1379,16 +1391,16 @@ function Header({
                           referrerPolicy="no-referrer"
                         />
                         <div className="min-w-0 flex-1">
-                          <p className="text-[14px] font-medium text-text-primary font-sans">업로드된 이미지 기반 매칭 중</p>
+                          <p className="text-[14px] font-medium text-text-primary font-sans">선택한 이미지 미리보기</p>
                           <p className="text-[14px] text-brand-primary/80 flex items-center gap-1 font-medium font-sans">
-                            <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-ping" /> AI 알고리즘 비전 스캔 완료
+                            <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-ping" /> 실제 이미지 분석은 준비 중입니다
                           </p>
                         </div>
                       </div>
 
                       {/* Display Similarity Results */}
                       <div className="space-y-2 border-t border-border-primary/20 pt-3">
-                        <p className="text-[14px] font-sans font-medium uppercase tracking-wider text-text-secondary">유사 항목 매칭 결과</p>
+                        <p className="text-[14px] font-sans font-medium uppercase tracking-wider text-text-secondary">검색 결과 UI 샘플</p>
                         <div className="grid grid-cols-2 gap-2.5">
                           {similarityResults?.map((res, index) => (
                             <div key={index} className="bg-surface-primary/60 hover:bg-surface-primary p-2.5 rounded-[6px] border border-border-primary/20 flex flex-col gap-2 group cursor-pointer">
@@ -1478,7 +1490,7 @@ function Header({
                     {filteredAssets.length > 0 ? (
                       <div className="grid grid-cols-1 gap-2">
                         {filteredAssets.slice(0, 4).map((asset) => (
-                          <div 
+                          <div role="button" tabIndex={0} onClick={() => { onOpenProduct(asset.id); setIsFocused(false); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenProduct(asset.id); setIsFocused(false); } }}
                             key={asset.id}
                             className="flex items-center gap-3 p-2.5 bg-surface-primary/50 hover:bg-surface-primary border border-border-primary/10 hover:border-brand-primary/30 rounded-[8px] transition-all cursor-pointer group"
                           >
@@ -1510,7 +1522,7 @@ function Header({
         
         <div className="flex items-center gap-3 md:gap-4 shrink-0">
           {/* Cart Icon + Dropdown */}
-          <div className="relative hidden lg:block" ref={cartRef}>
+          <div className={`relative ${isCartOpen ? 'block' : 'hidden lg:block'}`} ref={cartRef}>
             <button 
               onClick={toggleCart}
               className={`text-text-tertiary hover:text-text-primary transition-all p-2 hover:scale-110 relative cursor-pointer rounded-full hover:bg-surface-primary/30 ${isCartOpen ? 'text-brand-primary' : ''}`}
@@ -1530,7 +1542,7 @@ function Header({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 15 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="np-header-popover absolute top-full right-[-50px] sm:right-0 mt-3.5 w-80 md:w-96 bg-[#0E1011]/98 border border-border-primary rounded-[12px] p-4.5 shadow-[0_25px_60px_rgba(0,0,0,0.98)] backdrop-blur-2xl z-50 flex flex-col gap-4 text-left"
+                    className="np-header-popover absolute top-full right-0 mt-3.5 w-80 md:w-96 max-lg:fixed max-lg:inset-x-3 max-lg:top-[60px] max-lg:mt-2 max-lg:w-auto max-h-[calc(100dvh-90px)] overflow-y-auto bg-[#0E1011]/98 border border-border-primary rounded-[12px] p-4.5 shadow-[0_25px_60px_rgba(0,0,0,0.98)] backdrop-blur-2xl z-50 flex flex-col gap-4 text-left"
                   >
                     <div className="flex items-center justify-between border-b border-border-primary pb-3">
                       <span className="text-[15px] font-medium text-text-primary font-sans flex items-center gap-2">
@@ -1593,7 +1605,7 @@ function Header({
             </div>
 
             {/* Notification Icon + Dropdown */}
-            <div className="relative hidden lg:block" ref={notifRef}>
+            <div className={`relative ${isNotifOpen ? 'block' : 'hidden lg:block'}`} ref={notifRef}>
               <button 
                 onClick={toggleNotif}
                 className={`text-text-tertiary hover:text-text-primary transition-all relative p-2 hover:scale-110 cursor-pointer rounded-full hover:bg-surface-primary/30 ${isNotifOpen ? 'text-brand-primary' : ''}`}
@@ -1611,7 +1623,7 @@ function Header({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 15 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="np-header-popover np-notification-popover absolute top-full right-[-10px] sm:right-0 mt-3.5 w-[340px] md:w-[420px] bg-[#0E1011]/98 border border-border-primary rounded-[12px] p-5 shadow-[0_25px_60px_rgba(0,0,0,0.98)] backdrop-blur-2xl z-50 flex flex-col gap-4 text-left"
+                    className="np-header-popover np-notification-popover absolute top-full right-0 mt-3.5 w-[340px] md:w-[420px] max-lg:fixed max-lg:inset-x-3 max-lg:top-[60px] max-lg:mt-2 max-lg:w-auto max-h-[calc(100dvh-90px)] overflow-y-auto bg-[#0E1011]/98 border border-border-primary rounded-[12px] p-5 shadow-[0_25px_60px_rgba(0,0,0,0.98)] backdrop-blur-2xl z-50 flex flex-col gap-4 text-left"
                   >
                     <div className="flex items-center justify-between border-b border-border-primary pb-3.5">
                       <span className="text-[15px] font-medium text-text-primary font-sans flex items-center gap-2 tracking-tight">
@@ -1638,6 +1650,7 @@ function Header({
                       </div>
                     </div>
 
+                    <p className="text-[12px] leading-[18px] text-text-secondary">시연용 알림입니다. 실제 활동·거래 알림은 아직 연결되지 않았습니다.</p>
                     <div className="max-h-[300px] overflow-y-auto custom-scrollbar space-y-3 pr-1">
                       {notifications.length > 0 ? (
                         notifications.map((notif) => (
@@ -1697,7 +1710,7 @@ function Header({
     onClick={toggleProfileMenu}
     className="h-11 w-11 rounded-full bg-surface-secondary border border-border-soft cursor-pointer overflow-hidden hover:border-brand-primary transition-colors sm:h-10 sm:w-10 lg:h-8 lg:w-8"
   >
-    <img src={PROFILE_IMAGE} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+    <img src={profile.avatar} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
   </button>
 
   <AnimatePresence>
@@ -1720,13 +1733,13 @@ function Header({
       >
         {/* Header: User Info */}
         <div className="flex items-center gap-3 p-4 border-b border-[#2A2E36]/50">
-          <img referrerPolicy="no-referrer" src={PROFILE_IMAGE} alt="Profile" className="w-[42px] h-[42px] rounded-full border border-border-soft object-cover" />
+          <img referrerPolicy="no-referrer" src={profile.avatar} alt="Profile" className="w-[42px] h-[42px] rounded-full border border-border-soft object-cover" />
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="text-[15px] font-medium text-text-primary tracking-tight">Hwan</span>
+              <span className="text-[15px] font-medium text-text-primary tracking-tight">{profile.nickname}</span>
               <span className="text-[14px] bg-brand-primary/20 text-brand-primary border border-brand-primary/30 px-1.5 py-[1px] rounded uppercase font-medium tracking-wider">PRO</span>
             </div>
-            <span className="text-[14px] text-text-secondary">rlawlghks898@gmail.com</span>
+            <span className="text-[14px] text-text-secondary">{profile.email}</span>
           </div>
         </div>
 
@@ -1833,9 +1846,18 @@ function Header({
               exit={{ opacity: 0, y: -14 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               onMouseDown={(event) => event.stopPropagation()}
-              className="safe-area-bottom max-h-[calc(100dvh-60px)] overflow-y-auto border-b border-[#242831] bg-[#0B0D10]/98 px-4 pb-4 pt-5 shadow-[0_18px_45px_rgba(0,0,0,0.72)] backdrop-blur-xl custom-scrollbar"
+              className="safe-area-bottom max-h-[calc(100dvh-60px)] overflow-y-auto border-b border-border-primary bg-surface-primary/98 px-4 pb-4 pt-5 shadow-[0_18px_45px_rgba(0,0,0,0.32)] backdrop-blur-xl custom-scrollbar"
               aria-label="모바일 메뉴"
             >
+              <div className="mx-auto mb-4 max-w-[720px]">
+                <label className="flex items-center gap-2 rounded-lg border border-border-primary bg-surface-primary px-3">
+                  <Search className="h-4 w-4 shrink-0 text-text-secondary" aria-hidden="true" />
+                  <input aria-label="작품 검색" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} onKeyDown={handleKeyDown} placeholder="작품 이름 검색" className="h-11 min-w-0 flex-1 bg-transparent text-[14px] text-text-primary outline-none" />
+                </label>
+                {searchQuery.trim() && <div className="mt-2 max-h-52 overflow-y-auto rounded-lg border border-border-soft bg-surface-primary">
+                  {filteredAssets.length ? filteredAssets.slice(0, 8).map((asset) => <button key={asset.id} onClick={() => { onOpenProduct(asset.id); setIsMobileMenuOpen(false); }} className="flex min-h-11 w-full items-center gap-3 px-3 py-2 text-left text-[14px] text-text-primary hover:bg-surface-secondary"><img src={asset.image} alt="" className="h-9 w-12 rounded object-cover" />{asset.title}</button>) : <p className="p-3 text-[14px] text-text-secondary" role="status">일치하는 작품이 없습니다.</p>}
+                </div>}
+              </div>
               <div className="mx-auto flex max-w-[720px] flex-col gap-1 md:flex-row md:items-center md:justify-center md:gap-9">
                 {mobileNavItems.map(({ label, isActive, action }) => (
                   <button
@@ -1851,6 +1873,10 @@ function Header({
                     <span>{label}</span>
                   </button>
                 ))}
+              </div>
+              <div className="mx-auto mt-3 grid max-w-[720px] grid-cols-2 gap-2 border-t border-border-soft pt-3">
+                <button onClick={() => { setIsMobileMenuOpen(false); setIsCartOpen(true); setIsNotifOpen(false); }} className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border-primary text-[14px] text-text-primary"><ShoppingBag className="h-4 w-4" />장바구니 {cartItems.length}</button>
+                <button onClick={() => { setIsMobileMenuOpen(false); setIsNotifOpen(true); setIsCartOpen(false); }} className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border-primary text-[14px] text-text-primary"><Bell className="h-4 w-4" />알림</button>
               </div>
             </motion.nav>
           </motion.div>
@@ -2162,6 +2188,7 @@ type QuickCollectAsset = {
 type QuickCollections = Record<QuickDropTarget, QuickCollectAsset[]>;
 
 type QuickCollectOption = {
+  id: string | number;
   name: string;
   image: string;
   count: string;
@@ -2269,11 +2296,14 @@ function QuickCollectDialog({
 }: {
   request: { target: "notes" | "references"; asset: QuickCollectAsset } | null;
   onClose: () => void;
-  onSave: (mode: "existing" | "new", groupName: string, memo?: string) => void;
+  onSave: (mode: "existing" | "new", groupName: string, memo?: string, targetId?: string | number) => void;
 }) {
   const [mode, setMode] = useState<"existing" | "new">("existing");
   const [memo, setMemo] = useState("");
   const [newName, setNewName] = useState("");
+  const [allNotes] = useStoredState<NoteItem[]>("neopoly_notes_v3", NOTES);
+  const [trashedNotes] = useStoredIdSet("neopoly_note_trash_v3");
+  const [savedBoards] = useStoredState("neopoly_reference_boards_v1", REFERENCE_BOARDS);
 
   useEffect(() => {
     if (!request) return;
@@ -2285,37 +2315,31 @@ function QuickCollectDialog({
   if (!request) return null;
 
   const isNote = request.target === "notes";
-  const availableNotes = (() => {
-    try {
-      const saved = localStorage.getItem("neopoly_notes_v3");
-      const parsed = saved ? JSON.parse(saved) : null;
-      return Array.isArray(parsed) && parsed.length ? parsed : NOTES;
-    } catch {
-      return NOTES;
-    }
-  })();
+  const availableNotes = allNotes.filter((note) => !trashedNotes.has(note.id));
   const existingOptions: QuickCollectOption[] = isNote
     ? availableNotes.map((note) => ({
+        id: note.id,
         name: note.title,
         image: note.images[0] ?? request.asset.image,
         count: `${note.images.length}장`,
         helper: note.date,
       }))
-    : REFERENCE_BOARDS.map((board) => ({
+    : savedBoards.map((board) => ({
+        id: board.id,
         name: board.label,
         image: board.image,
         count: `${ASSETS.filter((asset) => boardMatchesAsset(board, asset)).length}개`,
         helper: "Reference board",
       }));
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-5 backdrop-blur-[1px]">
-      <div className="w-full max-w-[600px] rounded-xl border border-[#2A2E36] bg-[#0E1011] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.65)]">
+    <ModalLayer onClose={onClose} aria-label={isNote ? "노트에 저장" : "레퍼런스에 저장"} className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[1px]">
+      <div className="max-h-[90dvh] w-full max-w-[600px] overflow-y-auto rounded-xl border border-[#2A2E36] bg-[#0E1011] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.65)]">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
             <p className="text-[14px] font-medium text-brand-primary">{isNote ? "노트에 추가" : "레퍼런스에 추가"}</p>
             <h3 className="mt-1 text-[20px] font-bold text-white">{request.asset.title}</h3>
           </div>
-          <button onClick={onClose} className="rounded-md p-1.5 text-text-tertiary transition hover:bg-[#1A1C20] hover:text-white">
+          <button aria-label="저장 모달 닫기" onClick={onClose} className="rounded-md p-1.5 text-text-tertiary transition hover:bg-[#1A1C20] hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -2341,8 +2365,8 @@ function QuickCollectDialog({
           <div className="grid max-h-[360px] gap-2 overflow-y-auto pr-1 custom-scrollbar">
             {existingOptions.map((option) => (
               <button
-                key={option.name}
-                onClick={() => onSave("existing", option.name, memo)}
+                key={option.id}
+                onClick={() => onSave("existing", option.name, memo, option.id)}
                 className="flex items-center gap-3 rounded-lg border border-[#1F2329] bg-[#141518] p-2.5 text-left transition hover:border-brand-primary/60 hover:bg-[#191B20]"
               >
                 <img
@@ -2358,6 +2382,7 @@ function QuickCollectDialog({
                 <Plus className="h-4 w-4 shrink-0 text-brand-primary" />
               </button>
             ))}
+            {existingOptions.length === 0 && <p className="py-5 text-[14px] text-text-secondary">저장할 항목이 없습니다. ‘새 노트’에서 만들어 주세요.</p>}
           </div>
         ) : (
           <div className="space-y-3">
@@ -2382,7 +2407,7 @@ function QuickCollectDialog({
           </div>
         )}
       </div>
-    </div>
+    </ModalLayer>
   );
 }
 
@@ -2514,7 +2539,7 @@ function AssetCard({
       animate={{ opacity: 1 }}
       onClick={() => onOpenProduct?.(asset)}
       onKeyDown={(event) => {
-        if (event.key !== "Enter" && event.key !== " ") return;
+        if (event.target !== event.currentTarget || (event.key !== "Enter" && event.key !== " ")) return;
         event.preventDefault();
         onOpenProduct?.(asset);
       }}
@@ -2527,7 +2552,7 @@ function AssetCard({
       <div className="relative aspect-[16/10] overflow-hidden">
         {/* Main Image */}
         <img 
-          src={asset.image} 
+          loading="lazy" decoding="async" src={asset.image}
           alt={asset.title} 
           className="h-full w-full origin-center transform-gpu object-cover transition-transform duration-300 ease-out will-change-transform group-hover:scale-[1.006]"
           referrerPolicy="no-referrer"
@@ -2558,14 +2583,15 @@ function AssetCard({
         </div>
 
         {/* Hover Information Overlay (Desktop) */}
-        <div className="np-dark-media absolute inset-x-0 bottom-0 z-10 hidden h-[56%] flex-col justify-end bg-gradient-to-t from-black/98 via-black/72 to-transparent p-4 pb-4 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 lg:flex">
-          <p className="text-[15px] text-text-secondary font-medium">
+        <div className="np-dark-media absolute inset-x-0 bottom-0 z-10 hidden h-[56%] flex-col justify-end bg-gradient-to-t from-black/98 via-black/72 to-transparent p-4 pb-4 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 group-focus-within:opacity-100 lg:flex">
+          <h3 className="truncate text-[16px] font-semibold leading-6 text-white">{asset.title}</h3>
+          <p className="mt-1 text-[14px] text-text-secondary font-medium">
             {asset.author}
           </p>
           <div className="flex items-center gap-3 mt-2 text-[14px] text-text-secondary">
-            <div className="flex items-center gap-1 opacity-75 cursor-pointer hover:opacity-100 transition-opacity" onClick={onToggleFavorite}>
+            <button type="button" aria-label={`${asset.title} ${isFavorite ? '찜 해제' : '찜하기'}`} aria-pressed={isFavorite} className="flex min-h-8 items-center gap-1 opacity-75 cursor-pointer hover:opacity-100 transition-opacity" onClick={onToggleFavorite}>
               <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} /> {asset.likes}
-            </div>
+            </button>
             <div className="flex items-center gap-1 opacity-75">
               <Eye className="w-3.5 h-3.5" /> {asset.views}
             </div>
@@ -2597,6 +2623,19 @@ function AssetCard({
   );
 }
 
+type CreatorInquiryType = 'headhunting' | 'commission' | 'other';
+
+const CREATOR_INQUIRY_OPTIONS: Array<{
+  id: CreatorInquiryType;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { id: 'headhunting', label: '헤드헌팅', description: '채용 및 장기 협업 제안', icon: User },
+  { id: 'commission', label: '제품 의뢰', description: '작품·제품 제작 및 커미션 의뢰', icon: Box },
+  { id: 'other', label: '기타', description: '그 외 작품과 제작자 관련 문의', icon: FileText },
+];
+
 const PRODUCT_DETAIL_DATA: Record<number, {
   slug: string;
   imagePrefix: string;
@@ -2609,6 +2648,8 @@ const PRODUCT_DETAIL_DATA: Record<number, {
   description: string;
   fileInfo: [string, string][];
   galleryCount: number;
+  allowedInquiryTypes?: CreatorInquiryType[];
+  isPreview?: boolean;
 }> = {
   1: {
     slug: 'elf',
@@ -2648,6 +2689,7 @@ const PRODUCT_DETAIL_DATA: Record<number, {
     description: '커다란 날개와 긴 꼬리 실루엣이 특징인 와이번 크리처 모델입니다. 비행 포즈, 턴어라운드, 와이어 프레임 참고를 기반으로 고품질 크리처 작업에 적합합니다.',
     fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함 (Humanoid)']],
     galleryCount: 4,
+    allowedInquiryTypes: ['headhunting', 'commission', 'other'],
   },
   4: {
     slug: 'dinosaur',
@@ -2700,6 +2742,7 @@ const PRODUCT_DETAIL_DATA: Record<number, {
     description: '산업 설비와 조선, 건축 모듈을 한 화면에서 확인할 수 있는 포스코 스타일 3D 에셋 구성입니다. 기업 교육, 설명형 콘텐츠, 산업 시뮬레이션에 어울립니다.',
     fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함']],
     galleryCount: 11,
+    allowedInquiryTypes: ['commission', 'other'],
   },
   8: {
     slug: 'posco_b',
@@ -2713,6 +2756,7 @@ const PRODUCT_DETAIL_DATA: Record<number, {
     description: '철골 구조물, 와이어, 주택 구조, 건축 모듈 중심의 포스코 스타일 3D 에셋 구성입니다. 단계별 산업 모델 소개와 기술 콘텐츠에 적합합니다.',
     fileInfo: [['파일 형식', 'FBX, OBJ, Blend'], ['폴리곤 수', '25,000 tris'], ['텍스처 해상도', '4K (4096x4096)'], ['리깅', '미포함']],
     galleryCount: 11,
+    allowedInquiryTypes: ['headhunting', 'commission', 'other'],
   },
 };
 
@@ -2762,6 +2806,7 @@ function productFallbackImage(assetId: number, order: number, fallback: string) 
 }
 
 function detailImageCandidates(product: { slug: string; imagePrefix: string }, assetId: number, index: number) {
+  if (!product.imagePrefix) return [];
   const padded = String(index).padStart(2, '0');
   return [
     `/images/${product.imagePrefix}${padded}.png`,
@@ -2815,7 +2860,6 @@ function ProductDetailPage({
   onQuickCollect,
   onAssetDragStart,
   onViewPurchases,
-  onContactArtist,
 }: {
   assetId: number;
   onNavigateHome: () => void;
@@ -2823,10 +2867,14 @@ function ProductDetailPage({
   onQuickCollect?: (target: QuickDropTarget, asset: any) => void;
   onAssetDragStart?: (asset: any, e: React.DragEvent) => void;
   onViewPurchases?: () => void;
-  onContactArtist: () => void;
 }) {
   const asset = ASSETS.find((item) => item.id === assetId) ?? ASSETS[0];
-  const product = PRODUCT_DETAIL_DATA[asset.id] ?? PRODUCT_DETAIL_DATA[1];
+  const product: typeof PRODUCT_DETAIL_DATA[number] = PRODUCT_DETAIL_DATA[asset.id] ?? {
+    slug: String(asset.id), imagePrefix: '', title: asset.title, category: asset.badge === 'A' ? 'Art' : 'Market',
+    price: '판매 정보 준비 중', originalPrice: '', stats: [asset.views, asset.likes, '—'],
+    tags: [], description: '갤러리 미리보기 작품입니다. 상세 설명과 판매 파일은 아직 등록되지 않았습니다.',
+    fileInfo: [['상세 정보', '등록 준비 중']], galleryCount: 1, isPreview: true,
+  };
   const displayTitle = asset.title || product.title;
   const recommended = [5, 2, 1, 6]
     .map((id) => ASSETS.find((item) => item.id === id))
@@ -2841,6 +2889,28 @@ function ProductDetailPage({
   });
   const mobileGalleryRef = useRef<HTMLDivElement>(null);
   const mobileThumbnailRailRef = useRef<HTMLDivElement>(null);
+  const desktopInfoRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const panel = desktopInfoRef.current;
+      if (!panel) return;
+      if (window.innerWidth < 1024) { panel.style.removeProperty('max-height'); return; }
+      const top = Math.max(92, panel.getBoundingClientRect().top);
+      panel.style.maxHeight = `${Math.max(128, window.innerHeight - top - 24)}px`;
+    };
+    const schedule = () => { if (!frame) frame = window.requestAnimationFrame(measure); };
+    measure();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+    };
+  }, [asset.id, isDesktopInfoPanelCollapsed]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -2946,7 +3016,7 @@ function ProductDetailPage({
                   <button
                     onClick={(event) => {
                       event.stopPropagation();
-                      onQuickCollect?.("references", asset);
+                      onQuickCollect?.("references", { ...asset, image: event.currentTarget.closest('.np-product-carousel-slide')?.querySelector<HTMLImageElement>('img:not([aria-hidden])')?.currentSrc || asset.image });
                     }}
                     className="np-product-media-action np-product-mobile-media-action min-h-8 rounded-md border px-2.5 py-1 text-[12px] font-medium backdrop-blur transition md:min-h-9 md:px-3 md:text-[14px]"
                   >
@@ -2955,7 +3025,7 @@ function ProductDetailPage({
                   <button
                     onClick={(event) => {
                       event.stopPropagation();
-                      onQuickCollect?.("notes", asset);
+                      onQuickCollect?.("notes", { ...asset, image: event.currentTarget.closest('.np-product-carousel-slide')?.querySelector<HTMLImageElement>('img:not([aria-hidden])')?.currentSrc || asset.image });
                     }}
                     className="np-product-media-action np-product-mobile-media-action min-h-8 rounded-md border px-2.5 py-1 text-[12px] font-medium backdrop-blur transition md:min-h-9 md:px-3 md:text-[14px]"
                   >
@@ -2970,15 +3040,14 @@ function ProductDetailPage({
             <div
               ref={mobileThumbnailRailRef}
               className="np-product-thumbnail-rail scrollbar-hide flex touch-pan-x snap-x snap-proximity gap-1.5 overflow-x-auto overscroll-x-contain px-4 py-2.5 scroll-smooth md:gap-2 md:px-6 md:py-3"
-              role="tablist"
+              role="group"
               aria-label="상세 이미지 선택"
             >
               {gallery.map((order, index) => (
                 <button
                   key={order}
                   type="button"
-                  role="tab"
-                  aria-selected={index === activeMobileSlide}
+                  aria-pressed={index === activeMobileSlide}
                   aria-label={`${gallery.length}개 중 ${index + 1}번째 이미지 보기`}
                   data-active={index === activeMobileSlide}
                   data-thumbnail-index={index}
@@ -3048,7 +3117,9 @@ function ProductDetailPage({
           </section>
 
           <aside
-            className={`w-full md:mx-auto md:max-w-[760px] lg:sticky lg:top-[92px] lg:mx-0 lg:max-w-none lg:self-start ${
+            aria-label="작품 정보"
+            ref={desktopInfoRef}
+            className={`np-product-info-scroll custom-scrollbar w-full md:mx-auto md:max-w-[760px] lg:sticky lg:top-[92px] lg:mx-0 lg:max-h-[calc(100dvh-116px)] lg:max-w-none lg:self-start lg:overflow-y-auto lg:overscroll-contain lg:pr-1 ${
               isDesktopInfoPanelCollapsed
                 ? 'lg:hidden'
                 : 'lg:block'
@@ -3062,10 +3133,9 @@ function ProductDetailPage({
                 onNavigateHome={onNavigateHome}
                 onViewPurchases={onViewPurchases}
                 onCollapseInfoPanel={() => setIsDesktopInfoPanelCollapsed(true)}
-                onContactArtist={onContactArtist}
               />
-              {product.category === 'Market' && <ProductLicensePanel />}
-              <ProductStatsPanel stats={product.stats} />
+              {product.category === 'Market' && !product.isPreview && <ProductLicensePanel />}
+              <ProductStatsPanel stats={product.stats} isArt={product.category === 'Art' || product.isPreview} />
               <ProductInfoPanel product={product} />
             </div>
           </aside>
@@ -3074,7 +3144,7 @@ function ProductDetailPage({
 
       <section className="np-product-recommend-section border-t border-[#1F2329] px-4 py-14 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-[2560px]">
-          <h2 className="mb-8 text-[24px] font-bold text-white">추천 모델링</h2>
+          <h2 className="mb-8 text-[20px] leading-[30px] font-semibold text-white">함께 볼 작품</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
             {recommended.map((item) => (
               <button
@@ -3087,15 +3157,15 @@ function ProductDetailPage({
                 <img src={item.image} alt={item.title} className="aspect-[16/10] w-full object-cover" referrerPolicy="no-referrer" />
                 <div className="np-product-recommend-info border-t border-[#262A31] bg-[#15171D] p-4">
                   <span className="mb-2.5 inline-flex rounded-sm bg-brand-primary px-2 py-0.5 text-[14px] font-medium text-bg-dark">
-                    Market
+                    {item.badge === 'A' ? 'Art' : 'Market'}
                   </span>
-                  <h3 className="text-[15px] font-medium leading-tight text-white line-clamp-1">{item.id === 5 ? 'Street Dunker' : 'Fantasy Character 1'}</h3>
-                  <p className="mt-1.5 text-[14px] font-medium leading-snug text-text-secondary">고품질 3D 캐릭터 모델</p>
+                  <h3 className="text-[16px] leading-6 font-semibold text-white line-clamp-1">{item.title}</h3>
+                  <p className="mt-1.5 text-[14px] leading-6 text-text-secondary">{item.author}</p>
                   <div className="mt-4 flex items-center justify-between">
-                    <span className="text-[15px] font-medium text-brand-primary">{item.id === 5 ? '₩89,000' : '₩62K'}</span>
+                    <span className="np-price-text text-[15px] font-medium text-brand-primary">{item.badge === 'A' ? '감상 작품' : PRODUCT_DETAIL_DATA[item.id]?.price ?? '상세 준비 중'}</span>
                     <span className="flex items-center gap-1.5 text-[14px] font-medium text-text-tertiary">
                       <Heart className="h-3.5 w-3.5" />
-                      485
+                      {item.likes}
                     </span>
                   </div>
                 </div>
@@ -3141,15 +3211,14 @@ function BoardPage({
   const [aiOrganizerTarget, setAiOrganizerTarget] = useState<AIOrganizerTarget | null>(null);
   const [aiOrganizerStep, setAiOrganizerStep] = useState<"options" | "review">("options");
   const [aiOrganizerScope, setAiOrganizerScope] = useState<AIOrganizationScope>("ungrouped");
-  const [aiBoardPlan, setAiBoardPlan] = useState<AIBoardPlan | null>(null);
-  const [referenceAiGroups, setReferenceAiGroups] = useState<ReferenceAIGroup[]>([]);
+  const [aiBoardPlan, setAiBoardPlan, undoNotes, canUndoNotes] = useUndoStoredState<AIBoardPlan | null>("neopoly_board_plan_v1", null);
+  const [referenceAiGroups, setReferenceAiGroups, undoReferences, canUndoReferences] = useUndoStoredState<ReferenceAIGroup[]>("neopoly_reference_groups_v1", []);
+  const [storedNotes] = useStoredState<NoteItem[]>("neopoly_notes_v3", NOTES);
+  const [referenceBoards] = useStoredState("neopoly_reference_boards_v1", REFERENCE_BOARDS);
+  const [collectedReferences] = useStoredState<any[]>("neopoly_reference_assets_v1", []);
   const [focusedAiGroupCode, setFocusedAiGroupCode] = useState<string | null>(null);
-  const [boardDeletedNoteIds, setBoardDeletedNoteIds] = useState<Set<number>>(
-    () => readStoredIdSet(NOTE_TRASH_STORAGE_KEY),
-  );
-  const [boardDeletedReferenceIds, setBoardDeletedReferenceIds] = useState<Set<number>>(
-    () => readStoredIdSet(REFERENCE_TRASH_STORAGE_KEY),
-  );
+  const [boardDeletedNoteIds, setBoardDeletedNoteIds] = useStoredIdSet(NOTE_TRASH_STORAGE_KEY);
+  const [boardDeletedReferenceIds, setBoardDeletedReferenceIds] = useStoredIdSet(REFERENCE_TRASH_STORAGE_KEY);
 
   useEffect(() => {
     setBoardView(initialView);
@@ -3161,13 +3230,6 @@ function BoardPage({
     }
   }, [boardView]);
 
-  useEffect(() => {
-    localStorage.setItem(NOTE_TRASH_STORAGE_KEY, JSON.stringify(Array.from(boardDeletedNoteIds)));
-  }, [boardDeletedNoteIds]);
-
-  useEffect(() => {
-    localStorage.setItem(REFERENCE_TRASH_STORAGE_KEY, JSON.stringify(Array.from(boardDeletedReferenceIds)));
-  }, [boardDeletedReferenceIds]);
 
   const boardItems = [
     { id: "all" as const, label: "전체", icon: LayoutGrid },
@@ -3175,19 +3237,19 @@ function BoardPage({
     { id: "references" as const, label: "레퍼런스", icon: ImageIcon },
   ];
 
-  const liveNotes = NOTES.filter((note) => !boardDeletedNoteIds.has(note.id));
-  const liveReferences = ASSETS.filter((asset) =>
-    !boardDeletedReferenceIds.has(asset.id) &&
-    REFERENCE_BOARDS.some((board) => boardMatchesAsset(board, asset as any)),
-  );
+  const liveNotes = storedNotes.filter((note) => !boardDeletedNoteIds.has(note.id));
+  const liveReferences = [...new Map([...ASSETS, ...collectedReferences].map((asset) => [asset.id, asset])).values()]
+    .filter((asset) => !boardDeletedReferenceIds.has(asset.id));
   const savedReferenceIds = new Set(liveReferences.map((asset) => asset.id));
   const groupedNoteIds = new Set(
     aiBoardPlan?.groups
       .filter((group) => group.id !== "ungrouped")
-      .flatMap((group) => group.noteIds) ?? [],
+      .flatMap((group) => group.noteIds)
+      .filter((id) => liveNotes.some((note) => note.id === id)) ?? [],
   );
   const groupedReferenceIds = new Set(
-    referenceAiGroups.flatMap((group) => group.assetIds),
+    referenceAiGroups.flatMap((group) => group.assetIds)
+      .filter((id) => savedReferenceIds.has(id)),
   );
   const notesForAI = aiOrganizerScope === "all"
     ? liveNotes
@@ -3204,9 +3266,9 @@ function BoardPage({
     filter === "all" ? liveNotes.length : liveNotes.filter((note) => note.tags.includes(filter)).length;
   const referenceCountFor = (category: string) => {
     if (category === "all") return liveReferences.length;
-    if (category === "favorites") return favorites.length;
+    if (category === "favorites") return liveReferences.filter((asset) => favorites.includes(asset.id)).length;
     if (category === "recent") return Math.min(12, liveReferences.length);
-    const board = REFERENCE_BOARDS.find((item) => item.id === category);
+    const board = referenceBoards.find((item) => item.id === category);
     return board ? liveReferences.filter((asset) => boardMatchesAsset(board, asset as any)).length : 0;
   };
 
@@ -3300,11 +3362,12 @@ function BoardPage({
         {submenuButton("전체", referenceCountFor("all"), boardReferenceCategory === "all", () => setBoardReferenceCategory("all"), <LayoutGrid className="h-4 w-4" />)}
         {submenuButton("즐겨찾기", referenceCountFor("favorites"), boardReferenceCategory === "favorites", () => setBoardReferenceCategory("favorites"), <Star className="h-4 w-4" />)}
         {submenuButton("최근 추가", referenceCountFor("recent"), boardReferenceCategory === "recent", () => setBoardReferenceCategory("recent"), <Clock className="h-4 w-4" />)}
+        {submenuButton("휴지통", boardDeletedReferenceIds.size, boardReferenceCategory === "trash", () => setBoardReferenceCategory("trash"), <Trash2 className="h-4 w-4" />)}
       </div>
       <div>
         <p className="mb-2 px-4 text-[14px] font-medium uppercase tracking-[0.08em] text-text-secondary">보드</p>
         <div className="space-y-2">
-          {REFERENCE_BOARDS.map((board) => {
+          {referenceBoards.map((board) => {
             const active = boardReferenceCategory === board.id;
             return (
               <button
@@ -3378,7 +3441,7 @@ function BoardPage({
           ...remainingGroups,
           {
             id: `manual-note-${Date.now()}`,
-            code: `M${manualIndex}`,
+            code: `M${Math.max(0, ...remainingGroups.map((group) => Number(group.code.replace(/\D/g, "")) || 0)) + 1}`,
             title: name,
             rationale: "사용자가 직접 선택해 만든 노트 그룹입니다.",
             noteIds,
@@ -3401,7 +3464,7 @@ function BoardPage({
           assetIds: group.assetIds.filter((assetId) => !selected.has(assetId)),
         }))
         .filter((group) => group.assetIds.length > 0);
-      const manualIndex = remainingGroups.filter((group) => group.id.startsWith("manual-reference-")).length + 1;
+      const manualIndex = Math.max(0, ...remainingGroups.map((group) => Number(group.code.replace(/\D/g, "")) || 0)) + 1;
       return [
         ...remainingGroups,
         {
@@ -3456,10 +3519,10 @@ function BoardPage({
   const renderBoardNoteDetail = (note: (typeof NOTES)[number]) => (
     <article className="flex h-full min-h-0 flex-col bg-[#0A0B0D]">
       <header className="shrink-0 border-b border-[#1C1E24] px-6 py-5 sm:px-7">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-[14px] font-medium text-brand-primary">노트 보기</p>
-            <h2 className="mt-2 text-[30px] font-medium leading-tight text-white sm:text-[34px]">{note.title}</h2>
+            <h2 className="mt-2 text-[20px] font-semibold leading-[30px] text-white sm:text-[28px] sm:leading-[38px]">{note.title}</h2>
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[14px] font-medium text-text-tertiary">
               <span>{note.date}</span>
               <span className="h-1 w-1 rounded-full bg-[#4A4F5A]" />
@@ -3498,9 +3561,12 @@ function BoardPage({
               id={`board-note-memo-${note.id}`}
               key={note.id}
               defaultValue={note.desc}
+              readOnly
+              aria-describedby={`board-note-readonly-${note.id}`}
               placeholder="아이디어나 참고할 내용을 메모하세요."
               className="min-h-[260px] w-full resize-y rounded-xl border border-[#252A33] bg-[#101216] px-5 py-4 text-[17px] leading-[1.75] text-text-primary outline-none transition placeholder:text-text-tertiary focus:border-brand-primary/55 focus:bg-[#12161D]"
             />
+            <p id={`board-note-readonly-${note.id}`} className="text-[12px] leading-[18px] text-text-secondary">읽기 전용 미리보기입니다. 내용을 수정하려면 ‘노트 편집’을 선택하세요.</p>
           </section>
 
           <section className="flex flex-wrap items-center gap-2">
@@ -3538,8 +3604,10 @@ function BoardPage({
     if (!activeBoardNote) return null;
 
     return (
-      <div
-        className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 px-4 py-5 backdrop-blur-sm"
+      <ModalLayer
+        onClose={() => setActiveBoardNoteId(null)}
+        aria-label={`${activeBoardNote.title} 노트 보기`}
+        className="fixed inset-0 z-[270] flex items-center justify-center bg-black/55 px-4 py-5 backdrop-blur-sm"
         onClick={() => setActiveBoardNoteId(null)}
       >
         <div
@@ -3548,7 +3616,7 @@ function BoardPage({
         >
           {renderBoardNoteDetail(activeBoardNote)}
         </div>
-      </div>
+      </ModalLayer>
     );
   };
 
@@ -3561,7 +3629,7 @@ function BoardPage({
     const priority = focusedAiGroupCode
       ? priorityByGroup[focusedAiGroupCode] ?? REFERENCE_BOARDS.map((board) => board.id)
       : REFERENCE_BOARDS.map((board) => board.id);
-    const orderedBoards = [...REFERENCE_BOARDS].sort(
+    const orderedBoards = [...referenceBoards].sort(
       (first, second) => priority.indexOf(first.id) - priority.indexOf(second.id),
     );
 
@@ -3648,7 +3716,13 @@ function BoardPage({
         </nav>
       </aside>
 
-      <section className="min-w-0 flex-1 overflow-hidden p-4 lg:p-5">
+      <section className="relative min-w-0 flex-1 overflow-hidden p-4 lg:p-5">
+        {(canUndoNotes || canUndoReferences) && (
+          <div className="absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 gap-2 rounded-lg border border-border-primary bg-surface-primary p-2 shadow-sm" role="status">
+            {canUndoNotes && <button onClick={undoNotes} className="min-h-10 whitespace-nowrap px-3 text-[13px] text-text-secondary hover:text-text-primary">노트 정리 되돌리기</button>}
+            {canUndoReferences && <button onClick={undoReferences} className="min-h-10 whitespace-nowrap px-3 text-[13px] text-text-secondary hover:text-text-primary">레퍼런스 정리 되돌리기</button>}
+          </div>
+        )}
         <div className="mb-4 flex gap-2 lg:hidden">
           <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto scrollbar-hide">
             {boardItems.map((item) => (
@@ -3755,6 +3829,7 @@ function BoardPage({
             isPopup
             hideSidebar
             hideDetailPanel
+            showMobileFilters
             onOpenNote={openBoardNoteDetail}
             onCreateNote={() => onEditNote(null)}
             boardFilter={boardNoteFilter}
@@ -3781,6 +3856,7 @@ function BoardPage({
             isPopup
             hideSidebar
             boardCategory={boardReferenceCategory}
+            showMobileFilters
             initialTrashIds={boardDeletedReferenceIds}
             onTrashChange={setBoardDeletedReferenceIds}
             aiGroups={referenceAiGroups}
@@ -3812,22 +3888,7 @@ function BoardPage({
           savedReferenceIds={savedReferenceIds}
           onClose={() => setAiOrganizerTarget(null)}
           onApply={(plan) => {
-            setAiBoardPlan((current) => {
-              if (aiOrganizerScope === "all" || !current) return plan;
-              const existingGroups = current.groups.filter((group) => group.id !== "ungrouped");
-              const offset = existingGroups.length;
-              const appendedGroups = plan.groups.map((group, index) => ({
-                ...group,
-                id: `group-ai-${offset + index + 1}`,
-                code: String.fromCharCode(65 + ((offset + index) % 26)),
-              }));
-              return {
-                groups: [...existingGroups, ...appendedGroups],
-                relations: [...current.relations, ...plan.relations],
-                duplicates: [...current.duplicates, ...plan.duplicates],
-                recommendations: [...current.recommendations, ...plan.recommendations],
-              };
-            });
+            setAiBoardPlan((current) => mergeBoardPlans(current, plan, aiOrganizerScope === "all"));
             setFocusedAiGroupCode(null);
             setBoardView("notes");
             setAiOrganizerTarget(null);
@@ -3846,8 +3907,8 @@ function BoardPage({
                 ...current,
                 ...groups.map((group, index) => ({
                   ...group,
-                  id: `reference-ai-${offset + index + 1}`,
-                  code: `R${offset + index + 1}`,
+                  id: `reference-ai-${crypto.randomUUID()}`,
+                  code: `R${Math.max(0, ...current.map((item) => Number(item.code.replace(/\D/g, "")) || 0)) + index + 1}`,
                 })),
               ];
             });
@@ -3860,6 +3921,166 @@ function BoardPage({
   );
 }
 
+function CreatorInquiryDialog({
+  artworkTitle,
+  creatorName,
+  allowedTypes,
+  onClose,
+}: {
+  artworkTitle: string;
+  creatorName: string;
+  allowedTypes: CreatorInquiryType[];
+  onClose: () => void;
+}) {
+  const [draft, setDraft] = useStoredState<{ type: CreatorInquiryType | null; message: string }>(`neopoly_inquiry_draft_v1:${artworkTitle}`, { type: null, message: '' });
+  const selectedType = draft.type;
+  const message = draft.message;
+  const setSelectedType = (type: CreatorInquiryType) => setDraft((previous) => ({ ...previous, type }));
+  const setMessage = (message: string) => setDraft((previous) => ({ ...previous, message }));
+  const [isSent, setIsSent] = useState(false);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const availableOptions = CREATOR_INQUIRY_OPTIONS.filter((option) => allowedTypes.includes(option.id));
+  const canSubmit = selectedType !== null && allowedTypes.includes(selectedType) && message.trim().length > 0;
+
+
+  return (
+    <ModalLayer onClose={onClose} aria-labelledby="creator-inquiry-title" aria-describedby="creator-inquiry-description"
+      className="fixed inset-0 z-[300] flex items-end justify-center bg-black/60 backdrop-blur-sm md:items-center md:px-4 md:py-6"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <motion.section
+        initial={{ opacity: 0, y: 28, scale: 0.99 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 28, scale: 0.99 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+        className="np-creator-inquiry-dialog safe-area-bottom max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl border border-border-primary bg-[#101215] p-5 shadow-[0_-16px_48px_rgba(0,0,0,0.48)] md:max-w-[520px] md:rounded-xl md:p-6 md:shadow-[0_24px_70px_rgba(0,0,0,0.7)]"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        {isSent ? (
+          <div className="py-5 text-center md:py-7">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-brand-primary/30 bg-brand-primary/10 text-brand-primary">
+              <Check className="h-7 w-7" aria-hidden="true" />
+            </div>
+            <h2 id="creator-inquiry-title" className="mt-5 text-[20px] font-semibold leading-[30px] text-white">
+              문의 초안을 저장했습니다
+            </h2>
+            <p id="creator-inquiry-description" className="mt-2 text-[14px] leading-6 text-text-secondary">
+              현재는 기기 내 저장만 지원합니다. 제작자에게 전송되지 않았으며, 다시 열어 내용을 확인할 수 있습니다.
+            </p>
+            <button
+              ref={closeButtonRef}
+              type="button"
+              onClick={onClose}
+              className="np-primary-action mt-6 min-h-11 w-full rounded-md bg-brand-primary px-4 py-2.5 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover"
+            >
+              확인
+            </button>
+          </div>
+        ) : (
+          <>
+            <header className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-[12px] font-medium leading-[18px] text-brand-primary">CREATOR CONTACT</p>
+                <h2 id="creator-inquiry-title" className="mt-1 text-[20px] font-semibold leading-[30px] text-white">
+                  제작자에게 문의하기
+                </h2>
+                <p id="creator-inquiry-description" className="mt-1 text-[14px] leading-6 text-text-secondary">
+                  <span className="font-medium text-white">{artworkTitle}</span>에 관해 {creatorName} 님에게 보낼 문의 초안을 작성합니다.
+                </p>
+              </div>
+              <button
+                ref={closeButtonRef}
+                type="button"
+                onClick={onClose}
+                className="np-creator-inquiry-close shrink-0 rounded-md p-2 text-text-tertiary transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
+                aria-label="문의 모달 닫기"
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </header>
+
+            <form
+              className="mt-6"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!canSubmit) return;
+                const entries = readJSON<any[]>('neopoly_inquiries_v1', []);
+                if (writeJSON('neopoly_inquiries_v1', [{ id: crypto.randomUUID(), artworkTitle, creatorName, type: selectedType, message: message.trim(), status: 'draft', createdAt: new Date().toISOString() }, ...entries.filter((item) => item.artworkTitle !== artworkTitle)])) setIsSent(true);
+              }}
+            >
+              <fieldset>
+                <legend className="text-[14px] font-medium text-white">문의 유형</legend>
+                <p className="mt-1 text-[12px] leading-[18px] text-text-tertiary">
+                  제작자별 문의 유형 시연입니다. 실제 계정 설정 연동은 준비 중입니다.
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  {availableOptions.map((option) => {
+                    const Icon = option.icon;
+                    const isSelected = selectedType === option.id;
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        aria-pressed={isSelected}
+                        onClick={() => setSelectedType(option.id)}
+                        className={`np-creator-inquiry-option min-h-[88px] rounded-lg border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary ${
+                          isSelected
+                            ? 'border-brand-primary bg-brand-primary/10'
+                            : 'border-border-primary bg-surface-primary/60 hover:border-brand-primary/45 hover:bg-white/[0.04]'
+                        }`}
+                      >
+                        <Icon className={`h-4 w-4 ${isSelected ? 'text-brand-primary' : 'text-text-secondary'}`} aria-hidden="true" />
+                        <span className="mt-2 block text-[14px] font-medium text-white">{option.label}</span>
+                        <span className="mt-0.5 block text-[12px] leading-[18px] text-text-tertiary">{option.description}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </fieldset>
+
+              <label htmlFor="creator-inquiry-message" className="mt-5 block text-[14px] font-medium text-white">
+                문의 내용
+              </label>
+              <textarea
+                id="creator-inquiry-message"
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                rows={5}
+                maxLength={1000}
+                placeholder="제안 내용, 일정, 예산 등 제작자가 확인해야 할 내용을 작성해 주세요."
+                className="np-creator-inquiry-textarea mt-2 w-full resize-none rounded-lg border border-border-primary bg-[#0A0B0D] px-3.5 py-3 text-[14px] leading-6 text-white outline-none transition placeholder:text-text-tertiary focus:border-brand-primary"
+              />
+              <div className="mt-1 flex items-center justify-between gap-3 text-[12px] leading-[18px] text-text-tertiary">
+                <span>MVP · 실제 전송 없이 이 기기에 저장합니다.</span>
+                <span className="shrink-0">{message.length}/1000</span>
+              </div>
+
+              <div className="mt-6 grid grid-cols-[0.8fr_1.2fr] gap-2.5">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="np-creator-inquiry-cancel min-h-11 rounded-md border border-border-primary px-4 py-2.5 text-[14px] font-medium text-text-secondary transition hover:bg-white/5 hover:text-white"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={!canSubmit}
+                  className="np-primary-action min-h-11 rounded-md bg-brand-primary px-4 py-2.5 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  초안 저장
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+      </motion.section>
+    </ModalLayer>
+  );
+}
+
 function ProductPurchasePanel({
   asset,
   product,
@@ -3867,7 +4088,6 @@ function ProductPurchasePanel({
   onNavigateHome,
   onViewPurchases,
   onCollapseInfoPanel,
-  onContactArtist,
 }: {
   asset: any;
   product: typeof PRODUCT_DETAIL_DATA[number];
@@ -3875,7 +4095,6 @@ function ProductPurchasePanel({
   onNavigateHome: () => void;
   onViewPurchases?: () => void;
   onCollapseInfoPanel?: () => void;
-  onContactArtist: () => void;
 }) {
   const purchaseItem = createPurchaseItem(asset, product, displayTitle);
   const isArt = product.category === 'Art';
@@ -3883,6 +4102,24 @@ function ProductPurchasePanel({
   const [completeItems, setCompleteItems] = useState<PrototypePurchaseItem[] | null>(null);
   const [isInCart, setIsInCart] = useState(() => safeReadPurchaseItems(PURCHASE_CART_KEY).some((item) => item.id === asset.id));
   const [isPurchased, setIsPurchased] = useState(() => safeReadPurchaseItems(PURCHASED_ASSETS_KEY).some((item) => item.id === asset.id));
+  const [isCreatorInquiryOpen, setIsCreatorInquiryOpen] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useStoredState<number[]>("neopoly_favorites_v1", []);
+  const [followingAuthors, setFollowingAuthors] = useStoredState<string[]>("neopoly_following_authors_v1", []);
+  const [actionMessage, setActionMessage] = useState("");
+  const isFavorite = favoriteIds.includes(asset.id);
+  const isFollowing = followingAuthors.includes(asset.author);
+  const toggleSavedFavorite = () => setFavoriteIds((ids) => ids.includes(asset.id) ? ids.filter((id) => id !== asset.id) : [...ids, asset.id]);
+  const toggleFollow = () => {
+    if (setFollowingAuthors((authors) => authors.includes(asset.author) ? authors.filter((author) => author !== asset.author) : [...authors, asset.author])) {
+      setActionMessage(isFollowing ? "팔로잉을 해제했습니다." : "이 기기의 팔로잉 목록에 추가했습니다.");
+    }
+  };
+  const shareArtwork = async () => {
+    try {
+      await navigator.clipboard.writeText(new URL(`#product_detail/${asset.id}`, window.location.href).href);
+      setActionMessage("작품 링크를 복사했습니다.");
+    } catch { setActionMessage("복사 권한이 없습니다. 주소창의 작품 주소를 복사해 주세요."); }
+  };
 
   useEffect(() => {
     const syncState = () => {
@@ -3976,7 +4213,7 @@ function ProductPurchasePanel({
         <div className="flex items-center gap-3">
           <img src={PROFILE_IMAGE} alt="" className="h-10 w-10 rounded-full bg-white object-cover" />
           <div>
-            <p className="text-[14px] font-medium text-white">Kim ji hwan</p>
+            <p className="text-[14px] font-medium text-white">{asset.author}</p>
             <p className="text-[14px] text-text-tertiary">3D Character Artist</p>
           </div>
         </div>
@@ -3986,8 +4223,8 @@ function ProductPurchasePanel({
           <span>{'\uD314\uB85C\uC6CC'}</span>
           <span className="text-right text-text-secondary">0.3K</span>
         </div>
-        <button className="np-product-secondary-action mt-4 min-h-11 w-full rounded-md bg-[#3A3A3A] py-2.5 text-[14px] font-medium text-white transition hover:bg-[#4A4A4A]">
-          {'\uD314\uB85C\uC6B0'}
+        <button onClick={toggleFollow} aria-pressed={isFollowing} className="np-product-secondary-action mt-4 min-h-11 w-full rounded-md bg-[#3A3A3A] py-2.5 text-[14px] font-medium text-white transition hover:bg-[#4A4A4A]">
+          {isFollowing ? '팔로잉' : '팔로우'}
         </button>
       </div>
 
@@ -3999,17 +4236,17 @@ function ProductPurchasePanel({
           </p>
           <button
             type="button"
-            onClick={onContactArtist}
+            onClick={() => setIsCreatorInquiryOpen(true)}
             className="np-product-art-contact-action mt-4 w-full rounded-md bg-[#4C88D9] py-3 text-[14px] font-medium text-white transition hover:bg-[#5A96E6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A0C5FF]"
           >
             문의하기
           </button>
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <button className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
-              <Heart className="h-4 w-4 np-product-category-art" />
-              568
+            <button onClick={toggleSavedFavorite} aria-pressed={isFavorite} className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+              <Heart className={`h-4 w-4 np-product-category-art ${isFavorite ? 'fill-current' : ''}`} />
+              {isFavorite ? '찜 해제' : '찜하기'}
             </button>
-            <button className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+            <button onClick={shareArtwork} className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
               <Share2 className="h-4 w-4" />
               {'\uACF5\uC720'}
             </button>
@@ -4018,10 +4255,11 @@ function ProductPurchasePanel({
       ) : (
         <div className="np-product-panel rounded-lg border border-[#1F2329] bg-[#141518] p-4">
           <div className="mb-4 flex items-end gap-3">
-            <span className="text-[24px] font-bold text-brand-primary">{product.price}</span>
+            <span className="np-price-text text-[24px] font-bold text-brand-primary">{product.price}</span>
             {product.originalPrice && <span className="pb-1 text-[14px] text-text-tertiary line-through">{product.originalPrice}</span>}
           </div>
           <button
+            disabled={product.isPreview}
             onClick={() => {
               if (isPurchased) {
                 onViewPurchases?.();
@@ -4031,11 +4269,11 @@ function ProductPurchasePanel({
             }}
             className="np-primary-action mb-2 w-full rounded-md bg-brand-primary py-3 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover"
           >
-            {isPurchased ? '\uAD6C\uB9E4\uD55C \uC791\uC5C5\uBB3C \uBCF4\uAE30' : '\uAD6C\uB9E4\uD558\uAE30'}
+            {product.isPreview ? '판매 준비 중' : isPurchased ? '구매한 작업물 보기' : '구매하기 · 시연'}
           </button>
           <button
             onClick={handleAddToCart}
-            disabled={isInCart}
+            disabled={isInCart || product.isPreview}
             className={`np-product-cart-action mb-3 w-full rounded-md py-3 text-[14px] font-medium transition ${
               isInCart
                 ? 'np-product-cart-action-active cursor-default bg-[#262A31] text-brand-primary'
@@ -4045,18 +4283,29 @@ function ProductPurchasePanel({
             {isInCart ? '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uB2F4\uAE40' : '\uC7A5\uBC14\uAD6C\uB2C8\uC5D0 \uCD94\uAC00'}
           </button>
           <div className="grid grid-cols-2 gap-2">
-            <button className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
-              <Heart className="h-4 w-4 text-brand-primary" />
-              568
+            <button onClick={toggleSavedFavorite} aria-pressed={isFavorite} className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+              <Heart className={`h-4 w-4 text-brand-primary ${isFavorite ? 'fill-current' : ''}`} />
+              {isFavorite ? '찜 해제' : '찜하기'}
             </button>
-            <button className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
-              <ShoppingBag className="h-4 w-4" />
+            <button onClick={shareArtwork} className="np-product-icon-action flex min-h-11 items-center justify-center gap-2 rounded-md bg-[#262626] py-2 text-[14px] font-medium text-text-secondary hover:text-white">
+              <Share2 className="h-4 w-4" />
               {'\uACF5\uC720'}
             </button>
           </div>
         </div>
       )}
 
+      <p aria-live="polite" className="text-[12px] leading-[18px] text-text-secondary">{actionMessage || 'MVP · 찜·팔로잉은 이 기기에 저장되며 작가 통계는 샘플입니다.'}</p>
+      <AnimatePresence>
+        {isCreatorInquiryOpen && (
+          <CreatorInquiryDialog
+            artworkTitle={displayTitle}
+            creatorName={asset.author}
+            allowedTypes={product.allowedInquiryTypes ?? ['other']}
+            onClose={() => setIsCreatorInquiryOpen(false)}
+          />
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {checkoutItems && (
           <CheckoutDialog
@@ -4096,13 +4345,13 @@ function ProductLicensePanel() {
   );
 }
 
-function ProductStatsPanel({ stats }: { stats: [string, string, string] }) {
+function ProductStatsPanel({ stats, isArt = false }: { stats: [string, string, string]; isArt?: boolean }) {
   return (
     <div className="np-product-panel grid grid-cols-3 rounded-lg border border-[#1F2329] bg-[#141518] p-5 text-center">
       {[
         ['조회수', stats[0]],
-        ['구매', stats[1]],
-        ['평점', stats[2]],
+        [isArt ? '좋아요' : '구매', stats[1]],
+        [isArt ? '댓글' : '평점', isArt ? '—' : stats[2]],
       ].map(([label, value]) => (
         <div key={label}>
           <p className="text-[20px] font-bold text-white">{value}</p>
@@ -4206,22 +4455,22 @@ function DiscoverSection({
   onQuickCollect?: (target: QuickDropTarget, asset: any) => void,
   onAssetDragStart?: (asset: any, e: React.DragEvent) => void,
 }) {
-  const [activeTab, setActiveTab] = useState<'전체' | '마켓' | '아트' | '최신' | '팔로잉'>('전체');
+  const [activeTab, setActiveTab] = useStoredState<'전체' | '마켓' | '아트' | '최신' | '팔로잉'>("neopoly_discover_activeTab_v1", '전체');
   const [showFilters, setShowFilters] = useState(false);
   
   // Filter States
-  const [priceType, setPriceType] = useState<'all' | 'free' | 'paid'>('all');
-  const [priceRange, setPriceRange] = useState({ min: '0', max: '1,000,000+' });
-  const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
-  const [polyCount, setPolyCount] = useState<string[]>([]);
-  const [polyRange, setPolyRange] = useState({ min: '0', max: '1,000,000' });
-  const [license, setLicense] = useState<string[]>([]);
-  const [appliedPriceType, setAppliedPriceType] = useState<'all' | 'free' | 'paid'>('all');
-  const [appliedPriceRange, setAppliedPriceRange] = useState({ min: '0', max: '1,000,000+' });
-  const [appliedFormats, setAppliedFormats] = useState<string[]>([]);
-  const [appliedPolyCount, setAppliedPolyCount] = useState<string[]>([]);
-  const [appliedPolyRange, setAppliedPolyRange] = useState({ min: '0', max: '1,000,000' });
-  const [appliedLicense, setAppliedLicense] = useState<string[]>([]);
+  const [priceType, setPriceType] = useStoredState<'all' | 'free' | 'paid'>("neopoly_discover_priceType_v1", 'all');
+  const [priceRange, setPriceRange] = useStoredState("neopoly_discover_priceRange_v1", { min: '0', max: '1,000,000+' });
+  const [selectedFormats, setSelectedFormats] = useStoredState<string[]>("neopoly_discover_selectedFormats_v1", []);
+  const [polyCount, setPolyCount] = useStoredState<string[]>("neopoly_discover_polyCount_v1", []);
+  const [polyRange, setPolyRange] = useStoredState("neopoly_discover_polyRange_v1", { min: '0', max: '1,000,000' });
+  const [license, setLicense] = useStoredState<string[]>("neopoly_discover_license_v1", []);
+  const [appliedPriceType, setAppliedPriceType] = useStoredState<'all' | 'free' | 'paid'>("neopoly_discover_appliedPriceType_v1", 'all');
+  const [appliedPriceRange, setAppliedPriceRange] = useStoredState("neopoly_discover_appliedPriceRange_v1", { min: '0', max: '1,000,000+' });
+  const [appliedFormats, setAppliedFormats] = useStoredState<string[]>("neopoly_discover_appliedFormats_v1", []);
+  const [appliedPolyCount, setAppliedPolyCount] = useStoredState<string[]>("neopoly_discover_appliedPolyCount_v1", []);
+  const [appliedPolyRange, setAppliedPolyRange] = useStoredState("neopoly_discover_appliedPolyRange_v1", { min: '0', max: '1,000,000' });
+  const [appliedLicense, setAppliedLicense] = useStoredState<string[]>("neopoly_discover_appliedLicense_v1", []);
   const filterSheetDragControls = useDragControls();
   const [isMobileFilterSheet, setIsMobileFilterSheet] = useState(() => (
     typeof window !== 'undefined' ? window.matchMedia('(max-width: 767px)').matches : false
@@ -4229,7 +4478,7 @@ function DiscoverSection({
 
 
   const tabs: Array<typeof activeTab> = ['전체', '마켓', '아트', '최신', '팔로잉'];
-  const followingAssetIds = new Set([1, 2, 3, 4, 5, 6, 7, 8]);
+  const [followingAuthors] = useStoredState<string[]>("neopoly_following_authors_v1", []);
   const formats = ['.FBX', '.OBJ', '.ABC', '.BLEND', '.MAX', '.GLB'];
   const polyOptions = ['Low Poly', 'Mid Poly', 'High Poly'];
   const licenseOptions = ['\uD45C\uC900', '\uD655\uC7A5', '\uC0C1\uC5C5\uC801'];
@@ -4249,32 +4498,27 @@ function DiscoverSection({
   };
 
   const getAssetFilterMeta = (asset: typeof ASSETS[number]) => {
-    const id = asset.id;
-    const isFree = id % 7 === 0 || asset.badge === 'A';
-    const price = isFree ? 0 : 30000 + (id % 12) * 10000;
-    const assetFormats = formats.filter((_, index) => (id + index) % 3 !== 1);
-    const polyLabel = polyOptions[id % polyOptions.length];
-    const polyValue = 5000 + (id % 24) * 4200;
-    const assetLicenses = licenseOptions.filter((_, index) => (id + index) % 2 === 0);
-
-    return {
-      isFree,
-      price,
-      formats: assetFormats.length ? assetFormats : [formats[id % formats.length]],
-      polyLabel,
-      polyValue,
-      licenses: assetLicenses.length ? assetLicenses : [licenseOptions[id % licenseOptions.length]],
+    const data = PRODUCT_DETAIL_DATA[asset.id];
+    const isMarket = asset.badge === 'M';
+    const price = data && isMarket ? parseWonAmount(data.price) : 0;
+    const polyValue = Number(data?.fileInfo.find(([label]) => label === '폴리곤 수')?.[1].replace(/[^0-9]/g, '')) || 0;
+    const fileText = data?.fileInfo.find(([label]) => label === '파일 형식')?.[1].toUpperCase() ?? '';
+    return { known: Boolean(data), isFree: Boolean(data && isMarket && price === 0), price,
+      formats: formats.filter((format) => fileText.includes(format.slice(1))),
+      polyLabel: polyValue < 10000 ? 'Low Poly' : polyValue < 50000 ? 'Mid Poly' : 'High Poly', polyValue,
+      licenses: data && isMarket ? ['표준', '상업적'] : [],
     };
   };
 
   const assetMatchesAdvancedFilters = (asset: typeof ASSETS[number]) => {
     const meta = getAssetFilterMeta(asset);
+    if (!meta.known && (appliedPriceType !== 'all' || appliedFormats.length || appliedPolyCount.length || appliedLicense.length)) return false;
 
     if (appliedPriceType === 'free' && !meta.isFree) return false;
     if (appliedPriceType === 'paid') {
       const minPrice = parseFilterNumber(appliedPriceRange.min, 0);
       const maxPrice = parseFilterNumber(appliedPriceRange.max, Number.POSITIVE_INFINITY);
-      if (meta.isFree || meta.price < minPrice || meta.price > maxPrice) return false;
+      if (asset.badge !== 'M' || meta.isFree || meta.price < minPrice || meta.price > maxPrice) return false;
     }
 
     if (appliedFormats.length > 0 && appliedFormats.length < formats.length) {
@@ -4308,7 +4552,7 @@ function DiscoverSection({
     if (activeTabIndex === 3) {
       return [...ASSETS].sort((a, b) => b.id - a.id);
     }
-    return ASSETS.filter((asset) => followingAssetIds.has(asset.id));
+    return ASSETS.filter((asset) => followingAuthors.includes(asset.author));
   })();
   const discoverAssets = tabAssets
     .filter((asset) => assetMatchesCategory(asset.id, activeCategory))
@@ -4445,6 +4689,7 @@ function DiscoverSection({
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
+                  aria-pressed={activeTab === tab}
                     className={`relative min-h-11 min-w-11 py-2 text-[15px] font-medium transition-all sm:min-h-0 sm:min-w-0 sm:py-1 sm:text-[16px] md:text-[18px] ${
                     activeTab === tab ? 'text-brand-primary' : 'text-text-secondary hover:text-text-primary'
                   }`}
@@ -4757,7 +5002,7 @@ function DiscoverSection({
               isFavorite={favorites.includes(displayedAsset.id)}
               onToggleFavorite={(e) => { e.stopPropagation(); toggleFavorite(displayedAsset.id); }}
               onOpenProduct={() => {
-                if (displayedAsset.id <= 8) onOpenProduct?.(displayedAsset.id);
+                onOpenProduct?.(displayedAsset.id);
               }}
               onQuickCollect={onQuickCollect}
               onAssetDragStart={onAssetDragStart}
@@ -4765,11 +5010,7 @@ function DiscoverSection({
           );
         })}
       </div>
-      <div className="flex justify-center mt-8 py-6 pb-20">
-        <button className="flex min-h-11 items-center gap-2 px-4 py-2 text-[14px] font-medium text-text-secondary transition-colors hover:text-white">
-          더보기 <ChevronDown className="w-4 h-4" />
-        </button>
-      </div>
+      <p role="status" className="py-10 text-center text-[14px] text-text-secondary">{discoverAssets.length ? `${discoverAssets.length}개 작품을 모두 확인했습니다.` : '조건에 맞는 작품이 없습니다. 필터를 변경해 주세요.'}</p>
     </div>
   );
 }
@@ -4899,7 +5140,7 @@ function ScrollToTopButton() {
           exit={{ opacity: 0, scale: 0.8 }}
           onClick={scrollToTop}
           aria-label="페이지 맨 위로 이동"
-          className="group fixed bottom-4 right-4 z-[100] rounded-full border border-border-primary/50 bg-surface-primary p-3 text-text-secondary shadow-lg transition-colors hover:border-brand-primary/50 hover:bg-[#22252B] hover:text-brand-primary sm:bottom-6 sm:right-6 sm:p-3.5 lg:bottom-10 lg:right-10"
+          className="group fixed bottom-[calc(env(safe-area-inset-bottom)+12px)] right-4 z-[100] rounded-full border border-border-primary/50 bg-surface-primary p-3 text-text-secondary shadow-lg transition-colors hover:border-brand-primary/50 hover:bg-[#22252B] hover:text-brand-primary sm:bottom-8 sm:right-6"
         >
           <ArrowUp className="h-5 w-5 transition-transform group-hover:-translate-y-0.5 sm:h-6 sm:w-6" />
         </motion.button>
@@ -5012,6 +5253,54 @@ export default function App() {
   currentPageRef.current = currentPage;
 
   useEffect(() => {
+    const hideTimers = new Map<HTMLElement, number>();
+
+    const showScrollbar = (scrollHost: HTMLElement) => {
+      scrollHost.classList.add('np-scroll-active');
+      const previousTimer = hideTimers.get(scrollHost);
+      if (previousTimer) window.clearTimeout(previousTimer);
+
+      const nextTimer = window.setTimeout(() => {
+        scrollHost.classList.remove('np-scroll-active');
+        hideTimers.delete(scrollHost);
+      }, 700);
+      hideTimers.set(scrollHost, nextTimer);
+    };
+
+    const handleScroll = (event: Event) => {
+      const scrollHost = event.target === document
+        ? document.documentElement
+        : event.target instanceof HTMLElement
+          ? event.target
+          : document.documentElement;
+      showScrollbar(scrollHost);
+    };
+
+    const handleWheel = (event: WheelEvent) => {
+      const scrollHost = event.composedPath().find((item) => {
+        if (!(item instanceof HTMLElement)) return false;
+        const style = window.getComputedStyle(item);
+        const canScrollVertically = item.scrollHeight > item.clientHeight && /(auto|scroll|overlay)/.test(style.overflowY);
+        const canScrollHorizontally = item.scrollWidth > item.clientWidth && /(auto|scroll|overlay)/.test(style.overflowX);
+        return canScrollVertically || canScrollHorizontally;
+      });
+      showScrollbar(scrollHost instanceof HTMLElement ? scrollHost : document.documentElement);
+    };
+
+    document.addEventListener('scroll', handleScroll, true);
+    document.addEventListener('wheel', handleWheel, { capture: true, passive: true });
+    return () => {
+      document.removeEventListener('scroll', handleScroll, true);
+      document.removeEventListener('wheel', handleWheel, true);
+      hideTimers.forEach((timer, element) => {
+        window.clearTimeout(timer);
+        element.classList.remove('np-scroll-active');
+      });
+      hideTimers.clear();
+    };
+  }, []);
+
+  useEffect(() => {
     const nextHash = createAppHash(currentPage, selectedProductId);
     const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`;
 
@@ -5112,6 +5401,17 @@ export default function App() {
   };
 
   useEffect(() => {
+    const labels: Partial<Record<PageType, string>> = {
+      home: 'Discover', board: '작업 보드', studio: 'AI Studio', projects: '내 프로젝트',
+      uploads: '콘텐츠 관리', settings: '계정 설정', support: '고객 지원',
+      'note-editor': '노트 편집', favorites: '즐겨찾기', purchases: '구매한 에셋',
+    };
+    const title = currentPage === 'product_detail' ? ASSETS.find((asset) => asset.id === selectedProductId)?.title : labels[currentPage];
+    document.title = `${title ?? 'AI 작업'} · NeoPoly`;
+    if (currentPage !== 'home' || !shouldRestoreHomeScrollRef.current) window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [currentPage, selectedProductId]);
+
+  useEffect(() => {
     if (currentPage !== 'home' || !shouldRestoreHomeScrollRef.current) return;
 
     shouldRestoreHomeScrollRef.current = false;
@@ -5124,18 +5424,10 @@ export default function App() {
   }, [currentPage]);
 
   // Initialize dummy UserProfile (usually fetched from an API or local storage in reality)
-  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem('neopoly_user_profile');
+  const [userProfile, setUserProfile] = useStoredState<UserProfile>('neopoly_user_profile', () => {
+    const saved = readJSON<UserProfile | null>('neopoly_user_profile', null);
     if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return {
-          ...parsed,
-          avatar: PROFILE_IMAGE,
-          username: 'kimjihwan',
-          nickname: 'Hwan',
-        };
-      } catch (e) {}
+      return saved;
     }
     return {
       username: 'kimjihwan',
@@ -5151,30 +5443,28 @@ export default function App() {
 
   // Dummy state proxies required by UserProfilePage
   const [assets, setAssets] = useState<any[]>([]); // UserProfilePage will use this if needed, but ASSETS constant is global too.
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [favorites, setFavorites] = useStoredState<number[]>("neopoly_favorites_v1", []);
   const [isAssetDragging, setIsAssetDragging] = useState(false);
   const [isPanelDropMode, setIsPanelDropMode] = useState(false);
-  const [quickCollections, setQuickCollections] = useState<QuickCollections>(() => emptyQuickCollections());
+  const [quickCollections, setQuickCollections] = useStoredState<QuickCollections>(QUICK_COLLECTIONS_KEY, emptyQuickCollections);
   const [quickDialog, setQuickDialog] = useState<{ target: "notes" | "references"; asset: QuickCollectAsset } | null>(null);
   const [editingNote, setEditingNote] = useState<NoteItem | null>(null);
 
-  const panelNotes = (() => {
-    try {
-      const saved = localStorage.getItem("neopoly_notes_v3");
-      const parsed = saved ? JSON.parse(saved) : null;
-      return Array.isArray(parsed) && parsed.length ? parsed : NOTES;
-    } catch {
-      return NOTES;
-    }
-  })().slice(0, 2);
+  const [savedPanelNotes] = useStoredState<NoteItem[]>("neopoly_notes_v3", NOTES);
+  const [trashedPanelNotes] = useStoredIdSet("neopoly_note_trash_v3");
+  const [savedPanelBoards] = useStoredState("neopoly_reference_boards_v1", REFERENCE_BOARDS);
+  const panelNotes = savedPanelNotes.filter((note) => !trashedPanelNotes.has(note.id)).slice(0, 2);
 
-  const panelReferenceBoards = REFERENCE_BOARDS.slice(0, 2).map((board) => ({
+  const panelReferenceBoards = savedPanelBoards.slice(0, 2).map((board) => ({
     ...board,
     count: ASSETS.filter((asset) => boardMatchesAsset(board, asset as any)).length,
   }));
 
+  const [storageError, setStorageError] = useState(false);
   useEffect(() => {
-    localStorage.removeItem(QUICK_COLLECTIONS_KEY);
+    const onError = () => setStorageError(true);
+    window.addEventListener(STORAGE_ERROR_EVENT, onError);
+    return () => window.removeEventListener(STORAGE_ERROR_EVENT, onError);
   }, []);
 
   useEffect(() => {
@@ -5226,14 +5516,7 @@ export default function App() {
   };
 
   const handleQuickCollect = (target: QuickDropTarget, asset: any) => {
-    if (target === "notes") {
-      setCurrentPage("board");
-      return;
-    }
-    if (target === "references") {
-      setCurrentPage("board");
-      return;
-    }
+    if (target === "notes" || target === "references") setQuickDialog({ target, asset: toQuickCollectAsset(asset) });
   };
 
   const handleDropTarget = (target: QuickDropTarget, asset: QuickCollectAsset) => {
@@ -5313,7 +5596,13 @@ export default function App() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-bg-dark font-sans selection:bg-brand-primary/30 scroll-smooth">
+      {storageError && <div role="alert" className="fixed inset-x-3 top-3 z-[500] mx-auto flex max-w-[600px] items-center gap-3 rounded-lg border border-red-400 bg-surface-primary p-4 text-[14px] text-text-primary shadow-sm">
+        <span className="flex-1">변경 사항을 저장하지 못했습니다. 브라우저 저장 공간 또는 저장 허용 설정을 확인해 주세요.</span>
+        <button onClick={() => setStorageError(false)} aria-label="저장 오류 안내 닫기" className="p-2"><X className="h-4 w-4" /></button>
+      </div>}
       <Header
+        profile={userProfile}
+        onOpenProduct={openProductDetail}
         onNavigate={(page) => handleHeaderNavigate(page as PageType)}
         currentPage={currentPage}
         activeNav={activeNav}
@@ -5323,11 +5612,11 @@ export default function App() {
       />
       
       {currentPage === 'uploads' ? (
-        <ContentManagementPage />
+        <ContentManagementPage onNavigate={(page) => setCurrentPage(page as PageType)} />
       ) : currentPage === 'purchases' ? (
         <PurchasedAssetsPage />
       ) : currentPage === 'favorites' ? (
-        <FavoritesPage favorites={favorites} toggleFavorite={toggleFavorite} />
+        <FavoritesPage favorites={favorites} toggleFavorite={toggleFavorite} onOpenProduct={openProductDetail} />
       ) : currentPage === 'board' ? (
         <BoardPage
           onNavigate={(page) => setCurrentPage(page as PageType)}
@@ -5339,16 +5628,17 @@ export default function App() {
       ) : currentPage === 'projects' ? (
         <ProjectPage onNavigate={(page) => setCurrentPage(page as PageType)} selectedProjectId={focusedProjectId ?? undefined} />
       ) : currentPage === 'note-editor' ? (
-        <NoteEditorPage onNavigate={(page) => setCurrentPage(page as PageType)} initialNote={editingNote} />
+        <NoteEditorPage key={editingNote?.id ?? "new"} onNavigate={() => openBoardPage("notes")} initialNote={editingNote} />
       ) : currentPage === 'settings' ? (
         <AccountSettingsPage
           userProfile={userProfile}
           setUserProfile={setUserProfile}
           theme={theme}
           onThemeChange={handleThemeChange}
+          onNavigate={(page) => setCurrentPage(page as PageType)}
         />
       ) : currentPage === 'studio' ? (
-        <AIStudioPage onNavigate={(page) => setCurrentPage(page as PageType)} />
+        <AIStudioPage onNavigate={(page) => setCurrentPage(page as PageType)} onOpenProject={openProjectsPage} />
       ) : isPersistentModelingWorkflowPage(currentPage) ? (
         <div className="flex-1">
           {visitedModelingWorkflowPages.has('turnaround') && (
@@ -5370,7 +5660,6 @@ export default function App() {
           onQuickCollect={handleQuickCollect}
           onAssetDragStart={handleAssetDragStart}
           onViewPurchases={() => setCurrentPage('purchases')}
-          onContactArtist={() => setCurrentPage('support')}
         />
       ) : currentPage === 'support' ? (
         <SupportPage />
@@ -5603,8 +5892,36 @@ export default function App() {
       <QuickCollectDialog
         request={quickDialog}
         onClose={() => setQuickDialog(null)}
-        onSave={(mode, groupName, memo) => {
+        onSave={(mode, groupName, memo, targetId) => {
           if (!quickDialog) return;
+          if (quickDialog.target === "notes") {
+            const existing = mode === "existing" ? savedPanelNotes.find((note) => note.id === targetId) : null;
+            if (mode === "existing" && !existing) return;
+            const note: NoteItem = {
+              id: existing?.id ?? Date.now(), title: existing?.title ?? groupName,
+              desc: [existing?.desc, memo].filter(Boolean).join("\n\n"),
+              images: [...new Set([...(existing?.images ?? []), quickDialog.asset.image])],
+              tags: existing?.tags ?? [], date: noteDate(), starred: existing?.starred ?? false,
+              authorImage: existing?.authorImage ?? userProfile.avatar,
+            };
+            if (!saveNote(note, NOTES)) return;
+          } else {
+            const collected = readJSON<any[]>("neopoly_reference_assets_v1", []);
+            const known = [...ASSETS, ...collected].find((asset) => asset.image === quickDialog.asset.image);
+            const asset = known ?? { ...quickDialog.asset, id: Date.now(), likes: "0", views: "0", avatar: userProfile.avatar, badge: quickDialog.asset.badge ?? "A" };
+            if (!known && !writeJSON("neopoly_reference_assets_v1", [...collected, asset])) return;
+            const boards = readJSON<import('./components/ReferencePage').ReferenceBoard[]>("neopoly_reference_boards_v1", REFERENCE_BOARDS);
+            const existing = mode === "existing" ? boards.find((board) => board.id === targetId) : null;
+            if (mode === "existing" && !existing) return;
+            const board = {
+              id: existing?.id ?? `custom-${crypto.randomUUID()}`, label: existing?.label ?? groupName,
+              image: existing?.image ?? asset.image, keyword: existing?.keyword ?? groupName, memo: existing?.memo ?? memo,
+              assetIds: [...new Set([...(existing?.assetIds ?? (existing ? [...ASSETS, ...collected].filter((item) => boardMatchesAsset(existing, item)).map((item) => item.id) : [])), asset.id])],
+            };
+            if (!writeJSON("neopoly_reference_boards_v1", existing ? boards.map((item) => item.id === existing.id ? board : item) : [board, ...boards])) return;
+            const trash = readJSON<number[]>("neopoly_reference_trash_v3", []);
+            if (trash.includes(asset.id)) writeJSON("neopoly_reference_trash_v3", trash.filter((id) => id !== asset.id));
+          }
           const suffix = mode === "new" ? "새로 저장" : "기존에 추가";
           addQuickCollection(quickDialog.target, quickDialog.asset, `${groupName} · ${suffix}`, memo);
           setQuickDialog(null);
@@ -5614,7 +5931,7 @@ export default function App() {
       />
 
       {/* Premium Multi-Column Footer (Custom designed in Neo-Poly aesthetic matching reference screenshot) */}
-      {currentPage !== 'board' && currentPage !== 'projects' && currentPage !== 'note-editor' && currentPage !== 'uploads' && currentPage !== 'full_workflow' && currentPage !== 'full_workflow_chat' && currentPage !== 'studio' && currentPage !== 'turnaround' && currentPage !== 'modeling_generation' && (
+      {currentPage !== 'settings' && currentPage !== 'board' && currentPage !== 'projects' && currentPage !== 'note-editor' && currentPage !== 'uploads' && currentPage !== 'full_workflow' && currentPage !== 'full_workflow_chat' && currentPage !== 'studio' && currentPage !== 'turnaround' && currentPage !== 'modeling_generation' && (
         <footer className="bg-[#08080a] border-t border-border-soft/60 pt-16 pb-12 px-4 sm:px-6 2xl:px-8 min-[2200px]:px-10">
           <div className="max-w-[2560px] mx-auto">
             {/* Main Footer columns */}

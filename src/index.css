@@ -26,7 +26,7 @@
   /* High Readability Text Hierarchy */
   --color-text-primary: #FAFAFA;    /* Pure strong white for highest readability */
   --color-text-secondary: #B0B4BB;  /* Brighter supporting text for comfortable reading */
-  --color-text-tertiary: #9DA3AC;   /* AAA-ready metadata and inactive controls */
+  --color-text-tertiary: #9DA3AC;   /* Supporting metadata; contrast depends on its surface */
 }
 
 html[data-theme="light"] {
@@ -52,7 +52,7 @@ html[data-theme="light"] {
 
   body {
     @apply bg-bg-dark text-text-primary font-sans antialiased text-[14px];
-    min-width: 360px;
+    min-width: 320px;
     word-break: keep-all;
     overflow-wrap: break-word;
     transition: background-color 160ms ease, color 160ms ease;
@@ -250,6 +250,31 @@ html[data-theme="light"] .text-neutral-400 {
 
 html[data-theme="light"] .text-neutral-500 {
   color: #525B68 !important;
+}
+
+/* Legacy workspace metadata follows the readable theme token, not neutral-500. */
+html:not([data-theme="light"]) .np-workspace-shell .text-neutral-500 {
+  color: var(--color-text-tertiary);
+}
+
+/* Status labels sit on pale surfaces in light mode and need darker semantic ink. */
+html[data-theme="light"] .np-content-management-shell .text-\[\#4ADE80\] {
+  color: #19623B !important;
+}
+html[data-theme="light"] .np-content-management-shell .text-\[\#E46B6B\] {
+  color: #B32936 !important;
+}
+html[data-theme="light"] .np-content-management-shell .text-\[\#F97316\] {
+  color: #9A4312 !important;
+}
+
+html[data-theme="light"] .np-price-text,
+html[data-theme="light"] header nav [role="button"].text-brand-primary {
+  color: var(--color-text-primary) !important;
+}
+
+html[data-theme="light"] .np-organized-group-card {
+  background: linear-gradient(145deg, rgb(255 184 61 / 6%), var(--color-surface-primary));
 }
 
 html[data-theme="light"] [class*="text-white/"] {
@@ -515,7 +540,7 @@ html[data-theme="light"] .np-product-category-art {
 
 html[data-theme="light"] button:not([class*="focus-visible:ring"]):focus-visible,
 html[data-theme="light"] [role="button"]:not([class*="focus-visible:ring"]):focus-visible {
-  outline: 2px solid rgb(255 184 61 / 58%);
+  outline: 2px solid #795000;
   outline-offset: 2px;
 }
 
@@ -1100,6 +1125,43 @@ html[data-theme="light"] .np-product-panel {
   box-shadow: 0 1px 4px rgb(31 36 44 / 4%) !important;
 }
 
+html[data-theme="light"] .np-creator-inquiry-dialog {
+  border-color: #D5DAE2 !important;
+  background-color: #FFFFFF !important;
+  box-shadow: 0 18px 48px rgb(31 36 44 / 14%) !important;
+}
+
+html[data-theme="light"] .np-creator-inquiry-option {
+  border-color: #D5DAE2;
+  background-color: #F7F8FA;
+}
+
+html[data-theme="light"] .np-creator-inquiry-option:hover {
+  border-color: rgb(255 184 61 / 58%);
+  background-color: rgb(255 184 61 / 8%);
+}
+
+html[data-theme="light"] .np-creator-inquiry-option[aria-pressed="true"] {
+  border-color: var(--color-brand-primary);
+  background-color: rgb(255 184 61 / 12%);
+}
+
+html[data-theme="light"] .np-creator-inquiry-textarea {
+  border-color: #C8CFD8 !important;
+  background-color: #F7F8FA !important;
+  color: #111318 !important;
+}
+
+html[data-theme="light"] .np-creator-inquiry-textarea:focus {
+  border-color: var(--color-brand-primary) !important;
+}
+
+html[data-theme="light"] .np-creator-inquiry-close:hover,
+html[data-theme="light"] .np-creator-inquiry-cancel:hover {
+  background-color: rgb(255 184 61 / 10%) !important;
+  color: #111318 !important;
+}
+
 html[data-theme="light"] .np-product-panel-ghost {
   color: #5B626D !important;
 }
@@ -1562,15 +1624,8 @@ html[data-theme="light"] .glass-morphism {
   }
 }
 
-@media (hover: hover) and (pointer: fine) and (max-width: 1023px) {
-  .np-workspace-shell {
-    min-width: 960px;
-  }
-
-  .np-workspace-shell.np-content-management-shell {
-    min-width: 0;
-  }
-}
+/* Workspace panels reflow at the same breakpoint on mouse and touch devices.
+   Dense canvases may scroll inside their own panel, never widen the whole page. */
 
 @media (min-width: 1024px) and (max-height: 760px) {
   .np-settings-help-panel {
@@ -1583,16 +1638,20 @@ html[data-theme="light"] .glass-morphism {
 }
 .scrollbar-hide {
   -ms-overflow-style: none;
-  scrollbar-width: none;
+  scrollbar-width: none !important;
 }
 
-/* Modern scrollbars for a premium dark feel */
-html {
+/* Overlay scrollbars stay invisible at rest and appear only while their
+   own page or panel is actively scrolling. */
+html,
+.custom-scrollbar,
+[class*="overflow-auto"],
+[class*="overflow-y-auto"],
+[class*="overflow-x-auto"] {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: transparent transparent;
 }
 
-/* Premium Neo-Poly custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -1603,19 +1662,21 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid transparent;
+  background: transparent;
+  background-clip: padding-box;
   border-radius: 9999px;
-  transition: background 0.2s ease;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-brand-primary); /* Theme Brand Color */
+html.np-scroll-active,
+.np-scroll-active {
+  scrollbar-color: rgb(255 255 255 / 24%) transparent;
 }
 
-/* Compact custom scrollbar for dropdown content */
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+html.np-scroll-active::-webkit-scrollbar-thumb,
+.np-scroll-active::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 24%);
+  background-clip: padding-box;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -1623,60 +1684,14 @@ html {
   height: 5px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+html[data-theme="light"].np-scroll-active,
+html[data-theme="light"] .np-scroll-active {
+  scrollbar-color: rgb(78 88 103 / 38%) transparent;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 9999px;
-  border: 1px solid transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-brand-primary);
-}
-
-/* Light scrollbars use a cool neutral thumb and a faint visible track instead
-   of the translucent white treatment used by the dark theme. */
-html[data-theme="light"] {
-  scrollbar-color: rgb(112 122 136 / 48%) rgb(238 240 243 / 62%);
-}
-
-html[data-theme="light"]::-webkit-scrollbar-track,
-html[data-theme="light"] ::-webkit-scrollbar-track {
-  background: rgb(238 240 243 / 62%);
-}
-
-html[data-theme="light"]::-webkit-scrollbar-thumb,
-html[data-theme="light"] ::-webkit-scrollbar-thumb {
-  border: 1px solid rgb(244 245 247 / 88%);
-  background: rgb(112 122 136 / 44%);
-  background-clip: padding-box;
-}
-
-html[data-theme="light"]::-webkit-scrollbar-thumb:hover,
-html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
-  background: rgb(78 88 103 / 64%);
-  background-clip: padding-box;
-}
-
-html[data-theme="light"] .custom-scrollbar {
-  scrollbar-color: rgb(112 122 136 / 44%) rgb(238 240 243 / 52%);
-}
-
-html[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgb(238 240 243 / 52%);
-}
-
-html[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb {
-  border-color: rgb(244 245 247 / 86%);
-  background: rgb(112 122 136 / 40%);
-  background-clip: padding-box;
-}
-
-html[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgb(78 88 103 / 60%);
+html[data-theme="light"].np-scroll-active::-webkit-scrollbar-thumb,
+html[data-theme="light"] .np-scroll-active::-webkit-scrollbar-thumb {
+  background: rgb(78 88 103 / 38%);
   background-clip: padding-box;
 }
 

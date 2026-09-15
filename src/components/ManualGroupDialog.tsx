@@ -1,3 +1,4 @@
+import ModalLayer from "./ModalLayer";
 import { FolderPlus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -33,7 +34,7 @@ export default function ManualGroupDialog({
   };
 
   return (
-    <div
+    <ModalLayer onClose={onClose}
       className="fixed inset-0 z-[120] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
@@ -104,6 +105,6 @@ export default function ManualGroupDialog({
           </button>
         </footer>
       </div>
-    </div>
+    </ModalLayer>
   );
 }

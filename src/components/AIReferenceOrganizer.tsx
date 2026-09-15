@@ -1,3 +1,4 @@
+import ModalLayer from "./ModalLayer";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Check, Images, Sparkles, Wand2, X } from "lucide-react";
 import type { ReferenceAIGroup, ReferenceAsset } from "./ReferencePage";
@@ -101,7 +102,7 @@ export default function AIReferenceOrganizer({
   };
 
   return (
-    <div
+    <ModalLayer onClose={onClose}
       className="fixed inset-0 z-[115] flex items-center justify-center bg-black/75 p-0 backdrop-blur-md sm:p-4"
       role="dialog"
       aria-modal="true"
@@ -143,7 +144,7 @@ export default function AIReferenceOrganizer({
                 {assets.length}개 이미지를 비교하고 있습니다
               </h3>
               <p className="mt-3 text-[14px] leading-6 text-text-tertiary">
-                제목, 카테고리와 이미지 맥락을 바탕으로 함께 볼 자료를 찾습니다.
+                제목·태그를 규칙으로 비교합니다. 이미지 픽셀을 분석하는 실제 AI는 연결되지 않았습니다.
               </p>
             </div>
           </div>
@@ -242,6 +243,6 @@ export default function AIReferenceOrganizer({
           </>
         )}
       </div>
-    </div>
+    </ModalLayer>
   );
 }

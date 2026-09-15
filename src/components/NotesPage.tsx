@@ -23,11 +23,13 @@ import {
 } from "lucide-react";
 import NoteSidebar from "./NoteSidebar";
 import ManualGroupDialog from "./ManualGroupDialog";
+import { useStoredIdSet, useStoredState } from "../localStore";
 
 interface NotesPageProps {
   onNavigate: (page: string) => void;
   isPopup?: boolean;
   hideSidebar?: boolean;
+  showMobileFilters?: boolean;
   hideDetailPanel?: boolean;
   boardFilter?: string;
   onSelectNote?: (noteId: number) => void;
@@ -275,7 +277,7 @@ function loadNotes() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) return NOTES;
     const parsed = JSON.parse(saved) as NoteItem[];
-    return Array.isArray(parsed) && parsed.length ? parsed : NOTES;
+    return Array.isArray(parsed) ? parsed : NOTES;
   } catch {
     return NOTES;
   }
@@ -304,6 +306,7 @@ export default function NotesPage({
   onNavigate,
   isPopup,
   hideSidebar = false,
+  showMobileFilters = !isPopup,
   hideDetailPanel = false,
   boardFilter,
   onSelectNote,
@@ -318,7 +321,7 @@ export default function NotesPage({
   onDissolveAIGroup,
   onCreateManualGroup,
 }: NotesPageProps) {
-  const [notes, setNotes] = useState<NoteItem[]>(loadNotes);
+  const [notes, setNotes] = useStoredState<NoteItem[]>(STORAGE_KEY, NOTES);
   const [activeNote, setActiveNote] = useState<number | null>(() => hideDetailPanel || isPopup ? null : notes[0]?.id ?? null);
   const [selectedNotes, setSelectedNotes] = useState<Set<number>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -329,12 +332,8 @@ export default function NotesPage({
   const [sortMode, setSortMode] = useState<"recent" | "name">("recent");
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const [favoritesFirst, setFavoritesFirst] = useState(false);
-  const [trashIds, setTrashIds] = useState<Set<number>>(
-    () => new Set(initialTrashIds ?? loadTrashIds()),
-  );
-  const [checklists, setChecklists] = useState<Record<string, boolean[]>>(
-    loadChecklist,
-  );
+  const [trashIds, setTrashIds] = useStoredIdSet(TRASH_KEY);
+  const [checklists, setChecklists] = useStoredState<Record<string, boolean[]>>(CHECKLIST_KEY, {});
   const [toast, setToast] = useState("");
   const [isCreateNoteOpen, setIsCreateNoteOpen] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState("");
@@ -352,17 +351,6 @@ export default function NotesPage({
     if (boardFilter) setFilter(boardFilter);
   }, [boardFilter]);
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-  }, [notes]);
-
-  useEffect(() => {
-    localStorage.setItem(CHECKLIST_KEY, JSON.stringify(checklists));
-  }, [checklists]);
-  useEffect(() => {
-    localStorage.setItem(TRASH_KEY, JSON.stringify(Array.from(trashIds)));
-    onTrashChange?.(new Set(trashIds));
-  }, [onTrashChange, trashIds]);
   useEffect(() => {
     onSelectionChange?.(Array.from(selectedNotes));
   }, [onSelectionChange, selectedNotes]);
@@ -567,13 +555,16 @@ export default function NotesPage({
 
   const addReference = () => {
     if (!activeNoteData) return;
-    const candidate =
-      EXTRA_REFERENCES.find((image) => !activeNoteData.images.includes(image)) ||
-      EXTRA_REFERENCES[0];
+    const candidate = window.prompt("추가할 이미지 주소를 입력하세요. (https:// 또는 /images/)")?.trim();
+    if (!candidate) return;
+    if (!/^(https:\/\/|\/images\/)/.test(candidate)) {
+      setToast("https:// 이미지 주소 또는 로컬 이미지 경로를 입력해 주세요.");
+      return;
+    }
     setNotes((prev) =>
       prev.map((note) =>
         note.id === activeNoteData.id
-          ? { ...note, images: [...note.images, candidate].slice(-4) }
+          ? { ...note, images: Array.from(new Set([...note.images, candidate])) }
           : note,
       ),
     );
@@ -666,7 +657,7 @@ export default function NotesPage({
         }`}
       >
         <div className="mx-auto flex h-full w-full max-w-[2400px] flex-col gap-6">
-          {!hideSidebar && (
+          {showMobileFilters && (
             <div className="-mb-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide lg:hidden" aria-label="노트 보기">
               {[
                 ["all", "전체 노트"],
@@ -677,9 +668,10 @@ export default function NotesPage({
                   key={id}
                   type="button"
                   onClick={() => setFilter(id)}
+                  aria-pressed={filter === id}
                   className={`h-10 shrink-0 rounded-lg border px-4 text-[14px] font-medium transition ${
                     filter === id
-                      ? "border-brand-primary/60 bg-brand-primary/10 text-brand-primary"
+                      ? "border-brand-primary/60 bg-brand-primary/10 text-text-primary"
                       : "border-[#242832] bg-[#111317] text-text-secondary"
                   }`}
                 >
@@ -695,6 +687,7 @@ export default function NotesPage({
               <input
                 type="text"
                 placeholder="노트 검색"
+                aria-label="노트 검색"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-12 w-full rounded-lg border border-[#1C1E24] bg-[#121417] pl-11 pr-4 text-[15px] text-white shadow-inner outline-none transition placeholder:text-[#6E737B] focus:border-brand-primary/50"
@@ -789,6 +782,8 @@ export default function NotesPage({
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setViewMode("grid")}
+                  aria-label="노트 그리드 보기"
+                  aria-pressed={viewMode === "grid"}
                   className={`rounded-md p-1.5 ${
                     viewMode === "grid" ? "bg-[#252830] text-white" : "text-neutral-400 hover:text-white"
                   }`}
@@ -797,6 +792,8 @@ export default function NotesPage({
                 </button>
                 <button
                   onClick={() => setViewMode("list")}
+                  aria-label="노트 목록 보기"
+                  aria-pressed={viewMode === "list"}
                   className={`rounded-md p-1.5 ${
                     viewMode === "list" ? "bg-[#252830] text-white" : "text-neutral-400 hover:text-white"
                   }`}
@@ -833,7 +830,7 @@ export default function NotesPage({
                     {visibleAIGroups.map((group) => (
                       <article
                         key={group.id}
-                        className="overflow-hidden rounded-xl border border-brand-primary/25 bg-[linear-gradient(145deg,rgba(224,161,46,0.06),rgba(18,20,25,0.96))]"
+                        className="np-organized-group-card overflow-hidden rounded-xl border border-brand-primary/25 bg-[linear-gradient(145deg,rgba(224,161,46,0.06),rgba(18,20,25,0.96))]"
                       >
                         <div className="flex items-start justify-between gap-3 border-b border-[#2A2E36] px-4 py-3.5">
                           <div className="min-w-0">

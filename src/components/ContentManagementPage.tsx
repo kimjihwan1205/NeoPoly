@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useStoredState } from '../localStore';
+import ModalLayer from './ModalLayer';
 import { 
   Search, Filter, ChevronDown, LayoutGrid, List, Plus, 
   MoreHorizontal, Eye, Heart, ShoppingCart, Bookmark,
@@ -169,10 +171,10 @@ type RevenuePeriod = '30d' | '3m' | '6m' | 'year';
 type RevenueChannel = 'all' | 'market' | 'license';
 type RevenueSort = 'revenue' | 'sales';
 
-export default function ContentManagementPage() {
-  const [items, setItems] = useState<ContentItem[]>(ITEMS);
+export default function ContentManagementPage({ onNavigate }: { onNavigate?: (page: string) => void }) {
+  const [items, setItems] = useStoredState<ContentItem[]>('neopoly_content_items_v1', ITEMS);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(() =>
-    window.matchMedia('(min-width: 1440px)').matches ? ITEMS[0] : null,
+    window.matchMedia('(min-width: 1440px)').matches ? items[0] ?? null : null,
   );
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeSection, setActiveSection] = useState<'content' | 'revenue'>('content');
@@ -185,6 +187,28 @@ export default function ContentManagementPage() {
   const [revenuePeriod, setRevenuePeriod] = useState<RevenuePeriod>('6m');
   const [revenueChannel, setRevenueChannel] = useState<RevenueChannel>('all');
   const [revenueSort, setRevenueSort] = useState<RevenueSort>('revenue');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState('전체');
+  const [statusFilter, setStatusFilter] = useState('전체');
+  const [categoryFilter, setCategoryFilter] = useState('전체');
+  const [sortFilter, setSortFilter] = useState('최근 수정순');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState('8');
+  const [notice, setNotice] = useState('');
+  const categoryOptions = ['전체', ...new Set(items.map((item) => item.category))];
+  const statusOptions = ['전체', '판매 중', '공개 중', '심사 중', '수정 필요'];
+  const countStatus = (status: string) => items.filter((item) => item.status === status).length;
+  const filteredItems = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return items.filter((item) => (typeFilter === '전체' || item.type === typeFilter)
+      && (statusFilter === '전체' || item.status === statusFilter)
+      && (categoryFilter === '전체' || item.category === categoryFilter)
+      && (!query || `${item.title} ${item.tags.join(' ')}`.toLowerCase().includes(query)))
+      .sort((a, b) => sortFilter === '제목순' ? a.title.localeCompare(b.title, 'ko') : b.updatedAt.localeCompare(a.updatedAt));
+  }, [items, searchQuery, typeFilter, statusFilter, categoryFilter, sortFilter]);
+  const pageCount = Math.max(1, Math.ceil(filteredItems.length / Number(pageSize)));
+  const visibleItems = filteredItems.slice((page - 1) * Number(pageSize), page * Number(pageSize));
+  useEffect(() => { setPage(1); setSelectedItem(null); }, [searchQuery, typeFilter, statusFilter, categoryFilter, pageSize]);
 
   const revenueRows = useMemo(
     () =>
@@ -288,9 +312,9 @@ export default function ContentManagementPage() {
       ...pricing,
       isFree: false,
     };
-    setItems((current) =>
+    if (!setItems((current) =>
       current.map((item) => item.id === updatedItem.id ? updatedItem : item),
-    );
+    )) return;
     setSelectedItem((current) =>
       current?.id === updatedItem.id ? updatedItem : current,
     );
@@ -304,7 +328,7 @@ export default function ContentManagementPage() {
       <aside className="np-primary-sidebar-surface z-10 hidden h-full w-[240px] shrink-0 flex-col overflow-y-auto border-r border-[#1C1E24] bg-[#050505] custom-scrollbar lg:flex xl:w-[300px]">
         <div className="p-6">
           <h2 className="np-primary-sidebar-title mb-5 tracking-tight text-white">콘텐츠 관리</h2>
-          <button className="np-light-brand-action flex items-center justify-center gap-1.5 w-full py-3 rounded-xl border border-[#3A404F]/60 bg-[#15161A] hover:bg-[#22252B] hover:border-brand-primary/50 text-brand-primary shadow-sm transition-all font-medium text-[15px] tracking-wide">
+          <button onClick={() => setNotice('파일 업로드·심사 서버는 아직 연결되지 않았습니다. 현재 콘텐츠 목록과 수익은 샘플이며, 가격 편집은 이 브라우저에만 저장됩니다.')} className="np-light-brand-action flex items-center justify-center gap-1.5 w-full py-3 rounded-xl border border-[#3A404F]/60 bg-[#15161A] hover:bg-[#22252B] hover:border-brand-primary/50 text-brand-primary shadow-sm transition-all font-medium text-[15px] tracking-wide">
             <Plus className="w-[18px] h-[18px]" />
             <span>새 콘텐츠 업로드</span>
           </button>
@@ -312,30 +336,30 @@ export default function ContentManagementPage() {
 
         <nav className="px-3 space-y-1 mb-6">
           <button
-            onClick={() => setActiveSection('content')}
+            onClick={() => { setActiveSection('content'); setTypeFilter('전체'); setStatusFilter('전체'); setCategoryFilter('전체'); setSearchQuery(''); }}
             className={`flex items-center justify-between gap-3 w-full px-3 py-2.5 rounded-lg font-medium text-[15px] transition-colors ${
-              activeSection === 'content' ? 'bg-[#15161A] text-white' : 'text-text-secondary hover:text-white hover:bg-[#111215]'
+              activeSection === 'content' && typeFilter === '전체' && statusFilter === '전체' ? 'bg-[#15161A] text-white' : 'text-text-secondary hover:text-white hover:bg-[#111215]'
             }`}
           >
             <div className="flex items-center gap-3">
               <LayoutGrid className="w-[18px] h-[18px] text-brand-primary" />
               <span className="tracking-tight">전체 콘텐츠</span>
             </div>
-            <span className="text-[14px] font-sans text-text-secondary">42</span>
+            <span className="text-[14px] font-sans text-text-secondary">{items.length}</span>
           </button>
-          <button className="flex items-center justify-between gap-3 w-full px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-[#111215] font-medium text-[15px] transition-colors text-left border border-transparent">
+          <button onClick={() => { setActiveSection('content'); setTypeFilter('MARKET'); setStatusFilter('전체'); }} className="flex items-center justify-between gap-3 w-full px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-[#111215] font-medium text-[15px] transition-colors text-left border border-transparent">
             <div className="flex items-center gap-3">
               <ShoppingCart className="w-[18px] h-[18px] text-neutral-400" />
               <span className="tracking-tight">마켓 상품</span>
             </div>
-            <span className="text-[14px] font-sans text-text-secondary">18</span>
+            <span className="text-[14px] font-sans text-text-secondary">{items.filter((item) => item.type === 'MARKET').length}</span>
           </button>
-          <button className="flex items-center justify-between gap-3 w-full px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-[#111215] font-medium text-[15px] transition-colors text-left border border-transparent">
+          <button onClick={() => { setActiveSection('content'); setTypeFilter('ART'); setStatusFilter('전체'); }} className="flex items-center justify-between gap-3 w-full px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-[#111215] font-medium text-[15px] transition-colors text-left border border-transparent">
             <div className="flex items-center gap-3">
               <ImageIcon className="w-[18px] h-[18px] text-neutral-400" />
               <span className="tracking-tight">아트 게시물</span>
             </div>
-            <span className="text-[14px] font-sans text-text-secondary">16</span>
+            <span className="text-[14px] font-sans text-text-secondary">{items.filter((item) => item.type === 'ART').length}</span>
           </button>
         </nav>
 
@@ -352,12 +376,12 @@ export default function ContentManagementPage() {
               { label: '삭제됨', count: 0, active: false, icon: Trash2 },
             ].map((item, idx) => (
               <li key={idx}>
-                <button className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight transition-colors border border-transparent ${item.active ? 'bg-[#15161A] text-white' : 'text-text-secondary hover:text-white hover:bg-[#111215]'}`}>
+                <button onClick={() => { setActiveSection('content'); setTypeFilter('전체'); setStatusFilter(item.label); }} aria-pressed={activeSection === 'content' && statusFilter === item.label} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight transition-colors border border-transparent ${activeSection === 'content' && statusFilter === item.label ? 'bg-[#15161A] text-white' : 'text-text-secondary hover:text-white hover:bg-[#111215]'}`}>
                   <div className="flex items-center gap-3">
-                    <item.icon className={`w-[18px] h-[18px] ${item.active ? 'text-brand-primary' : 'text-neutral-400'}`} />
+                    <item.icon className={`w-[18px] h-[18px] ${activeSection === 'content' && statusFilter === item.label ? 'text-brand-primary' : 'text-neutral-400'}`} />
                     {item.label}
                   </div>
-                  <span className="text-[14px] font-sans text-neutral-500">{item.count}</span>
+                  <span className="text-[14px] font-sans text-neutral-500">{countStatus(item.label)}</span>
                 </button>
               </li>
             ))}
@@ -381,13 +405,13 @@ export default function ContentManagementPage() {
                 수익 관리
               </div>
             </button>
-            <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight text-text-secondary hover:text-white hover:bg-[#111215] transition-colors border border-transparent">
+            <button onClick={() => setNotice('판매자 등록·정산 계정 연결은 준비 중입니다. 실제 판매를 시작하기 전 별도 설정이 필요합니다.')} className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight text-text-secondary hover:text-white hover:bg-[#111215] transition-colors border border-transparent">
               <div className="flex items-center gap-3">
                 <Settings className="w-[18px] h-[18px] text-neutral-400" /> 
                 판매자 설정
               </div>
             </button>
-            <button className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight text-text-secondary hover:text-white hover:bg-[#111215] transition-colors border border-transparent">
+            <button onClick={() => onNavigate?.('support')} className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[15px] font-medium tracking-tight text-text-secondary hover:text-white hover:bg-[#111215] transition-colors border border-transparent">
               <div className="flex items-center gap-3">
                 <HelpCircle className="w-[18px] h-[18px] text-neutral-400" /> 
                 업로드 가이드
@@ -402,7 +426,7 @@ export default function ContentManagementPage() {
       <main className="np-page-canvas relative flex min-w-0 flex-1 flex-col overflow-y-auto bg-[#0A0B0D] custom-scrollbar">
         <nav
           aria-label="콘텐츠 관리 메뉴"
-          className="sticky top-0 z-20 grid shrink-0 grid-cols-3 gap-1.5 border-b border-[#1C1E24] bg-[#08090B]/95 p-2 backdrop-blur-lg lg:hidden"
+          className="sticky top-0 z-20 grid shrink-0 grid-cols-3 gap-1.5 border-b border-border-soft bg-bg-dark/95 p-2 backdrop-blur-lg lg:hidden"
         >
           <button
             type="button"
@@ -436,6 +460,7 @@ export default function ContentManagementPage() {
           </button>
           <button
             type="button"
+            onClick={() => setNotice('파일 업로드·심사 서버는 준비 중입니다. 현재는 샘플 콘텐츠와 기기 내 가격 편집을 사용할 수 있습니다.')}
             className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-[#2A2E36] bg-[#111215] text-[13px] font-medium text-neutral-300 transition hover:border-brand-primary/50 hover:text-brand-primary"
           >
             <Plus className="h-4 w-4" />
@@ -576,16 +601,16 @@ export default function ContentManagementPage() {
           <>
           <div className="mb-5 sm:mb-6">
             <h1 className="text-[24px] font-bold text-white sm:text-[28px]">전체 콘텐츠</h1>
-            <p className="mt-2 text-[14px] text-neutral-400">업로드한 작품의 상태와 판매 정보를 관리합니다.</p>
+            <p className="mt-2 text-[14px] text-neutral-400">MVP 샘플 콘텐츠 · 가격 변경은 이 기기에만 저장되며 실제 판매에 반영되지 않습니다.</p>
           </div>
 
           <div className="mb-4 grid grid-cols-5 overflow-hidden rounded-xl border border-[#1C1E24] bg-[#111215] sm:hidden">
             {[
-              { label: '전체', value: '42', tone: 'text-white' },
-              { label: '판매', value: '18', tone: 'text-white' },
-              { label: '공개', value: '16', tone: 'text-white' },
-              { label: '심사', value: '3', tone: 'text-brand-primary' },
-              { label: '수정', value: '2', tone: 'text-[#E46B6B]' },
+              { label: '전체', value: items.length, tone: 'text-white' },
+              { label: '판매', value: countStatus('판매 중'), tone: 'text-white' },
+              { label: '공개', value: countStatus('공개 중'), tone: 'text-white' },
+              { label: '심사', value: countStatus('심사 중'), tone: 'text-text-secondary' },
+              { label: '수정', value: countStatus('수정 필요'), tone: 'text-[#E46B6B]' },
             ].map((stat, index) => (
               <div
                 key={stat.label}
@@ -598,11 +623,11 @@ export default function ContentManagementPage() {
           </div>
 
           <div className="mb-4 hidden grid-cols-2 gap-2.5 sm:grid sm:grid-cols-3 sm:gap-3 min-[1600px]:grid-cols-5">
-            <StatCard icon={<Box className="w-5 h-5 text-neutral-400" />} title="전체 업로드" value="42" desc="전체 작품 수" />
-            <StatCard icon={<ShoppingCart className="w-5 h-5 text-neutral-400" />} title="판매 중" value="18" desc="마켓 판매 중" />
-            <StatCard icon={<ImageIcon className="w-5 h-5 text-neutral-400" />} title="아트 공개" value="16" desc="아트 공개 중" />
-            <StatCard icon={<Clock className="w-5 h-5 text-brand-primary" />} title="심사 중" value="3" desc="검토 대기 중" />
-            <StatCard icon={<AlertCircle className="w-5 h-5 text-[#E46B6B]" />} title="수정 필요" value="2" desc="수정 요청" />
+            <StatCard icon={<Box className="w-5 h-5 text-neutral-400" />} title="전체 업로드" value={String(items.length)} desc="전체 작품 수" />
+            <StatCard icon={<ShoppingCart className="w-5 h-5 text-neutral-400" />} title="판매 중" value={String(countStatus('판매 중'))} desc="마켓 판매 중" />
+            <StatCard icon={<ImageIcon className="w-5 h-5 text-neutral-400" />} title="아트 공개" value={String(countStatus('공개 중'))} desc="아트 공개 중" />
+            <StatCard icon={<Clock className="w-5 h-5 text-brand-primary" />} title="심사 중" value={String(countStatus('심사 중'))} desc="검토 대기 중" />
+            <StatCard icon={<AlertCircle className="w-5 h-5 text-[#E46B6B]" />} title="수정 필요" value={String(countStatus('수정 필요'))} desc="수정 요청" />
           </div>
 
           <RevenueSummaryDisclosure
@@ -669,15 +694,15 @@ export default function ContentManagementPage() {
                       <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" />
                       <input
                         type="text"
-                        placeholder="콘텐츠 제목, 태그 검색"
+                        aria-label="콘텐츠 제목, 태그 검색" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="콘텐츠 제목, 태그 검색"
                         className="h-11 w-full rounded-lg border border-[#2A2E36] bg-[#111215] pl-9 pr-4 text-[14px] text-white transition-colors focus:border-brand-primary/50 focus:outline-none"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <FilterSelect label="유형 전체" width="w-full" />
-                      <FilterSelect label="상태 전체" width="w-full" />
-                      <FilterSelect label="카테고리 전체" width="w-full" />
-                      <FilterSelect label="최근 수정순" width="w-full" />
+                      <FilterSelect label="유형 전체" value={typeFilter} options={['전체', 'MARKET', 'ART']} onChange={setTypeFilter} width="w-full" />
+                      <FilterSelect label="상태 전체" value={statusFilter} options={statusOptions} onChange={setStatusFilter} width="w-full" />
+                      <FilterSelect label="카테고리 전체" value={categoryFilter} options={categoryOptions} onChange={setCategoryFilter} width="w-full" />
+                      <FilterSelect label="최근 수정순" value={sortFilter} options={['최근 수정순', '제목순']} onChange={setSortFilter} width="w-full" />
                     </div>
                   </div>
                 </motion.div>
@@ -691,20 +716,20 @@ export default function ContentManagementPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary" />
                 <input 
                   type="text" 
-                  placeholder="콘텐츠 제목, 태그 검색" 
+                  aria-label="콘텐츠 제목, 태그 검색" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="콘텐츠 제목, 태그 검색"
                   className="h-11 w-full rounded-lg border border-[#2A2E36] bg-[#111215] pl-9 pr-4 text-[14px] text-white transition-colors focus:border-brand-primary/50 focus:outline-none xl:h-10 xl:w-[220px]"
                 />
               </div>
               
               <div className="grid w-full grid-cols-2 gap-2 xl:flex xl:w-auto xl:items-center">
-                <FilterSelect label="유형 전체" width="w-full xl:w-[140px]" />
-                <FilterSelect label="상태 전체" width="w-full xl:w-[140px]" />
-                <FilterSelect className="col-span-2 xl:col-span-1" label="카테고리 전체" width="w-full xl:w-[140px]" />
+                <FilterSelect label="유형 전체" value={typeFilter} options={['전체', 'MARKET', 'ART']} onChange={setTypeFilter} width="w-full xl:w-[140px]" />
+                <FilterSelect label="상태 전체" value={statusFilter} options={statusOptions} onChange={setStatusFilter} width="w-full xl:w-[140px]" />
+                <FilterSelect className="col-span-2 xl:col-span-1" label="카테고리 전체" value={categoryFilter} options={categoryOptions} onChange={setCategoryFilter} width="w-full xl:w-[140px]" />
               </div>
             </div>
 
             <div className="flex shrink-0 items-center gap-2 sm:justify-end sm:gap-3">
-              <FilterSelect label="최근 수정순" width="min-w-0 flex-1 sm:flex-none sm:w-[140px]" />
+              <FilterSelect label="최근 수정순" value={sortFilter} options={['최근 수정순', '제목순']} onChange={setSortFilter} width="min-w-0 flex-1 sm:flex-none sm:w-[140px]" />
               <div className="flex items-center bg-[#111215] border border-[#2A2E36] rounded-lg p-1 gap-1">
                 <button 
                   onClick={() => setViewMode('grid')}
@@ -733,7 +758,7 @@ export default function ContentManagementPage() {
                   : 'min-[1600px]:grid-cols-4'
               }`}
             >
-              {items.slice(0, 8).map((item) => (
+              {visibleItems.map((item) => (
                 <ContentCard 
                   key={item.id} 
                   item={item} 
@@ -744,7 +769,7 @@ export default function ContentManagementPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-3 pb-12">
-              {items.slice(0, 8).map((item) => (
+              {visibleItems.map((item) => (
                 <ContentListRow
                   key={item.id}
                   item={item}
@@ -755,29 +780,24 @@ export default function ContentManagementPage() {
             </div>
           )}
           
-          {/* Pagination Area */}
-          <div className="flex flex-col items-center justify-between gap-4 border-t border-[#1C1E24] pb-20 pt-5 md:flex-row md:pt-6">
-            <span className="text-[14px] text-text-secondary font-medium shrink-0">총 42개 항목</span>
-            <div className="flex max-w-full items-center justify-center gap-1 min-[380px]:gap-1.5 sm:gap-2">
-              <button aria-label="이전 페이지" className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#111215] text-text-secondary transition-colors hover:text-white sm:h-8 sm:w-8">&lt;</button>
-              <button className="flex h-10 w-10 items-center justify-center rounded-lg border border-brand-primary bg-brand-primary text-[14px] font-medium text-black sm:h-8 sm:w-8">1</button>
-              <button className="flex h-10 w-10 items-center justify-center rounded-lg text-[14px] font-medium text-text-secondary transition-colors hover:bg-[#111215] hover:text-white sm:h-8 sm:w-8">2</button>
-              <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">3</button>
-              <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">4</button>
-              <button className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg hover:bg-[#111215] text-text-secondary hover:text-white transition-colors font-medium text-[14px]">5</button>
-              <span className="hidden px-1 text-text-secondary min-[360px]:inline sm:px-2">...</span>
-              <button className="hidden h-10 w-10 items-center justify-center rounded-lg text-[14px] font-medium text-text-secondary transition-colors hover:bg-[#111215] hover:text-white min-[360px]:flex sm:h-8 sm:w-8">9</button>
-              <button aria-label="다음 페이지" className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#2A2E36] bg-[#111215] text-text-secondary transition-colors hover:text-white sm:h-8 sm:w-8">&gt;</button>
-            </div>
-            <div className="w-full md:w-auto flex justify-center md:justify-end">
-              <FilterSelect label="8개씩 보기" width="w-[120px]" />
-            </div>
+          {filteredItems.length === 0 && <div role="status" className="rounded-xl border border-border-soft p-8 text-center text-[14px] text-text-secondary">조건에 맞는 콘텐츠가 없습니다. 검색어 또는 필터를 변경해 주세요.</div>}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-soft pb-20 pt-5 text-[14px] text-text-secondary">
+            <span>총 {filteredItems.length}개 항목</span>
+            <nav aria-label="콘텐츠 페이지" className="flex items-center gap-2">
+              <button aria-label="이전 페이지" disabled={page === 1} onClick={() => setPage((value) => value - 1)} className="h-10 w-10 rounded border border-border-primary disabled:opacity-30">&lt;</button>
+              <span aria-live="polite">{page} / {pageCount}</span>
+              <button aria-label="다음 페이지" disabled={page >= pageCount} onClick={() => setPage((value) => value + 1)} className="h-10 w-10 rounded border border-border-primary disabled:opacity-30">&gt;</button>
+            </nav>
+            <FilterSelect label="페이지당 항목 수" width="w-[100px]" value={pageSize} options={['8', '16', '24']} onChange={setPageSize} />
           </div>
           </>
           )}
         </div>
       </main>
 
+      {notice && <ModalLayer onClose={() => setNotice('')} aria-label="콘텐츠 관리 안내" className="fixed inset-0 z-[300] flex items-center justify-center bg-black/50 p-4">
+        <div className="w-full max-w-[480px] rounded-xl border border-border-primary bg-surface-primary p-6"><h2 className="text-[20px] font-semibold">MVP 안내</h2><p className="mt-3 text-[14px] leading-6 text-text-secondary">{notice}</p><button onClick={() => setNotice('')} className="np-primary-action mt-5 min-h-11 w-full rounded-lg bg-brand-primary text-[#050505]">확인</button></div>
+      </ModalLayer>}
       {/* Detail Sidebar */}
       <AnimatePresence>
         {selectedItem && activeSection === 'content' && (
@@ -896,10 +916,10 @@ export default function ContentManagementPage() {
             {/* Actions Footer */}
             <div className="absolute bottom-0 left-0 right-0 flex flex-col gap-2 border-t border-[#1C1E24] bg-[#0A0B0D]/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-10px_30px_rgba(0,0,0,0.5)] backdrop-blur sm:p-4 sm:pb-[calc(1rem+env(safe-area-inset-bottom))]">
                <div className="grid grid-cols-2 gap-2">
-                 <button className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-brand-primary bg-transparent border border-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors">
+                 <button onClick={() => setNotice('이 콘텐츠는 관리 화면용 샘플입니다. 공개 상세 페이지와의 연결은 준비 중입니다.')} className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-brand-primary bg-transparent border border-brand-primary hover:bg-brand-primary/10 rounded-lg transition-colors">
                    상세 보기 <ArrowUpRight className="w-3.5 h-3.5" />
                  </button>
-                 <button className="np-primary-action py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-[#0A0B0D] bg-brand-primary hover:bg-[#F0B43A] rounded-lg transition-colors shadow-md">
+                 <button onClick={() => setNotice('콘텐츠 원본 편집과 재심사 제출은 준비 중입니다. 현재 마켓 항목의 가격만 기기 내에서 수정할 수 있습니다.')} className="np-primary-action py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-[#0A0B0D] bg-brand-primary hover:bg-[#F0B43A] rounded-lg transition-colors shadow-md">
                    <Edit className="w-3.5 h-3.5" /> 수정하기
                  </button>
                </div>
@@ -911,11 +931,11 @@ export default function ContentManagementPage() {
                  >
                    가격 수정
                  </button>
-                 <button className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-neutral-300 bg-transparent border border-[#2A2E36] hover:bg-[#15161A] hover:text-white rounded-lg transition-colors">
+                 <button onClick={() => setNotice('공개 범위 변경은 콘텐츠 서버 연결 후 제공됩니다. 현재 공개 상태는 변경되지 않습니다.')} className="py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-neutral-300 bg-transparent border border-[#2A2E36] hover:bg-[#15161A] hover:text-white rounded-lg transition-colors">
                    <Lock className="w-3.5 h-3.5" /> 비공개 전환
                  </button>
                </div>
-               <button className="w-full mt-1 py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-[#E46B6B] bg-transparent border border-[#E46B6B]/30 hover:bg-[#E46B6B]/10 hover:border-[#E46B6B] rounded-lg transition-colors">
+               <button onClick={() => setNotice('콘텐츠 삭제·복원은 아직 지원하지 않습니다. 이 버튼으로 기존 항목이 삭제되지는 않습니다.')} className="w-full mt-1 py-2.5 flex items-center justify-center gap-2 text-[14px] font-medium text-[#E46B6B] bg-transparent border border-[#E46B6B]/30 hover:bg-[#E46B6B]/10 hover:border-[#E46B6B] rounded-lg transition-colors">
                  <Trash2 className="w-3.5 h-3.5" /> 삭제
                </button>
             </div>
@@ -1071,13 +1091,13 @@ function RevenueSummaryDisclosure({
           <div className="min-w-0">
             <h2 className="text-[15px] font-medium text-white sm:text-[17px]">수익 요약</h2>
             <p className="mt-0.5 hidden text-[14px] text-neutral-500 sm:block">최근 판매 흐름을 간단히 확인합니다.</p>
-            <p className="mt-0.5 text-[14px] font-medium text-brand-primary sm:hidden">{formatCompactWon(value)}</p>
+            <p className="np-price-text mt-0.5 text-[14px] font-medium text-brand-primary sm:hidden">{formatCompactWon(value)}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-5">
           <div className="hidden text-right sm:block">
             <p className="text-[14px] text-neutral-500">이번 달</p>
-            <p className="mt-0.5 text-[18px] font-medium text-brand-primary">{formatCompactWon(value)}</p>
+            <p className="np-price-text mt-0.5 text-[18px] font-medium text-brand-primary">{formatCompactWon(value)}</p>
           </div>
           <span className={`hidden rounded-full px-2.5 py-1 text-[14px] font-medium md:inline-flex ${
             growthRate >= 0 ? 'bg-[#4ADE80]/10 text-[#4ADE80]' : 'bg-[#E46B6B]/10 text-[#E46B6B]'
@@ -1464,12 +1484,13 @@ function StatCard({ icon, title, value, desc, highlight = false, className = '' 
   )
 }
 
-function FilterSelect({ label, width = 'w-[140px]', className = '' }: { label: string, width?: string, className?: string }) {
+function FilterSelect({ label, width = 'w-[140px]', className = '', value, options = [], onChange }: {
+  label: string; width?: string; className?: string; value: string; options: string[]; onChange: (value: string) => void;
+}) {
   return (
-    <button className={`np-control-label flex h-11 items-center justify-between rounded-lg border border-[#2A2E36] bg-[#111215] px-3 text-[14px] text-neutral-300 transition-colors hover:bg-[#15161A] xl:h-10 ${width} ${className}`}>
-      <span>{label}</span>
-      <ChevronDown className="w-4 h-4 text-neutral-400" />
-    </button>
+    <select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)} className={`np-control-label h-11 min-w-0 rounded-lg border border-[#2A2E36] bg-[#111215] px-3 text-[14px] text-neutral-300 xl:h-10 ${width} ${className}`}>
+      {options.map((option) => <option key={option} value={option}>{option === '전체' ? label : option === 'MARKET' ? '마켓' : option === 'ART' ? '아트' : option}</option>)}
+    </select>
   )
 }
 
@@ -1477,6 +1498,10 @@ const ContentCard: React.FC<{ item: ContentItem, isSelected: boolean, onClick: (
   return (
     <div 
       onClick={onClick}
+      role="button"
+      tabIndex={0}
+      aria-label={`${item.title} 관리 정보 보기`}
+      onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onClick(); } }}
       className={`bg-[#0A0B0D] border rounded-xl overflow-hidden flex flex-col group cursor-pointer transition-all duration-200 ${isSelected ? 'border-brand-primary shadow-[0_0_15px_rgba(224,161,46,0.15)] ring-1 ring-brand-primary' : 'border-[#1C1E24] hover:border-[#3A404F]'}`}
     >
       {/* Image Container */}
@@ -1610,7 +1635,7 @@ function StatMini({ icon, label, value, isRevenue = false }: { icon: React.React
         {icon}
         <span className="text-[14px] font-medium tracking-tight">{label}</span>
       </div>
-      <div className={`text-[14px] font-medium font-sans tracking-tight mt-0.5 ${isRevenue ? 'text-brand-primary' : 'text-neutral-300'}`}>
+      <div className={`text-[14px] font-medium font-sans tracking-tight mt-0.5 ${isRevenue ? 'np-price-text text-brand-primary' : 'text-neutral-300'}`}>
         {value}
       </div>
     </div>
@@ -1629,7 +1654,7 @@ function PriceDisplay({ item, align = 'left' }: { item: ContentItem, align?: 'le
           ₩{item.originalPrice.toLocaleString()}
         </span>
       )}
-      <span className="text-[15px] font-medium text-brand-primary">
+      <span className="np-price-text text-[15px] font-medium text-brand-primary">
         ₩{item.price?.toLocaleString()}
       </span>
     </div>

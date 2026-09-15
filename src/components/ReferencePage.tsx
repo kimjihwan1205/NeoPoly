@@ -29,6 +29,7 @@ import {
 import { ASSETS } from "../App";
 import LoadingIndicator from "./LoadingIndicator";
 import ManualGroupDialog from "./ManualGroupDialog";
+import { useStoredIdSet, useStoredState } from "../localStore";
 
 interface ReferencePageProps {
   favorites: number[];
@@ -36,6 +37,7 @@ interface ReferencePageProps {
   onNavigate: (page: string) => void;
   isPopup?: boolean;
   hideSidebar?: boolean;
+  showMobileFilters?: boolean;
   boardCategory?: string;
   onAcceptSelection?: (selectedIds: number[]) => void;
   onSelectionChange?: (selectedIds: number[]) => void;
@@ -216,7 +218,7 @@ function referenceScore(asset: ReferenceAsset) {
   return score;
 }
 
-type ReferenceBoard = (typeof REFERENCE_BOARDS)[number] & { assetIds?: number[]; memo?: string };
+export type ReferenceBoard = (typeof REFERENCE_BOARDS)[number] & { assetIds?: number[]; memo?: string };
 const REFERENCE_TRASH_KEY = "neopoly_reference_trash_v3";
 
 function loadReferenceTrashIds() {
@@ -230,7 +232,7 @@ function loadReferenceTrashIds() {
 }
 
 export function boardMatchesAsset(board: ReferenceBoard, asset: ReferenceAsset) {
-  if (board.assetIds?.includes(asset.id)) return true;
+  if (board.assetIds) return board.assetIds.includes(asset.id);
   const haystack = `${asset.title} ${asset.type ?? ""} ${asset.category ?? ""}`.toLowerCase();
 
   if (board.id === "character") {
@@ -265,6 +267,7 @@ export default function ReferencePage({
   onNavigate = () => {},
   isPopup = false,
   hideSidebar = false,
+  showMobileFilters = !isPopup,
   boardCategory,
   onAcceptSelection,
   onSelectionChange,
@@ -280,22 +283,18 @@ export default function ReferencePage({
   const [isBadgeMenuOpen, setIsBadgeMenuOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
   const [isBoardMenuOpen, setIsBoardMenuOpen] = useState(false);
-  const [refFavorites, setRefFavorites] = useState<number[]>(() =>
-    favorites.length ? favorites : [1, 4, 7],
-  );
-  const [trashIds, setTrashIds] = useState<Set<number>>(
-    () => new Set(initialTrashIds ?? loadReferenceTrashIds()),
-  );
+  const refFavorites = favorites;
+  const [trashIds, setTrashIds] = useStoredIdSet(REFERENCE_TRASH_KEY);
   const [previewImage, setPreviewImage] = useState<ReferenceAsset | null>(null);
   const [displayLimit, setDisplayLimit] = useState(40);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [extraAssets, setExtraAssets] = useState<ReferenceAsset[]>([]);
+  const [extraAssets] = useStoredState<ReferenceAsset[]>("neopoly_reference_assets_v1", []);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [favoritesFirst, setFavoritesFirst] = useState(false);
   const [sortMode, setSortMode] = useState<"recent" | "name">("recent");
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
-  const [boards, setBoards] = useState<ReferenceBoard[]>(REFERENCE_BOARDS);
+  const [boards, setBoards] = useStoredState<ReferenceBoard[]>("neopoly_reference_boards_v1", REFERENCE_BOARDS);
   const [toast, setToast] = useState("");
   const [isCreateBoardOpen, setIsCreateBoardOpen] = useState(false);
   const [newBoardName, setNewBoardName] = useState("");
@@ -311,10 +310,6 @@ export default function ReferencePage({
     onSelectionChange?.(Array.from(selectedIds));
   }, [onSelectionChange, selectedIds]);
 
-  useEffect(() => {
-    localStorage.setItem(REFERENCE_TRASH_KEY, JSON.stringify(Array.from(trashIds)));
-    onTrashChange?.(new Set(trashIds));
-  }, [onTrashChange, trashIds]);
 
 
 
@@ -340,12 +335,12 @@ export default function ReferencePage({
 
   const displayedAssets = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    let result = allAssets.slice(0, displayLimit);
+    let result = allAssets.filter((asset) => activeCategory === "trash" ? trashIds.has(asset.id) : !trashIds.has(asset.id));
 
     if (activeCategory === "favorites") {
-      result = allAssets.filter((asset) => refFavorites.includes(asset.id));
+      result = result.filter((asset) => refFavorites.includes(asset.id));
     } else if (activeCategory === "recent") {
-      result = allAssets.slice(0, 12);
+      result = [...result].sort((a, b) => b.id - a.id).slice(0, 12);
     } else if (activeCategory === "trash") {
       result = allAssets.filter((asset) => trashIds.has(asset.id));
     } else {
@@ -377,7 +372,7 @@ export default function ReferencePage({
       return a.id - b.id;
     });
 
-    return result;
+    return result.slice(0, displayLimit);
   }, [
     activeBadge,
     activeCategory,
@@ -419,9 +414,6 @@ export default function ReferencePage({
     : displayedAssets;
 
   const toggleRefFavorite = (id: number) => {
-    setRefFavorites((prev) =>
-      prev.includes(id) ? prev.filter((favorite) => favorite !== id) : [...prev, id],
-    );
     toggleFavorite(id);
   };
 
@@ -439,17 +431,7 @@ export default function ReferencePage({
   };
 
   const handleLoadMore = () => {
-    setIsLoadingMore(true);
-    window.setTimeout(() => {
-      const offset = extraAssets.length;
-      const nextItems = Array.from({ length: 12 }).map((_, index) =>
-        buildGeneratedAsset(index, offset),
-      );
-      setExtraAssets((prev) => [...prev, ...nextItems]);
-      setDisplayLimit((prev) => prev + 12);
-      setIsLoadingMore(false);
-      setToast("기존 레퍼런스 이미지를 더 불러왔습니다.");
-    }, 500);
+    setDisplayLimit((prev) => prev + 24);
   };
 
   const openCreateBoard = () => {
@@ -478,7 +460,7 @@ export default function ReferencePage({
       image: newBoardImage.trim() || "/images/work_48.png",
       keyword: newBoardMemo.trim() || name,
       memo: newBoardMemo.trim(),
-      assetIds: newBoardAssetIds.length > 0 ? newBoardAssetIds : undefined,
+      assetIds: newBoardAssetIds,
     };
     setBoards((prev) => [next, ...prev]);
     setActiveCategory(next.id);
@@ -512,6 +494,12 @@ export default function ReferencePage({
       return next;
     });
     setToast("레퍼런스를 휴지통으로 보냈습니다.");
+  };
+
+  const restoreReferences = (ids: Set<number>) => {
+    if (!setTrashIds((previous) => new Set([...previous].filter((id) => !ids.has(id))))) return;
+    setSelectedIds(new Set());
+    setToast("레퍼런스를 복원했습니다.");
   };
 
   const activeBoardLabel = activeCategory === "all"
@@ -606,7 +594,7 @@ export default function ReferencePage({
             : "px-4 py-6 overscroll-y-auto sm:px-6 2xl:px-8 min-[2200px]:px-10"
         }`}
       >
-        {!hideSidebar && (
+        {showMobileFilters && (
           <div className="mb-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide lg:hidden" aria-label="레퍼런스 보기">
             {[
               ["all", "전체"],
@@ -618,9 +606,10 @@ export default function ReferencePage({
                 key={id}
                 type="button"
                 onClick={() => setActiveCategory(id)}
+                aria-pressed={activeCategory === id}
                 className={`h-10 shrink-0 rounded-lg border px-4 text-[14px] font-medium transition ${
                   activeCategory === id
-                    ? "border-brand-primary/60 bg-brand-primary/10 text-brand-primary"
+                    ? "border-brand-primary/60 bg-brand-primary/10 text-text-primary"
                     : "border-[#242832] bg-[#111317] text-text-secondary"
                 }`}
               >
@@ -815,16 +804,15 @@ export default function ReferencePage({
                 </span>
                 휴지통
               </h1>
-              <p className="text-[14px] text-text-secondary">삭제 대기 중인 항목입니다.</p>
+              <p className="text-[14px] text-text-secondary">보관 중인 항목입니다. 선택 복원하거나 모두 복원할 수 있습니다.</p>
             </div>
             <button
               onClick={() => {
-                setTrashIds(new Set());
-                setToast("휴지통을 비웠습니다.");
+                restoreReferences(selectedIds.size ? selectedIds : trashIds);
               }}
               className="rounded-lg border border-red-500/30 px-4 py-2 text-[13px] font-bold text-brand-primary transition hover:bg-red-500/10"
             >
-              휴지통 비우기
+              {selectedIds.size ? `선택 ${selectedIds.size}개 복원` : "전체 복원"}
             </button>
           </div>
         )}
@@ -849,7 +837,7 @@ export default function ReferencePage({
                 {visibleAIGroups.map((group) => (
                   <article
                     key={group.id}
-                    className="overflow-hidden rounded-xl border border-brand-primary/25 bg-[linear-gradient(145deg,rgba(224,161,46,0.06),rgba(18,20,25,0.96))]"
+                    className="np-organized-group-card overflow-hidden rounded-xl border border-brand-primary/25 bg-[linear-gradient(145deg,rgba(224,161,46,0.06),rgba(18,20,25,0.96))]"
                   >
                     <div className="flex items-start justify-between gap-3 border-b border-[#2A2E36] px-4 py-3.5">
                       <div className="min-w-0">
@@ -1028,7 +1016,7 @@ export default function ReferencePage({
             </div>
           )}
 
-          {!["favorites", "recent", "trash"].includes(activeCategory) && (
+          {displayedAssets.length >= displayLimit && (
             <div className="mt-8 flex justify-center py-6 pb-20">
             <button
               onClick={handleLoadMore}

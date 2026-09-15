@@ -12,9 +12,10 @@ import { ASSETS } from '../App';
 interface FavoritesPageProps {
   favorites: number[];
   toggleFavorite: (id: number) => void;
+  onOpenProduct: (id: number) => void;
 }
 
-export default function FavoritesPage({ favorites, toggleFavorite }: FavoritesPageProps) {
+export default function FavoritesPage({ favorites, toggleFavorite, onOpenProduct }: FavoritesPageProps) {
   const favoriteAssets = ASSETS.filter(a => favorites.includes(a.id));
 
   return (
@@ -40,6 +41,15 @@ export default function FavoritesPage({ favorites, toggleFavorite }: FavoritesPa
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
                 key={asset.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`${asset.title} 상세 보기`}
+                onClick={() => onOpenProduct(asset.id)}
+                onKeyDown={(event) => {
+                  if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault(); onOpenProduct(asset.id);
+                  }
+                }}
                 className="group relative rounded-[6px] overflow-hidden bg-surface-primary border border-border-soft shadow-xl cursor-pointer flex flex-col aspect-[16/10]"
               >
                 <div className="relative flex-1 overflow-hidden">

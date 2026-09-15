@@ -1,4 +1,5 @@
 import { Check, Layers3, Sparkles, X } from "lucide-react";
+import ModalLayer from "./ModalLayer";
 
 export type AIOrganizationScope = "ungrouped" | "all";
 export type AIOrganizerTarget = "notes" | "references";
@@ -22,13 +23,13 @@ export default function AIOrganizeOptionsDialog({
   const ungroupedCount = Math.max(0, totalCount - groupedCount);
 
   return (
-    <div
+    <ModalLayer onClose={onClose}
       className="fixed inset-0 z-[115] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
       aria-label={`AI ${label} 정리 옵션`}
     >
-      <div className="w-full max-w-[620px] overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0D0F12] shadow-[0_28px_90px_rgba(0,0,0,0.68)]">
+      <div className="max-h-[90dvh] w-full max-w-[620px] overflow-y-auto rounded-xl border border-[#2A2E36] bg-[#0D0F12] shadow-[0_28px_90px_rgba(0,0,0,0.68)]">
         <header className="flex items-start justify-between gap-4 border-b border-[#242832] px-5 py-5 sm:px-6">
           <div className="flex min-w-0 gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-primary text-[#050505]">
@@ -37,7 +38,7 @@ export default function AIOrganizeOptionsDialog({
             <div className="min-w-0">
               <h2 className="text-[20px] font-semibold text-white">AI {label} 정리</h2>
               <p className="mt-1 text-[13px] leading-5 text-text-tertiary">
-                분석할 범위를 선택한 뒤 제안 내용을 확인하고 적용할 수 있습니다.
+                MVP · 제목·본문·태그의 규칙 기반 제안입니다. 실제 AI 이미지 분석은 아직 연결되지 않았습니다.
               </p>
             </div>
           </div>
@@ -112,6 +113,6 @@ export default function AIOrganizeOptionsDialog({
           </p>
         </div>
       </div>
-    </div>
+    </ModalLayer>
   );
 }

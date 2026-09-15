@@ -3,12 +3,12 @@ import {
   Box,
   CheckCircle2,
   ChevronRight,
+  Copy,
   Download,
   Grid3X3,
   Image as ImageIcon,
   Info,
   Layers,
-  Link2,
   Maximize2,
   MoreHorizontal,
   Paintbrush,
@@ -25,6 +25,7 @@ import {
 import { motion } from "motion/react";
 import NewProjectModal from "./NewProjectModal";
 import { PROJECT_STORAGE_KEY } from "../workflowState";
+import { writeJSON } from "../localStore";
 
 interface ProjectPageProps {
   onNavigate?: (page: string) => void;
@@ -33,7 +34,7 @@ interface ProjectPageProps {
   selectedProjectId?: number;
 }
 
-type Project = {
+export type Project = {
   id: number;
   name: string;
   description: string;
@@ -196,7 +197,7 @@ function today() {
   });
 }
 
-function loadProjects() {
+export function loadProjects() {
   try {
     const deletedIds = new Set<number>(
       JSON.parse(localStorage.getItem(DELETED_PROJECTS_STORAGE_KEY) || "[]") as number[],
@@ -214,9 +215,7 @@ function loadProjects() {
       return savedProject
         ? {
             ...defaultProject,
-            linkedNoteIds: savedProject.linkedNoteIds,
-            linkedReferenceIds: savedProject.linkedReferenceIds,
-            pinned: savedProject.pinned,
+            ...savedProject,
           }
         : defaultProject;
     });
@@ -287,7 +286,7 @@ export default function ProjectPage({
   const boardScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    localStorage.setItem(PROJECT_STORAGE_KEY, JSON.stringify(projects));
+    writeJSON(PROJECT_STORAGE_KEY, projects);
   }, [projects]);
 
   useEffect(() => {
@@ -746,22 +745,37 @@ export default function ProjectPage({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-400">마지막 수정</span>
-                  <span className="font-medium text-[#F5F5F5]">{today()}</span>
+                  <span className="font-medium text-neutral-400">기록 없음</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-neutral-400">공유</span>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setToast("공유 링크를 준비했습니다.")}
+                      aria-label="프로젝트 공유 안내"
+                      title="프로젝트 공유 안내"
+                      onClick={() => setToast("프로젝트 공유는 준비 중입니다. 현재 프로젝트는 이 기기에만 저장됩니다.")}
                       className="flex h-11 w-11 items-center justify-center rounded-md border border-[#2A2E36] bg-[#15181D] text-neutral-400 hover:text-white sm:h-8 sm:w-8"
                     >
                       <Share2 className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => setToast("프로젝트 정보를 복사했습니다.")}
+                      aria-label="프로젝트 정보 복사"
+                      title="프로젝트 정보 복사"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText([
+                            activeProjData.name,
+                            activeProjData.description,
+                            activeProjData.tags.join(" "),
+                          ].join("\n"));
+                          setToast("프로젝트 정보를 복사했습니다.");
+                        } catch {
+                          setToast("복사하지 못했습니다. 브라우저의 클립보드 권한을 확인해 주세요.");
+                        }
+                      }}
                       className="flex h-11 w-11 items-center justify-center rounded-md border border-[#2A2E36] bg-[#15181D] text-neutral-400 hover:text-white sm:h-8 sm:w-8"
                     >
-                      <Link2 className="h-4 w-4" />
+                      <Copy className="h-4 w-4" />
                     </button>
                   </div>
                 </div>

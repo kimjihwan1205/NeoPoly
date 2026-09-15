@@ -144,9 +144,10 @@ export default function PurchasedAssetsPage() {
                 </div>
 
                 <div className="mt-auto">
-                  <button className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[6px] border border-border-soft bg-surface-secondary py-2.5 text-[14px] font-medium text-text-primary transition-all hover:border-brand-primary/50 hover:bg-[#1A1814] hover:text-brand-primary">
-                    <Download className="h-4 w-4" /> {'\uB2E4\uC6B4\uB85C\uB4DC \uBC1B\uAE30'}
+                  <button disabled className="flex min-h-11 w-full items-center justify-center gap-2 rounded-[6px] border border-border-soft bg-surface-secondary py-2.5 text-[14px] font-medium text-text-secondary cursor-not-allowed">
+                    <Download className="h-4 w-4" /> 다운로드 · 준비 중
                   </button>
+                  <p className="mt-2 text-[12px] leading-[18px] text-text-secondary">시연 구매 내역입니다. 실제 결제·판매 파일 다운로드는 지원하지 않습니다.</p>
                 </div>
               </div>
             </motion.div>

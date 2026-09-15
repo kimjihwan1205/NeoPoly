@@ -1,3 +1,4 @@
+import ModalLayer from "./ModalLayer";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
@@ -334,7 +335,7 @@ export function AIBoardOrganizer({
   };
 
   return (
-    <div
+    <ModalLayer onClose={onClose}
       className="fixed inset-0 z-[110] flex items-center justify-center bg-black/75 p-0 backdrop-blur-md sm:p-4"
       role="dialog"
       aria-modal="true"
@@ -360,7 +361,7 @@ export function AIBoardOrganizer({
                 </span>
               </div>
               <p className="mt-0.5 truncate text-[12px] text-text-tertiary sm:text-[13px]">
-                노트 내용을 비교해 함께 묶을 작업 그룹을 제안합니다.
+                MVP · 제목·본문·태그를 비교하는 규칙 기반 제안입니다.
               </p>
             </div>
           </div>
@@ -564,7 +565,7 @@ export function AIBoardOrganizer({
           )}
         </AnimatePresence>
       </motion.div>
-    </div>
+    </ModalLayer>
   );
 }
 
@@ -1071,7 +1072,7 @@ export function AIOrganizedBoard({
               className="flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border border-[#2A2E36] px-4 text-[13px] font-medium text-text-secondary transition hover:text-white xl:flex-none"
             >
               <RefreshCw className="h-4 w-4" />
-              원래 보기
+              정리 해제
             </button>
             <button
               type="button"

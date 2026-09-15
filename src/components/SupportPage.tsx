@@ -10,6 +10,8 @@ import {
   X,
 } from "lucide-react";
 import ChatbotWidget from "./ChatbotWidget";
+import ModalLayer from "./ModalLayer";
+import { useStoredState } from "../localStore";
 
 const FAQS = [
   {
@@ -62,6 +64,7 @@ export default function SupportPage() {
   const [contactOpen, setContactOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [selectedGuide, setSelectedGuide] = useState<string | null>(null);
+  const [contactDraft, setContactDraft] = useStoredState('neopoly_support_draft_v1', { title: '', message: '' });
 
   useEffect(() => {
     if (!toast) return;
@@ -217,11 +220,12 @@ export default function SupportPage() {
       </div>
 
       {contactOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#050505]/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-[520px] rounded-lg border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.8)]">
+        <ModalLayer onClose={() => setContactOpen(false)} aria-label="고객지원 문의 초안" className="fixed inset-0 z-[300] flex items-center justify-center bg-[#050505]/80 p-4 backdrop-blur-sm">
+          <div className="max-h-[90dvh] w-full max-w-[520px] overflow-y-auto rounded-lg border border-[#2A2E36] bg-[#0A0B0D] shadow-[0_24px_80px_rgba(0,0,0,0.8)]">
             <div className="flex items-center justify-between border-b border-[#1F2329] px-6 py-5">
-              <h3 className="text-[18px] font-semibold text-white">1:1 문의 접수</h3>
+              <h3 className="text-[20px] font-semibold text-white">1:1 문의 초안</h3>
               <button
+                aria-label="고객지원 문의 닫기"
                 onClick={() => setContactOpen(false)}
                 className="text-neutral-400 hover:text-white"
               >
@@ -229,26 +233,30 @@ export default function SupportPage() {
               </button>
             </div>
             <div className="flex flex-col gap-4 p-6">
+              <p className="text-[14px] leading-6 text-text-secondary">MVP · 입력 내용은 이 기기에 저장됩니다. 고객지원 전송은 아직 연결되지 않았습니다.</p>
               <input
+                aria-label="문의 제목" value={contactDraft.title} onChange={(event) => setContactDraft((current) => ({ ...current, title: event.target.value }))}
                 placeholder="제목"
                 className="h-11 rounded-lg border border-[#2A2E36] bg-[#141518] px-4 text-white outline-none placeholder:text-neutral-500 focus:border-brand-primary/60"
               />
               <textarea
+                aria-label="문의 내용" value={contactDraft.message} onChange={(event) => setContactDraft((current) => ({ ...current, message: event.target.value }))}
                 placeholder="문의 내용을 적어주세요."
                 className="h-36 resize-none rounded-lg border border-[#2A2E36] bg-[#141518] px-4 py-3 text-white outline-none placeholder:text-neutral-500 focus:border-brand-primary/60"
               />
               <button
+                disabled={!contactDraft.title.trim() || !contactDraft.message.trim()}
                 onClick={() => {
                   setContactOpen(false);
-                  setToast("문의가 접수되었습니다.");
+                  setToast("초안을 이 기기에 저장했습니다. 아직 전송되지 않았습니다.");
                 }}
                 className="np-primary-action rounded-lg bg-brand-primary px-5 py-3 text-[14px] font-medium text-[#050505] transition hover:bg-[#F0B43A]"
               >
-                문의 보내기
+                초안 보관하고 닫기
               </button>
             </div>
           </div>
-        </div>
+        </ModalLayer>
       )}
 
       {toast && (
