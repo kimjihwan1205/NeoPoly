@@ -1,0 +1,18 @@
+# Vercel builds the production output from source.
+dist/
+build/
+coverage/
+node_modules/
+
+# Keep local QA captures and backup files off the deployment upload.
+verification/
+*.bak
+.superpowers/
+.DS_Store
+*.log
+
+# Credentials remain local or in Vercel's environment settings.
+.env*
+!.env.example
+.git/
+.vercel/
