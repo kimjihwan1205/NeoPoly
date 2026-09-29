@@ -1209,7 +1209,7 @@ function Header({
     <>
     <header className="sticky top-0 z-50 flex h-[60px] w-full items-center justify-between gap-2 border-b border-border-primary/45 bg-[#08090B]/80 px-3 backdrop-blur-xl sm:px-5 md:gap-6 lg:h-[76px] lg:px-5">
       {/* Left section: Logo + Left-aligned menu with comfortable custom spacing */}
-      <div className="flex items-center gap-3 md:gap-5 lg:gap-6 xl:gap-10 shrink-0">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-5 lg:gap-6 xl:gap-10">
         <button
           type="button"
           onClick={() => {
@@ -1230,7 +1230,7 @@ function Header({
             src="/images/logo.png?v=2" 
             alt="NeoPoly" role="button" tabIndex={0} aria-label="NeoPoly 홈" onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onNavigate?.('home'); } }}
             onClick={() => { if(onNavigate) onNavigate('home'); if(setActiveNav) setActiveNav(null); }} 
-            className="np-brand-logo absolute left-1/2 top-1/2 h-[28px] w-auto max-h-[37px] -translate-x-1/2 -translate-y-1/2 cursor-pointer object-contain transition-all sm:h-[32px] md:h-[35px] lg:static lg:translate-x-0 lg:translate-y-0"
+            className="np-brand-logo h-[20px] w-auto max-h-[37px] cursor-pointer object-contain transition-all min-[360px]:h-[24px] sm:absolute sm:left-1/2 sm:top-1/2 sm:h-[32px] sm:-translate-x-1/2 sm:-translate-y-1/2 md:h-[35px] lg:static lg:translate-x-0 lg:translate-y-0"
           />
         </div>
         
@@ -1520,12 +1520,12 @@ function Header({
           </AnimatePresence>
         </div>
         
-        <div className="flex items-center gap-3 md:gap-4 shrink-0">
+        <div className="flex shrink-0 items-center gap-0 md:gap-2 lg:gap-4">
           {/* Cart Icon + Dropdown */}
-          <div className={`relative ${isCartOpen ? 'block' : 'hidden lg:block'}`} ref={cartRef}>
+          <div className="relative" ref={cartRef}>
             <button 
               onClick={toggleCart}
-              className={`text-text-tertiary hover:text-text-primary transition-all p-2 hover:scale-110 relative cursor-pointer rounded-full hover:bg-surface-primary/30 ${isCartOpen ? 'text-brand-primary' : ''}`}
+              className={`relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-text-tertiary transition-all hover:scale-110 hover:bg-surface-primary/30 hover:text-text-primary lg:h-auto lg:w-auto lg:p-2 ${isCartOpen ? 'text-brand-primary' : ''}`}
               aria-label="장바구니"
             >
               <ShoppingBag className="w-[19px] h-[19px] md:w-[21px] md:h-[21px]" />
@@ -1605,10 +1605,10 @@ function Header({
             </div>
 
             {/* Notification Icon + Dropdown */}
-            <div className={`relative ${isNotifOpen ? 'block' : 'hidden lg:block'}`} ref={notifRef}>
+            <div className="relative" ref={notifRef}>
               <button 
                 onClick={toggleNotif}
-                className={`text-text-tertiary hover:text-text-primary transition-all relative p-2 hover:scale-110 cursor-pointer rounded-full hover:bg-surface-primary/30 ${isNotifOpen ? 'text-brand-primary' : ''}`}
+                className={`relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-text-tertiary transition-all hover:scale-110 hover:bg-surface-primary/30 hover:text-text-primary lg:h-auto lg:w-auto lg:p-2 ${isNotifOpen ? 'text-brand-primary' : ''}`}
                 aria-label="알림"
               >
                 <Bell className="w-[19px] h-[19px] md:w-[21px] md:h-[21px]" />
@@ -1708,7 +1708,7 @@ function Header({
     aria-label="프로필 메뉴 열기"
     aria-expanded={isProfileMenuOpen}
     onClick={toggleProfileMenu}
-    className="h-11 w-11 rounded-full bg-surface-secondary border border-border-soft cursor-pointer overflow-hidden hover:border-brand-primary transition-colors sm:h-10 sm:w-10 lg:h-8 lg:w-8"
+    className="h-9 w-9 rounded-full bg-surface-secondary border border-border-soft cursor-pointer overflow-hidden hover:border-brand-primary transition-colors sm:h-10 sm:w-10 lg:h-8 lg:w-8"
   >
     <img src={profile.avatar} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
   </button>
@@ -1873,10 +1873,6 @@ function Header({
                     <span>{label}</span>
                   </button>
                 ))}
-              </div>
-              <div className="mx-auto mt-3 grid max-w-[720px] grid-cols-2 gap-2 border-t border-border-soft pt-3">
-                <button onClick={() => { setIsMobileMenuOpen(false); setIsCartOpen(true); setIsNotifOpen(false); }} className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border-primary text-[14px] text-text-primary"><ShoppingBag className="h-4 w-4" />장바구니 {cartItems.length}</button>
-                <button onClick={() => { setIsMobileMenuOpen(false); setIsNotifOpen(true); setIsCartOpen(false); }} className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border-primary text-[14px] text-text-primary"><Bell className="h-4 w-4" />알림</button>
               </div>
             </motion.nav>
           </motion.div>
@@ -2097,11 +2093,11 @@ function MobileCategoryPicker({
         type="button"
         onClick={() => setIsCategorySheetOpen(true)}
         aria-expanded={isCategorySheetOpen}
-        className="inline-flex h-11 items-center gap-2 rounded-md bg-transparent px-0 text-left text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary"
+        className="flex h-11 w-full items-center gap-2 rounded-lg border border-border-primary bg-surface-primary px-3 text-left text-[14px] font-medium text-text-secondary transition-colors hover:border-text-tertiary hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary"
       >
         <ActiveCategoryIcon className="h-4 w-4 text-brand-primary" />
-        <span className="text-text-primary">{activeCategoryMeta.label}</span>
-        <ChevronDown className={`h-4 w-4 transition-transform ${isCategorySheetOpen ? 'rotate-180 text-brand-primary' : 'text-text-secondary'}`} />
+        <span className="min-w-0 flex-1 text-text-primary">카테고리: {activeCategoryMeta.label}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${isCategorySheetOpen ? 'rotate-180 text-brand-primary' : 'text-text-secondary'}`} />
       </button>
 
       <AnimatePresence>
@@ -2569,7 +2565,7 @@ function AssetCard({
 
         {/* Always-visible Information Overlay (Mobile & Tablet) */}
         <div className="np-dark-media pointer-events-none absolute inset-x-0 bottom-0 z-10 flex min-h-[52%] flex-col justify-end bg-gradient-to-t from-black/98 via-black/68 to-transparent px-3 pb-3 pt-10 sm:px-3.5 sm:pb-3.5 lg:hidden">
-          <p className="truncate text-[16px] font-semibold leading-6 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] sm:text-[14px] sm:leading-5 md:text-[15px] md:leading-[22px]">
+          <p className="line-clamp-2 break-keep text-[16px] font-semibold leading-6 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] sm:text-[14px] sm:leading-5 md:text-[15px] md:leading-[22px]">
             {asset.title}
           </p>
           <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
@@ -2583,8 +2579,8 @@ function AssetCard({
         </div>
 
         {/* Hover Information Overlay (Desktop) */}
-        <div className="np-dark-media absolute inset-x-0 bottom-0 z-10 hidden h-[56%] flex-col justify-end bg-gradient-to-t from-black/98 via-black/72 to-transparent p-4 pb-4 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 group-focus-within:opacity-100 lg:flex">
-          <h3 className="truncate text-[16px] font-semibold leading-6 text-white">{asset.title}</h3>
+        <div className="np-dark-media absolute inset-x-0 bottom-0 z-10 hidden min-h-[56%] flex-col justify-end bg-gradient-to-t from-black/98 via-black/72 to-transparent p-4 pb-4 opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 group-focus-within:opacity-100 lg:flex">
+          <h3 className="line-clamp-2 break-keep text-[16px] font-semibold leading-6 text-white">{asset.title}</h3>
           <p className="mt-1 text-[14px] text-text-secondary font-medium">
             {asset.author}
           </p>
@@ -4269,7 +4265,7 @@ function ProductPurchasePanel({
             }}
             className="np-primary-action mb-2 w-full rounded-md bg-brand-primary py-3 text-[14px] font-medium text-bg-dark transition hover:bg-brand-hover"
           >
-            {product.isPreview ? '판매 준비 중' : isPurchased ? '구매한 작업물 보기' : '구매하기 · 시연'}
+            {product.isPreview ? '판매 준비 중' : isPurchased ? '구매한 작업물 보기' : '구매하기'}
           </button>
           <button
             onClick={handleAddToCart}
@@ -4680,10 +4676,15 @@ function DiscoverSection({
 
   return (
     <div className="flex-1 min-w-0 relative">
+      {onCategoryChange && (
+        <div className="mb-2 md:hidden">
+          <MobileCategoryPicker activeCategory={activeCategory} onCategoryChange={onCategoryChange} />
+        </div>
+      )}
       <div className="mb-5 flex flex-col gap-3 border-b border-border-soft/50 pb-3 sm:mb-6 sm:h-[46px] sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:pb-2">
-        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:gap-8 lg:gap-10">
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-1 sm:flex-row sm:items-end sm:gap-8 md:flex-none lg:gap-10">
           <h2 className="text-[28px] font-bold leading-[38px] tracking-tight text-text-primary font-display sm:leading-none">Discover</h2>
-          <div className="mb-[-2px] flex min-w-0 items-end gap-2 sm:self-end md:translate-y-[7px]">
+          <div className="mb-[-2px] flex min-w-0 flex-1 items-end gap-2 sm:self-end md:translate-y-[7px]">
             <div className="flex min-w-0 flex-1 flex-nowrap items-end gap-4 overflow-visible pr-1 sm:gap-6">
               {tabs.map(tab => (
                 <button
@@ -4742,12 +4743,6 @@ function DiscoverSection({
           </button>
         </div>
       </div>
-
-      {onCategoryChange && (
-        <div className="-mt-4 mb-4 flex">
-          <MobileCategoryPicker activeCategory={activeCategory} onCategoryChange={onCategoryChange} />
-        </div>
-      )}
 
       <AnimatePresence>
         {showFilters && (
@@ -5722,7 +5717,7 @@ export default function App() {
               animate={{ opacity: 1, y: 0, x: "-50%" }}
               exit={{ opacity: 0, y: 150, x: "-50%" }}
               transition={{ type: "spring", damping: 25, stiffness: 180 }}
-              className="np-main-panel safe-area-bottom fixed bottom-0 left-1/2 z-50 max-h-[88dvh] w-full max-w-full overflow-y-auto rounded-t-[16px] border border-border-primary/50 bg-[#0E1011]/95 px-4 pb-5 pt-[46px] shadow-[0_30px_60px_rgba(0,0,0,0.95)] backdrop-blur-xl custom-scrollbar sm:bottom-4 sm:w-[calc(100%_-_32px)] sm:max-w-[95%] sm:rounded-[12px] sm:px-6 md:bottom-6 md:max-h-[82dvh] md:w-[1536px] md:bg-[#0E1011]/93"
+              className="np-main-panel safe-area-bottom fixed bottom-0 left-1/2 z-50 max-h-[88dvh] w-full max-w-full overflow-y-auto rounded-t-[16px] border border-border-primary/50 bg-[#0E1011]/95 px-4 pb-5 pt-[46px] shadow-[0_30px_60px_rgba(0,0,0,0.95)] backdrop-blur-xl custom-scrollbar sm:bottom-4 sm:w-[calc(100%_-_32px)] sm:max-w-[95%] sm:rounded-[12px] sm:px-6 md:bottom-6 md:max-h-[75dvh] md:w-[1536px] md:bg-[#0E1011]/93 md:max-xl:pt-10 xl:max-h-[82dvh]"
             >
               {/* Close Button - Inside but safe from overlap */}
               <button
@@ -5733,10 +5728,10 @@ export default function App() {
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:max-xl:gap-6 xl:grid-cols-12">
                 
                 {/* 내 프로젝트 Section */}
-                <div className="xl:col-span-6 space-y-4">
+                <div className="min-w-0 space-y-4 md:col-span-2 md:max-xl:space-y-3 xl:col-span-6">
                   <div className="flex items-center justify-between px-1">
                     <h3 onClick={() => { setIsPanelOpen(false); openProjectsPage(); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">내 프로젝트</h3>
                     <button onClick={() => { setIsPanelOpen(false); openProjectsPage(); }} className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary">
@@ -5750,9 +5745,9 @@ export default function App() {
                         key={project.id}
                         type="button"
                         onClick={() => { setIsPanelOpen(false); openProjectsPage(project.id); }}
-                        className="bg-surface-primary/80 hover:bg-surface-primary border border-border-primary/20 rounded-[10px] p-2.5 transition-colors flex flex-col gap-3 group cursor-pointer hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)] text-left"
+                        className="bg-surface-primary/80 hover:bg-surface-primary border border-border-primary/20 rounded-[10px] p-2.5 transition-colors flex min-w-0 flex-col gap-3 md:max-xl:gap-2 group cursor-pointer hover:border-border-primary/60 shadow-[0_4px_12px_rgba(0,0,0,0.15)] text-left"
                       >
-                        <div className="w-full aspect-[16/10] rounded-[6px] overflow-hidden bg-bg-secondary relative border border-border-primary/10">
+                        <div className="w-full aspect-[16/10] md:max-xl:aspect-auto md:max-xl:h-[clamp(88px,11dvh,112px)] rounded-[6px] overflow-hidden bg-bg-secondary relative border border-border-primary/10">
                           <img src={project.image} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-100 group-hover:opacity-90" referrerPolicy="no-referrer" />
                         </div>
                         <div className="space-y-1.5 min-w-0">
@@ -5774,7 +5769,7 @@ export default function App() {
                 </div>
 
                 {/* 최근 노트 Section */}
-                <div className="xl:col-span-3 space-y-4">
+                <div className="min-w-0 space-y-4 md:max-xl:space-y-3 xl:col-span-3">
                   <div className="flex items-center justify-between px-1">
                     <h3 onClick={() => { setIsPanelOpen(false); openBoardPage('notes'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">노트</h3>
                     <button onClick={() => { setIsPanelOpen(false); openBoardPage('notes'); }} className="text-[14px] font-medium text-text-secondary transition-colors hover:text-text-primary">
@@ -5815,7 +5810,7 @@ export default function App() {
                 </div>
 
                 {/* 레퍼런스 Section */}
-                <div className="xl:col-span-3 space-y-4 xl:pr-6">
+                <div className="min-w-0 space-y-4 md:max-xl:space-y-3 xl:col-span-3 xl:pr-6">
                   <div className="flex items-center justify-between px-1">
                     <h3 onClick={() => { setIsPanelOpen(false); openBoardPage('references'); }} className="text-[17px] font-semibold text-text-primary tracking-tight cursor-pointer hover:text-brand-primary transition-colors">레퍼런스</h3>
                     <button 

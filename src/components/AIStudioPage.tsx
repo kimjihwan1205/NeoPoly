@@ -272,12 +272,12 @@ export default function AIStudioPage({
               className="custom-scrollbar flex cursor-grab select-none gap-5 overflow-x-auto pb-3 active:cursor-grabbing"
             >
               {recentProjects.map((project) => (
-                <button
+                <div
                   key={project.id}
-                  onClick={() => openProjectFromCard(project)}
                   data-continue-project-card
-                  className="np-studio-recent-card group flex min-h-[260px] w-[260px] shrink-0 flex-col overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-left transition hover:border-[#3A404F]"
+                  className="np-studio-recent-card group relative flex min-h-[260px] w-[260px] shrink-0 flex-col overflow-hidden rounded-lg border border-[#1F2329] bg-[#0A0B0D] text-left transition hover:border-[#3A404F]"
                 >
+                  <button type="button" aria-label={`${project.title} 이어서 작업하기`} onClick={() => openProjectFromCard(project)} className="np-card-open absolute inset-0 z-10 rounded-lg" />
                   <div className="np-dark-media relative aspect-[4/3] w-full shrink-0 overflow-hidden">
                     <img
                       referrerPolicy="no-referrer"
@@ -286,20 +286,23 @@ export default function AIStudioPage({
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                     />
                     <div className="np-studio-recent-image-fade absolute inset-0 bg-gradient-to-t from-[#0A0B0D] via-[#0A0B0D]/40 to-transparent" />
-                    <span
+                    <button
+                      type="button"
+                      aria-label={`${project.title} 즐겨찾기`}
+                      aria-pressed={starred.has(project.id)}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (suppressProjectClickRef.current) return;
                         toggleStar(project.id);
                       }}
-                      className="absolute right-3 top-3 z-10 p-1 text-neutral-300 transition hover:text-brand-primary"
+                      className="np-reference-favorite-action absolute right-2 top-2 z-20 flex h-11 w-11 items-center justify-center rounded-full text-brand-primary transition"
                     >
                       <Star
                         className={`h-5 w-5 ${
                           starred.has(project.id) ? "fill-brand-primary text-brand-primary" : ""
                         }`}
                       />
-                    </span>
+                    </button>
                     <div className="absolute inset-x-4 top-4 z-10">
                       <div className="flex items-center gap-2">
                         <span
@@ -345,7 +348,7 @@ export default function AIStudioPage({
 
 
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </div>

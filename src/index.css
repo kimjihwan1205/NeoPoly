@@ -1700,7 +1700,109 @@ html[data-theme="light"] .np-scroll-active::-webkit-scrollbar-thumb {
 }
 
 @supports (padding: max(0px)) {
-  .safe-area-bottom {
+.safe-area-bottom {
     padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Shared interaction contract. See docs/interaction-rules.md.
+   Kept after legacy theme overrides so both themes share state semantics. */
+:root {
+  --np-control-duration: 160ms;
+  --np-card-duration: 240ms;
+  --np-focus-color: #E0A12E;
+  --np-hover-surface: rgb(255 255 255 / 7%);
+}
+html[data-theme="light"] {
+  --np-focus-color: #795000;
+  --np-hover-surface: rgb(17 19 24 / 6%);
+}
+html :is(button, [role="button"], a[href], input, textarea, select):not(.np-eclipse-toggle) {
+  transition-duration: var(--np-control-duration);
+}
+html[data-theme] body :is(button, [role="button"], a[href], input, textarea, select):focus-visible {
+  outline: 2px solid var(--np-focus-color) !important;
+  outline-offset: 3px !important;
+}
+html[data-theme] body .np-card-open:focus-visible {
+  outline-offset: -3px !important;
+}
+html :is(button, [role="button"]):not(:disabled):not([aria-disabled="true"]):not(.np-eclipse-toggle):active {
+  filter: brightness(0.94) !important;
+}
+/* Ordinary controls do not jump or shrink. Theme-toggle motion is intentional. */
+html button[class*="hover:scale"]:not(.np-eclipse-toggle):hover,
+html button[class*="active:scale"]:not(.np-eclipse-toggle):active {
+  scale: 1 !important;
+}
+html :is(button:disabled, [role="button"][aria-disabled="true"]) {
+  opacity: 0.45 !important;
+  pointer-events: none;
+  box-shadow: none !important;
+  filter: none !important;
+}
+html :is(button, [role="button"])[aria-busy="true"] {
+  opacity: 0.7 !important;
+}
+html[data-theme] .np-primary-action:not(:disabled):hover {
+  box-shadow: 0 2px 6px rgb(224 161 46 / 16%) !important;
+}
+html[data-theme] .np-primary-action:not(:disabled):active {
+  box-shadow: none !important;
+}
+/* Image zoom only: no layout shift or card movement. */
+html img[class*="hover:scale"] {
+  transition-duration: var(--np-card-duration) !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  html .group:hover img[class*="group-hover:scale"],
+  html img[class*="hover:scale"]:hover {
+    scale: 1.01 !important;
+  }
+}
+html .np-reference-card:focus-within :is(.np-reference-overlay-action, .np-reference-favorite-action) {
+  opacity: 1 !important;
+}
+html[data-theme] :is(.np-reference-overlay-action, .np-reference-favorite-action, .np-generated-image-action) {
+  background-color: rgb(10 11 13 / 50%) !important;
+  border: 1px solid rgb(255 255 255 / 14%) !important;
+  backdrop-filter: blur(7px);
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease !important;
+}
+html[data-theme] :is(.np-reference-overlay-action, .np-reference-favorite-action, .np-generated-image-action):hover {
+  background-color: rgb(10 11 13 / 66%) !important;
+  border-color: rgb(255 255 255 / 24%) !important;
+}
+html[data-theme] .np-generated-image-action:hover {
+  color: #FFFFFF !important;
+}
+html[data-theme] .np-generated-image-action-edit:hover {
+  color: var(--color-brand-primary) !important;
+}
+html[data-theme] .np-reference-overlay-delete:hover {
+  background-color: rgb(127 29 29 / 66%) !important;
+  color: #FECACA !important;
+}
+html aside button:is([aria-current="page"], [aria-pressed="true"]) {
+  background-color: color-mix(in srgb, var(--color-brand-primary) 10%, transparent) !important;
+  border-color: color-mix(in srgb, var(--color-brand-primary) 30%, transparent) !important;
+  color: var(--color-text-primary) !important;
+  font-weight: 600;
+}
+@media (hover: none), (pointer: coarse) {
+  html .np-reference-card :is(.np-reference-overlay-action, .np-reference-favorite-action) {
+    opacity: 1 !important;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  html img[class*="hover:scale"] { scale: 1 !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html *, html *::before, html *::after {
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+  html img[class*="hover:scale"], html button[class*="hover:scale"] {
+    scale: 1 !important;
   }
 }

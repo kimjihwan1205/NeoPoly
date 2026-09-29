@@ -254,8 +254,8 @@ export default function AccountSettingsPage({
 
               <div className="flex items-center gap-4 text-[14px] text-neutral-400 font-medium mb-5">
                 <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> <span className="leading-none pt-0.5">{location}</span></div>
-                <div className="flex items-center gap-1.5 hover:text-brand-primary cursor-pointer transition-colors group">
-                  <Link2 className="w-3.5 h-3.5 group-hover:text-brand-primary" /> <span className="leading-none pt-0.5">외부 링크</span> <ChevronDown className="w-3.5 h-3.5 ml-px" />
+                <div className="flex items-center gap-1.5">
+                  <Link2 className="w-3.5 h-3.5" /> <span className="leading-none pt-0.5">외부 링크 미리보기</span>
                 </div>
               </div>
 
@@ -286,17 +286,17 @@ export default function AccountSettingsPage({
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[14px] font-medium text-neutral-100">대표 작업물</span>
-                  <span className="text-[14px] font-medium text-brand-primary flex items-center gap-1 cursor-pointer transition-colors hover:text-[#F0B43A]">전체 보기 <ExternalLink className="w-3.5 h-3.5" /></span>
+                  <span className="text-[12px] text-text-secondary">미리보기</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="aspect-[4/5] rounded-xl bg-[#141518] overflow-hidden border border-[#1F2329] group cursor-pointer shadow-sm">
-                    <img referrerPolicy="no-referrer" src="/images/work_%201.png" className="w-full h-full object-cover opacity-85 group-hover:scale-105 group-hover:opacity-100 transition-all duration-300" />
+                  <div className="aspect-[4/5] rounded-xl bg-[#141518] overflow-hidden border border-[#1F2329] shadow-sm">
+                    <img referrerPolicy="no-referrer" src="/images/work_%201.png" alt="대표 작업물 미리보기 1" className="w-full h-full object-cover opacity-85" />
                   </div>
-                  <div className="aspect-[4/5] rounded-xl bg-[#141518] overflow-hidden border border-[#1F2329] group cursor-pointer shadow-sm">
-                    <img referrerPolicy="no-referrer" src="/images/work_%205.png" className="w-full h-full object-cover opacity-85 group-hover:scale-105 group-hover:opacity-100 transition-all duration-300" />
+                  <div className="aspect-[4/5] rounded-xl bg-[#141518] overflow-hidden border border-[#1F2329] shadow-sm">
+                    <img referrerPolicy="no-referrer" src="/images/work_%205.png" alt="대표 작업물 미리보기 2" className="w-full h-full object-cover opacity-85" />
                   </div>
-                  <div className="aspect-[4/5] rounded-xl bg-[#141518] overflow-hidden border border-[#1F2329] group cursor-pointer shadow-sm">
-                    <img referrerPolicy="no-referrer" src="/images/work_%209.png" className="w-full h-full object-cover opacity-85 group-hover:scale-105 group-hover:opacity-100 transition-all duration-300" />
+                  <div className="aspect-[4/5] rounded-xl bg-[#141518] overflow-hidden border border-[#1F2329] shadow-sm">
+                    <img referrerPolicy="no-referrer" src="/images/work_%209.png" alt="대표 작업물 미리보기 3" className="w-full h-full object-cover opacity-85" />
                   </div>
                 </div>
               </div>
