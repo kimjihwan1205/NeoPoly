@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -12,7 +13,7 @@ import {
   Pencil,
   PenTool,
   RotateCcw,
-  SlidersHorizontal,
+  Plus,
   Sparkles,
   Unlock,
   Wand2,
@@ -429,6 +430,12 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   const [correctingConsistencyIssueId, setCorrectingConsistencyIssueId] = useState<string | null>(null);
   const [previewViewId, setPreviewViewId] = useState<ViewId>("front");
   const [isComparisonModalOpen, setIsComparisonModalOpen] = useState(false);
+  const [moduleImagePreview, setModuleImagePreview] = useState<{
+    src: string;
+    title: string;
+    cropArea?: ModularPart["area"];
+  } | null>(null);
+  const modulePreviewTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingModular, setIsGeneratingModular] = useState(false);
   const [isScanningModules, setIsScanningModules] = useState(false);
@@ -454,21 +461,20 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   const [isModuleListConfirmed, setIsModuleListConfirmed] = useState(
     initialModuleSession?.isModuleListConfirmed ?? false,
   );
-  const [isModuleListDrawerOpen, setIsModuleListDrawerOpen] = useState(
-    initialModuleSession?.isModuleListDrawerOpen ?? false,
-  );
+  const [isBaseSetExpanded, setIsBaseSetExpanded] = useState(true);
+  const [isSetComposerOpen, setIsSetComposerOpen] = useState(false);
   const [isAddingModuleSet, setIsAddingModuleSet] = useState(false);
-  const [isDraggingModuleSets, setIsDraggingModuleSets] = useState(false);
-  const moduleSetScrollerRef = useRef<HTMLDivElement | null>(null);
-  const moduleSetDragRef = useRef({ isDragging: false, startX: 0, scrollLeft: 0 });
-  const previousModuleSetCountRef = useRef(0);
+  const workspaceRef = useRef<HTMLElement | null>(null);
+  const latestModuleSetRef = useRef<HTMLElement | null>(null);
+  const shouldScrollToNewSetRef = useRef(false);
   const [moduleSets, setModuleSets] = useState<ModuleSet[]>(() => {
     const restored = initialModuleSession?.moduleSets as ModuleSet[] | undefined;
     return restored ?? [];
   });
-  const [newSetTag, setNewSetTag] = useState(
-    initialModuleSession?.newSetTag || MODULE_SET_TAG_SUGGESTIONS[1],
-  );
+  const [newSetTag, setNewSetTag] = useState(() => {
+    const saved = initialModuleSession?.newSetTag ?? "";
+    return MODULE_SET_TAG_SUGGESTIONS.includes(saved) ? "" : saved;
+  });
   const [moduleDrafts, setModuleDrafts] = useState<Record<string, ModuleDraft>>(() => ({
     ...DEFAULT_MODULE_DRAFTS,
     ...(initialModuleSession?.moduleDrafts as Record<string, ModuleDraft> | undefined),
@@ -559,6 +565,22 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   const isModularScanActive = isScanningModules || isBuildingModuleSet || isAddingModuleScan;
 
   useEffect(() => {
+    workspaceRef.current?.scrollTo({ top: 0 });
+  }, [expertTab, isModuleListConfirmed]);
+
+  useEffect(() => {
+    if (!moduleImagePreview) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setModuleImagePreview(null);
+        modulePreviewTriggerRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [moduleImagePreview]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
 
     window.sessionStorage.setItem(
@@ -566,7 +588,6 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
       JSON.stringify({
         isModuleScanComplete,
         isModuleListConfirmed,
-        isModuleListDrawerOpen,
         moduleParts,
         generatedModules,
         moduleSets,
@@ -579,7 +600,6 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   }, [
     generatedModules,
     isModuleListConfirmed,
-    isModuleListDrawerOpen,
     isModuleScanComplete,
     moduleDrafts,
     moduleNameInputs,
@@ -602,23 +622,16 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   }, [expertTab, isModuleScanComplete]);
 
   useEffect(() => {
-    if (!isModuleListConfirmed) {
-      previousModuleSetCountRef.current = moduleSets.length;
-      return;
-    }
-
-    const isNewSetAdded = moduleSets.length > previousModuleSetCountRef.current;
-    previousModuleSetCountRef.current = moduleSets.length;
-
-    if (!isNewSetAdded) return;
-
-    window.requestAnimationFrame(() => {
-      const scroller = moduleSetScrollerRef.current;
-      if (!scroller) return;
-
-      scroller.scrollTo({ left: scroller.scrollWidth, behavior: "smooth" });
+    if (!isModuleListConfirmed || expertTab !== "modular" || !shouldScrollToNewSetRef.current) return;
+    shouldScrollToNewSetRef.current = false;
+    const frame = window.requestAnimationFrame(() => {
+      latestModuleSetRef.current?.scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      });
     });
-  }, [isModuleListConfirmed, moduleSets.length]);
+    return () => window.cancelAnimationFrame(frame);
+  }, [expertTab, isModuleListConfirmed, moduleSets.length]);
 
   const handleBackToPreviousStep = () => {
     if (typeof window !== "undefined") {
@@ -1059,16 +1072,15 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
           : [DEFAULT_MODULE_SET],
       );
       setIsModuleListConfirmed(true);
-      setIsModuleListDrawerOpen(true);
+      setIsBaseSetExpanded(true);
       setIsBuildingModuleSet(false);
-      window.setTimeout(() => setIsModuleListDrawerOpen(false), 1000);
     }, 950);
   };
 
   const handleBackToModuleList = () => {
     setIsBuildingModuleSet(false);
     setIsModuleListConfirmed(false);
-    setIsModuleListDrawerOpen(false);
+    setIsSetComposerOpen(false);
   };
 
   const handleUpdateModuleSetTag = (setId: string, tag: string) => {
@@ -1091,50 +1103,29 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
 
     setIsAddingModuleSet(true);
     window.setTimeout(() => {
+      shouldScrollToNewSetRef.current = true;
       setModuleSets((current) => [...current, nextSet]);
-      setNewSetTag(MODULE_SET_TAG_SUGGESTIONS[(nextIndex + 1) % MODULE_SET_TAG_SUGGESTIONS.length]);
+      setNewSetTag("");
       setIsAddingModuleSet(false);
+      setIsSetComposerOpen(false);
     }, 720);
   };
 
-  const isModuleSetDragBlocked = (target: EventTarget | null) =>
-    target instanceof HTMLElement && Boolean(target.closest("input, textarea, select, [data-module-set-drag-lock]"));
-
-  const handleModuleSetPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0 || isModuleSetDragBlocked(event.target)) return;
-
-    const scroller = moduleSetScrollerRef.current;
-    if (!scroller) return;
-
-    moduleSetDragRef.current = {
-      isDragging: true,
-      startX: event.clientX,
-      scrollLeft: scroller.scrollLeft,
-    };
-    setIsDraggingModuleSets(true);
-    event.currentTarget.setPointerCapture(event.pointerId);
+  const openModuleImagePreview = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    src: string,
+    title: string,
+    cropArea?: ModularPart["area"],
+  ) => {
+    modulePreviewTriggerRef.current = event.currentTarget;
+    setModuleImagePreview({ src, title, cropArea });
   };
 
-  const handleModuleSetPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!moduleSetDragRef.current.isDragging) return;
-
-    const scroller = moduleSetScrollerRef.current;
-    if (!scroller) return;
-
-    const distance = event.clientX - moduleSetDragRef.current.startX;
-    scroller.scrollLeft = moduleSetDragRef.current.scrollLeft - distance;
-    event.preventDefault();
+  const closeModuleImagePreview = () => {
+    setModuleImagePreview(null);
+    modulePreviewTriggerRef.current?.focus();
   };
 
-  const handleModuleSetPointerEnd = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!moduleSetDragRef.current.isDragging) return;
-
-    moduleSetDragRef.current.isDragging = false;
-    setIsDraggingModuleSets(false);
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-  };
 
   const getModuleSetImage = (set: ModuleSet, part: ModularPart, partIndex: number) => {
     const matchedItem = MODULE_SET_ITEM_BY_PART_ID[part.id] ?? part.generatedImage.match(/item(\d{2})\.png$/)?.[1] ?? String((partIndex % 5) + 1).padStart(2, "0");
@@ -1163,12 +1154,11 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
   return (
     <div className="np-workspace-shell flex h-[calc(100dvh-60px)] bg-[#050505] font-sans text-[#F5F5F5] antialiased lg:h-[calc(100dvh-76px)]">
       <main
-        className={`relative grid min-w-0 flex-1 grid-cols-1 grid-rows-[64px_minmax(520px,1fr)_minmax(560px,auto)] overflow-y-auto custom-scrollbar lg:grid-rows-[64px_minmax(0,1fr)] lg:overflow-hidden ${
-          expertTab === "turnaround"
-            ? "lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_550px]"
-            : isModuleListConfirmed
-              ? "lg:grid-cols-[minmax(0,1fr)_minmax(620px,780px)] 2xl:grid-cols-[minmax(0,1fr)_900px]"
-              : "lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_550px]"
+        ref={workspaceRef}
+        className={`relative min-w-0 flex-1 overflow-y-auto custom-scrollbar ${
+          expertTab === "modular" && isModuleListConfirmed
+            ? "flex flex-col"
+            : "grid grid-cols-1 grid-rows-[64px_auto_minmax(560px,auto)] lg:grid-rows-[64px_minmax(0,1fr)] lg:overflow-hidden lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_550px]"
         }`}
       >
         <WorkflowHeader
@@ -1179,14 +1169,14 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
               <div
                 role="tablist"
                 aria-label="이미지 제작 단계"
-                className="flex items-center gap-1 rounded-lg border border-[#2A2E36] bg-[#0A0B0D] p-1"
+                className="grid w-full grid-cols-2 gap-1 rounded-lg border border-[#2A2E36] bg-[#0A0B0D] p-1 sm:flex sm:w-auto"
               >
                 <button
                   type="button"
                   role="tab"
                   aria-selected={expertTab === "turnaround"}
                   onClick={() => setExpertTab("turnaround")}
-                  className={`flex h-9 items-center rounded-md px-4 text-[14px] font-medium transition ${
+                  className={`flex h-9 min-w-0 items-center justify-center whitespace-nowrap rounded-md px-1 text-[13px] font-medium transition sm:px-4 sm:text-[14px] ${
                     expertTab === "turnaround"
                       ? "bg-brand-primary text-black"
                       : "text-neutral-400 hover:bg-[#141518] hover:text-white"
@@ -1206,7 +1196,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                         ? "턴어라운드를 완료하면 이동할 수 있습니다"
                         : "이미지 모듈화로 이동"
                     }
-                    className={`flex h-9 items-center rounded-md px-4 text-[14px] font-medium transition ${
+                    className={`flex h-9 min-w-0 items-center justify-center whitespace-nowrap rounded-md px-1 text-[13px] font-medium transition sm:px-4 sm:text-[14px] ${
                       expertTab === "modular"
                         ? "bg-brand-primary text-black"
                         : "text-neutral-400 hover:bg-[#141518] hover:text-white disabled:cursor-not-allowed disabled:text-neutral-700 disabled:hover:bg-transparent"
@@ -1220,13 +1210,13 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
           }
           section="image"
           currentStep={expertTab === "turnaround" ? "turnaround" : "modular"}
-          className="col-start-1 row-start-1"
+          className="col-start-1 row-start-1 shrink-0 !px-3 sm:!px-6 [&>div:first-child]:w-full sm:[&>div:first-child]:w-auto [&>div:last-child]:hidden sm:[&>div:last-child]:flex"
         />
 
         {expertTab === "turnaround" ? (
           <div className="contents">
-            <section className="col-start-1 row-start-2 flex min-w-0 flex-col overflow-hidden p-4">
-              <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+            <section className="col-start-1 row-start-2 flex min-w-0 flex-col p-4 lg:overflow-hidden">
+              <div className="grid auto-rows-auto grid-cols-1 gap-3 sm:grid-cols-2 lg:min-h-0 lg:flex-1 lg:auto-rows-fr">
                 {TURNAROUND_VIEWS.map((view, index) => {
                   const isSelected = selectedViewId === view.id;
                   const isLocked = lockedViews.has(view.id);
@@ -1302,11 +1292,11 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                         </div>
                       </div>
 
-                      <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center rounded-lg bg-white">
+                      <div className="relative z-10 flex aspect-[4/3] w-full flex-none items-center justify-center overflow-hidden rounded-lg bg-white lg:aspect-auto lg:min-h-0 lg:flex-1">
                         <img
                           src={`${view.img}?version=${viewVersions[view.id]}`}
                           alt={`오크 ${view.label}`}
-                          className={`max-h-full max-w-full object-contain p-2 transition duration-300 ${
+                          className={`absolute inset-0 h-full w-full object-contain p-2 transition duration-300 ${
                             isRegeneratingView ? "scale-95 opacity-30 blur-sm" : "opacity-100"
                           }`}
                         />
@@ -1575,10 +1565,239 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
               </div>
             </aside>
           </div>
+        ) : isModuleListConfirmed ? (
+          <>
+            <div className="mx-auto w-full max-w-[1600px] flex-1 p-4 sm:p-6 lg:p-8">
+              <div className="grid min-w-0 grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+                <section aria-labelledby="module-original-heading" className="min-w-0">
+                  <h2 id="module-original-heading" className="mb-3 text-[20px] font-semibold leading-[30px] text-white">원본 이미지</h2>
+                  <button
+                    type="button"
+                    onClick={(event) => openModuleImagePreview(event, ORC_MODULE_SCAN_IMAGE, "원본 이미지")}
+                    aria-label="원본 이미지 크게 보기"
+                    className="group relative flex h-[260px] w-full items-center justify-center overflow-hidden rounded-xl border border-[#1F2329] bg-white p-3 sm:h-[300px] lg:h-[280px]"
+                  >
+                    <img
+                      src={ORC_MODULE_SCAN_IMAGE}
+                      alt=""
+                      className="h-full w-full object-contain"
+                    />
+                    <span className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-lg bg-black/65 text-white opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-visible:opacity-100">
+                      <Maximize2 className="h-4 w-4" />
+                    </span>
+                  </button>
+                </section>
+
+                <section aria-labelledby="module-base-heading" className="min-w-0">
+                  <div className="mb-3 flex min-h-[30px] items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <h2 id="module-base-heading" className="text-[20px] font-semibold leading-[30px] text-white">기본 세트</h2>
+                      <span className="text-[12px] leading-[18px] text-neutral-400">{moduleSetParts.length}개 부품</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsBaseSetExpanded((current) => !current)}
+                      aria-expanded={isBaseSetExpanded}
+                      aria-controls="module-base-parts"
+                      className="flex min-h-11 items-center gap-1 rounded-lg px-2 text-[14px] leading-6 text-neutral-300 transition hover:bg-white/5 hover:text-white lg:hidden"
+                    >
+                      {isBaseSetExpanded ? "접기" : "펼치기"}
+                      <ChevronDown className={`h-4 w-4 transition-transform ${isBaseSetExpanded ? "rotate-180" : ""}`} />
+                    </button>
+                  </div>
+                  <div
+                    id="module-base-parts"
+                    className={`${isBaseSetExpanded ? "grid" : "hidden"} grid-cols-2 gap-3 sm:grid-cols-3 lg:grid`}
+                  >
+                    {moduleSetParts.map((part) => (
+                      <figure key={`base-${part.id}`} className="min-w-0 overflow-hidden rounded-xl border border-[#1F2329] bg-[#141518]">
+                        <button
+                          type="button"
+                          onClick={(event) => openModuleImagePreview(
+                            event,
+                            part.cropSource ?? part.image,
+                            `기본 세트 · ${moduleDrafts[part.id]?.label ?? part.label}`,
+                            part.cropSource ? part.area : undefined,
+                          )}
+                          aria-label={`${moduleDrafts[part.id]?.label ?? part.label} 크게 보기`}
+                          className="group relative flex h-[110px] w-full items-center justify-center overflow-hidden bg-white p-2 sm:h-[120px] lg:h-[100px]"
+                        >
+                          {renderModuleThumbnail(part, "h-full w-full object-contain")}
+                          <span className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-md bg-black/65 text-white opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-visible:opacity-100">
+                            <Maximize2 className="h-4 w-4" />
+                          </span>
+                        </button>
+                        <figcaption className="break-words px-3 py-2 text-[14px] leading-6 text-neutral-200">
+                          {moduleDrafts[part.id]?.label ?? part.label}
+                        </figcaption>
+                      </figure>
+                    ))}
+                  </div>
+                </section>
+              </div>
+
+              <section aria-labelledby="module-generated-heading" className="mt-8 border-t border-[#1F2329] pt-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 id="module-generated-heading" className="text-[20px] font-semibold leading-[30px] text-white">생성된 모듈 세트</h2>
+                    <span className="text-[12px] leading-[18px] text-neutral-400">{moduleSets.length}개 세트</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsSetComposerOpen((current) => !current)}
+                    disabled={isAddingModuleSet}
+                    aria-expanded={isSetComposerOpen}
+                    aria-controls="module-set-composer"
+                    className="flex min-h-11 items-center gap-1.5 rounded-lg border border-[#2A2E36] bg-[#141518] px-3 text-[14px] leading-6 text-neutral-200 transition hover:border-brand-primary/50 hover:text-white disabled:opacity-50"
+                  >
+                    {isSetComposerOpen ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                    {isSetComposerOpen ? "닫기" : "세트 추가"}
+                  </button>
+                </div>
+
+                {isSetComposerOpen && (
+                  <form
+                    id="module-set-composer"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      handleAddModuleSet();
+                    }}
+                    aria-busy={isAddingModuleSet}
+                    className="mt-4 rounded-xl border border-[#2A2E36] bg-[#141518] p-4"
+                  >
+                    <label htmlFor="new-module-set-tag" className="text-[14px] leading-6 text-neutral-200">새 세트의 스타일</label>
+                    <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+                      <input
+                        id="new-module-set-tag"
+                        autoFocus
+                        value={newSetTag}
+                        onChange={(event) => setNewSetTag(event.target.value)}
+                        disabled={isAddingModuleSet}
+                        placeholder="생각하는 세트를 설명해주세요"
+                        className="h-11 min-w-0 flex-1 rounded-lg border border-[#2A2E36] bg-[#050505] px-3 text-[14px] leading-6 text-white outline-none focus:border-brand-primary disabled:opacity-60"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isAddingModuleSet}
+                        className="np-primary-action flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-brand-primary px-5 text-[14px] leading-6 text-black transition disabled:cursor-wait disabled:opacity-60"
+                      >
+                        {isAddingModuleSet ? <LoadingIndicator tone="current" /> : <Sparkles className="h-4 w-4" />}
+                        {isAddingModuleSet ? "세트 생성 중" : "세트 생성"}
+                      </button>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-2" aria-label="추천 세트">
+                      <span className="mr-1 text-[12px] leading-[18px] text-neutral-400">추천 세트</span>
+                      {MODULE_SET_TAG_SUGGESTIONS.map((suggestion) => (
+                        <button
+                          key={suggestion}
+                          type="button"
+                          onClick={() => setNewSetTag(suggestion)}
+                          disabled={isAddingModuleSet}
+                          aria-pressed={newSetTag === suggestion}
+                          className={`min-h-9 rounded-full border px-3 text-[12px] leading-[18px] transition disabled:opacity-50 ${
+                            newSetTag === suggestion
+                              ? "border-brand-primary bg-brand-primary/10 text-brand-primary"
+                              : "border-[#2A2E36] bg-[#181A1F] text-neutral-300 hover:border-brand-primary/60 hover:text-white"
+                          }`}
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                    <p role="status" className="mt-2 text-[12px] leading-[18px] text-neutral-400">
+                      {isAddingModuleSet ? "기본 부품을 바탕으로 새 세트를 구성하고 있습니다." : "기본 세트와 같은 부품 순서로 생성됩니다."}
+                    </p>
+                  </form>
+                )}
+
+                <div className="mt-5 space-y-6">
+                  {moduleSets.map((set, setIndex) => (
+                    <section
+                      key={set.id}
+                      ref={setIndex === moduleSets.length - 1 ? latestModuleSetRef : undefined}
+                      aria-label={`${set.title} 모듈 세트`}
+                      className="scroll-mt-6 rounded-xl border border-[#1F2329] bg-[#141518] p-3 sm:p-4"
+                    >
+                      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-2">
+                          <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: set.accent }} />
+                          <h3 className="text-[16px] font-semibold leading-6 text-white">{set.title}</h3>
+                          <span className="text-[12px] leading-[18px] text-neutral-400">{moduleSetParts.length}개 부품</span>
+                        </div>
+                        <div className="flex min-w-0 items-center gap-2 sm:w-[300px]">
+                          <label htmlFor={`module-tag-${set.id}`} className="shrink-0 text-[12px] leading-[18px] text-neutral-400">스타일</label>
+                          <input
+                            id={`module-tag-${set.id}`}
+                            value={set.tag}
+                            onChange={(event) => handleUpdateModuleSetTag(set.id, event.target.value)}
+                            className="h-11 min-w-0 flex-1 rounded-lg border border-[#2A2E36] bg-[#050505] px-3 text-[14px] leading-6 text-neutral-200 outline-none focus:border-brand-primary"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                        {moduleSetParts.map((part, partIndex) => (
+                          <figure key={`${set.id}-${part.id}`} className="min-w-0 overflow-hidden rounded-lg border border-[#1F2329] bg-[#181A1F]">
+                            <button
+                              type="button"
+                              onClick={(event) => openModuleImagePreview(
+                                event,
+                                getModuleSetImage(set, part, partIndex),
+                                `${set.title} · ${moduleDrafts[part.id]?.label ?? part.label}`,
+                              )}
+                              aria-label={`${set.title} ${moduleDrafts[part.id]?.label ?? part.label} 크게 보기`}
+                              className="group relative flex h-[112px] w-full items-center justify-center overflow-hidden bg-white p-2 sm:h-[130px] lg:h-[150px] 2xl:h-[170px]"
+                            >
+                              <img
+                                src={getModuleSetImage(set, part, partIndex)}
+                                alt=""
+                                loading="lazy"
+                                className="h-full w-full object-contain"
+                              />
+                              <span className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-md bg-black/65 text-white opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-visible:opacity-100">
+                                <Maximize2 className="h-4 w-4" />
+                              </span>
+                            </button>
+                            <figcaption className="break-words px-3 py-2 text-[14px] leading-6 text-neutral-200">
+                              {moduleDrafts[part.id]?.label ?? part.label}
+                            </figcaption>
+                          </figure>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                  {moduleSets.length === 0 && (
+                    <p className="rounded-xl border border-dashed border-[#2A2E36] px-4 py-10 text-center text-[14px] leading-6 text-neutral-400">
+                      세트를 추가해 기본 부품의 새로운 스타일을 만들어 보세요.
+                    </p>
+                  )}
+                </div>
+              </section>
+            </div>
+            <div className="sticky bottom-0 z-20 shrink-0 border-t border-[#1F2329] bg-[#0A0B0D] px-4 py-3 sm:px-6 lg:px-8">
+              <div className="mx-auto flex w-full max-w-[1536px] items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={handleBackToModuleList}
+                  disabled={isAddingModuleSet}
+                  className="flex min-h-11 items-center justify-center gap-1 rounded-lg border border-[#2A2E36] bg-[#141518] px-3 text-[14px] leading-6 text-neutral-200 transition hover:border-brand-primary/50 disabled:opacity-50 sm:px-5"
+                >
+                  <ChevronLeft className="h-4 w-4" /> 기본 부품 수정
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCompleteModular}
+                  disabled={isAddingModuleSet}
+                  className="np-primary-action flex min-h-11 items-center justify-center gap-2 rounded-lg bg-brand-primary px-6 text-[14px] leading-6 text-black transition disabled:opacity-50 sm:min-w-[160px]"
+                >
+                  완료 <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </>
         ) : (
           <div className="contents">
             <div className="contents">
-              <section className="col-start-1 row-start-2 flex min-w-0 flex-col overflow-hidden p-4">
+              <section className="col-start-1 row-start-2 flex min-w-0 flex-col p-4 lg:overflow-hidden">
                 <div className="mb-3 flex shrink-0 items-center justify-between">
                   <div>
                     <h3 className="text-[17px] font-medium text-white">{"\ubaa8\ub4c8\ud654 \uce94\ubc84\uc2a4"}</h3>
@@ -1603,7 +1822,7 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                   </span>
                 </div>
 
-                <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-xl border border-[#1F2329] bg-white p-4">
+                <div className="relative flex min-h-[320px] w-full flex-none items-center justify-center overflow-hidden rounded-xl border border-[#1F2329] bg-white p-4 sm:min-h-[420px] lg:min-h-0 lg:flex-1">
                   <img
                     src={isModuleScanComplete ? ORC_MODULE_RESULT_IMAGE : ORC_MODULE_SCAN_IMAGE}
                     alt="orc modular canvas"
@@ -1899,194 +2118,59 @@ export default function TurnaroundPage({ onNavigate }: TurnaroundPageProps) {
                       )}
                     </section>
 
-                    {isModuleListConfirmed && (
-                      <section className="relative flex min-h-0 flex-col bg-[#050505]">
-                        {!isModuleListDrawerOpen && (
-                          <button
-                            type="button"
-                            onClick={() => setIsModuleListDrawerOpen(true)}
-                            className="absolute -left-px top-1/2 z-20 flex -translate-y-1/2 flex-col items-center gap-2 rounded-r-xl border border-l-0 border-[#2A2E36] bg-[#0A0B0D]/95 px-2.5 py-3 text-[14px] font-medium text-neutral-200 shadow-xl backdrop-blur transition hover:border-brand-primary/45 hover:bg-[#111317] hover:text-white"
-                          >
-                            <ChevronRight className="h-4 w-4 text-brand-primary" />
-                            <span className="[writing-mode:vertical-rl]">{"\ubaa8\ub4c8 \ub9ac\uc2a4\ud2b8"}</span>
-                          </button>
-                        )}
-
-                        <AnimatePresence initial={false}>
-                          {isModuleListDrawerOpen && (
-                            <motion.div
-                              initial={{ x: -28, opacity: 0 }}
-                              animate={{ x: 0, opacity: 1 }}
-                              exit={{ x: -28, opacity: 0 }}
-                              transition={{ duration: 0.22, ease: "easeOut" }}
-                              className="absolute bottom-[84px] left-4 top-[84px] z-30 flex w-[calc(100%_-_32px)] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#0A0B0D]/95 shadow-2xl backdrop-blur-md sm:w-[320px]"
-                            >
-                              <div className="flex items-start justify-between gap-3 border-b border-[#1F2329] p-4">
-                                <div>
-                                  <p className="text-[14px] font-medium text-brand-primary">Module List</p>
-                                  <h3 className="mt-1 text-[18px] font-medium text-white">{"\uc804\uccb4 \ubaa8\ub4c8 \ub9ac\uc2a4\ud2b8"}</h3>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => setIsModuleListDrawerOpen(false)}
-                                  className="rounded-lg border border-[#2A2E36] px-2.5 py-1.5 text-[14px] font-medium text-neutral-300 transition hover:bg-[#171A20] hover:text-white"
-                                >
-                                  {"\uc811\uae30"}
-                                </button>
-                              </div>
-                              <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3 custom-scrollbar">
-                                {moduleSetParts.map((part) => {
-                                  const draft = moduleDrafts[part.id] ?? { label: part.label, keyword: part.keyword, setName: part.setName };
-                                  return (
-                                    <div key={`drawer-${part.id}`} className="flex items-center gap-3 rounded-lg border border-[#161A20] bg-[#111317] p-2.5">
-                                      <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white">
-                                        {renderModuleThumbnail(part, "h-full w-full object-contain p-1")}
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <p className="truncate text-[14px] font-medium text-white">{draft.label}</p>
-                                        <p className="mt-0.5 truncate text-[14px] text-neutral-500">{draft.keyword}</p>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-
-                        <div className="min-h-0 flex-1 p-4">
-                          <div className="flex h-full min-h-0 gap-3">
-                            <div
-                              ref={moduleSetScrollerRef}
-                              onPointerDown={handleModuleSetPointerDown}
-                              onPointerMove={handleModuleSetPointerMove}
-                              onPointerUp={handleModuleSetPointerEnd}
-                              onPointerCancel={handleModuleSetPointerEnd}
-                              onPointerLeave={handleModuleSetPointerEnd}
-                              className={`min-w-0 flex-1 overflow-x-auto overflow-y-hidden pr-1 custom-scrollbar ${isDraggingModuleSets ? "cursor-grabbing select-none" : "cursor-grab"}`}
-                              style={{ touchAction: "pan-y" }}
-                            >
-                              <div className="flex h-full gap-3">
-                                <AnimatePresence initial={false}>
-                                  {moduleSets.map((set) => (
-                                    <motion.div
-                                      layout
-                                      key={set.id}
-                                      initial={{ opacity: 0, x: 64, scale: 0.96 }}
-                                      animate={{ opacity: 1, x: 0, scale: 1 }}
-                                      exit={{ opacity: 0, x: -24, scale: 0.96 }}
-                                      transition={{ duration: 0.28, ease: "easeOut" }}
-                                      className="flex w-[320px] min-w-[320px] flex-col rounded-xl border border-[#1F2329] bg-[#0A0B0D] p-3"
-                                    >
-                                    <div className="mb-3 flex items-start justify-between gap-2">
-                                      <div className="min-w-0 flex-1">
-                                        <h4 className="text-[16px] font-medium text-white">{set.title}</h4>
-                                        <input
-                                          data-module-set-drag-lock
-                                          value={set.tag}
-                                          onChange={(e) => handleUpdateModuleSetTag(set.id, e.target.value)}
-                                          className="mt-2 h-8 w-full rounded-lg border border-[#2A2E36] bg-[#050505] px-2 text-[14px] font-medium outline-none"
-                                          style={{ color: set.accent }}
-                                        />
-                                      </div>
-                                      <Lock className="h-4 w-4 text-neutral-500" />
-                                    </div>
-
-                                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1 custom-scrollbar">
-                                      {moduleSetParts.map((part, partIndex) => {
-                                        const draft = moduleDrafts[part.id] ?? { label: part.label, keyword: part.keyword, setName: part.setName };
-                                        const setImage = getModuleSetImage(set, part, partIndex);
-                                        return (
-                                          <button
-                                            key={`${set.id}-${part.id}`}
-                                            type="button"
-                                            className="flex w-full items-center gap-3 rounded-lg border border-[#161A20] bg-[#111317] p-2.5 text-left transition hover:border-brand-primary/50"
-                                          >
-                                            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white">
-                                              <img src={setImage} alt="" className="h-full w-full object-contain p-0.5" />
-                                            </div>
-                                            <span className="truncate text-[14px] font-medium text-neutral-200">{draft.label}</span>
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                    </motion.div>
-                                  ))}
-                                </AnimatePresence>
-                              </div>
-                            </div>
-
-                            <div className={`flex w-[220px] shrink-0 flex-col rounded-xl border bg-[#0A0B0D] p-3 shadow-[-18px_0_28px_rgba(0,0,0,0.2)] transition ${
-                              isAddingModuleSet ? "border-brand-primary/55" : "border-[#1F2329]"
-                            }`}>
-                              <div className="mb-3 flex items-center justify-between">
-                                <h4 className="text-[16px] font-medium text-white">{isAddingModuleSet ? "AI Set" : "\uc0c8 \uc138\ud2b8"}</h4>
-                                {isAddingModuleSet ? <LoadingIndicator /> : <SlidersHorizontal className="h-4 w-4 text-neutral-500" />}
-                              </div>
-                              <div className="flex flex-1 flex-col justify-center rounded-lg border border-dashed border-[#2A2E36] p-3 text-center">
-                                {isAddingModuleSet ? (
-                                  <motion.div
-                                    initial={{ opacity: 0, y: 8 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="flex flex-col items-center justify-center"
-                                  >
-                                    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-brand-primary/40 bg-brand-primary/10">
-                                      <Sparkles className="h-5 w-5 animate-pulse text-brand-primary" />
-                                    </div>
-                                    <p className="text-[14px] font-medium text-white">{"AI\uac00 \uc0c8 \uc138\ud2b8\ub97c \uad6c\uc131 \uc911\uc785\ub2c8\ub2e4"}</p>
-                                    <p className="mt-1 text-[14px] text-neutral-500">{newSetTag}</p>
-                                  </motion.div>
-                                ) : (
-                                  <>
-                                    <p className="text-[14px] font-medium text-neutral-300">{"AI \ucd94\ucc9c \ud0dc\uadf8"}</p>
-                                    <input
-                                      data-module-set-drag-lock
-                                      value={newSetTag}
-                                      onChange={(e) => setNewSetTag(e.target.value)}
-                                      className="mt-3 h-9 rounded-lg border border-[#2A2E36] bg-[#050505] px-3 text-center text-[14px] font-medium text-brand-primary outline-none focus:border-brand-primary/60"
-                                    />
-                                    <button
-                                      type="button"
-                                      data-module-set-drag-lock
-                                      onClick={handleAddModuleSet}
-                                      disabled={isAddingModuleSet}
-                                      className="np-primary-action mt-3 flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-primary text-[14px] font-medium text-black transition hover:bg-[#F0B43A] disabled:cursor-not-allowed disabled:opacity-70"
-                                    >
-                                      <Sparkles className="h-4 w-4" /> {"\uc138\ud2b8 \ucd94\uac00"}
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="border-t border-[#1F2329] p-4">
-                          <div className="grid grid-cols-[0.38fr_0.62fr] gap-2">
-                            <button
-                              type="button"
-                              onClick={handleBackToModuleList}
-                              className="flex items-center justify-center gap-1.5 rounded-xl border border-[#2A2E36] bg-[#0A0B0D] py-3.5 text-[14px] font-medium text-neutral-300 transition hover:bg-[#141518]"
-                            >
-                              <ChevronLeft className="h-4 w-4" /> {"\uc774\uc804"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleCompleteModular}
-                              className="np-primary-action flex items-center justify-center rounded-xl bg-brand-primary py-3.5 text-[14px] font-medium text-black transition hover:bg-[#F0B43A]"
-                            >
-                              {"\uc644\ub8cc"}
-                            </button>
-                          </div>
-                        </div>
-                      </section>
-                    )}
                   </div>
                 )}
               </aside>
             </div>
           </div>
         )}
+
+        <AnimatePresence>
+          {moduleImagePreview && (
+            <motion.div
+              role="presentation"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onMouseDown={closeModuleImagePreview}
+              className="fixed inset-0 z-[180] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-6"
+            >
+              <motion.div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="module-preview-title"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                onMouseDown={(event) => event.stopPropagation()}
+                className="flex max-h-[92dvh] w-full max-w-[1000px] flex-col overflow-hidden rounded-xl border border-[#2A2E36] bg-[#141518] shadow-[0_28px_90px_rgba(0,0,0,0.75)]"
+              >
+                <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-3 sm:px-5">
+                  <h2 id="module-preview-title" className="min-w-0 truncate text-[16px] font-semibold leading-6 text-white">
+                    {moduleImagePreview.title}
+                  </h2>
+                  <button
+                    type="button"
+                    autoFocus
+                    onClick={closeModuleImagePreview}
+                    aria-label="이미지 크게 보기 닫기"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-neutral-300 transition hover:bg-white/10 hover:text-white"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="relative flex h-[min(70dvh,700px)] min-h-0 items-center justify-center overflow-hidden bg-white">
+                  <img
+                    src={moduleImagePreview.src}
+                    alt={moduleImagePreview.title}
+                    className={moduleImagePreview.cropArea ? "absolute" : "h-full w-full object-contain p-2 sm:p-5"}
+                    style={moduleImagePreview.cropArea ? cropImageStyle(moduleImagePreview.cropArea) : undefined}
+                  />
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence>
           {isComparisonModalOpen && (
